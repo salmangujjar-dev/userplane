@@ -12,7 +12,7 @@ import {
 } from '@workspace/ui/components/dialog';
 import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { AlertCircle, Link, X } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronUp, Link, X } from 'lucide-react';
 import { type KeyboardEvent, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import validator from 'validator';
@@ -20,6 +20,7 @@ import { z } from 'zod';
 
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { useShareRecording, useWorkspaceMembers } from '@/features';
+import { useSubscriptionStatus } from '@/features/billing';
 import {
   showCopiedToClipboardToast,
   showCopyFailedToast,
@@ -70,7 +71,12 @@ function EmailTag({ email, isValid, name, onRemove }: EmailTagProps) {
 
 export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRecordingModalProps) {
   const [emailInput, setEmailInput] = useState('');
+  const [showEmailShare, setShowEmailShare] = useState(false);
   const workspaceId = useWorkspaceId();
+
+  const { data: subscriptionResult } = useSubscriptionStatus();
+  const canSendEmails =
+    subscriptionResult?.success && subscriptionResult.data.featureGates?.sendOutboundEmails;
 
   const { mutate: shareRecording, isPending } = useShareRecording(workspaceId);
   const { data: membersResult, isLoading: isLoadingMembers } = useWorkspaceMembers({
@@ -186,7 +192,9 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
               <div className="flex flex-col space-y-1">
                 <DialogTitle className="text-xl font-semibold">Share recording</DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground">
-                  Share this recording via link or email
+                  {canSendEmails
+                    ? 'Share this recording via link or email'
+                    : 'Share this recording via link'}
                 </DialogDescription>
               </div>
             </div>
@@ -217,87 +225,116 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
               </div>
             </div>
 
-            {/* Email Input Area */}
-            <div className="space-y-1.5">
-              <label htmlFor="share-emails" className="text-sm font-medium">
-                Email addresses
-              </label>
-              <div
-                className={`w-full rounded-lg bg-muted px-3 py-2 min-h-[100px] focus-within:ring-2 focus-within:ring-ring ${
-                  errors.emails ? 'border border-destructive' : ''
-                }`}
-              >
-                <div className="flex flex-wrap gap-2">
-                  {fields.map((field, index) => (
-                    <EmailTag
-                      key={field.id}
-                      email={field.email}
-                      isValid={field.isValid}
-                      name={field.name}
-                      onRemove={() => remove(index)}
-                    />
-                  ))}
-                  <input
-                    id="share-emails"
-                    type="text"
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={fields.length === 0 ? 'Type email and press space or enter' : ''}
-                    className="flex-1 min-w-[200px] bg-transparent text-sm focus:outline-none py-1"
-                    disabled={fields.length >= MAX_EMAIL_RECIPIENTS}
-                  />
-                </div>
-              </div>
-              <div className="h-4 flex items-center justify-between">
-                <div>
-                  {errors.emails?.message && (
-                    <p className="text-xs text-destructive">{errors.emails.message}</p>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {fields.length}/{MAX_EMAIL_RECIPIENTS}
-                </p>
-              </div>
-            </div>
-
-            {/* Member Suggestions */}
-            {isLoadingMembers ? (
-              <div>
-                <span className="text-xs text-muted-foreground block mb-2">Workspace members:</span>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from({ length: 3 }, (_, i) => (
-                    <Skeleton key={i} className="h-7 w-28 rounded-full" />
-                  ))}
-                </div>
-              </div>
-            ) : availableMembers.length > 0 ? (
-              <div>
-                <span className="text-xs text-muted-foreground block mb-2">Workspace members:</span>
-                <div className="flex flex-wrap gap-2">
-                  {availableMembers.map((m) => (
-                    <button
-                      key={m.workspaceMemberId}
-                      type="button"
-                      onClick={() => handleSelectSuggestion(m.memberEmail, m.memberName)}
-                      className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <BoringAvatar
-                        size={AVATAR_SIZES.COMPACT}
-                        name={m.memberName}
-                        email={m.memberEmail}
+            {/* Email Share Section (gated by sendOutboundEmails) */}
+            {canSendEmails && showEmailShare && (
+              <>
+                <div className="space-y-1.5">
+                  <label htmlFor="share-emails" className="text-sm font-medium">
+                    Email addresses
+                  </label>
+                  <div
+                    className={`w-full rounded-lg bg-muted px-3 py-2 min-h-[100px] focus-within:ring-2 focus-within:ring-ring ${
+                      errors.emails ? 'border border-destructive' : ''
+                    }`}
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      {fields.map((field, index) => (
+                        <EmailTag
+                          key={field.id}
+                          email={field.email}
+                          isValid={field.isValid}
+                          name={field.name}
+                          onRemove={() => remove(index)}
+                        />
+                      ))}
+                      <input
+                        id="share-emails"
+                        type="text"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder={
+                          fields.length === 0 ? 'Type email and press space or enter' : ''
+                        }
+                        className="flex-1 min-w-[200px] bg-transparent text-sm focus:outline-none py-1"
+                        disabled={fields.length >= MAX_EMAIL_RECIPIENTS}
                       />
-                      <span className="truncate max-w-[120px]">
-                        {m.memberName || m.memberEmail}
-                      </span>
-                    </button>
-                  ))}
+                    </div>
+                  </div>
+                  <div className="h-4 flex items-center justify-between">
+                    <div>
+                      {errors.emails?.message && (
+                        <p className="text-xs text-destructive">{errors.emails.message}</p>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {fields.length}/{MAX_EMAIL_RECIPIENTS}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : null}
+
+                {/* Member Suggestions */}
+                {isLoadingMembers ? (
+                  <div>
+                    <span className="text-xs text-muted-foreground block mb-2">
+                      Workspace members:
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from({ length: 3 }, (_, i) => (
+                        <Skeleton key={i} className="h-7 w-28 rounded-full" />
+                      ))}
+                    </div>
+                  </div>
+                ) : availableMembers.length > 0 ? (
+                  <div>
+                    <span className="text-xs text-muted-foreground block mb-2">
+                      Workspace members:
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {availableMembers.map((m) => (
+                        <button
+                          key={m.workspaceMemberId}
+                          type="button"
+                          onClick={() => handleSelectSuggestion(m.memberEmail, m.memberName)}
+                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <BoringAvatar
+                            size={AVATAR_SIZES.COMPACT}
+                            name={m.memberName}
+                            email={m.memberEmail}
+                          />
+                          <span className="truncate max-w-[120px]">
+                            {m.memberName || m.memberEmail}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            )}
           </div>
 
           <DialogFooter className="mt-6">
+            {canSendEmails && (
+              <button
+                type="button"
+                onClick={() => setShowEmailShare(!showEmailShare)}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+              >
+                {showEmailShare ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    Hide Email Sharing
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    Share by Email
+                  </>
+                )}
+              </button>
+            )}
             <div className="flex gap-2 ml-auto">
               <Button
                 type="button"
@@ -307,9 +344,15 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
               >
                 Cancel
               </Button>
-              <Button type="submit" className="rounded-full px-6" disabled={isPending || !isValid}>
-                {isPending ? 'Sharing...' : 'Share'}
-              </Button>
+              {canSendEmails && showEmailShare && (
+                <Button
+                  type="submit"
+                  className="rounded-full px-6"
+                  disabled={isPending || !isValid}
+                >
+                  {isPending ? 'Sharing...' : 'Share'}
+                </Button>
+              )}
             </div>
           </DialogFooter>
         </form>

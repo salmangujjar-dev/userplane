@@ -3,10 +3,11 @@
  * Implements the recording contract defined in @workspace/contract
  */
 
-import { recordingError } from '@workspace/contract';
+import { billingError, recordingError } from '@workspace/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
+import type { BillingService } from '@/api/services/billing.service';
 import type { EmailService } from '@/api/services/email.service';
 import type { InviteService } from '@/api/services/invite.service';
 import type { RecordingService } from '@/api/services/recording.service';
@@ -322,7 +323,8 @@ export const shareRecordingImpl = (
   emailService: EmailService,
   inviteService: InviteService,
   userService: UserService,
-  tokenService: TokenService
+  tokenService: TokenService,
+  billingService: BillingService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
@@ -331,6 +333,11 @@ export const shareRecordingImpl = (
     .handler(async ({ input, context }) => {
       const { workspaceId, recordingId } = input.params;
       const { emails } = input.body;
+
+      const featureGates = await billingService.getFeatureGates(workspaceId);
+      if (!featureGates.sendOutboundEmails) {
+        throw billingError.PLAN_FEATURE_UNAVAILABLE({ feature: 'sendOutboundEmails' });
+      }
 
       // Verify recording exists (throws RECORDING_NOT_FOUND or RECORDING_GONE)
       await recordingService.getById(recordingId, workspaceId);
@@ -404,7 +411,8 @@ export const createRecordingProcedures = (
   emailService: EmailService,
   inviteService: InviteService,
   userService: UserService,
-  tokenService: TokenService
+  tokenService: TokenService,
+  billingService: BillingService
 ) => {
   return {
     list: getRecordingsImpl(recordingService, workspaceMemberService, workspaceService),
@@ -418,7 +426,8 @@ export const createRecordingProcedures = (
       emailService,
       inviteService,
       userService,
-      tokenService
+      tokenService,
+      billingService
     ),
     resources: {
       video: getRecordingVideoImpl(recordingService, workspaceMemberService, workspaceService),

@@ -17,7 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
-import { AlertCircle, HelpCircle, Link, X } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronUp, HelpCircle, Link, X } from 'lucide-react';
 import { KeyboardEvent, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import validator from 'validator';
@@ -25,6 +25,7 @@ import { z } from 'zod';
 
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SUPPORT_LINKS } from '@/constants';
+import { useSubscriptionStatus } from '@/features/billing';
 import {
   useIntercomSuggestions,
   useSendWorkspaceInvites,
@@ -232,8 +233,13 @@ function SuggestionsPills({
 
 export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState('');
+  const [showEmailInvite, setShowEmailInvite] = useState(false);
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const { handlePlanLimit } = usePlanLimitHandler();
+
+  const { data: subscriptionResult } = useSubscriptionStatus();
+  const canSendEmails =
+    subscriptionResult?.success && subscriptionResult.data.featureGates?.sendOutboundEmails;
 
   const { data: inviteResult, isLoading: isLoadingInvite } = useWorkspaceInvite();
   const { mutate: sendInvites, isPending } = useSendWorkspaceInvites(workspaceId);
@@ -358,7 +364,9 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
                 <DialogTitle className="text-xl font-semibold">Invite teammates</DialogTitle>
                 <div className="flex items-center gap-2">
                   <DialogDescription className="text-sm text-muted-foreground">
-                    Send the invite link or email invitations to your team
+                    {canSendEmails
+                      ? 'Send the invite link or email invitations to your team'
+                      : 'Share the invite link with your team'}
                   </DialogDescription>
                   <TooltipProvider>
                     <Tooltip>
@@ -388,31 +396,53 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
               onCopyLink={handleCopyLink}
             />
 
-            {/* Email Input Area */}
-            <EmailInputArea
-              fields={fields}
-              emailInput={emailInput}
-              maxEmails={MAX_EMAIL_RECIPIENTS}
-              hasError={!!errors.emails}
-              errorMessage={errors.emails?.message}
-              onEmailInputChange={setEmailInput}
-              onKeyDown={handleKeyDown}
-              onRemoveEmail={removeEmail}
-            />
+            {/* Email Invite Section (gated by sendOutboundEmails) */}
+            {canSendEmails && showEmailInvite && (
+              <>
+                <EmailInputArea
+                  fields={fields}
+                  emailInput={emailInput}
+                  maxEmails={MAX_EMAIL_RECIPIENTS}
+                  hasError={!!errors.emails}
+                  errorMessage={errors.emails?.message}
+                  onEmailInputChange={setEmailInput}
+                  onKeyDown={handleKeyDown}
+                  onRemoveEmail={removeEmail}
+                />
 
-            {/* Subtle suggestions below email input */}
-            {suggestions.length > 0 && workspaceId && (
-              <SuggestionsPills
-                suggestions={suggestions}
-                onSelect={handleSelectSuggestion}
-                existingEmails={fields.map((f) => f.email.toLowerCase())}
-                workspaceId={workspaceId}
-                hasMore={hasMoreSuggestions}
-              />
+                {suggestions.length > 0 && workspaceId && (
+                  <SuggestionsPills
+                    suggestions={suggestions}
+                    onSelect={handleSelectSuggestion}
+                    existingEmails={fields.map((f) => f.email.toLowerCase())}
+                    workspaceId={workspaceId}
+                    hasMore={hasMoreSuggestions}
+                  />
+                )}
+              </>
             )}
           </div>
 
           <DialogFooter className="mt-6">
+            {canSendEmails && (
+              <button
+                type="button"
+                onClick={() => setShowEmailInvite(!showEmailInvite)}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+              >
+                {showEmailInvite ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    Hide Email Invites
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    Invite by Email
+                  </>
+                )}
+              </button>
+            )}
             <div className="flex gap-2 ml-auto">
               <Button
                 type="button"
@@ -422,9 +452,15 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="rounded-full px-6" disabled={isPending || !isValid}>
-                {isPending ? 'Sending...' : 'Send Invites'}
-              </Button>
+              {canSendEmails && showEmailInvite && (
+                <Button
+                  type="submit"
+                  className="rounded-full px-6"
+                  disabled={isPending || !isValid}
+                >
+                  {isPending ? 'Sending...' : 'Send Invites'}
+                </Button>
+              )}
             </div>
           </DialogFooter>
         </form>

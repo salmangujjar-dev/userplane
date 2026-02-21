@@ -5,7 +5,7 @@
  * INCREMENTAL MIGRATION: Starting with basic CRUD operations
  */
 
-import { domainError, inviteError, workspaceError } from '@workspace/contract';
+import { billingError, domainError, inviteError, workspaceError } from '@workspace/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import {
@@ -13,6 +13,7 @@ import {
   createWorkspaceRestoreMiddleware,
   createWorkspaceRoleMiddleware,
 } from '@/api/middleware/workspace.orpc';
+import type { BillingService } from '@/api/services/billing.service';
 import type { DomainService } from '@/api/services/domain.service';
 import type { EmailService } from '@/api/services/email.service';
 import type { IntercomService } from '@/api/services/intercom-oauth.service';
@@ -758,13 +759,19 @@ export const rotateInviteTokenImpl = (
 export const sendWorkspaceInvitesImpl = (
   inviteService: InviteService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  billingService: BillingService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorizedRateLimited.workspace.invite.send
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
+      const featureGates = await billingService.getFeatureGates(input.params.workspaceId);
+      if (!featureGates.sendOutboundEmails) {
+        throw billingError.PLAN_FEATURE_UNAVAILABLE({ feature: 'sendOutboundEmails' });
+      }
+
       const result = await inviteService.sendInvites({
         workspaceId: input.params.workspaceId,
         emails: input.body.emails,
@@ -1684,7 +1691,8 @@ export const createWorkspaceProcedures = (
   emailService: EmailService,
   userService: UserService,
   tokenService: TokenService,
-  intercomService: IntercomService
+  intercomService: IntercomService,
+  billingService: BillingService
 ) => {
   return {
     list: getAllWorkspacesImpl(workspaceService),
@@ -1731,7 +1739,12 @@ export const createWorkspaceProcedures = (
     invite: {
       getUrl: getInviteUrlImpl(inviteService, workspaceMemberService, workspaceService),
       rotate: rotateInviteTokenImpl(inviteService, workspaceMemberService, workspaceService),
-      send: sendWorkspaceInvitesImpl(inviteService, workspaceMemberService, workspaceService),
+      send: sendWorkspaceInvitesImpl(
+        inviteService,
+        workspaceMemberService,
+        workspaceService,
+        billingService
+      ),
       accept: acceptInviteImpl(inviteService, emailService, workspaceMemberService, userService),
     },
 

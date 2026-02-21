@@ -90,7 +90,8 @@ const workspaceProcedures = createWorkspaceProcedures(
   emailService,
   userService,
   tokenService,
-  intercomService
+  intercomService,
+  billingService
 );
 const recordingProcedures = createRecordingProcedures(
   recordingService,
@@ -99,7 +100,8 @@ const recordingProcedures = createRecordingProcedures(
   emailService,
   inviteService,
   userService,
-  tokenService
+  tokenService,
+  billingService
 );
 const linkProcedures = createLinkProcedures(linkService, workspaceMemberService, workspaceService);
 const domainProcedures = createDomainProcedures(domainService);
