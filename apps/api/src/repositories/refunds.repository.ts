@@ -90,20 +90,6 @@ export class RefundRepository {
   }
 
   /**
-   * Find all refunds for a workspace
-   */
-  async findByWorkspaceId(workspaceId: string) {
-    return this.db.select().from(refunds).where(eq(refunds.workspaceId, workspaceId));
-  }
-
-  /**
-   * Find refunds by subscription ID
-   */
-  async findBySubscriptionId(subscriptionId: string) {
-    return this.db.select().from(refunds).where(eq(refunds.subscriptionId, subscriptionId));
-  }
-
-  /**
    * Find refunds by payment ID
    */
   async findByPaymentId(paymentId: string) {

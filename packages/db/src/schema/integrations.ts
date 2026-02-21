@@ -39,15 +39,15 @@ export const integrations = pgTable(
     providerMeta: jsonb('provider_meta').notNull(),
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
 
     // Soft delete
     isDeleted: boolean('is_deleted').default(false).notNull(),
-    deletedAt: timestamp('deleted_at'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (table) => [
     // Partial unique index: only ONE active connection per provider workspace allowed

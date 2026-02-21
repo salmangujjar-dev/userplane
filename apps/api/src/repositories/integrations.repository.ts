@@ -139,6 +139,7 @@ export class IntegrationRepository {
    * Find all integrations for a workspace
    * Only returns non-deleted integrations
    * Used for cache invalidation and listing integrations
+   * Naturally bounded: typically 3-4 integration per workspace
    */
   async findByWorkspaceId(workspaceId: string): Promise<TypedIntegration[]> {
     const results = await this.db
@@ -226,9 +227,9 @@ export class IntegrationRepository {
         deletedAt: null,
       })
       .where(
-        sql`workspace_id = ${workspaceId} 
+        sql`workspace_id = ${workspaceId}
         AND provider = ${provider}
-        AND is_deleted = true 
+        AND is_deleted = true
         AND deleted_at = ${deletedAt}
         AND NOT EXISTS (
           SELECT 1 FROM ${integrations} AS active

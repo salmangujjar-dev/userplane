@@ -1,19 +1,21 @@
-import { RESOURCE_TYPE_VALUES } from '@workspace/pricing';
-import { relations } from 'drizzle-orm';
+import {
+  BILLING_CADENCES,
+  type BillingCadence,
+  RESOURCE_TYPE_VALUES,
+  type ResourceType,
+} from '@workspace/pricing';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   integer,
-  pgEnum,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
-import { billingCadenceEnum } from './enums';
 import { workspaces } from './workspaces';
-
-export const resourceTypeEnum = pgEnum('resource_type', RESOURCE_TYPE_VALUES);
 
 export const entitlements = pgTable(
   'entitlements',
@@ -22,10 +24,12 @@ export const entitlements = pgTable(
     id: text('id').primaryKey(),
 
     // Workspace relationship
-    workspaceId: text('workspace_id').notNull(),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspaces.workspaceId, { onDelete: 'restrict' }),
 
     // Resource configuration
-    resourceType: resourceTypeEnum('resource_type').notNull(),
+    resourceType: text('resource_type').$type<ResourceType>().notNull(),
 
     // Plan-specific limits
     // quotedLimit: Advertised limit (what customers see in UI)
@@ -37,21 +41,29 @@ export const entitlements = pgTable(
     resourceConsumed: integer('resource_consumed').notNull().default(0),
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
 
     // Billing cadence: 'monthly' | 'annual' | null (null = free plan)
-    billingCadence: billingCadenceEnum('billing_cadence'),
+    billingCadence: text('billing_cadence').$type<BillingCadence>(),
 
     // Soft delete
     isDeleted: boolean('is_deleted').default(false).notNull(),
-    deletedAt: timestamp('deleted_at'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (table) => [
     uniqueIndex('entitlements_workspace_resource_idx').on(table.workspaceId, table.resourceType),
+    check(
+      'entitlements_resource_type_check',
+      sql`${table.resourceType} IN (${sql.raw(RESOURCE_TYPE_VALUES.map((v) => `'${v}'`).join(', '))})`
+    ),
+    check(
+      'entitlements_billing_cadence_check',
+      sql`${table.billingCadence} IS NULL OR ${table.billingCadence} IN (${sql.raw(BILLING_CADENCES.map((v) => `'${v}'`).join(', '))})`
+    ),
   ]
 );
 

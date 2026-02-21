@@ -275,26 +275,6 @@ export class AdminRepository {
   }
 
   /**
-   * Get user sessions
-   */
-  async getUserSessions(userId: string): Promise<AdminUserSession[]> {
-    const result = await this.db
-      .select({
-        id: session.id,
-        ipAddress: session.ipAddress,
-        userAgent: session.userAgent,
-        createdAt: session.createdAt,
-        expiresAt: session.expiresAt,
-        impersonatedBy: session.impersonatedBy,
-      })
-      .from(session)
-      .where(eq(session.userId, userId))
-      .orderBy(desc(session.createdAt));
-
-    return result;
-  }
-
-  /**
    * Get active sessions for a user with pagination
    */
   async getActiveUserSessions(

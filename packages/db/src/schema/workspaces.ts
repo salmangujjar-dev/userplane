@@ -1,8 +1,9 @@
-import { relations } from 'drizzle-orm';
+import type { WorkspaceInvitePolicy } from '@workspace/contract';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   integer,
-  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -15,17 +16,6 @@ import { entitlements } from './entitlements';
 import { links } from './links';
 import { projects } from './projects';
 import { workspaceMembers } from './workspace-members';
-
-/**
- * Workspace invite policy enum
- * - private: Not discoverable, only explicit invites work
- * - whitelisted: Discoverable, matching domains can join directly
- * - protected: Discoverable, matching domains can request access
- */
-export const workspaceInvitePolicyEnum = pgEnum(
-  'workspace_invite_policy',
-  WORKSPACE_INVITE_POLICY_VALUES
-);
 
 export const workspaces = pgTable(
   'workspaces',
@@ -42,7 +32,14 @@ export const workspaces = pgTable(
 
     // Workspace invite policy settings
     // Controls how users can discover and join the workspace
-    workspaceInvitePolicy: workspaceInvitePolicyEnum('workspace_invite_policy')
+    /**
+     * Workspace invite policy
+     * - private: Not discoverable, only explicit invites work
+     * - whitelisted: Discoverable, matching domains can join directly
+     * - protected: Discoverable, matching domains can request access
+     */
+    workspaceInvitePolicy: text('workspace_invite_policy')
+      .$type<WorkspaceInvitePolicy>()
       .notNull()
       .default('private'),
     // Email domains allowed to join/request access (only used for whitelisted/protected policies)
@@ -64,17 +61,23 @@ export const workspaces = pgTable(
     recordingMaxDurationMs: integer('recording_max_duration'),
 
     // Timestamps
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
 
     // Soft delete
     isDeleted: boolean('is_deleted').default(false).notNull(),
-    deletedAt: timestamp('deleted_at'),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
-  (table) => [uniqueIndex('workspaces_recording_slug_idx').on(table.recordingSlug)]
+  (table) => [
+    uniqueIndex('workspaces_recording_slug_idx').on(table.recordingSlug),
+    check(
+      'workspaces_invite_policy_check',
+      sql`${table.workspaceInvitePolicy} IN (${sql.raw(WORKSPACE_INVITE_POLICY_VALUES.map((v) => `'${v}'`).join(', '))})`
+    ),
+  ]
 );
 
 export const workspacesRelations = relations(workspaces, ({ many }) => ({

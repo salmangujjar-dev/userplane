@@ -24,9 +24,9 @@ export const webhookEvents = pgTable(
     businessId: text('business_id').notNull(),
 
     // Timestamps
-    eventTimestamp: timestamp('event_timestamp').notNull(),
-    receivedAt: timestamp('received_at').defaultNow().notNull(),
-    processedAt: timestamp('processed_at'),
+    eventTimestamp: timestamp('event_timestamp', { withTimezone: true }).notNull(),
+    receivedAt: timestamp('received_at', { withTimezone: true }).defaultNow().notNull(),
+    processedAt: timestamp('processed_at', { withTimezone: true }),
 
     // Processing status
     processed: boolean('processed').default(false).notNull(),
