@@ -11,7 +11,7 @@ import {
 } from '@workspace/ui/components/dialog';
 import { Label } from '@workspace/ui/components/label';
 import Logo from '@workspace/ui/components/logo';
-import { useEffect } from 'react';
+import { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -50,11 +50,12 @@ export function AddEmailDomainModal({
     },
   });
 
-  useEffect(() => {
-    if (open) {
-      reset();
-    }
-  }, [open, reset]);
+  // Reset form when the modal opens (adjust state during render)
+  const prevOpenRef = useRef(open);
+  if (open && !prevOpenRef.current) {
+    reset();
+  }
+  prevOpenRef.current = open;
 
   const handleAdd = (data: { domain: string }) => {
     onAdd(data.domain.toLowerCase().trim());

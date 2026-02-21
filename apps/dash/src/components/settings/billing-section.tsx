@@ -10,7 +10,7 @@ import {
 import { Label } from '@workspace/ui/components/label';
 import { CreditCard, Loader2, Minus, MoveUpRight, Plus } from 'lucide-react';
 import { useQueryState } from 'nuqs';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { AddonChangePreviewModal } from '@/components/modals/addon-change-preview-modal';
 import { useOpenCustomerPortal, useSubscriptionStatus } from '@/features/billing';
@@ -38,9 +38,11 @@ export function BillingSection() {
   const [newSeatsQuantity, setNewSeatsQuantity] = useState(currentQuantity);
   const [accordionValue, setAccordionValue] = useState('');
 
-  useEffect(() => {
+  const [prevCurrentQuantity, setPrevCurrentQuantity] = useState(currentQuantity);
+  if (prevCurrentQuantity !== currentQuantity) {
+    setPrevCurrentQuantity(currentQuantity);
     setNewSeatsQuantity(currentQuantity);
-  }, [currentQuantity]);
+  }
 
   const hasChange = newSeatsQuantity !== currentQuantity;
   const packPrice = ADDITIONAL_SEATS_OPTIONS[0]!.price;

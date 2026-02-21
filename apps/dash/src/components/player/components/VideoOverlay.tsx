@@ -45,7 +45,19 @@ export function VideoOverlay({ hasStarted, hasError, duration, onPlay }: VideoOv
     return (
       <>
         {/* Semi-transparent overlay backdrop */}
-        <div className="custom-video-overlay" onClick={onPlay} aria-label="Play video" />
+        <div
+          className="custom-video-overlay"
+          role="button"
+          tabIndex={0}
+          onClick={onPlay}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onPlay();
+            }
+          }}
+          aria-label="Play video"
+        />
 
         {/* Play button and duration */}
         <div className="custom-big-play-container">

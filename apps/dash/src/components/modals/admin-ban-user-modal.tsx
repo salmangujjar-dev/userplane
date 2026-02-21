@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui/components/select';
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { WorkspaceRole } from '@/types';
 
@@ -65,15 +65,16 @@ export function AdminBanUserModal({
     'owner',
   ]);
 
-  useEffect(() => {
-    if (!open) {
-      setReason('');
-      setDuration('permanent');
-      setCustomDays('');
-      setConfirmEmail('');
-      setDeleteWorkspacesForRoles(['owner']);
-    }
-  }, [open]);
+  // Reset form when modal closes (adjust state during render)
+  const prevOpenRef = useRef(open);
+  if (!open && prevOpenRef.current) {
+    setReason('');
+    setDuration('permanent');
+    setCustomDays('');
+    setConfirmEmail('');
+    setDeleteWorkspacesForRoles(['owner']);
+  }
+  prevOpenRef.current = open;
 
   const handleRoleToggle = (role: WorkspaceRole) => {
     setDeleteWorkspacesForRoles((prev) =>

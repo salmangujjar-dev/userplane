@@ -1,6 +1,8 @@
 'use client';
 
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import dynamic from 'next/dynamic';
 import { useQueryState } from 'nuqs';
 
 import { useAdminWorkspaceDetail } from '@/features/admin';
@@ -9,8 +11,15 @@ import { tabParser } from '@/lib/parsers';
 import { MembersTab } from './members-tab';
 import { OverviewTab } from './overview-tab';
 import { ProjectsTab } from './projects-tab';
-import { RecordingsTab } from './recordings-tab';
 import { StatsTab } from './stats-tab';
+
+const RecordingsTab = dynamic(
+  () => import('./recordings-tab').then((mod) => ({ default: mod.RecordingsTab })),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[400px] w-full" />,
+  }
+);
 import { SubscriptionTab } from './subscription-tab';
 import type { WorkspaceDetail } from './types';
 

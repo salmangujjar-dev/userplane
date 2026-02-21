@@ -166,9 +166,21 @@ export function EditProjectModal({
                     'flex items-center justify-between',
                     !featureGates?.customizeRetentionPolicy && 'cursor-pointer'
                   )}
+                  role={!featureGates?.customizeRetentionPolicy ? 'button' : undefined}
+                  tabIndex={!featureGates?.customizeRetentionPolicy ? 0 : undefined}
                   onClick={
                     !featureGates?.customizeRetentionPolicy
                       ? () => triggerUpsell('customizeRetentionPolicy')
+                      : undefined
+                  }
+                  onKeyDown={
+                    !featureGates?.customizeRetentionPolicy
+                      ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            triggerUpsell('customizeRetentionPolicy');
+                          }
+                        }
                       : undefined
                   }
                 >

@@ -22,7 +22,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html>
+    <html lang="en">
       <body>
         <div className="flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-white">
           <div className="flex flex-col items-center gap-3 max-w-md">

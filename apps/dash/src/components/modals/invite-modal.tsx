@@ -159,10 +159,11 @@ interface InviteLinkSectionProps {
 function InviteLinkSection({ inviteLink, isLoading, onCopyLink }: InviteLinkSectionProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">Invite link</label>
+      <label htmlFor="invite-link" className="text-sm font-medium">Invite link</label>
       <div className="flex gap-2">
         <div className="flex-1 rounded-lg bg-muted px-4 py-2.5">
           <input
+            id="invite-link"
             type="text"
             value={inviteLink}
             readOnly
@@ -225,7 +226,7 @@ function SuggestionsPills({
           >
             <div className="flex -space-x-1.5">
               {Array.from({ length: 3 }, (_, i) => (
-                <BoringAvatar key={i} size={AVATAR_SIZES.COMPACT} />
+                <BoringAvatar key={`more-avatar-${i}`} size={AVATAR_SIZES.COMPACT} />
               ))}
             </div>
             <span>More</span>

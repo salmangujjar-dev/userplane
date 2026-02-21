@@ -9,12 +9,12 @@ export function TabsSkeleton({ tabCount = 5 }: TabsSkeletonProps) {
     <div className="space-y-6">
       <div className="flex gap-2">
         {[...Array(tabCount)].map((_, i) => (
-          <Skeleton key={i} className="h-10 w-24" />
+          <Skeleton key={`tab-${i}`} className="h-10 w-24" />
         ))}
       </div>
       <div className="space-y-8">
         {[...Array(2)].map((_, i) => (
-          <div key={i} className="space-y-4">
+          <div key={`section-${i}`} className="space-y-4">
             <div>
               <Skeleton className="h-6 w-48 mb-2" />
               <Skeleton className="h-4 w-full max-w-2xl" />

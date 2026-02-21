@@ -45,7 +45,19 @@ export function DomainRecordingSettings({
     return (
       <div
         className={cn('flex items-center justify-between', gated && !disabled && 'cursor-pointer')}
+        role={gated && !disabled ? 'button' : undefined}
+        tabIndex={gated && !disabled ? 0 : undefined}
         onClick={gated && !disabled ? () => triggerUpsell(featureKey) : undefined}
+        onKeyDown={
+          gated && !disabled
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  triggerUpsell(featureKey);
+                }
+              }
+            : undefined
+        }
       >
         <Label
           htmlFor={!gated ? id : undefined}

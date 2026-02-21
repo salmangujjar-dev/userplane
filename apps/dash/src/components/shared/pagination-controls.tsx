@@ -38,7 +38,7 @@ export function PaginationControls({
         {[...Array(Math.min(5, totalPages))].map((_, i) => {
           const pageNum = i + 1;
           return (
-            <PaginationItem key={i}>
+            <PaginationItem key={pageNum}>
               <PaginationLink
                 isActive={currentPage === pageNum}
                 onClick={() => onPageChange(pageNum)}

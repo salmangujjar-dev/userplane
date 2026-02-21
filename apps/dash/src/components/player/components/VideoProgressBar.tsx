@@ -5,6 +5,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { VideoMarker } from '../types';
 import { formatTimeCompact } from '../utils/time-format';
 
+const EMPTY_MARKERS: VideoMarker[] = [];
+
 interface VideoProgressBarProps {
   /** Current playback time in seconds */
   currentTime: number;
@@ -23,7 +25,7 @@ interface VideoProgressBarProps {
 export function VideoProgressBar({
   currentTime,
   duration,
-  markers = [],
+  markers = EMPTY_MARKERS,
   onSeek,
 }: VideoProgressBarProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -132,7 +134,15 @@ export function VideoProgressBar({
     <div
       ref={progressBarRef}
       className="custom-progress-container"
+      role="button"
+      tabIndex={0}
       onClick={handleProgressClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSeek(currentTime);
+        }
+      }}
       onMouseDown={handleProgressMouseDown}
       onMouseUp={handleProgressMouseUp}
       onMouseEnter={handleProgressMouseEnter}
@@ -170,7 +180,7 @@ export function VideoProgressBar({
           const markerPosition = duration > 0 ? (marker.time / duration) * 100 : 0;
           return (
             <div
-              key={index}
+              key={`marker-${marker.time}-${marker.label}`}
               className="custom-progress-marker"
               style={{
                 left: `${markerPosition}%`,
