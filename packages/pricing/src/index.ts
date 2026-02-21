@@ -1072,6 +1072,23 @@ export const FEATURE_GATE_LABELS: Record<FeatureGate, string> = {
  */
 export type PlanFeatureGates = Record<FeatureGate, boolean>;
 
+// ============================================================================
+// Feature Limits (resource-based upsell keys)
+// ============================================================================
+
+/**
+ * Feature limit keys — parallel to FeatureGate but for resource-based limits.
+ * Used by the upsell system when a plan's resource quota is exceeded.
+ */
+export const FEATURE_LIMIT_KEYS = RESOURCE_TYPE_VALUES;
+export type FeatureLimit = ResourceType;
+
+/**
+ * Unified upsell key — feature gate or feature limit.
+ * Used by the upsell system to identify what triggered an upgrade prompt.
+ */
+export type FeatureUpsellKey = FeatureGate | FeatureLimit;
+
 /**
  * Free plan feature gates - hardcoded since free plan has no Dodo product
  * All paid plan feature gates come from Dodo product metadata (stored on subscription record)

@@ -1,10 +1,10 @@
+import type { FeatureGate } from '@workspace/pricing';
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { cn } from '@workspace/ui/lib/utils';
 
 import { useSubscriptionStatus } from '@/features/billing';
 import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
-import type { UpsellFeatureKey } from '@/lib/upsell-config';
 import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface DomainRecordingSettingsProps {
@@ -39,7 +39,7 @@ export function DomainRecordingSettings({
     label: string,
     checked: boolean,
     onChange: (checked: boolean) => void,
-    featureKey: UpsellFeatureKey
+    featureKey: FeatureGate
   ) => {
     const gated = !featureGates?.[featureKey];
     const isInteractive = gated && !disabled;

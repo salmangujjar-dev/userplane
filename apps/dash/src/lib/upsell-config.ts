@@ -1,4 +1,4 @@
-import type { FeatureGate } from '@workspace/pricing';
+import type { FeatureGate, FeatureLimit } from '@workspace/pricing';
 
 interface UpsellConfig {
   title: string;
@@ -32,9 +32,7 @@ export const UPSELL_CONFIGS: Partial<Record<FeatureGate, UpsellConfig>> = {
   },
 } as const;
 
-export type UpsellFeatureKey = keyof typeof UPSELL_CONFIGS;
-
-export const RESOURCE_UPSELL_CONFIGS: Record<string, UpsellConfig> = {
+export const RESOURCE_UPSELL_CONFIGS: Partial<Record<FeatureLimit, UpsellConfig>> = {
   links: {
     title: 'Link Limit Reached',
     subtitle: 'Upgrade your plan to create more recording links',
@@ -48,3 +46,17 @@ export const RESOURCE_UPSELL_CONFIGS: Record<string, UpsellConfig> = {
     subtitle: 'Upgrade your plan to invite more team members',
   },
 } as const;
+
+export const GENERIC_UPSELL_CONFIG: UpsellConfig = {
+  title: 'Upgrade Your Plan',
+  subtitle: 'Get more out of Userplane with an upgrade',
+};
+
+export function resolveUpsellConfig(feature: string | null): UpsellConfig {
+  if (!feature) return GENERIC_UPSELL_CONFIG;
+  return (
+    UPSELL_CONFIGS[feature as FeatureGate] ??
+    RESOURCE_UPSELL_CONFIGS[feature as FeatureLimit] ??
+    GENERIC_UPSELL_CONFIG
+  );
+}

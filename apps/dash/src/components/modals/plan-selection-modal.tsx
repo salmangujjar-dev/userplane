@@ -21,11 +21,7 @@ import { useRef, useState } from 'react';
 
 import { env } from '@/env';
 import { planModalParser, upsellFeatureParser } from '@/lib/parsers';
-import {
-  RESOURCE_UPSELL_CONFIGS,
-  UPSELL_CONFIGS,
-  type UpsellFeatureKey,
-} from '@/lib/upsell-config';
+import { resolveUpsellConfig } from '@/lib/upsell-config';
 
 interface PlanSelectionModalProps {
   onPlanSelect: (planId: string) => void;
@@ -212,11 +208,7 @@ export function PlanSelectionModal({
     setSelectedPlanName(defaultPlan);
   }
 
-  const upsellConfig = upsellFeature
-    ? upsellFeature.startsWith('limit:')
-      ? RESOURCE_UPSELL_CONFIGS[upsellFeature.slice('limit:'.length)]
-      : UPSELL_CONFIGS[upsellFeature as UpsellFeatureKey]
-    : undefined;
+  const upsellConfig = upsellFeature ? resolveUpsellConfig(upsellFeature) : undefined;
 
   const open = planModal !== null;
   const showAllPlans = planModal === 'detailed';
