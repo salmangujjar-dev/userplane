@@ -28,6 +28,6 @@
     "capture_server_logs_enabled": "false",
     "customize_recording_link_enabled": "true",
     "customize_retention_policy_enabled": "true",
-    "send_outbound_emails_enabled": "false"
+    "send_outbound_emails_enabled": "true"
   }
 }

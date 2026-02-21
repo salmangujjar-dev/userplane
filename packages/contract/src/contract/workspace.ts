@@ -501,6 +501,7 @@ export const sendWorkspaceInvites = oc
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     PLAN_LIMIT_EXCEEDED: BillingErrors.PLAN_LIMIT_EXCEEDED,
+    PLAN_FEATURE_UNAVAILABLE: BillingErrors.PLAN_FEATURE_UNAVAILABLE,
   })
   .input(SendWorkspaceInvitesSchema)
   .output(ApiResponseSchema(SendInvitesResultSchema));

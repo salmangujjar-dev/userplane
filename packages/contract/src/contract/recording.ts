@@ -2,6 +2,7 @@ import { oc } from '@orpc/contract';
 
 import {
   ApiResponseSchema,
+  BillingErrors,
   DeleteRecordingSchema,
   ListRecordingsQuerySchema,
   RecordingByIdSchema,
@@ -240,6 +241,7 @@ export const shareRecording = oc
     RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
     RECORDING_SHARE_FAILED: RecordingErrors.RECORDING_SHARE_FAILED,
+    PLAN_FEATURE_UNAVAILABLE: BillingErrors.PLAN_FEATURE_UNAVAILABLE,
   })
   .input(ShareRecordingSchema)
   .output(ApiResponseSchema(ShareRecordingResultSchema));
