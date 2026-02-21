@@ -65,7 +65,7 @@ export default function IntercomInvitePage() {
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
       onComplete={() => router.push(`/workspace/${workspaceId}/settings`)}
-      onSkip={() => router.push(`/workspace/${workspaceId}/settings`)}
+      onSkip={() => router.push(`/workspace/${workspaceId}/recordings`)}
     />
   );
 }

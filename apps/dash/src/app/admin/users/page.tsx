@@ -168,7 +168,12 @@ function inviteReducer(state: InviteState, action: InviteAction): InviteState {
     case 'SET_INVITE_RESULT':
       return { ...state, inviteResult: action.value };
     case 'INVITE_SUCCESS':
-      return { ...state, showCreateInviteModal: false, inviteResult: action.result, showInviteSuccessModal: true };
+      return {
+        ...state,
+        showCreateInviteModal: false,
+        inviteResult: action.result,
+        showInviteSuccessModal: true,
+      };
     default:
       return state;
   }
@@ -185,6 +190,178 @@ function UserCardSkeleton() {
         </div>
         <Skeleton className="h-8 w-8" />
       </div>
+    </div>
+  );
+}
+
+interface AdminUsersHeaderProps {
+  search: string;
+  onSearchChange: (value: string) => void;
+  selectedStatus: string[];
+  onStatusChange: (value: string[]) => void;
+  selectedSortBy: string[];
+  onSortByChange: (value: string[]) => void;
+  selectedSortDirection: string[];
+  onSortDirectionChange: (value: string[]) => void;
+  getSortDirectionIcon: () => typeof ArrowUpDown;
+}
+
+function AdminUsersHeader({
+  search,
+  onSearchChange,
+  selectedStatus,
+  onStatusChange,
+  selectedSortBy,
+  onSortByChange,
+  selectedSortDirection,
+  onSortDirectionChange,
+  getSortDirectionIcon,
+}: AdminUsersHeaderProps) {
+  return (
+    <div className="mb-6">
+      <h2 className="text-lg font-semibold">Users</h2>
+      <p className="text-sm text-muted-foreground mt-1">Manage userplane users</p>
+      <div className="flex items-center gap-2 mt-3">
+        <SearchInput
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-80"
+        />
+        <div className="flex items-center gap-2 ml-2">
+          <FilterDropdown
+            label="Status"
+            options={ADMIN_USER_STATUS_OPTIONS}
+            selected={selectedStatus}
+            onSelectionChange={onStatusChange}
+            placeholder="Filter status..."
+            icon={UserCheck}
+            singleSelect
+          />
+          <FilterDropdown
+            label="Sort by"
+            options={ADMIN_USER_SORT_OPTIONS}
+            selected={selectedSortBy}
+            onSelectionChange={onSortByChange}
+            placeholder="Sort by..."
+            icon={Clock}
+            singleSelect
+          />
+          <FilterDropdown
+            label="Order"
+            options={SORT_DIRECTION_OPTIONS}
+            selected={selectedSortDirection}
+            onSelectionChange={onSortDirectionChange}
+            placeholder="Sort order..."
+            icon={getSortDirectionIcon()}
+            singleSelect
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface AdminUsersListProps {
+  isLoading: boolean;
+  users: {
+    id: string;
+    name: string | null;
+    email: string;
+    role: string | null;
+    workspaceCount: number;
+    banned: boolean | null;
+    banExpires: Date | null;
+  }[];
+  searchQuery: string;
+  selectedUserId: string | null;
+  currentUserId: string | undefined;
+  onSelectUser: (userId: string) => void;
+  onImpersonate: (user: UserToAction) => void;
+  onViewSessions: (user: UserToAction) => void;
+  onBan: (user: UserToAction) => void;
+  onUnban: (userId: string) => void;
+  onRevokeAllSessions: (user: UserToAction) => void;
+}
+
+function AdminUsersList({
+  isLoading,
+  users,
+  searchQuery,
+  selectedUserId,
+  currentUserId,
+  onSelectUser,
+  onImpersonate,
+  onViewSessions,
+  onBan,
+  onUnban,
+  onRevokeAllSessions,
+}: AdminUsersListProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <UserCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <p className="text-muted-foreground">
+          {searchQuery ? 'No users found matching your search' : 'No users found'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      {users.map((user) => (
+        <UserCard
+          key={user.id}
+          name={user.name}
+          email={user.email}
+          role={user.role}
+          workspaceCount={user.workspaceCount}
+          banned={!!user.banned}
+          banExpires={user.banExpires}
+          isSelected={selectedUserId === user.id}
+          onClick={() => onSelectUser(user.id)}
+          onImpersonate={() =>
+            onImpersonate({
+              id: user.id,
+              name: user.name || '',
+              email: user.email,
+            })
+          }
+          onViewSessions={() =>
+            onViewSessions({
+              id: user.id,
+              name: user.name || '',
+              email: user.email,
+            })
+          }
+          onBan={() =>
+            onBan({
+              id: user.id,
+              name: user.name || '',
+              email: user.email,
+            })
+          }
+          onUnban={() => onUnban(user.id)}
+          onRevokeAllSessions={() =>
+            onRevokeAllSessions({
+              id: user.id,
+              name: user.name || '',
+              email: user.email,
+            })
+          }
+          isCurrentUser={user.id === currentUserId}
+        />
+      ))}
     </div>
   );
 }
@@ -217,7 +394,13 @@ function AdminUsersPageContent() {
 
   // Modal states (grouped)
   const [modals, dispatchModals] = useReducer(modalReducer, initialModalState);
-  const { userToImpersonate, userToBan, userForSessions, sessionToRevoke, userToRevokeAllSessions } = modals;
+  const {
+    userToImpersonate,
+    userToBan,
+    userForSessions,
+    sessionToRevoke,
+    userToRevokeAllSessions,
+  } = modals;
 
   // Invite modal state (grouped)
   const [invite, dispatchInvite] = useReducer(inviteReducer, initialInviteState);
@@ -232,6 +415,9 @@ function AdminUsersPageContent() {
 
   const createInviteMutation = useAdminCreateWorkspaceInvite();
 
+  // Ref to track previous debounced filters for comparison without causing re-renders
+  const prevDebouncedRef = useRef(debouncedFilters);
+
   // Debounce all filter changes (search, status, sort) together
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -243,26 +429,21 @@ function AdminUsersPageContent() {
       };
 
       // Check if filters actually changed to avoid unnecessary page resets
+      const prev = prevDebouncedRef.current;
       const filtersChanged =
-        newFilters.search !== debouncedFilters.search ||
-        newFilters.status !== debouncedFilters.status ||
-        newFilters.sortBy !== debouncedFilters.sortBy ||
-        newFilters.sortDirection !== debouncedFilters.sortDirection;
+        newFilters.search !== prev.search ||
+        newFilters.status !== prev.status ||
+        newFilters.sortBy !== prev.sortBy ||
+        newFilters.sortDirection !== prev.sortDirection;
 
       if (filtersChanged) {
+        prevDebouncedRef.current = newFilters;
         setDebouncedFilters(newFilters);
         void setCurrentPage(1);
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [
-    search,
-    selectedStatus,
-    selectedSortBy,
-    selectedSortDirection,
-    debouncedFilters,
-    setCurrentPage,
-  ]);
+  }, [search, selectedStatus, selectedSortBy, selectedSortDirection, setCurrentPage]);
 
   const { data: usersResult, isLoading: isLoadingUsers } = useAdminSearchUsers({
     search: debouncedFilters.search,
@@ -306,11 +487,9 @@ function AdminUsersPageContent() {
   });
 
   // Reset sessions and workspaces pages when user changes
-  const prevSelectedUserIdRef = useRef(selectedUserId);
-  if (prevSelectedUserIdRef.current !== selectedUserId) {
-    prevSelectedUserIdRef.current = selectedUserId;
+  useEffect(() => {
     dispatchPagination({ type: 'RESET_DETAIL_PAGES' });
-  }
+  }, [selectedUserId]);
 
   useEffect(() => {
     dispatchPagination({ type: 'SET_MODAL_SESSIONS_PAGE', value: 0 });
@@ -423,7 +602,9 @@ function AdminUsersPageContent() {
     if (userToRevokeAllSessions) {
       revokeAllSessionsMutation.mutate(
         { userId: userToRevokeAllSessions.id },
-        { onSuccess: () => dispatchModals({ type: 'SET_USER_TO_REVOKE_ALL_SESSIONS', value: null }) }
+        {
+          onSuccess: () => dispatchModals({ type: 'SET_USER_TO_REVOKE_ALL_SESSIONS', value: null }),
+        }
       );
     }
   };
@@ -455,113 +636,37 @@ function AdminUsersPageContent() {
       <AdminSidebar />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <AdminTopActions onCreateInviteClick={() => dispatchInvite({ type: 'SHOW_CREATE_INVITE', value: true })} />
+        <AdminTopActions
+          onCreateInviteClick={() => dispatchInvite({ type: 'SHOW_CREATE_INVITE', value: true })}
+        />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="space-y-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold">Users</h2>
-              <p className="text-sm text-muted-foreground mt-1">Manage userplane users</p>
-              <div className="flex items-center gap-2 mt-3">
-                <SearchInput
-                  placeholder="Search by name or email..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-80"
-                />
-                <div className="flex items-center gap-2 ml-2">
-                  <FilterDropdown
-                    label="Status"
-                    options={ADMIN_USER_STATUS_OPTIONS}
-                    selected={selectedStatus}
-                    onSelectionChange={setSelectedStatus}
-                    placeholder="Filter status..."
-                    icon={UserCheck}
-                    singleSelect
-                  />
-                  <FilterDropdown
-                    label="Sort by"
-                    options={ADMIN_USER_SORT_OPTIONS}
-                    selected={selectedSortBy}
-                    onSelectionChange={setSelectedSortBy}
-                    placeholder="Sort by..."
-                    icon={Clock}
-                    singleSelect
-                  />
-                  <FilterDropdown
-                    label="Order"
-                    options={SORT_DIRECTION_OPTIONS}
-                    selected={selectedSortDirection}
-                    onSelectionChange={setSelectedSortDirection}
-                    placeholder="Sort order..."
-                    icon={getSortDirectionIcon()}
-                    singleSelect
-                  />
-                </div>
-              </div>
-            </div>
+            <AdminUsersHeader
+              search={search}
+              onSearchChange={setSearch}
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
+              selectedSortBy={selectedSortBy}
+              onSortByChange={setSelectedSortBy}
+              selectedSortDirection={selectedSortDirection}
+              onSortDirectionChange={setSelectedSortDirection}
+              getSortDirectionIcon={getSortDirectionIcon}
+            />
 
-            {isLoadingUsers ? (
-              <div className="grid grid-cols-1 gap-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <UserCardSkeleton key={i} />
-                ))}
-              </div>
-            ) : users.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <p className="text-muted-foreground">
-                  {debouncedFilters.search
-                    ? 'No users found matching your search'
-                    : 'No users found'}
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {users.map((user) => (
-                  <UserCard
-                    key={user.id}
-                    name={user.name}
-                    email={user.email}
-                    role={user.role}
-                    workspaceCount={user.workspaceCount}
-                    banned={!!user.banned}
-                    banExpires={user.banExpires}
-                    isSelected={selectedUserId === user.id}
-                    onClick={() => handleSelectUser(user.id)}
-                    onImpersonate={() =>
-                      handleImpersonate({
-                        id: user.id,
-                        name: user.name || '',
-                        email: user.email,
-                      })
-                    }
-                    onViewSessions={() =>
-                      handleViewSessions({
-                        id: user.id,
-                        name: user.name || '',
-                        email: user.email,
-                      })
-                    }
-                    onBan={() =>
-                      handleBan({
-                        id: user.id,
-                        name: user.name || '',
-                        email: user.email,
-                      })
-                    }
-                    onUnban={() => handleUnban(user.id)}
-                    onRevokeAllSessions={() =>
-                      handleRevokeAllSessions({
-                        id: user.id,
-                        name: user.name || '',
-                        email: user.email,
-                      })
-                    }
-                    isCurrentUser={user.id === currentUser?.id}
-                  />
-                ))}
-              </div>
-            )}
+            <AdminUsersList
+              isLoading={isLoadingUsers}
+              users={users}
+              searchQuery={debouncedFilters.search}
+              selectedUserId={selectedUserId}
+              currentUserId={currentUser?.id}
+              onSelectUser={handleSelectUser}
+              onImpersonate={handleImpersonate}
+              onViewSessions={handleViewSessions}
+              onBan={handleBan}
+              onUnban={handleUnban}
+              onRevokeAllSessions={handleRevokeAllSessions}
+            />
 
             {!isLoadingUsers && users.length > 0 && (
               <PaginationControls
@@ -585,13 +690,17 @@ function AdminUsersPageContent() {
         workspacesTotal={selectedUserWorkspacesTotal}
         workspacesPage={detailWorkspacesPage}
         workspacesPageSize={WORKSPACES_PER_PAGE}
-        onWorkspacesPageChange={(v: number) => dispatchPagination({ type: 'SET_DETAIL_WORKSPACES_PAGE', value: v })}
+        onWorkspacesPageChange={(v: number) =>
+          dispatchPagination({ type: 'SET_DETAIL_WORKSPACES_PAGE', value: v })
+        }
         sessions={selectedUserSessions}
         isLoadingSessions={isLoadingSelectedUserSessions}
         sessionsTotal={selectedUserSessionsTotal}
         sessionsPage={detailSessionsPage}
         sessionsPageSize={SESSIONS_PER_PAGE}
-        onSessionsPageChange={(v: number) => dispatchPagination({ type: 'SET_DETAIL_SESSIONS_PAGE', value: v })}
+        onSessionsPageChange={(v: number) =>
+          dispatchPagination({ type: 'SET_DETAIL_SESSIONS_PAGE', value: v })
+        }
         onImpersonate={() =>
           userDetail &&
           handleImpersonate({
@@ -609,14 +718,18 @@ function AdminUsersPageContent() {
           })
         }
         onUnban={() => userDetail && handleUnban(userDetail.id)}
-        onRevokeSession={(session) => dispatchModals({ type: 'SET_SESSION_TO_REVOKE', value: session })}
+        onRevokeSession={(session) =>
+          dispatchModals({ type: 'SET_SESSION_TO_REVOKE', value: session })
+        }
         isCurrentUser={userDetail?.id === currentUser?.id}
       />
 
       {/* Modals */}
       <ImpersonateConfirmModal
         open={!!userToImpersonate}
-        onOpenChange={(open) => !open && dispatchModals({ type: 'SET_USER_TO_IMPERSONATE', value: null })}
+        onOpenChange={(open) =>
+          !open && dispatchModals({ type: 'SET_USER_TO_IMPERSONATE', value: null })
+        }
         user={userToImpersonate}
         onConfirm={confirmImpersonate}
         isPending={isImpersonating}
@@ -632,13 +745,17 @@ function AdminUsersPageContent() {
 
       <AdminSessionsModal
         open={!!userForSessions}
-        onOpenChange={(open) => !open && dispatchModals({ type: 'SET_USER_FOR_SESSIONS', value: null })}
+        onOpenChange={(open) =>
+          !open && dispatchModals({ type: 'SET_USER_FOR_SESSIONS', value: null })
+        }
         sessions={userSessions}
         isLoading={isLoadingSessions}
         sessionsTotal={userSessionsTotal}
         sessionsPage={modalSessionsPage}
         sessionsPageSize={SESSIONS_PER_PAGE}
-        onSessionsPageChange={(v: number) => dispatchPagination({ type: 'SET_MODAL_SESSIONS_PAGE', value: v })}
+        onSessionsPageChange={(v: number) =>
+          dispatchPagination({ type: 'SET_MODAL_SESSIONS_PAGE', value: v })
+        }
         onRevokeSession={handleRevokeSession}
         onRevokeAll={() =>
           userForSessions &&
@@ -654,7 +771,9 @@ function AdminUsersPageContent() {
 
       <AdminRevokeSessionModal
         open={!!sessionToRevoke}
-        onOpenChange={(open) => !open && dispatchModals({ type: 'SET_SESSION_TO_REVOKE', value: null })}
+        onOpenChange={(open) =>
+          !open && dispatchModals({ type: 'SET_SESSION_TO_REVOKE', value: null })
+        }
         session={sessionToRevoke}
         onConfirm={() => {
           if (sessionToRevoke && selectedUserId) {
@@ -669,7 +788,9 @@ function AdminUsersPageContent() {
 
       <AdminRevokeAllSessionsModal
         open={!!userToRevokeAllSessions}
-        onOpenChange={(open) => !open && dispatchModals({ type: 'SET_USER_TO_REVOKE_ALL_SESSIONS', value: null })}
+        onOpenChange={(open) =>
+          !open && dispatchModals({ type: 'SET_USER_TO_REVOKE_ALL_SESSIONS', value: null })
+        }
         user={userToRevokeAllSessions}
         onConfirm={confirmRevokeAllSessions}
         isPending={revokeAllSessionsMutation.isPending}

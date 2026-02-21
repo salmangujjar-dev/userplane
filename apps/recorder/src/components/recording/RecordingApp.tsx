@@ -6,16 +6,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  AppModeProvider,
-  useAppMode,
-  useCrossTabLock,
-} from '@/contexts/AppModeContext';
+import { AppModeProvider, useAppMode, useCrossTabLock } from '@/contexts/AppModeContext';
 import { useEmbeddedBridgeSync } from '@/hooks/useEmbeddedBridgeSync';
-import {
-  type RecordingFlowActions,
-  useRecordingFlow,
-} from '@/hooks/useRecordingFlow';
+import { type RecordingFlowActions, useRecordingFlow } from '@/hooks/useRecordingFlow';
 import { createLogger } from '@/lib/logger';
 import { classifyError, type ErrorAction, type RecordingError } from '@/types/errors';
 import type { RecordingPreferences } from '@/types/session-preferences';
@@ -59,10 +52,7 @@ function RecordingAppContent() {
   const urlParams = useMemo(() => getUrlParams(), []);
   const linkToken = urlParams.token;
   const action = urlParams.action;
-  const workspaceIds = useMemo(
-    () => parseWorkspaceIds(urlParams.workspace),
-    [urlParams.workspace]
-  );
+  const workspaceIds = useMemo(() => parseWorkspaceIds(urlParams.workspace), [urlParams.workspace]);
 
   // User override for blur preference (null = use session preference)
   const [blurOverride, setBlurOverride] = useState<boolean | null>(null);

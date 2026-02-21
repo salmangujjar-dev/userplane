@@ -12,6 +12,7 @@ import { DEV_SECRETS } from './defaults';
 import {
   type AdminConfig,
   type AuthConfig,
+  type BillingConfig,
   type BucketCredentials,
   type CacheConfig,
   type CorsConfig,
@@ -41,6 +42,7 @@ import {
 export type {
   AdminConfig,
   AuthConfig,
+  BillingConfig,
   BucketCredentials,
   CacheConfig,
   CorsConfig,
@@ -129,6 +131,9 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     },
     dashboard: {
       baseUrl: raw.INVITE_APP_URL,
+    },
+    billing: {
+      trialPeriodDays: raw.TRIAL_PERIOD_DAYS,
     },
     payments: {
       apiKey: raw.DODO_PAYMENTS_API_KEY,

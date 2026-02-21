@@ -48,7 +48,7 @@ export default function Hero() {
         <div className="z-20 flex h-full grow flex-col items-center gap-12 text-center">
           <h1 className="text-center font-dm-sans font-medium text-4xl leading-tight tracking-[-2px] md:max-w-4xl md:text-6xl">
             {segments.map((segment, index) => (
-              <span key={index}>
+              <span key={`${segment.text}-${index}`}>
                 {segment.color ? (
                   <Highlight color={segment.color}>{segment.text}</Highlight>
                 ) : (

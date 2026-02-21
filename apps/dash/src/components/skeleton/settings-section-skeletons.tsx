@@ -38,8 +38,8 @@ export function TeamSectionSkeleton() {
       <div className="max-w-2xl">
         <div className="rounded-xl border bg-card p-6">
           <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={`member-${i}`} className="flex items-center gap-3">
+            {Array.from({ length: 5 }, (_, i) => `member-${i}`).map((id) => (
+              <div key={id} className="flex items-center gap-3">
                 <Skeleton className="h-8 w-8 rounded-full" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-32" />
@@ -69,9 +69,9 @@ export function ProjectsSectionSkeleton() {
       </div>
       <div className="max-w-2xl">
         <div className="grid gap-3">
-          {[...Array(5)].map((_, i) => (
+          {Array.from({ length: 5 }, (_, i) => `project-${i}`).map((id) => (
             <div
-              key={`project-${i}`}
+              key={id}
               className="flex items-center justify-between p-4 rounded-xl border bg-card"
             >
               <div className="flex items-center gap-3">
@@ -98,8 +98,8 @@ export function DomainsSectionSkeleton() {
         <p className="text-sm text-muted-foreground">Configure domain and recording settings</p>
       </div>
       <div className="max-w-2xl space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={`domain-${i}`} className="h-16 rounded-xl" />
+        {Array.from({ length: 3 }, (_, i) => `domain-${i}`).map((id) => (
+          <Skeleton key={id} className="h-16 rounded-xl" />
         ))}
         <Skeleton className="h-10 w-full rounded-md" />
       </div>
@@ -115,8 +115,8 @@ export function NotificationsSectionSkeleton() {
         <p className="text-sm text-muted-foreground">Configure your workspace notifications</p>
       </div>
       <div className="max-w-2xl space-y-6">
-        {[...Array(5)].map((_, i) => (
-          <div key={`notification-${i}`} className="flex items-center justify-between">
+        {Array.from({ length: 5 }, (_, i) => `notification-${i}`).map((id) => (
+          <div key={id} className="flex items-center justify-between">
             <div className="space-y-1">
               <Skeleton className="h-4 w-48" />
               <Skeleton className="h-3 w-64" />
@@ -173,8 +173,8 @@ export function WorkspacePlanSectionSkeleton() {
         <div className="rounded-xl border bg-card p-6 space-y-4">
           <Skeleton className="h-5 w-32" />
           <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={`plan-detail-${i}`} className="flex items-center justify-between">
+            {Array.from({ length: 3 }, (_, i) => `plan-detail-${i}`).map((id) => (
+              <div key={id} className="flex items-center justify-between">
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-4 w-24" />
               </div>
@@ -251,8 +251,8 @@ export function WorkspaceMembershipSkeleton() {
       <div className="max-w-2xl">
         <div className="rounded-xl border bg-card p-6">
           <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={`workspace-${i}`} className="flex items-center gap-3">
+            {Array.from({ length: 3 }, (_, i) => `workspace-${i}`).map((id) => (
+              <div key={id} className="flex items-center gap-3">
                 <div className="flex items-center -space-x-2">
                   <Skeleton className="h-8 w-8 rounded-full" />
                   <Skeleton className="h-8 w-8 rounded-full" />

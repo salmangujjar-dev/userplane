@@ -10,6 +10,9 @@ export default function Spotlight() {
             alt={SPOTLIGHT_IMAGE.alt}
             className="w-full h-full object-cover"
             draggable={false}
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
           />
         </div>
       </div>

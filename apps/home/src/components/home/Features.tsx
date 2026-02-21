@@ -45,7 +45,7 @@ export default function Features() {
             {words.map((word, index) => {
               const color = highlightMap.get(index);
               return (
-                <span key={index}>
+                <span key={`${word}-${index}`}>
                   {color ? <Highlight color={color}>{word}</Highlight> : word}{' '}
                 </span>
               );
@@ -57,8 +57,8 @@ export default function Features() {
 
       {/* Feature cards grid */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        {FEATURES.map((feature, index) => (
-          <FeatureCard key={index} {...feature} />
+        {FEATURES.map((feature) => (
+          <FeatureCard key={feature.title} {...feature} />
         ))}
       </div>
     </section>

@@ -122,8 +122,8 @@ export function AdminSessionsModal({
           <div className="flex-1 overflow-y-auto py-4">
             {isLoading ? (
               <div className="space-y-2">
-                {[...Array(3)].map((_, i) => (
-                  <div key={`session-skeleton-${i}`} className="flex items-start justify-between p-3 rounded-lg border">
+                {Array.from({ length: 3 }, (_, i) => `session-skeleton-${i}`).map((id) => (
+                  <div key={id} className="flex items-start justify-between p-3 rounded-lg border">
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-32" />
                       <Skeleton className="h-3 w-48" />

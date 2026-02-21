@@ -51,18 +51,10 @@ function LogValueDisplay({ obj, isObjectExpanded, onToggleExpand }: LogValueDisp
   }
 
   if (obj.type === 'string') {
-    return (
-      <span className={color}>
-        &quot;{formatRemoteObject(obj)}&quot;
-      </span>
-    );
+    return <span className={color}>&quot;{formatRemoteObject(obj)}&quot;</span>;
   }
 
-  return (
-    <span className={color}>
-      {formatRemoteObject(obj)}
-    </span>
-  );
+  return <span className={color}>{formatRemoteObject(obj)}</span>;
 }
 
 interface ExpandedPropertiesDisplayProps {
@@ -141,18 +133,20 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
         <span className="text-muted-foreground shrink-0 mt-0.5 tabular-nums w-12">
           {recordingTime}
         </span>
-        <div className="shrink-0 mt-0.5"><LevelIcon type={log.event.type} /></div>
+        <div className="shrink-0 mt-0.5">
+          <LevelIcon type={log.event.type} />
+        </div>
 
         <div className="flex-1">
           <div className="flex items-start gap-1 flex-wrap">
-            {log.event.args.map((arg, index) => (
-              <span key={`arg-${arg.type}-${index}`}>
+            {log.event.args.map((arg, pos) => (
+              <span key={`arg-${arg.type}-${pos}`}>
                 <LogValueDisplay
                   obj={arg}
                   isObjectExpanded={isObjectExpanded}
                   onToggleExpand={() => setIsObjectExpanded(!isObjectExpanded)}
                 />
-                {index < log.event.args.length - 1 && (
+                {pos < log.event.args.length - 1 && (
                   <span className="text-muted-foreground"> </span>
                 )}
               </span>
@@ -187,8 +181,11 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
           {log.event.stackTrace && log.event.stackTrace.callFrames.length > 0 && (
             <div className="text-[10px] text-muted-foreground space-y-0.5 pt-1">
               <div className="font-medium">Stack trace:</div>
-              {log.event.stackTrace.callFrames.map((frame, index) => (
-                <div key={`${frame.url}-${frame.lineNumber}-${frame.columnNumber}`} className="pl-2">
+              {log.event.stackTrace.callFrames.map((frame) => (
+                <div
+                  key={`${frame.url}-${frame.lineNumber}-${frame.columnNumber}`}
+                  className="pl-2"
+                >
                   at {frame.functionName || '(anonymous)'} ({frame.url}:{frame.lineNumber}:
                   {frame.columnNumber})
                 </div>

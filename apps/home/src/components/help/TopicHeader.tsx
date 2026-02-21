@@ -21,7 +21,9 @@ export default function TopicHeader({ topic }: TopicHeaderProps) {
         {words.map((word, index) => {
           const color = highlightMap.get(index);
           return (
-            <span key={index}>{color ? <Highlight color={color}>{word}</Highlight> : word} </span>
+            <span key={`${word}-${index}`}>
+              {color ? <Highlight color={color}>{word}</Highlight> : word}{' '}
+            </span>
           );
         })}
       </h1>

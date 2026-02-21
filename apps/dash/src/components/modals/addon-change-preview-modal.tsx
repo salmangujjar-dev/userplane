@@ -276,9 +276,9 @@ function AddonPreviewView({
                     Proration Details
                   </div>
                   <div className="space-y-3">
-                    {lineItems.map((item, index) => (
+                    {lineItems.map((item) => (
                       <div
-                        key={`${item.name}-${index}`}
+                        key={`${item.name}-${item.unitPrice}-${item.quantity}`}
                         className="flex justify-between items-start"
                       >
                         <span className="text-sm text-zinc-700">
@@ -713,19 +713,20 @@ export function AddonChangePreviewModal({
   const addonsData = addonsResult?.success ? addonsResult.data : null;
   const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal();
 
-  const [state, setState] = useState<ModalState>('loading');
-  const [previewData, setPreviewData] = useState<PlanChangePreviewData | null>(null);
-  const [errorInfo, setErrorInfo] = useState<AddonErrorInfo>({ message: '' });
-  const [currentQuantity, setCurrentQuantity] = useState(0);
-  const [newQuantity, setNewQuantity] = useState(0);
+  const [addonState, setAddonState] = useState({
+    step: 'loading' as ModalState,
+    previewData: null as PlanChangePreviewData | null,
+    errorInfo: { message: '' } as AddonErrorInfo,
+    currentQuantity: 0,
+    newQuantity: 0,
+  });
 
   const { mutate: manageAddons, isPending } = useManageAddons({
     onPreview: (data) => {
-      setPreviewData(data);
-      setState('preview');
+      setAddonState((prev) => ({ ...prev, previewData: data, step: 'preview' }));
     },
     onExecute: () => {
-      setState('success');
+      setAddonState((prev) => ({ ...prev, step: 'success' }));
     },
     onError: (error) => {
       const code = error.data?.code || error.code;
@@ -733,8 +734,7 @@ export function AddonChangePreviewModal({
         code === 'BILLING_MANAGEMENT_UNAVAILABLE_FOR_MEMBER'
           ? 'Only workspace owners and admins can change billing add-ons.'
           : error.data?.message || error.message || 'Failed to change add-ons.';
-      setErrorInfo({ message, code });
-      setState('error');
+      setAddonState((prev) => ({ ...prev, errorInfo: { message, code }, step: 'error' }));
     },
   });
 
@@ -753,14 +753,16 @@ export function AddonChangePreviewModal({
   if (addonKey !== prevAddonKeyRef.current) {
     prevAddonKeyRef.current = addonKey;
     if (addonKey === 'loading') {
-      setState('loading');
+      setAddonState((prev) => ({ ...prev, step: 'loading' }));
     } else if (open && addonsData && workspaceId) {
       const initialSeatsQuantity = Math.min(addonsData.seatsQuantity, MAX_SEAT_PACKS);
-      setCurrentQuantity(initialSeatsQuantity);
-      setPreviewData(null);
-      setErrorInfo({ message: '' });
-      setNewQuantity(requestedQuantity ?? initialSeatsQuantity);
-      setState('loading');
+      setAddonState({
+        step: 'loading',
+        previewData: null,
+        errorInfo: { message: '' },
+        currentQuantity: initialSeatsQuantity,
+        newQuantity: requestedQuantity ?? initialSeatsQuantity,
+      });
     }
   }
 
@@ -778,22 +780,25 @@ export function AddonChangePreviewModal({
 
   const handleConfirm = () => {
     if (!workspaceId) return;
-    setState('confirming');
+    setAddonState((prev) => ({ ...prev, step: 'confirming' }));
     manageAddons({
       workspaceId,
-      seatsQuantity: newQuantity,
+      seatsQuantity: addonState.newQuantity,
       action: 'execute',
     });
   };
 
   const handleClose = () => {
-    const wasSuccess = state === 'success';
+    const wasSuccess = addonState.step === 'success';
     setAddonModal(null);
     if (wasSuccess) onComplete?.();
     setTimeout(() => {
-      setState('loading');
-      setPreviewData(null);
-      setErrorInfo({ message: '' });
+      setAddonState((prev) => ({
+        ...prev,
+        step: 'loading',
+        previewData: null,
+        errorInfo: { message: '' },
+      }));
     }, 200);
   };
 
@@ -808,33 +813,34 @@ export function AddonChangePreviewModal({
           Manage and confirm seat add-on billing changes.
         </DialogDescription>
 
-        {state === 'loading' && <LoadingView />}
+        {addonState.step === 'loading' && <LoadingView />}
 
-        {(state === 'preview' || state === 'confirming') && previewData ? (
+        {(addonState.step === 'preview' || addonState.step === 'confirming') &&
+        addonState.previewData ? (
           <AddonPreviewView
-            currentQuantity={currentQuantity}
-            newQuantity={newQuantity}
-            preview={previewData}
-            isConfirming={state === 'confirming' || isPending}
+            currentQuantity={addonState.currentQuantity}
+            newQuantity={addonState.newQuantity}
+            preview={addonState.previewData}
+            isConfirming={addonState.step === 'confirming' || isPending}
             onConfirm={handleConfirm}
             onCancel={handleClose}
           />
         ) : null}
 
-        {state === 'success' ? (
+        {addonState.step === 'success' ? (
           <SuccessView
-            currentQuantity={currentQuantity}
-            newQuantity={newQuantity}
-            preview={previewData}
+            currentQuantity={addonState.currentQuantity}
+            newQuantity={addonState.newQuantity}
+            preview={addonState.previewData}
             onClose={handleClose}
             onOpenPortal={() => openCustomerPortal()}
             isPortalLoading={isPortalPending}
           />
         ) : null}
 
-        {state === 'error' ? (
+        {addonState.step === 'error' ? (
           <ErrorView
-            error={errorInfo}
+            error={addonState.errorInfo}
             onClose={handleClose}
             onOpenPortal={() => openCustomerPortal()}
             isPortalLoading={isPortalPending}

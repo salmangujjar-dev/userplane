@@ -87,11 +87,3 @@ export const HELP_TOPICS: HelpTopic[] = [
     highlights: [{ wordIndex: 0, color: 'yellow' }],
   },
 ];
-
-/**
- * Lookup a topic by its slug.
- * Returns undefined if no match is found.
- */
-export function getTopicBySlug(slug: string): HelpTopic | undefined {
-  return HELP_TOPICS.find((t) => t.slug === slug);
-}

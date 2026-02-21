@@ -17,7 +17,7 @@ import {
 } from '@workspace/ui/components/select';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Globe, Lock, Plus, RefreshCw, Shield, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { AddEmailDomainModal } from '@/components/modals/add-email-domain-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
@@ -52,52 +52,59 @@ export function InvitePolicySection() {
   const { data: policyResult, isLoading, error, refetch } = useInvitePolicy();
   const { canEdit, isLoading: isLoadingRole } = useCanEditWorkspace();
 
-  const [policy, setPolicy] = useState<WorkspaceInvitePolicy>('private');
-  const [domains, setDomains] = useState<string[]>([]);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [showAddDomainModal, setShowAddDomainModal] = useState(false);
-  const [accordionValue, setAccordionValue] = useState('');
-  const [resetInviteModalOpen, setResetInviteModalOpen] = useState(false);
+  const [formState, setFormState] = useState({
+    policy: 'private' as WorkspaceInvitePolicy,
+    domains: [] as string[],
+    hasChanges: false,
+  });
+  const [uiState, setUiState] = useState({
+    showAddDomainModal: false,
+    accordionValue: '',
+    resetInviteModalOpen: false,
+  });
 
   const updatePolicyMutation = useUpdateInvitePolicy({
-    onSuccess: () => setHasChanges(false),
+    onSuccess: () => setFormState((prev) => ({ ...prev, hasChanges: false })),
   });
   const rotateInviteMutation = useRotateInvite();
 
   const handleResetInviteToken = () => {
-    setResetInviteModalOpen(true);
+    setUiState((prev) => ({ ...prev, resetInviteModalOpen: true }));
   };
 
   const handleConfirmResetInviteToken = () => {
     if (!workspaceId) return;
     rotateInviteMutation.mutate(workspaceId);
-    setResetInviteModalOpen(false);
+    setUiState((prev) => ({ ...prev, resetInviteModalOpen: false }));
   };
 
-  // Sync state with fetched data (adjust state during render)
-  const prevPolicyResultRef = useRef(policyResult);
-  if (policyResult !== prevPolicyResultRef.current && policyResult?.success) {
-    setPolicy(policyResult.data.workspaceInvitePolicy);
-    setDomains(policyResult.data.workspaceInviteDomains || []);
-    setHasChanges(false);
-  }
-  prevPolicyResultRef.current = policyResult;
+  // Sync state with fetched data
+  useEffect(() => {
+    if (policyResult?.success) {
+      setFormState({
+        policy: policyResult.data.workspaceInvitePolicy,
+        domains: policyResult.data.workspaceInviteDomains || [],
+        hasChanges: false,
+      });
+    }
+  }, [policyResult]);
 
   const handlePolicyChange = (newPolicy: WorkspaceInvitePolicy) => {
-    setPolicy(newPolicy);
-    setHasChanges(true);
+    setFormState((prev) => ({ ...prev, policy: newPolicy, hasChanges: true }));
   };
 
   const handleAddDomain = (domain: string) => {
-    if (domain && !domains.includes(domain)) {
-      setDomains([...domains, domain]);
-      setHasChanges(true);
+    if (domain && !formState.domains.includes(domain)) {
+      setFormState((prev) => ({ ...prev, domains: [...prev.domains, domain], hasChanges: true }));
     }
   };
 
   const handleRemoveDomain = (domainToRemove: string) => {
-    setDomains(domains.filter((d) => d !== domainToRemove));
-    setHasChanges(true);
+    setFormState((prev) => ({
+      ...prev,
+      domains: prev.domains.filter((d) => d !== domainToRemove),
+      hasChanges: true,
+    }));
   };
 
   const handleSave = () => {
@@ -105,17 +112,19 @@ export function InvitePolicySection() {
 
     updatePolicyMutation.mutate({
       workspaceId,
-      policy,
-      domains: domains.length > 0 ? domains : null,
+      policy: formState.policy,
+      domains: formState.domains.length > 0 ? formState.domains : null,
     });
-    setAccordionValue('');
+    setUiState((prev) => ({ ...prev, accordionValue: '' }));
   };
 
   const handleCancel = () => {
     if (policyResult?.success) {
-      setPolicy(policyResult.data.workspaceInvitePolicy);
-      setDomains(policyResult.data.workspaceInviteDomains || []);
-      setHasChanges(false);
+      setFormState({
+        policy: policyResult.data.workspaceInvitePolicy,
+        domains: policyResult.data.workspaceInviteDomains || [],
+        hasChanges: false,
+      });
     }
   };
 
@@ -157,9 +166,9 @@ export function InvitePolicySection() {
     );
   }
 
-  const selectedOption = POLICY_OPTIONS.find((opt) => opt.value === policy);
-  const showDomainInput = policy !== 'private';
-  const isMaxDomainsReached = domains.length >= MAX_EMAIL_DOMAINS;
+  const selectedOption = POLICY_OPTIONS.find((opt) => opt.value === formState.policy);
+  const showDomainInput = formState.policy !== 'private';
+  const isMaxDomainsReached = formState.domains.length >= MAX_EMAIL_DOMAINS;
 
   return (
     <div>
@@ -181,8 +190,8 @@ export function InvitePolicySection() {
             type="single"
             collapsible
             className="max-w-md"
-            value={accordionValue}
-            onValueChange={setAccordionValue}
+            value={uiState.accordionValue}
+            onValueChange={(value) => setUiState((prev) => ({ ...prev, accordionValue: value }))}
           >
             <AccordionItem value="policy" className="border rounded-lg overflow-hidden px-4">
               <AccordionTrigger className="hover:no-underline">
@@ -197,7 +206,11 @@ export function InvitePolicySection() {
               </AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-4 pb-1">
-                  <Select value={policy} onValueChange={handlePolicyChange} disabled={!canEdit}>
+                  <Select
+                    value={formState.policy}
+                    onValueChange={handlePolicyChange}
+                    disabled={!canEdit}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select policy" />
                     </SelectTrigger>
@@ -217,13 +230,13 @@ export function InvitePolicySection() {
                   {showDomainInput && (
                     <div className="space-y-3">
                       <p className="text-xs text-muted-foreground">
-                        {policy === 'whitelisted'
+                        {formState.policy === 'whitelisted'
                           ? 'Users with these email domains can join directly.'
                           : 'Users with these email domains can request access.'}{' '}
-                        ({domains.length}/{MAX_EMAIL_DOMAINS})
+                        ({formState.domains.length}/{MAX_EMAIL_DOMAINS})
                       </p>
 
-                      {domains.map((domain) => (
+                      {formState.domains.map((domain) => (
                         <div
                           key={domain}
                           className={`flex items-center gap-2 p-3 rounded-lg border bg-background ${!canEdit ? 'opacity-50' : ''}`}
@@ -249,7 +262,9 @@ export function InvitePolicySection() {
 
                       {canEdit && (
                         <button
-                          onClick={() => setShowAddDomainModal(true)}
+                          onClick={() =>
+                            setUiState((prev) => ({ ...prev, showAddDomainModal: true }))
+                          }
                           disabled={isMaxDomainsReached}
                           className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors ${
                             isMaxDomainsReached
@@ -268,7 +283,7 @@ export function InvitePolicySection() {
 
                   {/* Save / Cancel */}
                   <div
-                    className={`flex gap-2 pt-2 transition-opacity ${hasChanges && canEdit ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    className={`flex gap-2 pt-2 transition-opacity ${formState.hasChanges && canEdit ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                   >
                     <button
                       onClick={handleSave}
@@ -291,10 +306,10 @@ export function InvitePolicySection() {
           </Accordion>
 
           <AddEmailDomainModal
-            open={showAddDomainModal}
-            onOpenChange={setShowAddDomainModal}
+            open={uiState.showAddDomainModal}
+            onOpenChange={(open) => setUiState((prev) => ({ ...prev, showAddDomainModal: open }))}
             onAdd={handleAddDomain}
-            existingDomains={domains}
+            existingDomains={formState.domains}
           />
         </div>
 
@@ -323,8 +338,8 @@ export function InvitePolicySection() {
         </div>
 
         <ResetInviteTokenModal
-          open={resetInviteModalOpen}
-          onOpenChange={setResetInviteModalOpen}
+          open={uiState.resetInviteModalOpen}
+          onOpenChange={(open) => setUiState((prev) => ({ ...prev, resetInviteModalOpen: open }))}
           workspace={
             workspaceId
               ? {

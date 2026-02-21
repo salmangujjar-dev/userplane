@@ -7,8 +7,9 @@ import type {
   AdminWorkspaceProvisionData,
   AdminWorkspaceProvisionInput,
 } from '@workspace/contract';
-import { adminError, DEFAULT_TRIAL_PERIOD_DAYS } from '@workspace/contract';
+import { adminError } from '@workspace/contract';
 
+import { env } from '@/api/env';
 import { generateInviteToken } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import { deriveWorkspaceName } from '@/api/lib/workspace';
@@ -197,7 +198,7 @@ export class AdminWorkspaceService {
     // Resolve trial period (only for existing/custom plan modes)
     const trialPeriodDays =
       'trialPeriodDays' in params
-        ? Number(params.trialPeriodDays ?? String(DEFAULT_TRIAL_PERIOD_DAYS))
+        ? Number(params.trialPeriodDays ?? String(env.billing.trialPeriodDays))
         : undefined;
 
     // Now checkout for the product and return the checkout url

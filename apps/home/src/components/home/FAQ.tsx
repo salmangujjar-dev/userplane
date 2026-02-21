@@ -87,7 +87,7 @@ export default function FAQ() {
               {words.map((word, index) => {
                 const color = highlightMap.get(index);
                 return (
-                  <span key={index}>
+                  <span key={`${word}-${index}`}>
                     {color ? <Highlight color={color}>{word}</Highlight> : word}{' '}
                   </span>
                 );
@@ -100,7 +100,7 @@ export default function FAQ() {
         <div className="bg-white rounded-2xl border border-zinc-200 p-6 md:p-8 w-full min-w-0">
           {FAQ_ITEMS.map((item, index) => (
             <FAQAccordionItem
-              key={index}
+              key={item.question}
               item={item}
               isOpen={openIndex === index}
               onToggle={() => toggleItem(index)}

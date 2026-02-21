@@ -86,7 +86,7 @@ const RoadmapComponent = ({ items }: RoadmapComponentProps) => {
           <div className="flex items-center gap-1">
             {Array.from({ length: totalPages }, (_, i) => (
               <button
-                key={i}
+                key={`page-${i}`}
                 onClick={() => setCurrentPage(i)}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   i === currentPage ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'

@@ -12,9 +12,9 @@ import CTA from '../components/home/CTA';
   <main class="flex flex-col items-center">
     <Hero />
     <Spotlight />
-    <Features client:load />
+    <Features client:visible />
     <Pricing client:visible />
-    <FAQ client:load />
+    <FAQ client:idle />
     <CTA />
   </main>
 </HomepageLayout>

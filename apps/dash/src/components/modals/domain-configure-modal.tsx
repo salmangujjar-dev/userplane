@@ -303,10 +303,10 @@ export function DomainConfigureModal({
 
   // Sync local settings when the modal opens or when the settings prop changes
   const prevOpenRef = useRef(open);
-  const [prevSettings, setPrevSettings] = useState(settings);
-  if ((open && !prevOpenRef.current) || prevSettings !== settings) {
+  const prevSettingsRef = useRef(settings);
+  if ((open && !prevOpenRef.current) || prevSettingsRef.current !== settings) {
     setLocalSettings(settings);
-    setPrevSettings(settings);
+    prevSettingsRef.current = settings;
   }
   prevOpenRef.current = open;
 

@@ -26,8 +26,8 @@ function PricingFeatureItem({ text, included, subFeatures }: PlanFeatureHighligh
       <div>
         {subFeatures && subFeatures.length > 0 && (
           <ul className="space-y-2">
-            {subFeatures.map((subFeature: PlanFeatureHighlight, index: number) => (
-              <li key={index} className="flex items-start">
+            {subFeatures.map((subFeature: PlanFeatureHighlight) => (
+              <li key={subFeature.text} className="flex items-start">
                 <span className="text-base text-gray-600">{subFeature.text}</span>
               </li>
             ))}
@@ -62,7 +62,7 @@ export default function Pricing() {
             {words.map((word, index) => {
               const color = highlightMap.get(index);
               return (
-                <span key={index}>
+                <span key={`${word}-${index}`}>
                   {color ? <Highlight color={color}>{word}</Highlight> : word}{' '}
                 </span>
               );
@@ -170,8 +170,8 @@ export default function Pricing() {
             What&apos;s Included
           </h3>
           <div className="space-y-8">
-            {featuredPlan.featureHighlights.map((feature, index) => (
-              <PricingFeatureItem key={index} {...feature} />
+            {featuredPlan.featureHighlights.map((feature) => (
+              <PricingFeatureItem key={feature.text} {...feature} />
             ))}
           </div>
         </div>

@@ -17,7 +17,7 @@ import {
 import Logo from '@workspace/ui/components/logo';
 import { Check } from 'lucide-react';
 import { useQueryState } from 'nuqs';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { env } from '@/env';
 import { planModalParser, upsellFeatureParser } from '@/lib/parsers';
@@ -206,9 +206,9 @@ export function PlanSelectionModal({
   const [selectedPlanName, setSelectedPlanName] = useState<string>(defaultPlan);
 
   // Sync selected plan when the defaultPlan prop changes
-  const [prevDefaultPlan, setPrevDefaultPlan] = useState(defaultPlan);
-  if (prevDefaultPlan !== defaultPlan) {
-    setPrevDefaultPlan(defaultPlan);
+  const prevDefaultPlanRef = useRef(defaultPlan);
+  if (prevDefaultPlanRef.current !== defaultPlan) {
+    prevDefaultPlanRef.current = defaultPlan;
     setSelectedPlanName(defaultPlan);
   }
 

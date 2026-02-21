@@ -141,7 +141,13 @@ export default function Header() {
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 animate-in fade-in-0 duration-200"
+            role="button"
+            tabIndex={-1}
+            aria-label="Close navigation menu"
             onClick={closeMenu}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') closeMenu();
+            }}
           />
           {/* Panel sliding up from bottom */}
           <div className="absolute inset-x-0 bottom-0 max-h-[80vh] rounded-t-lg border-t bg-background animate-in slide-in-from-bottom duration-300 ease-out">

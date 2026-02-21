@@ -8,7 +8,7 @@ import type { AuthAssetKey, IntegrationAssetKey } from './types';
 
 // Derive name types from asset key unions
 type IntegrationName = IntegrationAssetKey extends `integrations/${infer Name}.webp` ? Name : never;
-type AuthProviderName = AuthAssetKey extends `auth/${infer Name}.png` ? Name : never;
+type AuthProviderName = AuthAssetKey extends `auth/${infer Name}.webp` ? Name : never;
 
 /**
  * Integration asset metadata
@@ -155,7 +155,7 @@ export interface AuthProviderAsset {
 export const AUTH_PROVIDER_REGISTRY: Record<AuthProviderName, AuthProviderAsset> =
   Object.fromEntries(
     AUTH_PROVIDER_NAMES.map((name) => {
-      const path: AuthAssetKey = `auth/${name}.png`;
+      const path: AuthAssetKey = `auth/${name}.webp`;
       return [
         name,
         {

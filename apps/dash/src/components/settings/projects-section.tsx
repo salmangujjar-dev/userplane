@@ -64,21 +64,146 @@ const SORT_OPTIONS: Record<SortOption, { sortBy: ProjectSortField; sortDirection
     za: { sortBy: 'project_title', sortDirection: 'desc' },
   };
 
-export function ProjectsSection() {
-  const router = useRouter();
-  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
-  const [showModal, setShowModal] = useState(false);
-  const [editingProject, setEditingProject] = useState<{
+interface ProjectsSectionHeaderProps {
+  sortOption: SortOption;
+  onSortChange: (value: SortOption) => void;
+}
+
+function ProjectsSectionHeader({ sortOption, onSortChange }: ProjectsSectionHeaderProps) {
+  return (
+    <div className="mb-4 flex items-start justify-between max-w-2xl">
+      <div>
+        <h2 className="text-lg font-semibold">Projects</h2>
+        <p className="text-sm text-muted-foreground">Organize recordings by projects</p>
+      </div>
+      <Select value={sortOption} onValueChange={(value) => onSortChange(value as SortOption)}>
+        <SelectTrigger className="w-[160px] h-9">
+          <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="recent">Recently Added</SelectItem>
+          <SelectItem value="oldest">Oldest First</SelectItem>
+          <SelectItem value="az">A to Z</SelectItem>
+          <SelectItem value="za">Z to A</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+interface ProjectItemCardProps {
+  project: {
     projectId: string;
     projectTitle: string;
     isDefault: boolean;
     recordingRetentionDays: RetentionDays;
-  } | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [deletingProject, setDeletingProject] = useState<{
+  };
+  canDelete: boolean;
+  isDeleting: boolean;
+  onView: (projectId: string) => void;
+  onEdit: (project: {
     projectId: string;
     projectTitle: string;
-  } | null>(null);
+    isDefault: boolean;
+    recordingRetentionDays: RetentionDays;
+  }) => void;
+  onDelete: (projectId: string, projectTitle: string) => void;
+}
+
+function ProjectItemCard({
+  project,
+  canDelete,
+  isDeleting,
+  onView,
+  onEdit,
+  onDelete,
+}: ProjectItemCardProps) {
+  return (
+    <div className="flex items-center justify-between p-6 rounded-xl border bg-card">
+      <div className="flex items-center gap-3">
+        <Folder className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">{project.projectTitle || 'Untitled Project'}</span>
+          {project.isDefault && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+              Default
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <Button
+          variant="secondary"
+          size="sm"
+          className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
+          onClick={() => onView(project.projectId)}
+        >
+          View
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(project)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit project
+            </DropdownMenuItem>
+            {canDelete && (
+              <DropdownMenuItem
+                onClick={() => onDelete(project.projectId, project.projectTitle)}
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete project
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+
+interface AddProjectButtonProps {
+  onClick: () => void;
+}
+
+function AddProjectButton({ onClick }: AddProjectButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full max-w-2xl flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors cursor-pointer hover:border-primary/50"
+    >
+      <Plus className="h-4 w-4 text-muted-foreground" />
+      <span className="text-sm text-muted-foreground">Add New Project</span>
+    </button>
+  );
+}
+
+export function ProjectsSection() {
+  const router = useRouter();
+  const workspaceId = useWorkspaceStore((state) => state.workspaceId);
+  const [modalState, setModalState] = useState<{
+    showCreate: boolean;
+    showEdit: boolean;
+    editingProject: {
+      projectId: string;
+      projectTitle: string;
+      isDefault: boolean;
+      recordingRetentionDays: RetentionDays;
+    } | null;
+    deletingProject: { projectId: string; projectTitle: string } | null;
+  }>({
+    showCreate: false,
+    showEdit: false,
+    editingProject: null,
+    deletingProject: null,
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState<SortOption>('recent');
   const { sortBy, sortDirection } = SORT_OPTIONS[sortOption];
@@ -117,21 +242,21 @@ export function ProjectsSection() {
       { title: newProject.title, recordingRetentionDays: newProject.recordingRetentionDays },
       {
         onSuccess: () => {
-          setShowModal(false);
+          setModalState((prev) => ({ ...prev, showCreate: false }));
         },
       }
     );
   };
 
   const handleDeleteProject = (projectId: string, projectTitle: string) => {
-    setDeletingProject({ projectId, projectTitle });
+    setModalState((prev) => ({ ...prev, deletingProject: { projectId, projectTitle } }));
   };
 
   const handleConfirmDelete = () => {
-    if (deletingProject) {
-      deleteProjectMutation.mutate(deletingProject.projectId, {
+    if (modalState.deletingProject) {
+      deleteProjectMutation.mutate(modalState.deletingProject.projectId, {
         onSuccess: () => {
-          setDeletingProject(null);
+          setModalState((prev) => ({ ...prev, deletingProject: null }));
         },
       });
     }
@@ -149,8 +274,7 @@ export function ProjectsSection() {
     isDefault: boolean;
     recordingRetentionDays: RetentionDays;
   }) => {
-    setEditingProject(project);
-    setShowEditModal(true);
+    setModalState((prev) => ({ ...prev, editingProject: project, showEdit: true }));
   };
 
   const handleSaveEdit = (updatedProject: {
@@ -158,18 +282,17 @@ export function ProjectsSection() {
     isDefault: boolean;
     recordingRetentionDays: RetentionDays;
   }) => {
-    if (!editingProject) return;
+    if (!modalState.editingProject) return;
     updateProjectMutation.mutate(
       {
-        projectId: editingProject.projectId,
+        projectId: modalState.editingProject.projectId,
         title: updatedProject.title,
         isDefault: updatedProject.isDefault,
         recordingRetentionDays: updatedProject.recordingRetentionDays,
       },
       {
         onSuccess: () => {
-          setShowEditModal(false);
-          setEditingProject(null);
+          setModalState((prev) => ({ ...prev, showEdit: false, editingProject: null }));
         },
       }
     );
@@ -226,8 +349,8 @@ export function ProjectsSection() {
           <p className="text-sm text-muted-foreground">Organize recordings by projects</p>
         </div>
         <div className="max-w-2xl space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={`project-skeleton-${i}`} className="h-16 bg-muted animate-pulse rounded-xl" />
+          {Array.from({ length: 5 }, (_, i) => `project-skeleton-${i}`).map((id) => (
+            <div key={id} className="h-16 bg-muted animate-pulse rounded-xl" />
           ))}
         </div>
       </div>
@@ -236,87 +359,24 @@ export function ProjectsSection() {
 
   return (
     <div>
-      <div className="mb-4 flex items-start justify-between max-w-2xl">
-        <div>
-          <h2 className="text-lg font-semibold">Projects</h2>
-          <p className="text-sm text-muted-foreground">Organize recordings by projects</p>
-        </div>
-        <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
-          <SelectTrigger className="w-[160px] h-9">
-            <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="recent">Recently Added</SelectItem>
-            <SelectItem value="oldest">Oldest First</SelectItem>
-            <SelectItem value="az">A to Z</SelectItem>
-            <SelectItem value="za">Z to A</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <ProjectsSectionHeader sortOption={sortOption} onSortChange={setSortOption} />
 
       <div className="max-w-2xl space-y-4">
         {displayedProjects.map((project) => (
-          <div
+          <ProjectItemCard
             key={project.projectId}
-            className="flex items-center justify-between p-6 rounded-xl border bg-card"
-          >
-            <div className="flex items-center gap-3">
-              <Folder className="h-5 w-5 text-muted-foreground" />
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">
-                  {project.projectTitle || 'Untitled Project'}
-                </span>
-                {project.isDefault && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                    Default
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
-                onClick={() => handleViewProject(project.projectId)}
-              >
-                View
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleEditProject(project)}>
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit project
-                  </DropdownMenuItem>
-                  {canDelete && (
-                    <DropdownMenuItem
-                      onClick={() => handleDeleteProject(project.projectId, project.projectTitle)}
-                      disabled={deleteProjectMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete project
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+            project={project}
+            canDelete={!!canDelete}
+            isDeleting={deleteProjectMutation.isPending}
+            onView={handleViewProject}
+            onEdit={handleEditProject}
+            onDelete={handleDeleteProject}
+          />
         ))}
 
-        <button
-          onClick={() => setShowModal(true)}
-          className="w-full max-w-2xl flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed bg-background hover:bg-muted/50 transition-colors cursor-pointer hover:border-primary/50"
-        >
-          <Plus className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Add New Project</span>
-        </button>
+        <AddProjectButton
+          onClick={() => setModalState((prev) => ({ ...prev, showCreate: true }))}
+        />
 
         {totalPages > 1 && (
           <Pagination className="mt-4">
@@ -366,21 +426,21 @@ export function ProjectsSection() {
       </div>
 
       <CreateProjectModal
-        open={showModal}
-        onOpenChange={setShowModal}
+        open={modalState.showCreate}
+        onOpenChange={(open) => setModalState((prev) => ({ ...prev, showCreate: open }))}
         onCreateProject={handleCreateProject}
         loading={createProjectMutation.isPending}
       />
 
-      {editingProject && (
+      {modalState.editingProject && (
         <EditProjectModal
-          open={showEditModal}
-          onOpenChange={setShowEditModal}
+          open={modalState.showEdit}
+          onOpenChange={(open) => setModalState((prev) => ({ ...prev, showEdit: open }))}
           project={{
-            id: parseInt(editingProject.projectId),
-            title: editingProject.projectTitle || '',
-            isDefault: editingProject.isDefault,
-            recordingRetentionDays: editingProject.recordingRetentionDays,
+            id: parseInt(modalState.editingProject.projectId),
+            title: modalState.editingProject.projectTitle || '',
+            isDefault: modalState.editingProject.isDefault,
+            recordingRetentionDays: modalState.editingProject.recordingRetentionDays,
           }}
           onSave={(projectId, updatedProject) => handleSaveEdit(updatedProject)}
           loading={updateProjectMutation.isPending}
@@ -388,9 +448,11 @@ export function ProjectsSection() {
       )}
 
       <DeleteConfirmationModal
-        open={!!deletingProject}
-        onOpenChange={(open) => !open && setDeletingProject(null)}
-        itemName={deletingProject?.projectTitle || 'Untitled Project'}
+        open={!!modalState.deletingProject}
+        onOpenChange={(open) =>
+          !open && setModalState((prev) => ({ ...prev, deletingProject: null }))
+        }
+        itemName={modalState.deletingProject?.projectTitle || 'Untitled Project'}
         itemType="project"
         onConfirm={handleConfirmDelete}
         isLoading={deleteProjectMutation.isPending}

@@ -93,11 +93,7 @@ interface PageNumberItemProps {
 
 function PageNumberItem({ page, currentPage, totalPages, onPageChange }: PageNumberItemProps) {
   // Show first page, last page, and pages around current page
-  if (
-    page === 1 ||
-    page === totalPages ||
-    (page >= currentPage - 1 && page <= currentPage + 1)
-  ) {
+  if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
     return (
       <PaginationItem>
         <PaginationLink onClick={() => onPageChange(page)} isActive={currentPage === page}>

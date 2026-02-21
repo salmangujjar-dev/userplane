@@ -40,6 +40,22 @@ interface CreatedDomain {
   domainUrl: string;
 }
 
+interface ModalState {
+  step: ModalStep;
+  createdDomain: CreatedDomain | null;
+  showSettings: boolean;
+  localSettings: DomainRecordingPreferences;
+  originalSettings: DomainRecordingPreferences;
+}
+
+const initialModalState: ModalState = {
+  step: 'create',
+  createdDomain: null,
+  showSettings: false,
+  localSettings: DEFAULT_DOMAIN_RECORDING_PREFERENCES,
+  originalSettings: DEFAULT_DOMAIN_RECORDING_PREFERENCES,
+};
+
 interface CreateDomainModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -426,15 +442,7 @@ export function CreateDomainModal({
   loading = false,
   savingSettings = false,
 }: CreateDomainModalProps) {
-  const [step, setStep] = useState<ModalStep>('create');
-  const [createdDomain, setCreatedDomain] = useState<CreatedDomain | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [localSettings, setLocalSettings] = useState<DomainRecordingPreferences>(
-    DEFAULT_DOMAIN_RECORDING_PREFERENCES
-  );
-  const [originalSettings, setOriginalSettings] = useState<DomainRecordingPreferences>(
-    DEFAULT_DOMAIN_RECORDING_PREFERENCES
-  );
+  const [modalState, setModalState] = useState<ModalState>(initialModalState);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
@@ -461,17 +469,14 @@ export function CreateDomainModal({
       // Small delay to allow closing animation before resetting state
       const timeout = setTimeout(() => {
         reset();
-        setStep('create');
-        setCreatedDomain(null);
-        setShowSettings(false);
-        setLocalSettings(DEFAULT_DOMAIN_RECORDING_PREFERENCES);
-        setOriginalSettings(DEFAULT_DOMAIN_RECORDING_PREFERENCES);
+        setModalState(initialModalState);
       }, 200);
       return () => clearTimeout(timeout);
     }
   }, [open, reset]);
 
   const hasSettingsChanges = useMemo(() => {
+    const { localSettings, originalSettings } = modalState;
     return (
       localSettings.recordingHideSensitive !== originalSettings.recordingHideSensitive ||
       localSettings.recordingCaptureClientLog !== originalSettings.recordingCaptureClientLog ||
@@ -480,13 +485,12 @@ export function CreateDomainModal({
       localSettings.recordingCaptureNetworkLog !== originalSettings.recordingCaptureNetworkLog ||
       localSettings.recordingCaptureServerLog !== originalSettings.recordingCaptureServerLog
     );
-  }, [localSettings, originalSettings]);
+  }, [modalState]);
 
   const handleCreate = async (data: { domainUrl: string }) => {
     const result = await onCreateDomain(data.domainUrl);
     if (result) {
-      setCreatedDomain(result);
-      setStep('verify');
+      setModalState((prev) => ({ ...prev, createdDomain: result, step: 'verify' }));
     }
   };
 
@@ -506,12 +510,16 @@ export function CreateDomainModal({
         // Fetch settings on success
         try {
           const settings = await onFetchSettings(domainId);
-          setLocalSettings(settings);
-          setOriginalSettings(settings);
+          setModalState((prev) => ({
+            ...prev,
+            localSettings: settings,
+            originalSettings: settings,
+            step: 'success',
+          }));
         } catch {
           // Use defaults on error
+          setModalState((prev) => ({ ...prev, step: 'success' }));
         }
-        setStep('success');
       } else if (attempt < 10) {
         const delay = Math.min(1000 * Math.pow(1.5, attempt), 10000);
         pollingRef.current = setTimeout(() => {
@@ -519,25 +527,25 @@ export function CreateDomainModal({
         }, delay);
       } else {
         stopPolling();
-        setStep('failed');
+        setModalState((prev) => ({ ...prev, step: 'failed' }));
       }
     } catch {
       stopPolling();
-      setStep('failed');
+      setModalState((prev) => ({ ...prev, step: 'failed' }));
     }
   };
 
   const handleVerify = async () => {
-    if (!createdDomain) return;
+    if (!modalState.createdDomain) return;
 
-    setStep('verifying');
+    setModalState((prev) => ({ ...prev, step: 'verifying' }));
 
-    const verificationUrl = await onStartVerification(createdDomain.domainId);
+    const verificationUrl = await onStartVerification(modalState.createdDomain.domainId);
     if (verificationUrl) {
       window.open(verificationUrl, '_blank', 'noopener,noreferrer');
-      pollVerificationStatus(createdDomain.domainId);
+      pollVerificationStatus(modalState.createdDomain.domainId);
     } else {
-      setStep('failed');
+      setModalState((prev) => ({ ...prev, step: 'failed' }));
     }
   };
 
@@ -546,12 +554,12 @@ export function CreateDomainModal({
   };
 
   const handleTryAgain = () => {
-    setStep('verify');
+    setModalState((prev) => ({ ...prev, step: 'verify' }));
   };
 
   const handleDone = () => {
-    if (hasSettingsChanges && createdDomain) {
-      onSaveSettings(createdDomain.domainId, localSettings);
+    if (hasSettingsChanges && modalState.createdDomain) {
+      onSaveSettings(modalState.createdDomain.domainId, modalState.localSettings);
     }
     onOpenChange(false);
   };
@@ -565,7 +573,7 @@ export function CreateDomainModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]" showCloseButton={false}>
         <StepContent
-          step={step}
+          step={modalState.step}
           control={control}
           errors={errors}
           isValid={isValid}
@@ -573,15 +581,19 @@ export function CreateDomainModal({
           onSubmit={handleSubmit(handleCreate)}
           onCancel={handleCancel}
           workspaceId={workspaceId}
-          domainUrl={createdDomain?.domainUrl || ''}
+          domainUrl={modalState.createdDomain?.domainUrl || ''}
           onVerify={handleVerify}
           onTryAgain={handleTryAgain}
           onSkip={handleSkip}
-          showSettings={showSettings}
-          settings={localSettings}
+          showSettings={modalState.showSettings}
+          settings={modalState.localSettings}
           savingSettings={savingSettings}
-          onToggleSettings={() => setShowSettings(!showSettings)}
-          onSettingsChange={setLocalSettings}
+          onToggleSettings={() =>
+            setModalState((prev) => ({ ...prev, showSettings: !prev.showSettings }))
+          }
+          onSettingsChange={(settings) =>
+            setModalState((prev) => ({ ...prev, localSettings: settings }))
+          }
           onDone={handleDone}
         />
       </DialogContent>

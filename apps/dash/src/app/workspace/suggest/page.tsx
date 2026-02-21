@@ -9,7 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { PaginationControls } from '@/components/shared/pagination-controls';
@@ -27,6 +27,207 @@ function WorkspaceSuggestLayout({ children }: { children: React.ReactNode }) {
       <AuthIcons />
       <div className="w-full max-w-md space-y-10 relative z-10">{children}</div>
     </div>
+  );
+}
+
+function WorkspaceSuggestSkeleton() {
+  return (
+    <WorkspaceSuggestLayout>
+      <div className="flex flex-col items-center gap-3">
+        <Logo showText={false} />
+        <Skeleton className="h-7 w-64" />
+        <Skeleton className="h-4 w-80" />
+      </div>
+
+      <div className="space-y-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-6 rounded-xl bg-card">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+              <div className="flex -space-x-2">
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-6 w-6 rounded-full" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3.5 w-3.5 rounded" />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between p-6 rounded-xl bg-card">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+              <div className="flex -space-x-2">
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-6 w-6 rounded-full" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3.5 w-3.5 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Skeleton className="h-12 w-full rounded-full" />
+
+        <div className="flex justify-center pt-2">
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+    </WorkspaceSuggestLayout>
+  );
+}
+
+interface WorkspaceSuggestErrorProps {
+  errorMessage?: string;
+}
+
+function WorkspaceSuggestError({ errorMessage }: WorkspaceSuggestErrorProps) {
+  const router = useRouter();
+
+  return (
+    <WorkspaceSuggestLayout>
+      <div className="flex flex-col items-center gap-3">
+        <Image
+          src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+          alt="Dino"
+          width={120}
+          height={120}
+          className="mb-2"
+        />
+        <h1 className="text-xl font-medium text-foreground">Unable to Load Suggestions</h1>
+        <p className="text-sm text-muted-foreground text-center">
+          {errorMessage ?? 'Something went wrong while loading workspace suggestions.'}
+        </p>
+      </div>
+      <div className="flex justify-center pt-2">
+        <button
+          type="button"
+          onClick={() => router.push('/workspace/create')}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Create Workspace
+        </button>
+      </div>
+    </WorkspaceSuggestLayout>
+  );
+}
+
+interface WorkspaceSelectItemProps {
+  workspace: {
+    workspaceId: string;
+    workspaceName: string;
+    workspaceInvitePolicy: string;
+  };
+  isSelected: boolean;
+  onSelect: (workspaceId: string) => void;
+}
+
+function WorkspaceSelectItem({ workspace, isSelected, onSelect }: WorkspaceSelectItemProps) {
+  const PolicyIcon = workspace.workspaceInvitePolicy === 'protected' ? Shield : Globe;
+  const policyLabel =
+    workspace.workspaceInvitePolicy === 'protected' ? 'Approval required' : 'Open to your domain';
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(workspace.workspaceId)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(workspace.workspaceId);
+        }
+      }}
+      className={`flex items-center justify-between p-6 rounded-xl bg-card cursor-pointer transition-all ${
+        isSelected ? 'ring-1 ring-foreground' : 'hover:bg-accent'
+      }`}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div
+          className={`h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+            isSelected ? 'border-foreground' : 'border-muted-foreground'
+          }`}
+        >
+          {isSelected && <div className="h-2 w-2 rounded-full bg-foreground" />}
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-pointer">
+              <WorkspaceAvatar
+                workspaceId={workspace.workspaceId}
+                workspaceName={workspace.workspaceName}
+                size={WORKSPACE_AVATAR_SIZES.INLINE}
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <span className="text-xs">Workspace members</span>
+          </TooltipContent>
+        </Tooltip>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-sm font-medium text-foreground truncate">
+            {workspace.workspaceName}
+          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="cursor-pointer">
+                <PolicyIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span className="text-xs">{policyLabel}</span>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface AccessRequestedStateProps {
+  workspaceId: string;
+  workspaceName: string;
+}
+
+function AccessRequestedState({ workspaceId, workspaceName }: AccessRequestedStateProps) {
+  return (
+    <WorkspaceSuggestLayout>
+      <div className="flex flex-col items-center gap-3">
+        <Logo showText={false} />
+        <h1 className="text-xl font-medium text-foreground">Access Requested</h1>
+      </div>
+
+      <div className="w-full p-6 rounded-xl bg-card">
+        <div className="flex flex-col items-center gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-default">
+                <WorkspaceAvatar
+                  workspaceId={workspaceId}
+                  workspaceName={workspaceName}
+                  size={WORKSPACE_AVATAR_SIZES.GROUP}
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span className="text-xs">Workspace members</span>
+            </TooltipContent>
+          </Tooltip>
+          <div className="flex flex-col items-center gap-1 text-center">
+            <p className="text-sm font-medium text-foreground">
+              You&apos;ve requested access to <strong>{workspaceName}</strong>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              We&apos;ll notify you as soon as your request is approved
+            </p>
+          </div>
+        </div>
+      </div>
+    </WorkspaceSuggestLayout>
   );
 }
 
@@ -67,14 +268,24 @@ function WorkspaceSuggestPageContent() {
     },
   });
 
-  // Redirect during render using Next.js redirect()
+  // Redirect when no workspaces available
   if (!isLoading) {
     if (!suggestionsData?.success || suggestionsData.data.workspaces.length === 0) {
       redirect('/workspace/create');
-    } else if (suggestionsData.data.workspaces.length > 0 && !selectedWorkspaceId) {
-      setSelectedWorkspaceId(suggestionsData.data.workspaces[0]?.workspaceId ?? null);
     }
   }
+
+  // Auto-select first workspace when data loads
+  useEffect(() => {
+    if (
+      !isLoading &&
+      suggestionsData?.success &&
+      suggestionsData.data.workspaces.length > 0 &&
+      !selectedWorkspaceId
+    ) {
+      setSelectedWorkspaceId(suggestionsData.data.workspaces[0]?.workspaceId ?? null);
+    }
+  }, [isLoading, suggestionsData, selectedWorkspaceId, setSelectedWorkspaceId]);
 
   const handleJoinWorkspace = () => {
     if (!selectedWorkspaceId) return;
@@ -83,54 +294,7 @@ function WorkspaceSuggestPageContent() {
   };
 
   if (isLoading) {
-    return (
-      <WorkspaceSuggestLayout>
-        <div className="flex flex-col items-center gap-3">
-          <Logo showText={false} />
-          <Skeleton className="h-7 w-64" />
-          <Skeleton className="h-4 w-80" />
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-6 rounded-xl bg-card">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-4 w-4 rounded-full shrink-0" />
-                <div className="flex -space-x-2">
-                  <Skeleton className="h-6 w-6 rounded-full" />
-                  <Skeleton className="h-6 w-6 rounded-full" />
-                  <Skeleton className="h-6 w-6 rounded-full" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3.5 w-3.5 rounded" />
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-6 rounded-xl bg-card">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-4 w-4 rounded-full shrink-0" />
-                <div className="flex -space-x-2">
-                  <Skeleton className="h-6 w-6 rounded-full" />
-                  <Skeleton className="h-6 w-6 rounded-full" />
-                  <Skeleton className="h-6 w-6 rounded-full" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-3.5 w-3.5 rounded" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Skeleton className="h-12 w-full rounded-full" />
-
-          <div className="flex justify-center pt-2">
-            <Skeleton className="h-4 w-32" />
-          </div>
-        </div>
-      </WorkspaceSuggestLayout>
-    );
+    return <WorkspaceSuggestSkeleton />;
   }
 
   if (error || (suggestionsData && !suggestionsData.success)) {
@@ -140,32 +304,11 @@ function WorkspaceSuggestPageContent() {
     showWorkspaceSuggestionsLoadFailedToast(error instanceof Error ? error.message : undefined);
 
     return (
-      <WorkspaceSuggestLayout>
-        <div className="flex flex-col items-center gap-3">
-          <Image
-            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-            alt="Dino"
-            width={120}
-            height={120}
-            className="mb-2"
-          />
-          <h1 className="text-xl font-medium text-foreground">Unable to Load Suggestions</h1>
-          <p className="text-sm text-muted-foreground text-center">
-            {suggestionsData && !suggestionsData.success
-              ? suggestionsData.error.message
-              : 'Something went wrong while loading workspace suggestions.'}
-          </p>
-        </div>
-        <div className="flex justify-center pt-2">
-          <button
-            type="button"
-            onClick={() => router.push('/workspace/create')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Create Workspace
-          </button>
-        </div>
-      </WorkspaceSuggestLayout>
+      <WorkspaceSuggestError
+        errorMessage={
+          suggestionsData && !suggestionsData.success ? suggestionsData.error.message : undefined
+        }
+      />
     );
   }
 
@@ -181,39 +324,10 @@ function WorkspaceSuggestPageContent() {
   // Show success state when access has been requested
   if (requestedWorkspace) {
     return (
-      <WorkspaceSuggestLayout>
-        <div className="flex flex-col items-center gap-3">
-          <Logo showText={false} />
-          <h1 className="text-xl font-medium text-foreground">Access Requested</h1>
-        </div>
-
-        <div className="w-full p-6 rounded-xl bg-card">
-          <div className="flex flex-col items-center gap-3">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-default">
-                  <WorkspaceAvatar
-                    workspaceId={requestedWorkspace.workspaceId}
-                    workspaceName={requestedWorkspace.workspaceName}
-                    size={WORKSPACE_AVATAR_SIZES.GROUP}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <span className="text-xs">Workspace members</span>
-              </TooltipContent>
-            </Tooltip>
-            <div className="flex flex-col items-center gap-1 text-center">
-              <p className="text-sm font-medium text-foreground">
-                You&apos;ve requested access to <strong>{requestedWorkspace.workspaceName}</strong>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                We&apos;ll notify you as soon as your request is approved
-              </p>
-            </div>
-          </div>
-        </div>
-      </WorkspaceSuggestLayout>
+      <AccessRequestedState
+        workspaceId={requestedWorkspace.workspaceId}
+        workspaceName={requestedWorkspace.workspaceName}
+      />
     );
   }
 
@@ -229,71 +343,14 @@ function WorkspaceSuggestPageContent() {
 
       <div className="space-y-6">
         <div className="space-y-4">
-          {suggestionsData.data.workspaces.map((workspace) => {
-            const isSelected = selectedWorkspaceId === workspace.workspaceId;
-            const PolicyIcon = workspace.workspaceInvitePolicy === 'protected' ? Shield : Globe;
-            const policyLabel =
-              workspace.workspaceInvitePolicy === 'protected'
-                ? 'Approval required'
-                : 'Open to your domain';
-
-            return (
-              <div
-                key={workspace.workspaceId}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedWorkspaceId(workspace.workspaceId)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedWorkspaceId(workspace.workspaceId);
-                  }
-                }}
-                className={`flex items-center justify-between p-6 rounded-xl bg-card cursor-pointer transition-all ${
-                  isSelected ? 'ring-1 ring-foreground' : 'hover:bg-accent'
-                }`}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className={`h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      isSelected ? 'border-foreground' : 'border-muted-foreground'
-                    }`}
-                  >
-                    {isSelected && <div className="h-2 w-2 rounded-full bg-foreground" />}
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="rounded-full border-2 border-card overflow-hidden shrink-0 cursor-pointer">
-                        <WorkspaceAvatar
-                          workspaceId={workspace.workspaceId}
-                          workspaceName={workspace.workspaceName}
-                          size={WORKSPACE_AVATAR_SIZES.INLINE}
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <span className="text-xs">Workspace members</span>
-                    </TooltipContent>
-                  </Tooltip>
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-sm font-medium text-foreground truncate">
-                      {workspace.workspaceName}
-                    </span>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="cursor-pointer">
-                          <PolicyIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <span className="text-xs">{policyLabel}</span>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {suggestionsData.data.workspaces.map((workspace) => (
+            <WorkspaceSelectItem
+              key={workspace.workspaceId}
+              workspace={workspace}
+              isSelected={selectedWorkspaceId === workspace.workspaceId}
+              onSelect={setSelectedWorkspaceId}
+            />
+          ))}
         </div>
 
         {suggestionsData.data.pagination.totalPages > 1 && (

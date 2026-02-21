@@ -1,4 +1,3 @@
-import { TALLY_COMPLIANCE_FORM_URL } from './contact';
 import { getMarketingUrl } from './urls';
 
 /**
@@ -47,24 +46,3 @@ export const getHelpTopicUrl = (topicSlug: string): string => {
 export const getHelpArticleUrl = (topicSlug: string, articleSlug: string): string => {
   return getMarketingUrl(`/help/${topicSlug}/${articleSlug}`);
 };
-
-/**
- * Footer navigation links
- */
-export const FOOTER_LINKS = {
-  product: [
-    { label: 'Features', href: NAV_LINKS.features },
-    { label: 'Pricing', href: NAV_LINKS.pricing },
-    { label: 'Integration', href: NAV_LINKS.integrations },
-  ],
-  company: [
-    { label: 'Blog', href: NAV_LINKS.blog },
-    { label: 'Roadmap', href: NAV_LINKS.roadmap },
-    { label: 'Help Center', href: NAV_LINKS.help },
-  ],
-  legal: [
-    { label: 'Privacy Policy', href: getMarketingUrl('/privacy') },
-    { label: 'Terms of Service', href: getMarketingUrl('/terms') },
-    { label: 'Compliance Request', href: TALLY_COMPLIANCE_FORM_URL },
-  ],
-} as const;

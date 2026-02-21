@@ -65,7 +65,7 @@ function SuccessState({ workspaceId }: { workspaceId: string }) {
   };
 
   const handleSkip = () => {
-    router.push(`/workspace/${workspaceId}/settings`);
+    router.push(`/workspace/${workspaceId}/recordings`);
   };
 
   return (

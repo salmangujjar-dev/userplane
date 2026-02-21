@@ -8,7 +8,7 @@ import type {
   AdminPlanProduct,
   AdminUpdatePlanInput,
 } from '@workspace/contract';
-import { adminError, DEFAULT_TRIAL_PERIOD_DAYS } from '@workspace/contract';
+import { adminError } from '@workspace/contract';
 import { getSeatsAddonIdForInterval } from '@workspace/payments';
 import type { DodoPayments } from '@workspace/payments/client';
 import type { DodoFeatureLimits } from '@workspace/payments/metadata';
@@ -16,6 +16,7 @@ import { buildFlatMetadata, parseFlatMetadata } from '@workspace/payments/metada
 import type { FeatureGate, PlanFeatureGates } from '@workspace/pricing';
 import { FEATURE_GATE_KEYS, FEATURE_GATE_LABELS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 
+import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
 
 const logger = createLogger('admin-plan-service');
@@ -253,7 +254,7 @@ export class AdminPlanService {
     const session = await this.deps.dodoClient.checkoutSessions.create({
       product_cart: [{ product_id: params.productId, quantity: 1 }],
       subscription_data: {
-        trial_period_days: params.trialPeriodDays ?? DEFAULT_TRIAL_PERIOD_DAYS,
+        trial_period_days: params.trialPeriodDays ?? env.billing.trialPeriodDays,
       },
       metadata: {
         workspace_id: params.workspaceId,
