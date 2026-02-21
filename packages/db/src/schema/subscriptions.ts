@@ -1,6 +1,6 @@
 import type { AddonItems } from '@workspace/contract';
 import { SUBSCRIPTION_STATUSES, type SubscriptionStatus } from '@workspace/payments/types';
-import { BILLING_CADENCES, type BillingCadence } from '@workspace/pricing';
+import { BILLING_CADENCES, type BillingCadence, type PlanFeatureGates } from '@workspace/pricing';
 import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
@@ -49,7 +49,7 @@ export const subscriptions = pgTable(
     cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
 
     // Feature gates (from Dodo product metadata)
-    featureGates: jsonb('feature_gates').$type<Record<string, boolean>>(),
+    featureGates: jsonb('feature_gates').$type<PlanFeatureGates>(),
     // Subscription add-ons (from Dodo subscription payload)
     addons: jsonb('addons').$type<AddonItems>(),
 

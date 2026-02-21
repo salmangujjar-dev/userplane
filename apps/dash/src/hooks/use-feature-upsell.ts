@@ -1,7 +1,7 @@
+import type { FeatureGate, FeatureLimit } from '@workspace/pricing';
 import { useQueryStates } from 'nuqs';
 
 import { planModalParser, upsellFeatureParser } from '@/lib/parsers';
-import type { UpsellFeatureKey } from '@/lib/upsell-config';
 
 export function useFeatureUpsell() {
   const [, setParams] = useQueryStates({
@@ -9,17 +9,17 @@ export function useFeatureUpsell() {
     'upsell-feature': upsellFeatureParser,
   });
 
-  const triggerUpsell = (feature: UpsellFeatureKey) => {
+  const triggerUpsell = (feature: FeatureGate) => {
     setParams({
       'plan-modal': 'suggested',
       'upsell-feature': feature,
     });
   };
 
-  const triggerResourceUpsell = (resource: string) => {
+  const triggerResourceUpsell = (resource: FeatureLimit) => {
     setParams({
       'plan-modal': 'suggested',
-      'upsell-feature': `limit:${resource}`,
+      'upsell-feature': resource,
     });
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import type { FeatureGate, PlanId } from '@workspace/pricing';
+import type { FeatureGate, PlanFeatureGates, PlanId } from '@workspace/pricing';
 import { FEATURE_GATE_LABELS, PLAN_NAMES } from '@workspace/pricing';
 import {
   Accordion,
@@ -96,7 +96,7 @@ interface SubscriptionOverviewProps {
     effectivePlanId: string;
     accessStatus: string;
   };
-  featureGates: Record<string, boolean>;
+  featureGates: PlanFeatureGates;
   addons?: {
     subscriptionId?: string;
     seatsQuantity: number;

@@ -1,5 +1,6 @@
 'use client';
 
+import type { FeatureGate, PlanFeatureGates } from '@workspace/pricing';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -24,7 +25,6 @@ import { useMemo, useRef, useState } from 'react';
 import { SUPPORT_LINKS } from '@/constants';
 import { useSubscriptionStatus } from '@/features/billing';
 import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
-import type { UpsellFeatureKey } from '@/lib/upsell-config';
 import type { DomainRecordingPreferences } from '@/types/domain';
 
 interface GatedToggleProps {
@@ -32,9 +32,9 @@ interface GatedToggleProps {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
-  featureKey: UpsellFeatureKey;
-  featureGates: Record<string, boolean> | undefined;
-  triggerUpsell: (featureKey: UpsellFeatureKey) => void;
+  featureKey: FeatureGate;
+  featureGates: PlanFeatureGates | undefined;
+  triggerUpsell: (featureKey: FeatureGate) => void;
   loading: boolean;
   verified: boolean;
 }
@@ -161,8 +161,8 @@ interface RecordingSettingsSectionProps {
   onSettingsChange: (
     updater: (prev: DomainRecordingPreferences) => DomainRecordingPreferences
   ) => void;
-  featureGates: Record<string, boolean> | undefined;
-  triggerUpsell: (featureKey: UpsellFeatureKey) => void;
+  featureGates: PlanFeatureGates | undefined;
+  triggerUpsell: (featureKey: FeatureGate) => void;
 }
 
 function RecordingSettingsSection({
