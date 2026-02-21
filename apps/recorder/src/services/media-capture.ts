@@ -10,6 +10,7 @@ import { ClientError } from '@/posthog/client-errors';
 import {
   getBestMimeType,
   isScreenRecordingSupported as checkScreenRecordingSupport,
+  isSystemAudioSupported,
 } from '@/utils/browser';
 
 export type RecordingMode = 'screen-voice' | 'screen-only';
@@ -33,6 +34,10 @@ export class MediaCapture {
   private onErrorCallback: ((error: Error) => void) | null = null;
   private isStopping: boolean = false;
   private stopPromiseResolve: ((blob: Blob) => void) | null = null;
+  private audioContext: AudioContext | null = null;
+  private audioDestination: MediaStreamAudioDestinationNode | null = null;
+  private audioSourceNodes: MediaStreamAudioSourceNode[] = [];
+  private sourceStreams: MediaStream[] = [];
 
   constructor(mode: RecordingMode = 'screen-only') {
     this.mode = mode;
@@ -76,14 +81,16 @@ export class MediaCapture {
           displaySurface: 'monitor',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
-        audio: false,
+        audio: isSystemAudioSupported(),
       });
 
-      const combinedStream = displayStream;
+      const hasSystemAudio = displayStream.getAudioTracks().length > 0;
+      const combinedStream = new MediaStream(displayStream.getVideoTracks());
 
       if (mode === 'screen-voice') {
+        let micStream: MediaStream | null = null;
         try {
-          const audioStream = await navigator.mediaDevices.getUserMedia({
+          micStream = await navigator.mediaDevices.getUserMedia({
             audio: {
               echoCancellation: true,
               noiseSuppression: true,
@@ -91,11 +98,33 @@ export class MediaCapture {
             },
             video: false,
           });
-
-          const audioTrack = audioStream.getAudioTracks()[0];
-          combinedStream.addTrack(audioTrack);
         } catch (audioError) {
-          logger.warn({ err: audioError }, 'audio capture failed, continuing video-only');
+          logger.warn({ err: audioError }, 'mic capture failed, continuing without mic');
+        }
+
+        if (hasSystemAudio && micStream) {
+          // Mix system audio + mic via Web Audio API
+          try {
+            const destination = this.mixAudioStreams(displayStream, micStream);
+            combinedStream.addTrack(destination.stream.getAudioTracks()[0]);
+            // Source streams' tracks aren't in combinedStream — store for cleanup
+            this.sourceStreams = [displayStream, micStream];
+          } catch (mixError) {
+            logger.warn({ err: mixError }, 'audio mixing failed, falling back to mic only');
+            combinedStream.addTrack(micStream.getAudioTracks()[0]);
+          }
+        } else if (micStream) {
+          // Mic only (no system audio or non-Chromium)
+          combinedStream.addTrack(micStream.getAudioTracks()[0]);
+        } else if (hasSystemAudio) {
+          // System audio only (mic failed)
+          combinedStream.addTrack(displayStream.getAudioTracks()[0]);
+        }
+        // else: neither — video only
+      } else {
+        // screen-only mode: include system audio if available
+        if (hasSystemAudio) {
+          combinedStream.addTrack(displayStream.getAudioTracks()[0]);
         }
       }
 
@@ -270,9 +299,52 @@ export class MediaCapture {
   }
 
   /**
+   * Mix two audio streams into a single output using Web Audio API
+   */
+  private mixAudioStreams(
+    streamA: MediaStream,
+    streamB: MediaStream
+  ): MediaStreamAudioDestinationNode {
+    this.audioContext = new AudioContext({ sampleRate: AUDIO_SAMPLE_RATE_HZ });
+    // Resume in case the context starts in a suspended state
+    void this.audioContext.resume();
+
+    this.audioDestination = this.audioContext.createMediaStreamDestination();
+    this.audioSourceNodes = [];
+
+    const sourceA = this.audioContext.createMediaStreamSource(streamA);
+    const sourceB = this.audioContext.createMediaStreamSource(streamB);
+
+    sourceA.connect(this.audioDestination);
+    sourceB.connect(this.audioDestination);
+
+    this.audioSourceNodes.push(sourceA, sourceB);
+
+    return this.audioDestination;
+  }
+
+  /**
    * Cleanup resources
    */
   private cleanup(): void {
+    // Tear down Web Audio mixing graph
+    for (const node of this.audioSourceNodes) {
+      node.disconnect();
+    }
+    this.audioSourceNodes = [];
+
+    if (this.audioContext) {
+      void this.audioContext.close();
+      this.audioContext = null;
+    }
+    this.audioDestination = null;
+
+    // Stop audio tracks on source streams used for mixing (mic, display audio)
+    for (const s of this.sourceStreams) {
+      s.getAudioTracks().forEach((track) => track.stop());
+    }
+    this.sourceStreams = [];
+
     if (this.stream) {
       this.stream.getTracks().forEach((track) => track.stop());
       this.stream = null;
@@ -299,6 +371,10 @@ export class MediaCapture {
     this.stopPromiseResolve = null;
     this.onStopCallback = null;
     this.onErrorCallback = null;
+    this.audioContext = null;
+    this.audioDestination = null;
+    this.audioSourceNodes = [];
+    this.sourceStreams = [];
   }
 }
 
