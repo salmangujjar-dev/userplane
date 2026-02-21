@@ -41,7 +41,7 @@ export function RecordingDetailNav({
           </Button>
           <Button variant="default" size="default" className="rounded-full" onClick={onShare}>
             <Share2 className="h-4 w-4" />
-            Share link
+            Share
           </Button>
           {(onEdit || onDelete) && (
             <DropdownMenu>

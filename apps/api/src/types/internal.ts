@@ -40,6 +40,8 @@ import type {
   RecoveryConfirmationEmailProps,
   RecoveryPartiallyEmailProps,
   SandboxInviteEmailProps,
+  ShareRecordingExternalEmailProps,
+  ShareRecordingMemberEmailProps,
   TeammateInvitedEmailProps,
   WelcomeEmailCustomSubscriptionProps,
   WelcomeEmailMemberProps,
@@ -393,6 +395,30 @@ export type ProjectRecoveryPartiallyEmailParams = Omit<
 > & {
   workspaceId: string;
 } & Partial<ScheduledEmailParams>;
+
+/**
+ * Share recording member email parameters
+ * Service accepts workspaceId and recordingId and builds URL internally
+ */
+export type ShareRecordingMemberEmailParams = Omit<
+  ShareRecordingMemberEmailProps,
+  'recordingUrl'
+> & {
+  workspaceId: string;
+  recordingId: string;
+};
+
+/**
+ * Share recording external email parameters
+ * Service accepts workspaceId, recordingId, and inviteUrl
+ */
+export type ShareRecordingExternalEmailParams = Omit<
+  ShareRecordingExternalEmailProps,
+  'recordingUrl'
+> & {
+  workspaceId: string;
+  recordingId: string;
+};
 
 /**
  * Internal invite action result for service orchestration

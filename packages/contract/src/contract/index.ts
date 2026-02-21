@@ -250,6 +250,7 @@ export const recordingContract = {
   getById: recording.getRecordingById,
   update: recording.updateRecording,
   delete: recording.deleteRecording,
+  share: recording.shareRecording,
   resources: {
     video: recording.getRecordingVideo,
     thumbnail: recording.getRecordingThumbnail,

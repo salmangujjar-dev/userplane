@@ -7,7 +7,11 @@ import { recordingError } from '@workspace/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
+import type { EmailService } from '@/api/services/email.service';
+import type { InviteService } from '@/api/services/invite.service';
 import type { RecordingService } from '@/api/services/recording.service';
+import type { TokenService } from '@/api/services/token.service';
+import type { UserService } from '@/api/services/user.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { createPaginationMeta, type RecordingSortOptions } from '@/api/types';
@@ -308,18 +312,114 @@ export const getRecordingActionImpl = (
 };
 
 /**
+ * POST /workspace/:workspaceId/recordings/:recordingId/share - Share recording via email
+ * Requires workspace member
+ */
+export const shareRecordingImpl = (
+  recordingService: RecordingService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService,
+  emailService: EmailService,
+  inviteService: InviteService,
+  userService: UserService,
+  tokenService: TokenService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorizedRateLimited.recording.share
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      const { workspaceId, recordingId } = input.params;
+      const { emails } = input.body;
+
+      // Verify recording exists (throws RECORDING_NOT_FOUND or RECORDING_GONE)
+      await recordingService.getById(recordingId, workspaceId);
+
+      // Get sender info
+      const sender = await userService.getById(context.user.id);
+      const senderName = sender.name || sender.email;
+
+      // Get workspace info for invite URL generation
+      const workspace = await workspaceService.getById(workspaceId);
+      const inviteToken = await workspaceService.getInviteToken(workspaceId);
+
+      type ResultItem = { email: string; success: boolean; isMember: boolean };
+      const sent: ResultItem[] = [];
+      const failed: ResultItem[] = [];
+
+      for (const email of emails) {
+        try {
+          // Check if user exists and is a workspace member
+          const user = await userService.findByEmail(email);
+          let isMember = false;
+
+          if (user) {
+            const member = await workspaceMemberService.getMember(user.id, workspaceId);
+            isMember = !!member;
+          }
+
+          if (isMember) {
+            // Send member email with direct recording link
+            await emailService.sendSafeShareRecordingMember(
+              { to: email },
+              { senderName, workspaceId, recordingId }
+            );
+          } else {
+            // Generate invite URL for non-members
+            const inviteUrl = tokenService.generateInviteUrl({
+              wi: workspace.workspaceId,
+              wn: workspace.workspaceName,
+              wt: inviteToken,
+              in: sender.name,
+              ie: sender.email,
+            });
+
+            // Send external email with invite + recording link
+            await emailService.sendSafeShareRecordingExternal(
+              { to: email },
+              { senderName, inviteUrl, workspaceId, recordingId }
+            );
+          }
+
+          sent.push({ email, success: true, isMember });
+        } catch {
+          failed.push({ email, success: false, isMember: false });
+        }
+      }
+
+      return {
+        message: 'Recording shared successfully',
+        data: { sent, failed },
+      };
+    });
+};
+
+/**
  * Create the recording procedures object
  */
 export const createRecordingProcedures = (
   recordingService: RecordingService,
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  emailService: EmailService,
+  inviteService: InviteService,
+  userService: UserService,
+  tokenService: TokenService
 ) => {
   return {
     list: getRecordingsImpl(recordingService, workspaceMemberService, workspaceService),
     getById: getRecordingByIdImpl(recordingService, workspaceMemberService, workspaceService),
     update: updateRecordingImpl(recordingService, workspaceMemberService, workspaceService),
     delete: deleteRecordingImpl(recordingService, workspaceMemberService, workspaceService),
+    share: shareRecordingImpl(
+      recordingService,
+      workspaceMemberService,
+      workspaceService,
+      emailService,
+      inviteService,
+      userService,
+      tokenService
+    ),
     resources: {
       video: getRecordingVideoImpl(recordingService, workspaceMemberService, workspaceService),
       thumbnail: getRecordingThumbnailImpl(

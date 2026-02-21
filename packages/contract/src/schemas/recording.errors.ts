@@ -50,4 +50,8 @@ export const RecordingErrors = {
     status: 500,
     message: 'Failed to update recording',
   },
+  RECORDING_SHARE_FAILED: {
+    status: 500,
+    message: 'Failed to share recording',
+  },
 } as const;

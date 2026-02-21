@@ -151,6 +151,14 @@ type RecordingReceivedKeyParams = {
   recordingId: string;
 };
 
+type ShareRecordingKeyParams = {
+  recipients: string[];
+  /** Recording ID being shared */
+  recordingId: string;
+  /** Sharer user ID hash - allows re-shares by different users */
+  sharerHash: string;
+};
+
 type WelcomeEmailMemberKeyParams = {
   to: string | string[];
   workspaceName: string;
@@ -466,5 +474,16 @@ export function projectRecoveryPartiallyKey(params: ProjectRecoveryPartiallyKeyP
   const recipients = formatRecipients(params.recipients);
   return ensureKeyLength(
     `project-recovery-partially/${params.projectName}/${recipients}/${params.projectId}`
+  );
+}
+
+/**
+ * Generate idempotency key for share recording
+ * Uses recordingId + sharer hash - unique per share action per user
+ */
+export function shareRecordingKey(params: ShareRecordingKeyParams): string {
+  const recipients = formatRecipients(params.recipients);
+  return ensureKeyLength(
+    `share-recording/${recipients}/${params.recordingId}/${params.sharerHash}`
   );
 }

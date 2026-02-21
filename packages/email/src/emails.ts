@@ -57,9 +57,17 @@ import {
   ProjectRecoveryConfirmationEmail,
   ProjectRecoveryPartiallyEmail,
 } from './emails/project';
-import type { RecordingReceivedEmailProps } from './emails/recording';
+import type {
+  RecordingReceivedEmailProps,
+  ShareRecordingExternalEmailProps,
+  ShareRecordingMemberEmailProps,
+} from './emails/recording';
 // Recording emails
-import { RecordingReceivedEmail } from './emails/recording';
+import {
+  RecordingReceivedEmail,
+  ShareRecordingExternalEmail,
+  ShareRecordingMemberEmail,
+} from './emails/recording';
 import type {
   AccessRequestEmailProps,
   DeletionScheduledEmailProps,
@@ -249,6 +257,22 @@ export async function renderRecordingReceived(
   return { html, text };
 }
 
+export async function renderShareRecordingMember(
+  props: ShareRecordingMemberEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(ShareRecordingMemberEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
+export async function renderShareRecordingExternal(
+  props: ShareRecordingExternalEmailProps
+): Promise<RenderResult> {
+  const element = React.createElement(ShareRecordingExternalEmail, props);
+  const [html, text] = await Promise.all([renderEmail(element), renderEmailText(element)]);
+  return { html, text };
+}
+
 // ============================================================================
 // DOMAIN EMAILS
 // ============================================================================
@@ -322,6 +346,8 @@ export type {
   RecoveryPartiallyEmailProps,
   // Pilot
   SandboxInviteEmailProps,
+  ShareRecordingExternalEmailProps,
+  ShareRecordingMemberEmailProps,
   // Invite
   TeammateInvitedEmailProps,
   TosViolationEmailProps,

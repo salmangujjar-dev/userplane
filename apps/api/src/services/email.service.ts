@@ -20,6 +20,8 @@ import {
   renderRecoveryConfirmation,
   renderRecoveryPartially,
   renderSandboxInvite,
+  renderShareRecordingExternal,
+  renderShareRecordingMember,
   renderTeammateInvited,
   renderTosViolation,
   renderWelcomeEmailCustomSubscription,
@@ -47,6 +49,7 @@ import {
   projectRecoveryPartiallySubject,
   recordingReceivedSubject,
   sandboxInviteSubject,
+  shareRecordingSubject,
   teammateInvitedSubject,
   tosViolationSubject,
   welcomeEmailCustomSubscriptionSubject,
@@ -71,6 +74,8 @@ import type {
   ProjectRecoveryPartiallyEmailParams,
   ReceipientEmailParams,
   RecordingReceivedEmailParams,
+  ShareRecordingExternalEmailParams,
+  ShareRecordingMemberEmailParams,
   TeammateInvitedEmailParams,
   WelcomeEmailCustomSubscriptionParams,
   WelcomeEmailMemberParams,
@@ -98,6 +103,7 @@ import {
   projectRecoveryConfirmationKey,
   projectRecoveryPartiallyKey,
   recordingReceivedKey,
+  shareRecordingKey,
   teammateInvitedKey,
   tosViolationKey,
   welcomeEmailCustomSubscriptionKey,
@@ -1021,6 +1027,155 @@ export class EmailService {
       'sendRecordingReceived',
       { receipientParams, emailContentParams },
       () => this.sendRecordingReceived(receipientParams, emailContentParams)
+    );
+  }
+
+  /**
+   * Send share recording email to an existing workspace member
+   * URLs are built internally from workspaceId and recordingId
+   * @private Use sendSafeShareRecordingMember instead
+   */
+  private async sendShareRecordingMember(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ShareRecordingMemberEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
+    const recordingUrl = emailUrls.recording.view(
+      emailContentParams.workspaceId,
+      emailContentParams.recordingId
+    );
+
+    const idempotencyKey = shareRecordingKey({
+      recipients,
+      recordingId: emailContentParams.recordingId,
+      sharerHash: emailContentParams.senderName,
+    });
+
+    const { html, text } = await renderShareRecordingMember({
+      senderName: emailContentParams.senderName,
+      recordingUrl,
+      logoUrl: this.getLogoUrl(),
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: receipientParams.to,
+        subject: shareRecordingSubject(emailContentParams.senderName),
+        html,
+        text,
+        batch: useBatch,
+        headers: antiThreadingHeaders(),
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.debug(
+      {
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceId: emailContentParams.workspaceId,
+        recordingId: emailContentParams.recordingId,
+        provider: emailClient.getProvider(),
+      },
+      'Share recording member email sent'
+    );
+  }
+
+  /**
+   * Safe version: Send share recording member email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeShareRecordingMember(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ShareRecordingMemberEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendShareRecordingMember',
+      { receipientParams, emailContentParams },
+      () => this.sendShareRecordingMember(receipientParams, emailContentParams)
+    );
+  }
+
+  /**
+   * Send share recording email to a non-member (includes invite CTA)
+   * URLs are built internally from workspaceId and recordingId
+   * @private Use sendSafeShareRecordingExternal instead
+   */
+  private async sendShareRecordingExternal(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ShareRecordingExternalEmailParams
+  ): Promise<void> {
+    const recipients = Array.isArray(receipientParams.to)
+      ? receipientParams.to
+      : [receipientParams.to];
+    const useBatch = recipients.length > 1;
+
+    const recordingUrl = emailUrls.recording.view(
+      emailContentParams.workspaceId,
+      emailContentParams.recordingId
+    );
+
+    const idempotencyKey = shareRecordingKey({
+      recipients,
+      recordingId: emailContentParams.recordingId,
+      sharerHash: emailContentParams.senderName,
+    });
+
+    const { html, text } = await renderShareRecordingExternal({
+      senderName: emailContentParams.senderName,
+      inviteUrl: emailContentParams.inviteUrl,
+      recordingUrl,
+      logoUrl: this.getLogoUrl(),
+    });
+
+    await emailClient.send(
+      {
+        from: notificationFrom(),
+        to: receipientParams.to,
+        subject: shareRecordingSubject(emailContentParams.senderName),
+        html,
+        text,
+        batch: useBatch,
+        headers: antiThreadingHeaders(),
+      },
+      {
+        idempotencyKey,
+      }
+    );
+
+    logger.debug(
+      {
+        to: receipientParams.to,
+        batch: useBatch,
+        count: recipients.length,
+        workspaceId: emailContentParams.workspaceId,
+        recordingId: emailContentParams.recordingId,
+        provider: emailClient.getProvider(),
+      },
+      'Share recording external email sent'
+    );
+  }
+
+  /**
+   * Safe version: Send share recording external email
+   * Errors are handled by the configured error handler instead of throwing
+   */
+  async sendSafeShareRecordingExternal(
+    receipientParams: ReceipientEmailParams,
+    emailContentParams: ShareRecordingExternalEmailParams
+  ): Promise<void> {
+    await this.executeSafely(
+      'sendShareRecordingExternal',
+      { receipientParams, emailContentParams },
+      () => this.sendShareRecordingExternal(receipientParams, emailContentParams)
     );
   }
 

@@ -11,6 +11,8 @@ import {
   RecordingResourceDataSchema,
   RecordingsListDataSchema,
   RecordingUpdateDataSchema,
+  ShareRecordingResultSchema,
+  ShareRecordingSchema,
   UpdateRecordingSchema,
 } from '../schemas';
 
@@ -219,3 +221,25 @@ export const getRecordingAction = oc
   })
   .input(RecordingByIdSchema)
   .output(ApiResponseSchema(RecordingResourceDataSchema));
+
+/**
+ * POST /workspace/{workspaceId}/recordings/{recordingId}/share
+ * Share recording via email
+ */
+export const shareRecording = oc
+  .route({
+    method: 'POST',
+    path: '/workspace/{workspaceId}/recordings/{recordingId}/share',
+    inputStructure: 'detailed',
+    summary: 'Share recording via email',
+    tags: ['Recordings'],
+  })
+  .errors({
+    UNAUTHORIZED: RecordingErrors.UNAUTHORIZED,
+    FORBIDDEN: RecordingErrors.FORBIDDEN,
+    RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
+    RECORDING_GONE: RecordingErrors.RECORDING_GONE,
+    RECORDING_SHARE_FAILED: RecordingErrors.RECORDING_SHARE_FAILED,
+  })
+  .input(ShareRecordingSchema)
+  .output(ApiResponseSchema(ShareRecordingResultSchema));
