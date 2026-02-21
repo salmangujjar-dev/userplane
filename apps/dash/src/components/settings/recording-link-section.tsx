@@ -191,23 +191,19 @@ export function RecordingLinkSection() {
                 'flex items-center justify-between p-6 rounded-xl border bg-card',
                 !featureGates?.customizeRecordingLink && 'cursor-pointer'
               )}
-              role={!featureGates?.customizeRecordingLink ? 'button' : undefined}
-              tabIndex={!featureGates?.customizeRecordingLink ? 0 : undefined}
-              onClick={
-                !featureGates?.customizeRecordingLink
-                  ? () => triggerUpsell('customizeRecordingLink')
-                  : undefined
-              }
-              onKeyDown={
-                !featureGates?.customizeRecordingLink
-                  ? (e) => {
+              {...(!featureGates?.customizeRecordingLink
+                ? {
+                    role: 'button' as const,
+                    tabIndex: 0,
+                    onClick: () => triggerUpsell('customizeRecordingLink'),
+                    onKeyDown: (e: React.KeyboardEvent) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         triggerUpsell('customizeRecordingLink');
                       }
-                    }
-                  : undefined
-              }
+                    },
+                  }
+                : {})}
             >
               <Label
                 htmlFor={
