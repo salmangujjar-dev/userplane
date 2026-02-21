@@ -8,7 +8,7 @@ export function LinksListSkeleton({ count = 10 }: LinksListSkeletonProps) {
   return (
     <div className="space-y-4">
       {[...Array(count)].map((_, i) => (
-        <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-card">
+        <div key={`link-${i}`} className="flex items-center justify-between p-4 rounded-lg bg-card">
           <div className="flex-1 space-y-3">
             <div className="flex items-center gap-3">
               <Skeleton className="h-5 w-5 rounded" />

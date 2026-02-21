@@ -7,7 +7,7 @@ import { Switch } from '@workspace/ui/components/switch';
 import { cn } from '@workspace/ui/lib/utils';
 import { Loader2, Upload } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { SectionError } from '@/components/shared/section-error';
 import { RecordingLinkSectionSkeleton } from '@/components/skeleton';
@@ -57,22 +57,22 @@ export function RecordingLinkSection() {
   // Track if toggle should sync from server
   const shouldSyncToggleRef = useRef(true);
 
-  // Initialize form with API data
-  useEffect(() => {
-    if (preferences) {
-      // Only sync toggle when allowed (initial load or after error)
-      if (shouldSyncToggleRef.current) {
-        setCustomizeRecordingLink(preferences.recordingCustomizeLink);
-        shouldSyncToggleRef.current = false;
-      }
-      // Always sync other fields
-      setWorkspaceImage(preferences.recordingCompanyLogoPath);
-      setWorkspaceName(preferences.recordingCompanyName || '');
-      setHeaderText(preferences.recordingHeader || '');
-      setFootnoteText(preferences.recordingFootnote || '');
-      setPrimaryColor(preferences.recordingPrimaryColor || '#000000');
+  // Initialize form with API data (adjust state during render)
+  const prevPreferencesRef = useRef(preferences);
+  if (preferences && preferences !== prevPreferencesRef.current) {
+    // Only sync toggle when allowed (initial load or after error)
+    if (shouldSyncToggleRef.current) {
+      setCustomizeRecordingLink(preferences.recordingCustomizeLink);
+      shouldSyncToggleRef.current = false;
     }
-  }, [preferences, setCustomizeRecordingLink]);
+    // Always sync other fields
+    setWorkspaceImage(preferences.recordingCompanyLogoPath);
+    setWorkspaceName(preferences.recordingCompanyName || '');
+    setHeaderText(preferences.recordingHeader || '');
+    setFootnoteText(preferences.recordingFootnote || '');
+    setPrimaryColor(preferences.recordingPrimaryColor || '#000000');
+  }
+  prevPreferencesRef.current = preferences;
 
   const updateAppearanceMutation = useUpdateAppearance(workspaceId);
   const uploadLogoMutation = useUploadWorkspaceLogo(workspaceId);
@@ -191,9 +191,21 @@ export function RecordingLinkSection() {
                 'flex items-center justify-between p-6 rounded-xl border bg-card',
                 !featureGates?.customizeRecordingLink && 'cursor-pointer'
               )}
+              role={!featureGates?.customizeRecordingLink ? 'button' : undefined}
+              tabIndex={!featureGates?.customizeRecordingLink ? 0 : undefined}
               onClick={
                 !featureGates?.customizeRecordingLink
                   ? () => triggerUpsell('customizeRecordingLink')
+                  : undefined
+              }
+              onKeyDown={
+                !featureGates?.customizeRecordingLink
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        triggerUpsell('customizeRecordingLink');
+                      }
+                    }
                   : undefined
               }
             >

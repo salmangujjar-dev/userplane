@@ -7,9 +7,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/component
 import { Globe, Loader2, Shield } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { PaginationControls } from '@/components/shared/pagination-controls';
@@ -67,15 +67,14 @@ function WorkspaceSuggestPageContent() {
     },
   });
 
-  useEffect(() => {
-    if (isLoading) return;
-
+  // Redirect during render using Next.js redirect()
+  if (!isLoading) {
     if (!suggestionsData?.success || suggestionsData.data.workspaces.length === 0) {
-      router.push('/workspace/create');
+      redirect('/workspace/create');
     } else if (suggestionsData.data.workspaces.length > 0 && !selectedWorkspaceId) {
       setSelectedWorkspaceId(suggestionsData.data.workspaces[0]?.workspaceId ?? null);
     }
-  }, [isLoading, suggestionsData, router, selectedWorkspaceId]);
+  }
 
   const handleJoinWorkspace = () => {
     if (!selectedWorkspaceId) return;
@@ -241,7 +240,15 @@ function WorkspaceSuggestPageContent() {
             return (
               <div
                 key={workspace.workspaceId}
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedWorkspaceId(workspace.workspaceId)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedWorkspaceId(workspace.workspaceId);
+                  }
+                }}
                 className={`flex items-center justify-between p-6 rounded-xl bg-card cursor-pointer transition-all ${
                   isSelected ? 'ring-1 ring-foreground' : 'hover:bg-accent'
                 }`}

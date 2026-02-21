@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -37,15 +37,17 @@ export function WorkspaceDomainsSection({ value, onChange }: WorkspaceDomainsSec
     },
   });
 
-  // Sync external value changes to form
-  useEffect(() => {
+  // Sync external value changes to form during render
+  const [prevValue, setPrevValue] = useState(value);
+  if (prevValue !== value) {
+    setPrevValue(value);
     setValue('domainUrl', value);
-  }, [value, setValue]);
+  }
 
   return (
     <div className="space-y-3">
       <div>
-        <label className="text-sm font-medium">Workspace Domain</label>
+        <label htmlFor="workspace-domain" className="text-sm font-medium">Workspace Domain</label>
         <p className="text-xs text-muted-foreground mt-0.5">
           Domain where recordings will be captured
         </p>
@@ -57,6 +59,7 @@ export function WorkspaceDomainsSection({ value, onChange }: WorkspaceDomainsSec
           control={control}
           render={({ field }) => (
             <URLInput
+              id="workspace-domain"
               value={field.value}
               onChange={(url) => {
                 field.onChange(url);

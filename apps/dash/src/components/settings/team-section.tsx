@@ -220,7 +220,7 @@ export function TeamSection({ onInviteClick }: TeamSectionProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -228,7 +228,7 @@ export function TeamSection({ onInviteClick }: TeamSectionProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
                   disabled={currentPage === totalPages}
                 >
                   Next

@@ -8,7 +8,7 @@ import Logo from '@workspace/ui/components/logo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import { cn } from '@workspace/ui/lib/utils';
 import { Loader2, Plus } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -100,8 +100,8 @@ export function InviteTeammatesView({
 
   // Workspace domain state (URL for recordings) - initialized from props
   const [domainUrl, setDomainUrl] = useState(initialDomainUrl);
-  const [existingDomainId] = useState<string | null>(initialDomainId);
-  const [originalDomainUrl] = useState(initialDomainUrl);
+  const existingDomainId = initialDomainId;
+  const originalDomainUrl = initialDomainUrl;
 
   // Email input form
   const {
@@ -121,11 +121,20 @@ export function InviteTeammatesView({
   const createDomainMutation = useCreateDomain(workspaceId);
   const updateDomainMutation = useUpdateDomain(workspaceId);
 
-  // Sync policy state with initial values
-  useEffect(() => {
+  // Sync state with initial values during render
+  const [prevInitialPolicy, setPrevInitialPolicy] = useState(initialPolicy);
+  const [prevInitialDomains, setPrevInitialDomains] = useState(initialDomains);
+  const [prevInitialDomainUrl, setPrevInitialDomainUrl] = useState(initialDomainUrl);
+  if (prevInitialPolicy !== initialPolicy || prevInitialDomains !== initialDomains) {
+    setPrevInitialPolicy(initialPolicy);
+    setPrevInitialDomains(initialDomains);
     setPolicy(initialPolicy);
     setEmailDomains(initialDomains || []);
-  }, [initialPolicy, initialDomains]);
+  }
+  if (prevInitialDomainUrl !== initialDomainUrl) {
+    setPrevInitialDomainUrl(initialDomainUrl);
+    setDomainUrl(initialDomainUrl);
+  }
 
   // Create unified teammates list (current user first, then manual emails, then teammates from props)
   const allTeammates: TeammateItem[] = useMemo(() => {

@@ -118,7 +118,19 @@ function PlanCard({
 
   return (
     <div
+      role={!isCurrent ? 'button' : undefined}
+      tabIndex={!isCurrent ? 0 : undefined}
       onClick={isCurrent ? undefined : onSelect}
+      onKeyDown={
+        !isCurrent
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect();
+              }
+            }
+          : undefined
+      }
       className={`flex flex-col rounded-2xl p-6 relative bg-white border transition-all ${
         isCurrent
           ? 'border-zinc-200 cursor-default'
@@ -176,7 +188,7 @@ function PlanCard({
 
       <ul className="space-y-3 flex-1" style={{ minHeight: `${minHeight}px` }}>
         {highlights.map((highlight, index) => (
-          <PlanHighlight key={index} text={highlight} />
+          <PlanHighlight key={`${highlight}-${index}`} text={highlight} />
         ))}
       </ul>
     </div>
@@ -192,6 +204,13 @@ export function PlanSelectionModal({
   const [upsellFeature, setUpsellFeature] = useQueryState('upsell-feature', upsellFeatureParser);
   const [billingCycle, setBillingCycle] = useState<PlanCycle>('annual');
   const [selectedPlanName, setSelectedPlanName] = useState<string>(defaultPlan);
+
+  // Sync selected plan when the defaultPlan prop changes
+  const [prevDefaultPlan, setPrevDefaultPlan] = useState(defaultPlan);
+  if (prevDefaultPlan !== defaultPlan) {
+    setPrevDefaultPlan(defaultPlan);
+    setSelectedPlanName(defaultPlan);
+  }
 
   const upsellConfig = upsellFeature
     ? upsellFeature.startsWith('limit:')

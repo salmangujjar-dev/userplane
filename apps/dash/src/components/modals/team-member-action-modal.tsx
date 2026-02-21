@@ -172,7 +172,19 @@ export function TeamMemberActionModal({
                 return (
                   <div
                     key={role.value}
+                    role={!isCurrent ? 'button' : undefined}
+                    tabIndex={!isCurrent ? 0 : undefined}
                     onClick={() => !isCurrent && setSelectedRole(role.value)}
+                    onKeyDown={
+                      !isCurrent
+                        ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedRole(role.value);
+                            }
+                          }
+                        : undefined
+                    }
                     className={`flex items-start gap-3 p-4 rounded-xl border bg-card transition-all min-h-[88px] ${
                       isCurrent
                         ? 'opacity-50 cursor-not-allowed'

@@ -13,6 +13,8 @@ import { showRecordingCannotBePlayedToast } from '@/lib/toasts';
 import StreamControls from './StreamControls';
 import type { Player, PlayerOptions, VideoMarker } from './types';
 
+const EMPTY_MARKERS: VideoMarker[] = [];
+
 interface StreamPlayerProps {
   options: PlayerOptions;
   markers?: VideoMarker[];
@@ -24,7 +26,7 @@ interface StreamPlayerProps {
 
 const StreamPlayer: React.FC<StreamPlayerProps> = ({
   options,
-  markers = [],
+  markers = EMPTY_MARKERS,
   poster = null,
   durationMs,
   onPlayerReady,
@@ -182,7 +184,26 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
       onMouseLeave={handleContainerMouseLeave}
       onContextMenu={handleContextMenu}
     >
-      <div ref={videoRef} className="video-player-wrapper" onClick={handleVideoClick} />
+      <div
+        ref={videoRef}
+        className="video-player-wrapper"
+        role="button"
+        tabIndex={0}
+        onClick={handleVideoClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const player = playerRef.current;
+            if (player) {
+              if (player.paused()) {
+                player.play();
+              } else {
+                player.pause();
+              }
+            }
+          }
+        }}
+      />
 
       {/* Custom controls */}
       <StreamControls

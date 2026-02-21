@@ -741,29 +741,39 @@ export function AddonChangePreviewModal({
   const manageAddonsRef = useRef(manageAddons);
   manageAddonsRef.current = manageAddons;
 
-  useEffect(() => {
-    if (!open) return;
-    if (isAddonsLoading) {
+  // Reset state when modal opens or addons data changes (adjust state during render)
+  const prevAddonKeyRef = useRef<string | null>(null);
+  const addonKey = open
+    ? isAddonsLoading
+      ? 'loading'
+      : addonsData && workspaceId
+        ? `${workspaceId}-${addonsData.seatsQuantity}-${requestedQuantity ?? 'default'}`
+        : null
+    : null;
+  if (addonKey !== prevAddonKeyRef.current) {
+    prevAddonKeyRef.current = addonKey;
+    if (addonKey === 'loading') {
       setState('loading');
-      return;
-    }
-    if (addonsData && workspaceId) {
+    } else if (open && addonsData && workspaceId) {
       const initialSeatsQuantity = Math.min(addonsData.seatsQuantity, MAX_SEAT_PACKS);
       setCurrentQuantity(initialSeatsQuantity);
       setPreviewData(null);
       setErrorInfo({ message: '' });
-
-      const qty = requestedQuantity ?? initialSeatsQuantity;
-      setNewQuantity(qty);
-
-      // Auto-trigger preview when modal opens
+      setNewQuantity(requestedQuantity ?? initialSeatsQuantity);
       setState('loading');
-      manageAddonsRef.current({
-        workspaceId,
-        seatsQuantity: qty,
-        action: 'preview',
-      });
     }
+  }
+
+  // Auto-trigger preview when modal opens with data
+  useEffect(() => {
+    if (!open || isAddonsLoading || !addonsData || !workspaceId) return;
+    const initialSeatsQuantity = Math.min(addonsData.seatsQuantity, MAX_SEAT_PACKS);
+    const qty = requestedQuantity ?? initialSeatsQuantity;
+    manageAddonsRef.current({
+      workspaceId,
+      seatsQuantity: qty,
+      action: 'preview',
+    });
   }, [open, addonsData, isAddonsLoading, workspaceId, requestedQuantity]);
 
   const handleConfirm = () => {

@@ -17,6 +17,8 @@ import { useVideoPlayer } from './hooks';
 import type { Player } from './types';
 import type { VideoMarker } from './types';
 
+const EMPTY_MARKERS: VideoMarker[] = [];
+
 interface StreamControlsProps {
   player: Player | null;
   markers?: VideoMarker[];
@@ -29,7 +31,7 @@ interface StreamControlsProps {
 
 const StreamControls: React.FC<StreamControlsProps> = ({
   player,
-  markers = [],
+  markers = EMPTY_MARKERS,
   onFullscreen,
   duration: videoDuration = 0,
   hasStarted = false,

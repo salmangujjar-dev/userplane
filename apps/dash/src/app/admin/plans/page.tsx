@@ -1,8 +1,8 @@
 'use client';
 
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { useRouter } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { redirect, RedirectType } from 'next/navigation';
+import { Suspense, useState } from 'react';
 
 import { PlanManagement } from '@/components/admin/plan-management';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
@@ -10,15 +10,8 @@ import { AdminTopActions } from '@/components/navigation/admin-top-actions';
 import { useSession } from '@/features/auth';
 
 function AdminPlansPageContent() {
-  const router = useRouter();
   const { hasAdminAccess, isPending: isSessionPending } = useSession();
   const [showCreateSheet, setShowCreateSheet] = useState(false);
-
-  useEffect(() => {
-    if (!isSessionPending && !hasAdminAccess) {
-      router.replace('/');
-    }
-  }, [isSessionPending, hasAdminAccess, router]);
 
   if (isSessionPending) {
     return (
@@ -52,8 +45,9 @@ function AdminPlansPageContent() {
     );
   }
 
+  // Redirect users without admin access
   if (!hasAdminAccess) {
-    return null;
+    redirect('/', RedirectType.replace);
   }
 
   return (

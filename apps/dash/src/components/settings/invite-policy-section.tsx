@@ -17,7 +17,7 @@ import {
 } from '@workspace/ui/components/select';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Globe, Lock, Plus, RefreshCw, Shield, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { AddEmailDomainModal } from '@/components/modals/add-email-domain-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
@@ -74,14 +74,14 @@ export function InvitePolicySection() {
     setResetInviteModalOpen(false);
   };
 
-  // Sync state with fetched data
-  useEffect(() => {
-    if (policyResult?.success) {
-      setPolicy(policyResult.data.workspaceInvitePolicy);
-      setDomains(policyResult.data.workspaceInviteDomains || []);
-      setHasChanges(false);
-    }
-  }, [policyResult]);
+  // Sync state with fetched data (adjust state during render)
+  const prevPolicyResultRef = useRef(policyResult);
+  if (policyResult !== prevPolicyResultRef.current && policyResult?.success) {
+    setPolicy(policyResult.data.workspaceInvitePolicy);
+    setDomains(policyResult.data.workspaceInviteDomains || []);
+    setHasChanges(false);
+  }
+  prevPolicyResultRef.current = policyResult;
 
   const handlePolicyChange = (newPolicy: WorkspaceInvitePolicy) => {
     setPolicy(newPolicy);

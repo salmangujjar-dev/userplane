@@ -127,20 +127,20 @@ export function AdminProvisionWorkspaceModal({
     },
   });
 
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!open) {
-      reset();
-      setShowAdvanced(false);
-      setPlanMode('none');
-      setSelectedProductId('');
-      setTrialPeriodDays(DEFAULT_TRIAL_PERIOD);
-      setCustomPriceAmount('');
-      setCustomBillingCycle('monthly');
-      setCustomLimits(cloneAdminCustomPlanLimits());
-      setCustomGates(cloneAdminCustomPlanGates());
-    }
-  }, [open, reset]);
+  // Reset form when modal closes (adjust state during render)
+  const prevOpenRef = useRef(open);
+  if (!open && prevOpenRef.current) {
+    reset();
+    setShowAdvanced(false);
+    setPlanMode('none');
+    setSelectedProductId('');
+    setTrialPeriodDays(DEFAULT_TRIAL_PERIOD);
+    setCustomPriceAmount('');
+    setCustomBillingCycle('monthly');
+    setCustomLimits(cloneAdminCustomPlanLimits());
+    setCustomGates(cloneAdminCustomPlanGates());
+  }
+  prevOpenRef.current = open;
 
   useEffect(() => {
     if (!open) return;
@@ -648,12 +648,13 @@ export function AdminProvisionWorkspaceSuccessModal({
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  useEffect(() => {
-    if (!open) {
-      setCopiedField(null);
-      setShowAdvanced(false);
-    }
-  }, [open]);
+  // Reset state when modal closes (adjust state during render)
+  const prevSuccessOpenRef = useRef(open);
+  if (!open && prevSuccessOpenRef.current) {
+    setCopiedField(null);
+    setShowAdvanced(false);
+  }
+  prevSuccessOpenRef.current = open;
 
   const handleCopy = async (text: string, field: string) => {
     try {
