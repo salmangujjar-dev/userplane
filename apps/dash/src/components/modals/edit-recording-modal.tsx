@@ -20,7 +20,7 @@ import {
 } from '@workspace/ui/components/select';
 import { cn } from '@workspace/ui/lib/utils';
 import { addDays, differenceInDays, format, formatDistanceToNow } from 'date-fns';
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useSubscriptionStatus } from '@/features/billing';
 import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
@@ -71,12 +71,12 @@ export function EditRecordingModal({
   const { triggerUpsell } = useFeatureUpsell();
 
   // Pre-select the closest matching value when modal opens
-  useEffect(() => {
-    if (open) {
-      setSelectedValue(getInitialValue(currentExpiresAt));
-      setHasChanged(false);
-    }
-  }, [open, currentExpiresAt]);
+  const prevOpenRef = useRef(open);
+  if (open && !prevOpenRef.current) {
+    setSelectedValue(getInitialValue(currentExpiresAt));
+    setHasChanged(false);
+  }
+  prevOpenRef.current = open;
 
   const handleValueChange = (value: string) => {
     setSelectedValue(value);
@@ -114,11 +114,19 @@ export function EditRecordingModal({
                 'space-y-2',
                 !featureGates?.customizeRetentionPolicy && 'cursor-pointer'
               )}
-              onClick={
-                !featureGates?.customizeRetentionPolicy
-                  ? () => triggerUpsell('customizeRetentionPolicy')
-                  : undefined
-              }
+              {...(!featureGates?.customizeRetentionPolicy
+                ? {
+                    role: 'button' as const,
+                    tabIndex: 0,
+                    onClick: () => triggerUpsell('customizeRetentionPolicy'),
+                    onKeyDown: (e: React.KeyboardEvent) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        triggerUpsell('customizeRetentionPolicy');
+                      }
+                    },
+                  }
+                : {})}
             >
               <div className="space-y-0.5">
                 <Label

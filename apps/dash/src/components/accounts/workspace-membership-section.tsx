@@ -221,7 +221,7 @@ export function WorkspaceMembershipSection() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -229,7 +229,7 @@ export function WorkspaceMembershipSection() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
                   disabled={currentPage === pagination.totalPages}
                 >
                   Next

@@ -10,13 +10,15 @@ interface WorkspaceMember {
   memberEmail: string;
 }
 
+const EMPTY_MEMBERS: WorkspaceMember[] = [];
+
 interface WorkspaceMemberAvatarsProps {
   members?: WorkspaceMember[];
   onInviteClick?: () => void;
 }
 
 export function WorkspaceMemberAvatars({
-  members = [],
+  members = EMPTY_MEMBERS,
   onInviteClick,
 }: WorkspaceMemberAvatarsProps) {
   const displayMembers = members.slice(0, 5);

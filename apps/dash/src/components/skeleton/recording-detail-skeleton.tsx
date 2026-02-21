@@ -33,7 +33,7 @@ export function RecordingDetailSkeleton() {
             </div>
             <div className="space-y-3">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded bg-card">
+                <div key={`event-${i}`} className="flex items-start gap-3 p-3 rounded bg-card">
                   <Skeleton className="h-4 w-16" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-4 w-full" />

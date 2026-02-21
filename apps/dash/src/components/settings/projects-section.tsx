@@ -227,7 +227,7 @@ export function ProjectsSection() {
         </div>
         <div className="max-w-2xl space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-muted animate-pulse rounded-xl" />
+            <div key={`project-skeleton-${i}`} className="h-16 bg-muted animate-pulse rounded-xl" />
           ))}
         </div>
       </div>

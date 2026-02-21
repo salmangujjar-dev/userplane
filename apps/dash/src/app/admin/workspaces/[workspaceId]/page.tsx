@@ -2,8 +2,8 @@
 
 import { Card, CardContent, CardHeader } from '@workspace/ui/components/card';
 import { Skeleton } from '@workspace/ui/components/skeleton';
-import { useParams, useRouter } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
+import { redirect, RedirectType, useParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { AdminWorkspaceTabs } from '@/components/admin/workspace-detail';
 import { AdminSidebar } from '@/components/navigation/admin-sidebar';
@@ -11,16 +11,9 @@ import { AdminTopActions } from '@/components/navigation/admin-top-actions';
 import { useSession } from '@/features/auth';
 
 function WorkspaceDetailPageContent() {
-  const router = useRouter();
   const params = useParams();
   const workspaceId = params.workspaceId as string;
   const { hasAdminAccess, isPending: isSessionPending } = useSession();
-
-  useEffect(() => {
-    if (!isSessionPending && !hasAdminAccess) {
-      router.replace('/');
-    }
-  }, [isSessionPending, hasAdminAccess, router]);
 
   if (isSessionPending) {
     return (
@@ -44,8 +37,9 @@ function WorkspaceDetailPageContent() {
     );
   }
 
+  // Redirect users without admin access
   if (!hasAdminAccess) {
-    return null;
+    redirect('/', RedirectType.replace);
   }
 
   return (

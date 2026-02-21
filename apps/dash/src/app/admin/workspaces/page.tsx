@@ -6,7 +6,7 @@ import type {
 import { SearchInput } from '@workspace/ui/components/search-input';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { ArrowDown, ArrowUp, ArrowUpDown, Building2, Clock } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { redirect, RedirectType, useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { Suspense, useEffect, useState } from 'react';
 
@@ -180,13 +180,6 @@ function AdminRecordingsPageContent() {
     enabled: hasAdminAccess,
   });
 
-  // Redirect users without admin access
-  useEffect(() => {
-    if (!isSessionPending && !hasAdminAccess) {
-      router.replace('/');
-    }
-  }, [isSessionPending, hasAdminAccess, router]);
-
   // Show loading while checking session
   if (isSessionPending) {
     return (
@@ -212,8 +205,9 @@ function AdminRecordingsPageContent() {
     );
   }
 
+  // Redirect users without admin access
   if (!hasAdminAccess) {
-    return null;
+    redirect('/', RedirectType.replace);
   }
 
   const workspaces = workspacesResult?.success ? workspacesResult.data.workspaces : [];

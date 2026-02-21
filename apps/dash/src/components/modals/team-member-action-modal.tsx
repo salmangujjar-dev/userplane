@@ -172,7 +172,6 @@ export function TeamMemberActionModal({
                 return (
                   <div
                     key={role.value}
-                    onClick={() => !isCurrent && setSelectedRole(role.value)}
                     className={`flex items-start gap-3 p-4 rounded-xl border bg-card transition-all min-h-[88px] ${
                       isCurrent
                         ? 'opacity-50 cursor-not-allowed'
@@ -180,6 +179,19 @@ export function TeamMemberActionModal({
                           ? 'border-foreground border-dashed cursor-pointer'
                           : 'hover:border-muted-foreground cursor-pointer'
                     }`}
+                    {...(!isCurrent
+                      ? {
+                          role: 'button' as const,
+                          tabIndex: 0,
+                          onClick: () => setSelectedRole(role.value),
+                          onKeyDown: (e: React.KeyboardEvent) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedRole(role.value);
+                            }
+                          },
+                        }
+                      : {})}
                   >
                     <div
                       className={`h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${

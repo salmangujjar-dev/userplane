@@ -75,8 +75,8 @@ export function IntegrationPostConnectModal({
           <div className="space-y-4">
             <p className="text-sm font-medium">You can now</p>
             <div className="space-y-3">
-              {capabilities.map((capability, index) => (
-                <div key={index} className="flex items-start gap-3">
+              {capabilities.map((capability) => (
+                <div key={capability} className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                   <p className="text-sm text-muted-foreground">{capability}</p>
                 </div>

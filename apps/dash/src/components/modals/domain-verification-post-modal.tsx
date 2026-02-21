@@ -11,7 +11,7 @@ import {
 import { Label } from '@workspace/ui/components/label';
 import { Switch } from '@workspace/ui/components/switch';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';
 import { DomainRecordingSettings } from '@/components/domains/domain-recording-settings';
@@ -44,12 +44,14 @@ export function DomainVerificationPostModal({
   const [localSettings, setLocalSettings] = useState<DomainRecordingPreferences>(settings);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Sync local settings when props change
-  useEffect(() => {
-    if (open) {
-      setLocalSettings(settings);
-    }
-  }, [open, settings]);
+  // Sync local settings when the modal opens or when the settings prop changes
+  const prevOpenRef = useRef(open);
+  const [prevSettings, setPrevSettings] = useState(settings);
+  if ((open && !prevOpenRef.current) || prevSettings !== settings) {
+    setLocalSettings(settings);
+    setPrevSettings(settings);
+  }
+  prevOpenRef.current = open;
 
   const hasChanges = useMemo(() => {
     return (

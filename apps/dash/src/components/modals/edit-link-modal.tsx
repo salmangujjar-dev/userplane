@@ -27,7 +27,7 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -93,18 +93,19 @@ export function EditLinkModal({
 
   const selectedProvider = watch('linkProvider');
 
-  useEffect(() => {
-    if (open) {
-      reset({
-        title: title,
-        reference: reference,
-        linkProvider: linkProvider,
-        providerId: linkProviderId || '',
-        isReusable: isReusable,
-      });
-      setShowAdvanced(false);
-    }
-  }, [open, title, reference, isReusable, linkProvider, linkProviderId, reset]);
+  // Reset form when the modal opens
+  const prevOpenRef = useRef(open);
+  if (open && !prevOpenRef.current) {
+    reset({
+      title: title,
+      reference: reference,
+      linkProvider: linkProvider,
+      providerId: linkProviderId || '',
+      isReusable: isReusable,
+    });
+    setShowAdvanced(false);
+  }
+  prevOpenRef.current = open;
 
   const onSubmit = (data: {
     title: string;

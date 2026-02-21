@@ -163,7 +163,7 @@ export function ProjectsTab({ workspaceId }: ProjectsTabProps) {
         </div>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />
+            <div key={`project-skeleton-${i}`} className="h-20 bg-muted animate-pulse rounded-xl" />
           ))}
         </div>
       </div>

@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
 } from '@workspace/ui/components/tooltip';
 import { HelpCircle } from 'lucide-react';
-import { useEffect } from 'react';
+import { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -58,11 +58,12 @@ export function EditDomainModal({
     },
   });
 
-  useEffect(() => {
-    if (open) {
-      reset({ domainUrl });
-    }
-  }, [open, domainUrl, reset]);
+  // Reset form when the modal opens
+  const prevOpenRef = useRef(open);
+  if (open && !prevOpenRef.current) {
+    reset({ domainUrl });
+  }
+  prevOpenRef.current = open;
 
   const onSubmit = (data: { domainUrl: string }) => {
     onSave(data.domainUrl);

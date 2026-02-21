@@ -7,6 +7,8 @@ import React, { useEffect, useState } from 'react';
 
 import type { VideoMarker } from '@/components/player/types';
 
+const EMPTY_MARKERS: VideoMarker[] = [];
+
 const StreamPlayer = dynamic(() => import('@/components/player'), {
   ssr: false,
 });
@@ -27,7 +29,7 @@ export function RecordingPlayer({
   videoSources,
   thumbnailUrl,
   durationMs,
-  markers = [],
+  markers = EMPTY_MARKERS,
 }: RecordingPlayerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -90,7 +92,20 @@ export function RecordingPlayer({
       data-fullscreen={isFullscreen}
     >
       {/* Overlay backdrop for fullscreen */}
-      {isFullscreen && <div className="recording-player-overlay" onClick={toggleFullscreen} />}
+      {isFullscreen && (
+        <div
+          className="recording-player-overlay"
+          role="button"
+          tabIndex={0}
+          onClick={toggleFullscreen}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleFullscreen();
+            }
+          }}
+        />
+      )}
 
       {/* Single StreamPlayer instance that persists */}
       <div className="recording-player-content">

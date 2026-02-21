@@ -1,0 +1,13 @@
+{
+  "ignore": {
+    "rules": [
+      "react-doctor/nextjs-missing-metadata",
+      "react-doctor/nextjs-no-use-search-params-without-suspense",
+      "react-doctor/prefer-dynamic-import"
+    ],
+    "files": [
+      "src/components/skeleton/**",
+      "src/components/admin/components/detailed-list-skeleton.tsx"
+    ]
+  }
+}

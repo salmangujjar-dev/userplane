@@ -19,6 +19,62 @@ export interface FilterOption {
   avatar?: boolean;
 }
 
+interface TriggerIconProps {
+  selected: string[];
+  options: FilterOption[];
+  showAvatars: boolean;
+  icon?: LucideIcon;
+}
+
+function TriggerIcon({ selected, options, showAvatars, icon: Icon }: TriggerIconProps) {
+  if (selected.length === 0) return null;
+
+  const selectedOption =
+    selected.length === 1 ? options.find((opt) => opt.value === selected[0]) : null;
+  const firstTwoSelected = selected
+    .slice(0, 2)
+    .map((val) => options.find((opt) => opt.value === val))
+    .filter(Boolean);
+
+  if (selected.length === 1 && selectedOption) {
+    if (showAvatars && selectedOption.avatar) {
+      return (
+        <BoringAvatar
+          name={selectedOption.label}
+          size={AVATAR_SIZES.COMPACT}
+          className="shrink-0"
+        />
+      );
+    }
+    if (Icon) {
+      return <Icon className="h-3.5 w-3.5 shrink-0" />;
+    }
+    return null;
+  }
+
+  if (selected.length > 1) {
+    if (showAvatars && firstTwoSelected[0]?.avatar) {
+      return (
+        <div className="flex -space-x-1 shrink-0">
+          {firstTwoSelected.slice(0, 2).map((opt) => (
+            <BoringAvatar
+              key={opt?.value}
+              name={opt?.label}
+              size={AVATAR_SIZES.COMPACT}
+              className="ring-1 ring-background"
+            />
+          ))}
+        </div>
+      );
+    }
+    if (Icon) {
+      return <Icon className="h-3.5 w-3.5 shrink-0" />;
+    }
+  }
+
+  return null;
+}
+
 interface FilterDropdownProps {
   label: string;
   options: FilterOption[];
@@ -99,55 +155,6 @@ export function FilterDropdown({
     return `${selected.length} ${label}`;
   };
 
-  const renderTriggerIcon = () => {
-    if (selected.length === 0) return null;
-
-    const selectedOption =
-      selected.length === 1 ? options.find((opt) => opt.value === selected[0]) : null;
-    const firstTwoSelected = selected
-      .slice(0, 2)
-      .map((val) => options.find((opt) => opt.value === val))
-      .filter(Boolean);
-
-    if (selected.length === 1 && selectedOption) {
-      if (showAvatars && selectedOption.avatar) {
-        return (
-          <BoringAvatar
-            name={selectedOption.label}
-            size={AVATAR_SIZES.COMPACT}
-            className="shrink-0"
-          />
-        );
-      }
-      if (Icon) {
-        return <Icon className="h-3.5 w-3.5 shrink-0" />;
-      }
-      return null;
-    }
-
-    if (selected.length > 1) {
-      if (showAvatars && firstTwoSelected[0]?.avatar) {
-        return (
-          <div className="flex -space-x-1 shrink-0">
-            {firstTwoSelected.slice(0, 2).map((opt, idx) => (
-              <BoringAvatar
-                key={idx}
-                name={opt?.label}
-                size={AVATAR_SIZES.COMPACT}
-                className="ring-1 ring-background"
-              />
-            ))}
-          </div>
-        );
-      }
-      if (Icon) {
-        return <Icon className="h-3.5 w-3.5 shrink-0" />;
-      }
-    }
-
-    return null;
-  };
-
   return (
     <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
@@ -161,7 +168,7 @@ export function FilterDropdown({
             className
           )}
         >
-          {renderTriggerIcon()}
+          <TriggerIcon selected={selected} options={options} showAvatars={showAvatars} icon={Icon} />
           <span className="truncate">{getDisplayLabel()}</span>
           {selected.length > 0 ? (
             <>

@@ -8,6 +8,115 @@ import {
   RemoteObject,
 } from './console-log-types';
 
+function hasExpandableContent(obj: RemoteObject): boolean {
+  return obj.type === 'object' && !!obj.preview && obj.preview.properties.length > 0;
+}
+
+interface LogValueDisplayProps {
+  obj: RemoteObject;
+  isObjectExpanded: boolean;
+  onToggleExpand: () => void;
+}
+
+function LogValueDisplay({ obj, isObjectExpanded, onToggleExpand }: LogValueDisplayProps) {
+  const canExpand = hasExpandableContent(obj);
+  const color = 'text-foreground';
+
+  if (canExpand) {
+    return (
+      <span className="inline-flex items-start">
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleExpand();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+              e.preventDefault();
+              onToggleExpand();
+            }
+          }}
+          className="hover:bg-muted/50 rounded px-0.5 cursor-pointer"
+        >
+          <ChevronRight
+            className={`h-3 w-3 transition-transform inline-block ${isObjectExpanded ? 'rotate-90' : ''}`}
+          />
+        </span>
+        <span className={color}>{formatRemoteObject(obj)}</span>
+      </span>
+    );
+  }
+
+  if (obj.type === 'string') {
+    return (
+      <span className={color}>
+        &quot;{formatRemoteObject(obj)}&quot;
+      </span>
+    );
+  }
+
+  return (
+    <span className={color}>
+      {formatRemoteObject(obj)}
+    </span>
+  );
+}
+
+interface ExpandedPropertiesDisplayProps {
+  isObjectExpanded: boolean;
+  firstArg: RemoteObject | undefined;
+}
+
+function ExpandedPropertiesDisplay({ isObjectExpanded, firstArg }: ExpandedPropertiesDisplayProps) {
+  if (!isObjectExpanded) return null;
+  if (!firstArg?.preview?.properties) return null;
+
+  return (
+    <div className="ml-8 mt-1 space-y-0.5">
+      {firstArg.preview.properties.map((prop) => (
+        <div key={prop.name} className="text-xs">
+          <span>{prop.name}</span>
+          <span className="text-muted-foreground">: </span>
+          <span>{prop.type === 'string' ? `"${prop.value}"` : prop.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface LevelIconProps {
+  type: ConsoleAPIType;
+}
+
+function LevelIcon({ type }: LevelIconProps) {
+  switch (type) {
+    case 'error':
+      return <AlertCircle className="h-4 w-4 text-red-500" />;
+    case 'warning':
+      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+    case 'info':
+      return <Info className="h-4 w-4 text-blue-500" />;
+    case 'log':
+      return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
+    case 'debug':
+      return <Bug className="h-4 w-4 text-purple-500" />;
+    default:
+      return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
+  }
+}
+
+function getRecordingTime(eventTimestamp: number, recordingStartTime?: number): string {
+  if (!recordingStartTime) return '00:00';
+  const elapsed = eventTimestamp - recordingStartTime;
+  const totalSeconds = Math.floor(elapsed / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
 interface ConsoleLogEntryProps {
   log: ConsoleLogEvent;
   recordingStartTime?: number;
@@ -17,108 +126,8 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
   const [isExpanded, setIsExpanded] = useState(false);
   const [isObjectExpanded, setIsObjectExpanded] = useState(false);
 
-  const getRecordingTime = () => {
-    if (!recordingStartTime) return '00:00';
-    const elapsed = log.event.timestamp - recordingStartTime;
-    const totalSeconds = Math.floor(elapsed / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const getLevelIcon = (type: ConsoleAPIType) => {
-    switch (type) {
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'info':
-        return <Info className="h-4 w-4 text-blue-500" />;
-      case 'log':
-        return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
-      case 'debug':
-        return <Bug className="h-4 w-4 text-purple-500" />;
-      default:
-        return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
-    }
-  };
-
-  const getValueColor = (): string => {
-    return 'text-foreground';
-  };
-
-  const hasExpandableContent = (obj: RemoteObject): boolean => {
-    return obj.type === 'object' && !!obj.preview && obj.preview.properties.length > 0;
-  };
-
-  const renderLogValue = (obj: RemoteObject, index: number) => {
-    const canExpand = hasExpandableContent(obj);
-    const color = getValueColor();
-
-    if (canExpand) {
-      return (
-        <span key={index} className="inline-flex items-start">
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsObjectExpanded(!isObjectExpanded);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.stopPropagation();
-                e.preventDefault();
-                setIsObjectExpanded(!isObjectExpanded);
-              }
-            }}
-            className="hover:bg-muted/50 rounded px-0.5 cursor-pointer"
-          >
-            <ChevronRight
-              className={`h-3 w-3 transition-transform inline-block ${isObjectExpanded ? 'rotate-90' : ''}`}
-            />
-          </span>
-          <span className={color}>{formatRemoteObject(obj)}</span>
-        </span>
-      );
-    }
-
-    if (obj.type === 'string') {
-      return (
-        <span key={index} className={color}>
-          &quot;{formatRemoteObject(obj)}&quot;
-        </span>
-      );
-    }
-
-    return (
-      <span key={index} className={color}>
-        {formatRemoteObject(obj)}
-      </span>
-    );
-  };
-
-  const renderExpandedProperties = () => {
-    if (!isObjectExpanded) return null;
-
-    const firstArg = log.event.args[0];
-    if (!firstArg?.preview?.properties) return null;
-
-    return (
-      <div className="ml-8 mt-1 space-y-0.5">
-        {firstArg.preview.properties.map((prop) => (
-          <div key={prop.name} className="text-xs">
-            <span>{prop.name}</span>
-            <span className="text-muted-foreground">: </span>
-            <span>{prop.type === 'string' ? `"${prop.value}"` : prop.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   const sourceLocation = log.event.stackTrace?.callFrames[0];
-  const recordingTime = getRecordingTime();
+  const recordingTime = getRecordingTime(log.event.timestamp, recordingStartTime);
 
   return (
     <div className="border-b border-border/50">
@@ -132,13 +141,17 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
         <span className="text-muted-foreground shrink-0 mt-0.5 tabular-nums w-12">
           {recordingTime}
         </span>
-        <div className="shrink-0 mt-0.5">{getLevelIcon(log.event.type)}</div>
+        <div className="shrink-0 mt-0.5"><LevelIcon type={log.event.type} /></div>
 
         <div className="flex-1">
           <div className="flex items-start gap-1 flex-wrap">
             {log.event.args.map((arg, index) => (
-              <span key={index}>
-                {renderLogValue(arg, index)}
+              <span key={`arg-${arg.type}-${index}`}>
+                <LogValueDisplay
+                  obj={arg}
+                  isObjectExpanded={isObjectExpanded}
+                  onToggleExpand={() => setIsObjectExpanded(!isObjectExpanded)}
+                />
                 {index < log.event.args.length - 1 && (
                   <span className="text-muted-foreground"> </span>
                 )}
@@ -166,13 +179,16 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
             {log.event.executionContextId && <div>Context ID: {log.event.executionContextId}</div>}
           </div>
 
-          {renderExpandedProperties()}
+          <ExpandedPropertiesDisplay
+            isObjectExpanded={isObjectExpanded}
+            firstArg={log.event.args[0]}
+          />
 
           {log.event.stackTrace && log.event.stackTrace.callFrames.length > 0 && (
             <div className="text-[10px] text-muted-foreground space-y-0.5 pt-1">
               <div className="font-medium">Stack trace:</div>
               {log.event.stackTrace.callFrames.map((frame, index) => (
-                <div key={index} className="pl-2">
+                <div key={`${frame.url}-${frame.lineNumber}-${frame.columnNumber}`} className="pl-2">
                   at {frame.functionName || '(anonymous)'} ({frame.url}:{frame.lineNumber}:
                   {frame.columnNumber})
                 </div>

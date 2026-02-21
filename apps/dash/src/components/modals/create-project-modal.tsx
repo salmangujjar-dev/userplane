@@ -193,11 +193,19 @@ export function CreateProjectModal({
                       'flex items-center justify-between',
                       !featureGates?.customizeRetentionPolicy && 'cursor-pointer'
                     )}
-                    onClick={
-                      !featureGates?.customizeRetentionPolicy
-                        ? () => triggerUpsell('customizeRetentionPolicy')
-                        : undefined
-                    }
+                    {...(!featureGates?.customizeRetentionPolicy
+                      ? {
+                          role: 'button' as const,
+                          tabIndex: 0,
+                          onClick: () => triggerUpsell('customizeRetentionPolicy'),
+                          onKeyDown: (e: React.KeyboardEvent) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              triggerUpsell('customizeRetentionPolicy');
+                            }
+                          },
+                        }
+                      : {})}
                   >
                     <div className="space-y-0.5">
                       <Label

@@ -100,7 +100,15 @@ export function RecordingPreview({
   return (
     <div
       className="flex flex-col gap-3 group/card cursor-pointer transition-all duration-300 ease-out hover:z-10"
+      role="button"
+      tabIndex={0}
       onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
