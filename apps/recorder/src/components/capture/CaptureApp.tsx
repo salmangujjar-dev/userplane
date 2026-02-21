@@ -16,7 +16,7 @@
  * - Enables scatter-gather metadata collection from all open tabs
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 import {
   CaptureBridgeConnection,
@@ -35,19 +35,50 @@ const logger = createLogger('capture-app');
  * Capture App - Hidden metadata extraction component
  * No visual rendering - this is a purely functional component
  */
-export default function CaptureApp() {
-  const bridgeRef = useRef<CaptureBridgeConnection | null>(null);
-  const crossTabRef = useRef<CrossTabCoordinator | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isCrossTabConnected, setIsCrossTabConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+type CaptureState = {
+  isConnected: boolean;
+  isCrossTabConnected: boolean;
+  error: string | null;
+  recorderState: CaptureRecorderState;
+};
 
-  // Track recorder state for debugging (could be exposed via context if needed)
-  const [recorderState, setRecorderState] = useState<CaptureRecorderState>({
+type CaptureAction =
+  | { type: 'bridge_connected' }
+  | { type: 'cross_tab_connected' }
+  | { type: 'error'; message: string }
+  | { type: 'recorder_state'; state: CaptureRecorderState };
+
+function captureReducer(state: CaptureState, action: CaptureAction): CaptureState {
+  switch (action.type) {
+    case 'bridge_connected':
+      return { ...state, isConnected: true };
+    case 'cross_tab_connected':
+      return { ...state, isCrossTabConnected: true };
+    case 'error':
+      return { ...state, error: action.message };
+    case 'recorder_state':
+      return { ...state, recorderState: action.state };
+  }
+}
+
+const initialCaptureState: CaptureState = {
+  isConnected: false,
+  isCrossTabConnected: false,
+  error: null,
+  recorderState: {
     recorderTabId: null,
     recorderState: 'inactive',
     lastStateUpdate: Date.now(),
-  });
+  },
+};
+
+export default function CaptureApp() {
+  const bridgeRef = useRef<CaptureBridgeConnection | null>(null);
+  const crossTabRef = useRef<CrossTabCoordinator | null>(null);
+  const [{ isConnected, isCrossTabConnected, error, recorderState }, dispatch] = useReducer(
+    captureReducer,
+    initialCaptureState
+  );
 
   // Metadata extractor function - called by cross-tab coordinator during scatter-gather
   // Builds flattened TabMetadata - system keys prefixed, custom metadata spread
@@ -81,7 +112,7 @@ export default function CaptureApp() {
           onRecorderStateChange: (state) => {
             if (mounted) {
               logger.debug({ state }, 'recorder state changed');
-              setRecorderState(state);
+              dispatch({ type: 'recorder_state', state });
             }
           },
         });
@@ -93,10 +124,10 @@ export default function CaptureApp() {
         if (!mounted) return;
 
         logger.debug('parent bridge connected');
-        setIsConnected(true);
+        dispatch({ type: 'bridge_connected' });
 
         // Initialize recorder state from bridge
-        setRecorderState(bridge.getCurrentRecorderState());
+        dispatch({ type: 'recorder_state', state: bridge.getCurrentRecorderState() });
 
         // 2. Connect to cross-tab coordinator (SharedWorker)
         // Use a prefixed tab ID for this capture iframe
@@ -121,7 +152,7 @@ export default function CaptureApp() {
                   { recorderState: state.recorderState },
                   'capture recorder state changed'
                 );
-                setRecorderState(state);
+                dispatch({ type: 'recorder_state', state });
               }
             },
             onBlurrStart: () => {
@@ -149,7 +180,7 @@ export default function CaptureApp() {
         if (!mounted) return;
 
         logger.debug({ captureTabId }, 'cross-tab coordinator connected');
-        setIsCrossTabConnected(true);
+        dispatch({ type: 'cross_tab_connected' });
 
         // Check if blur is already enabled (for tabs that connect during recording)
         const blurrEnabled = crossTab.isBlurrEnabled();
@@ -160,7 +191,10 @@ export default function CaptureApp() {
       } catch (err) {
         logger.error({ err }, 'bridge initialization failed');
         if (mounted) {
-          setError(err instanceof Error ? err.message : 'Failed to connect');
+          dispatch({
+            type: 'error',
+            message: err instanceof Error ? err.message : 'Failed to connect',
+          });
         }
       }
     }
