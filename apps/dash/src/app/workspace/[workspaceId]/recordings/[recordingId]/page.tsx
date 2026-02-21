@@ -11,7 +11,7 @@ import { useState } from 'react';
 
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { EditRecordingModal } from '@/components/modals/edit-recording-modal';
-import { ShareLinkModal } from '@/components/modals/share-link-modal';
+import { ShareRecordingModal } from '@/components/modals/share-recording-modal';
 import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
 import { RecordingPlayer } from '@/components/recordings/recording-player';
@@ -34,7 +34,7 @@ export default function RecordingDetailPage() {
   const recordingId = params.recordingId as string;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const {
     data: recordingResult,
@@ -91,8 +91,7 @@ export default function RecordingDetailPage() {
   };
 
   const handleShare = () => {
-    const currentUrl = window.location.href;
-    setShareLink(currentUrl);
+    setShowShareModal(true);
   };
 
   return (
@@ -143,10 +142,10 @@ export default function RecordingDetailPage() {
         isLoading={deleteRecordingMutation.isPending}
       />
 
-      <ShareLinkModal
-        link={shareLink || ''}
-        open={!!shareLink}
-        onClose={() => setShareLink(null)}
+      <ShareRecordingModal
+        open={showShareModal}
+        onOpenChange={setShowShareModal}
+        recordingId={recordingId}
       />
     </div>
   );

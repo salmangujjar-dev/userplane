@@ -1,6 +1,5 @@
 'use client';
 
-import type { PlanId } from '@workspace/pricing';
 import { Badge } from '@workspace/ui/components/badge';
 import {
   DropdownMenu,
@@ -45,8 +44,6 @@ import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
-import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-modal';
-import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { SidebarProjectsSkeleton } from '@/components/skeleton';
@@ -57,7 +54,7 @@ import { useSubscriptionStatus } from '@/features/billing';
 import { useWorkspaceProjects } from '@/features/projects';
 import { useWorkspace, useWorkspaces } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { planChangePreviewParser, planModalParser } from '@/lib/parsers';
+import { planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
 import { useWorkspaceId, useWorkspaceStore } from '@/stores/workspace';
 
@@ -107,8 +104,6 @@ export function AppSidebar() {
   const hasPrevPage = projectsPage > 1;
   const hasNextPage = projectsPagination ? projectsPage < projectsPagination.totalPages : false;
 
-  const [, setPlanPreview] = useQueryState('plan-preview', planChangePreviewParser);
-
   // Get plan display based on subscription status
   const planDisplay = getPlanDisplay(
     subscriptionData?.contractDetail.planName ?? null,
@@ -131,21 +126,6 @@ export function AppSidebar() {
     // No subscription → show all plans (detailed mode)
     // Has subscription → show suggested upgrade plans
     setPlanModal(hasActiveSubscription ? 'suggested' : 'detailed');
-  };
-
-  const handlePlanSelect = (planId: string) => {
-    if (!workspaceId) return;
-
-    // Always open modal - server will route to appropriate flow:
-    // - No subscription + owner/admin: checkout
-    // - Active subscription + owner/admin: preview + execute
-    // - Active subscription + member: request
-    setPlanPreview(planId as PlanId);
-    setPlanModal(null);
-  };
-
-  const handlePlanChangeComplete = () => {
-    setPlanPreview(null);
   };
 
   const sections: NavSection[] = [
@@ -371,13 +351,6 @@ export function AppSidebar() {
       )}
 
       <SidebarRail />
-
-      <PlanSelectionModal
-        onPlanSelect={handlePlanSelect}
-        currentPlanName={subscriptionData?.contractDetail.planName ?? null}
-      />
-
-      <PlanChangePreviewModal onComplete={handlePlanChangeComplete} />
     </Sidebar>
   );
 }

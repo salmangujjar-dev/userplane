@@ -179,6 +179,10 @@ export function showTeammatesInvitedToast(count: number) {
   toast.success(`Invites sent to ${count} teammate${count > 1 ? 's' : ''}`);
 }
 
+export function showShareRecordingToast(count: number) {
+  toast.success(`Recording shared with ${count} ${count === 1 ? 'person' : 'people'}`);
+}
+
 export function showWorkspaceLeftToast(workspaceDeleted: boolean = false) {
   if (workspaceDeleted) {
     toast.success('Left and deactivated workspace');

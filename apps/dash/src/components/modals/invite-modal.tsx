@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { deduplicateEmail, EmailTagsFieldSchema, MAX_EMAIL_RECIPIENTS } from '@workspace/contract';
 import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
@@ -40,19 +41,7 @@ import {
 import { useWorkspaceStore } from '@/stores/workspace';
 
 const inviteFormSchema = z.object({
-  emails: z
-    .array(
-      z.object({
-        email: z.string(),
-        isValid: z.boolean(),
-      })
-    )
-    .refine((emails) => emails.length > 0, {
-      message: 'At least one email is required',
-    })
-    .refine((emails) => emails.some((e) => e.isValid), {
-      message: 'At least one valid email is required',
-    }),
+  emails: EmailTagsFieldSchema,
 });
 
 type InviteFormData = z.infer<typeof inviteFormSchema>;
@@ -65,10 +54,11 @@ interface InviteModalProps {
 interface EmailTagProps {
   email: string;
   isValid: boolean;
+  name?: string;
   onRemove: () => void;
 }
 
-function EmailTag({ email, isValid, onRemove }: EmailTagProps) {
+function EmailTag({ email, isValid, name, onRemove }: EmailTagProps) {
   return (
     <div
       className={`inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm ${
@@ -76,7 +66,7 @@ function EmailTag({ email, isValid, onRemove }: EmailTagProps) {
       }`}
     >
       {isValid ? (
-        <BoringAvatar size={AVATAR_SIZES.TAG} email={email} />
+        <BoringAvatar size={AVATAR_SIZES.TAG} name={name} email={email} />
       ) : (
         <AlertCircle className="h-4 w-4 text-destructive" />
       )}
@@ -89,7 +79,7 @@ function EmailTag({ email, isValid, onRemove }: EmailTagProps) {
 }
 
 interface EmailInputAreaProps {
-  fields: Array<{ id: string; email: string; isValid: boolean }>;
+  fields: Array<{ id: string; email: string; isValid: boolean; name?: string }>;
   emailInput: string;
   maxEmails: number;
   hasError: boolean;
@@ -125,6 +115,7 @@ function EmailInputArea({
               key={field.id}
               email={field.email}
               isValid={field.isValid}
+              name={field.name}
               onRemove={() => onRemoveEmail(index)}
             />
           ))}
@@ -188,7 +179,7 @@ function InviteLinkSection({ inviteLink, isLoading, onCopyLink }: InviteLinkSect
 
 interface SuggestionsPillsProps {
   suggestions: Array<{ id: string; email: string; name: string | null }>;
-  onSelect: (email: string) => void;
+  onSelect: (email: string, name?: string) => void;
   existingEmails: string[];
   workspaceId: string;
   hasMore: boolean;
@@ -214,7 +205,7 @@ function SuggestionsPills({
           <button
             key={s.id}
             type="button"
-            onClick={() => onSelect(s.email)}
+            onClick={() => onSelect(s.email, s.name ?? undefined)}
             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <BoringAvatar size={AVATAR_SIZES.COMPACT} name={s.name} email={s.email} />
@@ -241,7 +232,6 @@ function SuggestionsPills({
 
 export function InviteModal({ open, onOpenChange }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState('');
-  const MAX_EMAILS = 10;
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
   const { handlePlanLimit } = usePlanLimitHandler();
 
@@ -293,25 +283,19 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     return validator.isEmail(email);
   };
 
-  const addEmail = (email: string) => {
-    const trimmedEmail = email.trim().toLowerCase();
-
-    if (fields.length >= MAX_EMAILS) {
-      showMaxEmailsErrorToast(MAX_EMAILS);
+  const addEmail = (email: string, name?: string) => {
+    if (fields.length >= MAX_EMAIL_RECIPIENTS) {
+      showMaxEmailsErrorToast(MAX_EMAIL_RECIPIENTS);
       return;
     }
 
-    if (!trimmedEmail) return;
-
-    // Check if email already exists
-    const emailExists = fields.some((field) => field.email.toLowerCase() === trimmedEmail);
-    if (emailExists) {
-      showDuplicateEmailErrorToast();
+    const trimmedEmail = deduplicateEmail(email, fields);
+    if (!trimmedEmail) {
+      if (email.trim()) showDuplicateEmailErrorToast();
       return;
     }
 
-    const isValid = validateEmail(trimmedEmail);
-    append({ email: trimmedEmail, isValid });
+    append({ email: trimmedEmail, isValid: validateEmail(trimmedEmail), name });
     setEmailInput('');
   };
 
@@ -328,8 +312,8 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     remove(index);
   };
 
-  const handleSelectSuggestion = (email: string) => {
-    addEmail(email);
+  const handleSelectSuggestion = (email: string, name?: string) => {
+    addEmail(email, name);
   };
 
   const onSubmit = (data: InviteFormData) => {
@@ -408,7 +392,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
             <EmailInputArea
               fields={fields}
               emailInput={emailInput}
-              maxEmails={MAX_EMAILS}
+              maxEmails={MAX_EMAIL_RECIPIENTS}
               hasError={!!errors.emails}
               errorMessage={errors.emails?.message}
               onEmailInputChange={setEmailInput}

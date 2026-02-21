@@ -7,7 +7,7 @@ import {
   type SafeResult,
   showErrorToastToast,
 } from '@/lib/errors';
-import { showDeletedToast, showUpdatedToast } from '@/lib/toasts';
+import { showDeletedToast, showShareRecordingToast, showUpdatedToast } from '@/lib/toasts';
 import type { DeleteResponse, QueryData, QuerySnapshot } from '@/types';
 
 import { workspaceKeys } from '../workspace/query-keys';
@@ -120,6 +120,34 @@ export function useUpdateRecordingExpiry(workspaceId: string | null) {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: recordingKeys.lists() });
       queryClient.invalidateQueries({ queryKey: recordingKeys.all });
+    },
+  });
+}
+
+interface ShareRecordingInput {
+  recordingId: string;
+  emails: string[];
+}
+
+export function useShareRecording(workspaceId: string | null) {
+  return useMutation({
+    mutationFn: async ({ recordingId, emails }: ShareRecordingInput) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      const [error, response] = await apiClient.recording.share({
+        params: { workspaceId, recordingId },
+        body: { emails },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      showShareRecordingToast(result.data.sent.length);
+    },
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to share recording');
     },
   });
 }

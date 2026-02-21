@@ -54,6 +54,15 @@ export const getProjectName = (projectName?: string): string => {
 };
 
 /**
+ * Formats teammate name by trimming and applying defaults
+ * Returns 'Your teammate' if the teammate name is empty or undefined
+ */
+export const getTeammateName = (memberName?: string): string => {
+  const trimmed = memberName?.trim();
+  return trimmed || 'Your teammate';
+};
+
+/**
  * Formats member name by trimming and applying defaults
  * Returns 'A member' if the member name is empty or undefined
  */

@@ -82,6 +82,7 @@ export {
   useRecordingNetworkLog,
   useRecordingThumbnail,
   useRecordingVideo,
+  useShareRecording,
   useWorkspaceRecordings,
 } from './recordings';
 

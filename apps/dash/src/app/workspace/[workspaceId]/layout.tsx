@@ -5,6 +5,7 @@ import { useParams, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { AppSidebar } from '@/components/navigation/sidebar';
+import { UpsellProvider } from '@/components/providers/upsell-provider';
 import { WorkspaceAccessGate } from '@/components/workspace/workspace-access-gate';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -25,15 +26,21 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   }, [workspaceIdFromUrl, setWorkspace]);
 
   if (isFullScreenView) {
-    return <WorkspaceAccessGate>{children}</WorkspaceAccessGate>;
+    return (
+      <WorkspaceAccessGate>
+        <UpsellProvider>{children}</UpsellProvider>
+      </WorkspaceAccessGate>
+    );
   }
 
   return (
     <WorkspaceAccessGate>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>{children}</SidebarInset>
-      </SidebarProvider>
+      <UpsellProvider>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>{children}</SidebarInset>
+        </SidebarProvider>
+      </UpsellProvider>
     </WorkspaceAccessGate>
   );
 }

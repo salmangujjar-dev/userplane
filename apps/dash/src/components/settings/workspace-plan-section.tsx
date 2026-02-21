@@ -15,12 +15,10 @@ import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
 import { BillingDetailsModal } from '@/components/modals/billing-details-modal';
-import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-modal';
-import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
 import { SectionError } from '@/components/shared/section-error';
 import { useOpenCustomerPortal, useSubscriptionStatus, useUsageSummary } from '@/features/billing';
 import { useWorkspace } from '@/features/workspace';
-import { planChangePreviewParser, planModalParser } from '@/lib/parsers';
+import { planModalParser } from '@/lib/parsers';
 import { getPlanDisplay } from '@/lib/plan-display';
 import type { ResourceUsage } from '@/types';
 
@@ -302,11 +300,8 @@ export function WorkspacePlanSection() {
   const { data: workspaceResult, isLoading: isLoadingWorkspace, error, refetch } = useWorkspace();
   const { data: subscriptionResult, isLoading: isLoadingSubscription } = useSubscriptionStatus();
   const { data: usageResult, isLoading: isLoadingUsage } = useUsageSummary();
-  const workspaceData = workspaceResult?.success ? workspaceResult.data : null;
   const subscriptionData = subscriptionResult?.success ? subscriptionResult.data : null;
   const usageData = usageResult?.success ? usageResult.data : null;
-  const workspaceId = workspaceData?.workspace?.workspaceId;
-
   // Resource metadata for user-facing display (internal resources like logs, files hidden)
   const RESOURCE_METADATA: Record<
     string,
@@ -383,28 +378,12 @@ export function WorkspacePlanSection() {
   );
 
   const [, setPlanModal] = useQueryState('plan-modal', planModalParser);
-  const [, setPlanPreview] = useQueryState('plan-preview', planChangePreviewParser);
   const [showBillingDetails, setShowBillingDetails] = useState(false);
   const [showContactAdmin, setShowContactAdmin] = useState(false);
 
   const { mutate: openCustomerPortal, isPending: isPortalPending } = useOpenCustomerPortal({
     onPermissionDenied: () => setShowContactAdmin(true),
   });
-
-  const handlePlanSelect = (planId: string) => {
-    if (!workspaceId) return;
-
-    // Always open modal - server will route to appropriate flow:
-    // - No subscription + owner/admin: checkout
-    // - Active subscription + owner/admin: preview + execute
-    // - Active subscription + member: request
-    setPlanPreview(planId as PlanId);
-    setPlanModal(null);
-  };
-
-  const handlePlanChangeComplete = () => {
-    setPlanPreview(null);
-  };
 
   const handleManageBilling = () => {
     openCustomerPortal();
@@ -482,11 +461,6 @@ export function WorkspacePlanSection() {
           />
         </div>
 
-        <PlanSelectionModal
-          onPlanSelect={handlePlanSelect}
-          currentPlanName={subscriptionData?.contractDetail.planName ?? null}
-        />
-
         {subscriptionData &&
           subscriptionData.contractDetail.planName &&
           subscriptionData.contractDetail.planId &&
@@ -515,8 +489,6 @@ export function WorkspacePlanSection() {
               }))}
             />
           )}
-
-        <PlanChangePreviewModal onComplete={handlePlanChangeComplete} />
 
         <ContactAdminSheet open={showContactAdmin} onOpenChange={setShowContactAdmin} />
       </div>

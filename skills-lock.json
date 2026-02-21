@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "postgres": {
+      "source": "planetscale/database-skills",
+      "sourceType": "github",
+      "computedHash": "b4f561e91e066eba314e69309e03b9a624bf7467f55a6a3818df4874aeee608e"
+    }
+  }
+}

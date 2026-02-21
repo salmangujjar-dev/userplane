@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { RECORDING_PAGINATION } from '../constants';
 import {
   DomainIdSchema,
+  EmailSchema,
   LinkIdSchema,
   LinkProviderTypeSchema,
   PaginationMetaSchema,
@@ -239,6 +240,36 @@ export const RecordingUpdateDataSchema = z.object({
 export const RecordingDeleteDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   recordingId: RecordingIdSchema,
+});
+
+/**
+ * Share recording request (detailed mode)
+ */
+export const ShareRecordingSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+    recordingId: RecordingIdSchema,
+  }),
+  body: z.object({
+    emails: z.array(EmailSchema).min(1).max(10),
+  }),
+});
+
+/**
+ * Share recording result item
+ */
+export const ShareRecordingResultItemSchema = z.object({
+  email: z.string(),
+  success: z.boolean(),
+  isMember: z.boolean(),
+});
+
+/**
+ * Share recording response
+ */
+export const ShareRecordingResultSchema = z.object({
+  sent: z.array(ShareRecordingResultItemSchema),
+  failed: z.array(ShareRecordingResultItemSchema),
 });
 
 // Type exports

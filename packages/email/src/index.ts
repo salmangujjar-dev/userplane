@@ -43,6 +43,8 @@ export type {
   RenderResult,
   // Pilot
   SandboxInviteEmailProps,
+  ShareRecordingExternalEmailProps,
+  ShareRecordingMemberEmailProps,
   // Invite
   TeammateInvitedEmailProps,
   TosViolationEmailProps,
@@ -78,6 +80,8 @@ export {
   renderRecoveryPartially,
   // Pilot
   renderSandboxInvite,
+  renderShareRecordingExternal,
+  renderShareRecordingMember,
   // Invite
   renderTeammateInvited,
   renderTosViolation,
