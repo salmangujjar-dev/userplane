@@ -7,8 +7,8 @@
   ],
   "metadata": {
     "billing_cadence": "annual",
-    "seats_quoted_limit": "360",
-    "seats_actual_limit": "540",
+    "seats_quoted_limit": "30",
+    "seats_actual_limit": "45",
     "recordings_quoted_limit": "-1",
     "recordings_actual_limit": "8400",
     "links_quoted_limit": "-1",

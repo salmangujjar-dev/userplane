@@ -5,7 +5,7 @@ import 'videojs-contrib-quality-levels';
 import 'videojs-hls-quality-selector';
 import './stream-player.css';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
 
 import { showRecordingCannotBePlayedToast } from '@/lib/toasts';
@@ -34,11 +34,32 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
 }) => {
   const videoRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<Player | null>(null);
-  const [duration, setDuration] = useState<number>(durationMs ? durationMs / 1000 : 0);
-  const [hasStarted, setHasStarted] = useState<boolean>(false);
-  const [showControls, setShowControls] = useState<boolean>(false);
-  const [hasError, setHasError] = useState<boolean>(false);
+  const [playerState, setPlayerState] = useState({
+    duration: durationMs ? durationMs / 1000 : 0,
+    hasStarted: false,
+    showControls: false,
+    hasError: false,
+  });
   const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Event handlers extracted to reduce setState calls in useEffect body
+  const handleDurationUpdate = useCallback(
+    (player: Player) => {
+      if (!durationMs) {
+        setPlayerState((prev) => ({ ...prev, duration: player.duration() || 0 }));
+      }
+    },
+    [durationMs]
+  );
+
+  const handlePlay = () => {
+    setPlayerState((prev) => ({ ...prev, hasStarted: true }));
+  };
+
+  const handleError = () => {
+    setPlayerState((prev) => ({ ...prev, hasError: true }));
+    showRecordingCannotBePlayedToast();
+  };
 
   useEffect(() => {
     // Make sure Video.js player is only initialized once
@@ -77,30 +98,15 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
         }
       }) as Player);
 
-      // Listen for loadedmetadata to get duration (only if not provided via props)
-      player.on('loadedmetadata', () => {
-        if (!durationMs) {
-          setDuration(player.duration() || 0);
-        }
-      });
-
-      // Also try to get duration when it changes (only if not provided via props)
-      player.on('durationchange', () => {
-        if (!durationMs) {
-          setDuration(player.duration() || 0);
-        }
-      });
+      // Listen for loadedmetadata and durationchange to get duration (only if not provided via props)
+      player.on('loadedmetadata', () => handleDurationUpdate(player));
+      player.on('durationchange', () => handleDurationUpdate(player));
 
       // Track when video starts playing
-      player.on('play', () => {
-        setHasStarted(true);
-      });
+      player.on('play', handlePlay);
 
       // Track video errors
-      player.on('error', () => {
-        setHasError(true);
-        showRecordingCannotBePlayedToast();
-      });
+      player.on('error', handleError);
     } else if (playerRef.current) {
       const player = playerRef.current;
       if (options.autoplay !== undefined) {
@@ -110,7 +116,7 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
         player.src(options.sources);
       }
     }
-  }, [options, poster, onPlayerReady, durationMs]);
+  }, [options, poster, onPlayerReady, durationMs, handleDurationUpdate]);
 
   // Dispose the Video.js player when the component unmounts
   useEffect(() => {
@@ -132,13 +138,13 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
       hideControlsTimeoutRef.current = null;
     }
     // Show controls immediately
-    setShowControls(true);
+    setPlayerState((prev) => ({ ...prev, showControls: true }));
   };
 
   const handleContainerMouseLeave = () => {
     // Wait 1.5 seconds before hiding controls
     hideControlsTimeoutRef.current = setTimeout(() => {
-      setShowControls(false);
+      setPlayerState((prev) => ({ ...prev, showControls: false }));
       hideControlsTimeoutRef.current = null;
     }, 1500);
   };
@@ -210,10 +216,10 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
         player={playerRef.current}
         markers={markers}
         onFullscreen={onFullscreen}
-        duration={duration}
-        hasStarted={hasStarted}
-        showControls={showControls}
-        hasError={hasError}
+        duration={playerState.duration}
+        hasStarted={playerState.hasStarted}
+        showControls={playerState.showControls}
+        hasError={playerState.hasError}
       />
     </div>
   );

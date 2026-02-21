@@ -176,7 +176,7 @@ export function VideoProgressBar({
         )}
 
         {/* Markers */}
-        {markers.map((marker, index) => {
+        {markers.map((marker) => {
           const markerPosition = duration > 0 ? (marker.time / duration) * 100 : 0;
           return (
             <div

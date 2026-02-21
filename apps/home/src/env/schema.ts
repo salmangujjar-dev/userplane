@@ -49,20 +49,20 @@ const booleanWithDefault = (defaultValue: boolean) =>
 // =============================================================================
 
 /** App env vars schema */
-export const appEnvSchema = z.object({
+const appEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   // Astro uses MODE from --mode flag
   MODE: z.enum(['development', 'production']).default('development'),
 });
 
 /** URL env vars schema */
-export const urlEnvSchema = z.object({
+const urlEnvSchema = z.object({
   PUBLIC_HOME_URL: urlWithDefault(DEV_URLS.HOME),
   PUBLIC_DASH_URL: urlWithDefault(DEV_URLS.DASH),
 });
 
 /** Storage env vars schema */
-export const storageEnvSchema = z.object({
+const storageEnvSchema = z.object({
   PUBLIC_CDN_DOMAIN: urlWithDefault(DEV_URLS.CDN),
   PUBLIC_ASSETS_DOMAIN: urlWithDefault(DEV_URLS.ASSETS),
   PUBLIC_CLOUDFLARE_IMAGE_ZONE: stringWithDefault(STORAGE.IMAGE_ZONE),

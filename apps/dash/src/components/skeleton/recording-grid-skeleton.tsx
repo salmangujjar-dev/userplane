@@ -7,8 +7,8 @@ interface RecordingGridSkeletonProps {
 export function RecordingGridSkeleton({ count = 16 }: RecordingGridSkeletonProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {[...Array(count)].map((_, i) => (
-        <div key={`recording-${i}`} className="space-y-3">
+      {Array.from({ length: count }, (_, i) => `recording-${i}`).map((id) => (
+        <div key={id} className="space-y-3">
           <Skeleton className="aspect-video w-full rounded-lg" />
           <div className="space-y-2">
             <Skeleton className="h-4 w-full" />

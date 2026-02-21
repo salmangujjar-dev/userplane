@@ -50,13 +50,7 @@ function formatDate(date: Date) {
 
 // ---- Shared sub-components ----
 
-function PreviewModalHeader({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+function PreviewModalHeader({ title, description }: { title: string; description: string }) {
   return (
     <div className="p-6 pb-4">
       <div className="flex items-start gap-4">
@@ -268,10 +262,7 @@ function CreditPreviewContent({
                       <span className="text-sm text-zinc-700">Account Credit</span>
                       <span className="text-sm font-semibold text-green-600 ml-4 text-right">
                         +
-                        {formatCurrency(
-                          preview.creditAmount.amount,
-                          preview.creditAmount.currency
-                        )}
+                        {formatCurrency(preview.creditAmount.amount, preview.creditAmount.currency)}
                       </span>
                     </div>
                     <p className="text-xs text-zinc-500">{preview.creditAmount.summary}</p>
@@ -289,7 +280,11 @@ function CreditPreviewContent({
               />
 
               <div className="flex-1" />
-              <PreviewActionButtons onConfirm={onConfirm} onCancel={onCancel} isConfirming={isConfirming} />
+              <PreviewActionButtons
+                onConfirm={onConfirm}
+                onCancel={onCancel}
+                isConfirming={isConfirming}
+              />
             </div>
           </div>
         </div>
@@ -306,7 +301,9 @@ function ChargePreviewContent({
   onConfirm,
   onCancel,
 }: {
-  preview: PlanChangePreviewData & { immediateCharge: NonNullable<PlanChangePreviewData['immediateCharge']> };
+  preview: PlanChangePreviewData & {
+    immediateCharge: NonNullable<PlanChangePreviewData['immediateCharge']>;
+  };
   isConfirming: boolean;
   onConfirm: () => void;
   onCancel: () => void;
@@ -395,8 +392,11 @@ function ChargePreviewContent({
                   Proration Details
                 </div>
                 <div className="space-y-3">
-                  {lineItems.map((item, i) => (
-                    <div key={`${item.name}-${i}`} className="flex justify-between items-start">
+                  {lineItems.map((item) => (
+                    <div
+                      key={`${item.name}-${item.unitPrice}-${item.quantity}`}
+                      className="flex justify-between items-start"
+                    >
                       <span className="text-sm text-zinc-700">{getLineItemName(item)}</span>
                       <span className="text-sm font-semibold text-foreground ml-4 text-right">
                         {formatCurrency(getLineItemAmount(item), currency)}
@@ -426,7 +426,11 @@ function ChargePreviewContent({
               />
 
               <div className="flex-1" />
-              <PreviewActionButtons onConfirm={onConfirm} onCancel={onCancel} isConfirming={isConfirming} />
+              <PreviewActionButtons
+                onConfirm={onConfirm}
+                onCancel={onCancel}
+                isConfirming={isConfirming}
+              />
             </div>
           </div>
         </div>
@@ -461,7 +465,11 @@ function PreviewView({
 
   return (
     <ChargePreviewContent
-      preview={preview as PlanChangePreviewData & { immediateCharge: NonNullable<PlanChangePreviewData['immediateCharge']> }}
+      preview={
+        preview as PlanChangePreviewData & {
+          immediateCharge: NonNullable<PlanChangePreviewData['immediateCharge']>;
+        }
+      }
       isConfirming={isConfirming}
       onConfirm={onConfirm}
       onCancel={onCancel}
@@ -790,8 +798,8 @@ function PreviewLoadingView() {
               <div className="mb-6">
                 <Skeleton className="h-3 w-32 mb-4" />
                 <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={`skeleton-row-${i}`} className="flex justify-between items-start">
+                  {[1, 2, 3].map((n) => (
+                    <div key={`skeleton-row-${n}`} className="flex justify-between items-start">
                       <Skeleton className="h-3 w-40" />
                       <Skeleton className="h-3 w-20" />
                     </div>

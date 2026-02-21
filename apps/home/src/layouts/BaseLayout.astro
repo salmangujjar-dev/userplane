@@ -1,6 +1,7 @@
 ---
 import '@workspace/ui/globals.css';
 import { SITE_META } from '../constants/site';
+import { SPOTLIGHT_IMAGE } from '../constants/spotlight';
 
 interface Props {
   title?: string;
@@ -15,6 +16,8 @@ const {
   keywords = SITE_META.keywords,
   ogImage = SITE_META.ogImage,
 } = Astro.props;
+
+const spotlightSrc = SPOTLIGHT_IMAGE.src;
 ---
 
 <!doctype html>
@@ -30,6 +33,9 @@ const {
         color-scheme: light only !important;
       }
     </style>
+
+    <!-- Preload LCP image -->
+    <link rel="preload" as="image" href={spotlightSrc} fetchpriority="high" />
 
     <!-- Primary Meta Tags -->
     <title>{title}</title>

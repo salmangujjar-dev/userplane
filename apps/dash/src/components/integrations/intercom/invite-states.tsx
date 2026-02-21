@@ -35,16 +35,18 @@ export function InviteLoadingState() {
 
           {/* Teammates list */}
           <div className="divide-y flex-1 overflow-hidden">
-            {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
-              <div key={`teammate-skeleton-${i}`} className="flex items-center gap-3 p-3">
-                <Skeleton className="h-4 w-4 rounded" />
-                <Skeleton className="h-7 w-7 rounded-full" />
-                <div className="flex flex-col gap-1.5 min-w-0 flex-1">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-44" />
+            {Array.from({ length: ITEMS_PER_PAGE }, (_, i) => `teammate-skeleton-${i}`).map(
+              (id) => (
+                <div key={id} className="flex items-center gap-3 p-3">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-7 w-7 rounded-full" />
+                  <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-44" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
 
           {/* Email input skeleton at bottom */}
@@ -117,7 +119,7 @@ export function InviteErrorState({ workspaceId, message, onRetry }: InviteErrorS
         <div className="flex justify-center">
           <button
             type="button"
-            onClick={() => router.push(`/workspace/${workspaceId}/settings`)}
+            onClick={() => router.push(`/workspace/${workspaceId}/recordings`)}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Skip for now

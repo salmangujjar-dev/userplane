@@ -3,6 +3,7 @@
  * All defaults are defined here to eliminate sprawl and ensure consistency
  */
 
+import { DEFAULT_TRIAL_PERIOD_DAYS } from '@workspace/contract';
 import { SUPPORT_EMAIL as SHARED_SUPPORT_EMAIL } from '@workspace/shared';
 
 // =============================================================================
@@ -196,6 +197,15 @@ export const STORAGE = {
 
 export const POSTHOG = {
   HOST: 'https://us.i.posthog.com',
+} as const;
+
+// =============================================================================
+// Billing Defaults
+// =============================================================================
+
+export const BILLING = {
+  /** Default trial period in days for paid plan checkouts */
+  TRIAL_PERIOD_DAYS: DEFAULT_TRIAL_PERIOD_DAYS,
 } as const;
 
 // =============================================================================

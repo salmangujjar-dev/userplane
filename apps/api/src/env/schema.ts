@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import {
   AUTH,
+  BILLING,
   CACHE,
   CORS,
   DEV_SECRETS,
@@ -80,6 +81,11 @@ export const intercomEnvSchema = z.object({
 /** Dashboard env vars schema */
 export const dashboardEnvSchema = z.object({
   INVITE_APP_URL: urlWithDefault(DEV_URLS.DASH),
+});
+
+/** Billing env vars schema */
+export const billingEnvSchema = z.object({
+  TRIAL_PERIOD_DAYS: integerWithDefault(BILLING.TRIAL_PERIOD_DAYS),
 });
 
 /** Payments env vars schema */
@@ -227,6 +233,7 @@ export const rawEnvSchema = serverEnvSchema
   .merge(googleEnvSchema)
   .merge(intercomEnvSchema)
   .merge(dashboardEnvSchema)
+  .merge(billingEnvSchema)
   .merge(paymentsEnvSchema)
   .merge(tokenEnvSchema)
   .merge(sessionEnvSchema)
@@ -284,6 +291,11 @@ export const oauthConfigSchema = z.object({
 /** Dashboard configuration schema */
 export const dashboardConfigSchema = z.object({
   baseUrl: z.string().url(),
+});
+
+/** Billing configuration schema */
+export const billingConfigSchema = z.object({
+  trialPeriodDays: z.number(),
 });
 
 /** Payments configuration schema */
@@ -431,6 +443,7 @@ export const envConfigSchema = z.object({
   google: oauthConfigSchema,
   intercom: oauthConfigSchema,
   dashboard: dashboardConfigSchema,
+  billing: billingConfigSchema,
   payments: paymentsConfigSchema,
   token: tokenConfigSchema,
   session: sessionConfigSchema,
@@ -457,6 +470,7 @@ export type CorsConfig = z.infer<typeof corsConfigSchema>;
 export type AuthConfig = z.infer<typeof authConfigSchema>;
 export type OAuthConfig = z.infer<typeof oauthConfigSchema>;
 export type DashboardConfig = z.infer<typeof dashboardConfigSchema>;
+export type BillingConfig = z.infer<typeof billingConfigSchema>;
 export type PaymentsConfig = z.infer<typeof paymentsConfigSchema>;
 export type TokenConfig = z.infer<typeof tokenConfigSchema>;
 export type SessionConfig = z.infer<typeof sessionConfigSchema>;

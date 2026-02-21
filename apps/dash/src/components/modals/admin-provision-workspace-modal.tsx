@@ -34,13 +34,15 @@ import {
 } from '@workspace/ui/components/select';
 import { Switch } from '@workspace/ui/components/switch';
 import { Check, ChevronDown, ChevronUp, Copy, ExternalLink, Zap } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { AdminPlanMetadataLine, AdminPlanSummaryRow } from '@/components/admin/plan-display';
 import { URLInput } from '@/components/url-input';
 import {
+  type AdminCustomPlanGates,
+  type AdminCustomPlanLimits,
   type AdminWorkspaceProvisionMutationInput,
   applyAdminCustomPlanQuickstart,
   cloneAdminCustomPlanGates,
@@ -74,6 +76,577 @@ const provisionFormSchema = z.object({
 type ProvisionFormData = z.infer<typeof provisionFormSchema>;
 
 // ============================================
+// PROVISION FORM REDUCER
+// ============================================
+
+interface ProvisionFormState {
+  showAdvanced: boolean;
+  planMode: PlanMode;
+  selectedProductId: string;
+  trialPeriodDays: TrialPeriod;
+  customPriceAmount: string;
+  customBillingCycle: BillingCycle;
+  customLimits: AdminCustomPlanLimits;
+  customGates: AdminCustomPlanGates;
+}
+
+type ProvisionFormAction =
+  | { type: 'SET_SHOW_ADVANCED'; value: boolean }
+  | { type: 'SET_PLAN_MODE'; value: PlanMode }
+  | { type: 'SET_SELECTED_PRODUCT'; value: string }
+  | { type: 'SET_TRIAL_PERIOD'; value: TrialPeriod }
+  | { type: 'SET_CUSTOM_PRICE'; value: string }
+  | { type: 'SET_BILLING_CYCLE'; value: BillingCycle }
+  | {
+      type: 'UPDATE_CUSTOM_LIMIT';
+      rt: ResourceType;
+      field: 'quotedLimit' | 'actualLimit';
+      value: number;
+    }
+  | { type: 'SET_CUSTOM_GATE'; gate: FeatureGate; enabled: boolean }
+  | { type: 'QUICKSTART'; limits: AdminCustomPlanLimits; gates: AdminCustomPlanGates }
+  | { type: 'RESET' };
+
+function createInitialProvisionFormState(): ProvisionFormState {
+  return {
+    showAdvanced: false,
+    planMode: 'none',
+    selectedProductId: '',
+    trialPeriodDays: DEFAULT_TRIAL_PERIOD,
+    customPriceAmount: '',
+    customBillingCycle: 'monthly',
+    customLimits: cloneAdminCustomPlanLimits(),
+    customGates: cloneAdminCustomPlanGates(),
+  };
+}
+
+function provisionFormReducer(
+  state: ProvisionFormState,
+  action: ProvisionFormAction
+): ProvisionFormState {
+  switch (action.type) {
+    case 'SET_SHOW_ADVANCED':
+      return { ...state, showAdvanced: action.value };
+    case 'SET_PLAN_MODE':
+      return { ...state, planMode: action.value, selectedProductId: '' };
+    case 'SET_SELECTED_PRODUCT':
+      return { ...state, selectedProductId: action.value };
+    case 'SET_TRIAL_PERIOD':
+      return { ...state, trialPeriodDays: action.value };
+    case 'SET_CUSTOM_PRICE':
+      return { ...state, customPriceAmount: action.value };
+    case 'SET_BILLING_CYCLE':
+      return { ...state, customBillingCycle: action.value };
+    case 'UPDATE_CUSTOM_LIMIT':
+      return {
+        ...state,
+        customLimits: {
+          ...state.customLimits,
+          [action.rt]: {
+            ...state.customLimits[action.rt],
+            [action.field]: action.value,
+          },
+        },
+      };
+    case 'SET_CUSTOM_GATE':
+      return {
+        ...state,
+        customGates: { ...state.customGates, [action.gate]: action.enabled },
+      };
+    case 'QUICKSTART':
+      return {
+        ...state,
+        showAdvanced: true,
+        planMode: 'custom',
+        selectedProductId: '',
+        customLimits: action.limits,
+        customGates: action.gates,
+      };
+    case 'RESET':
+      return createInitialProvisionFormState();
+  }
+}
+
+// ============================================
+// EXTRACTED SUB-COMPONENTS
+// ============================================
+
+interface ProvisionBasicFieldsProps {
+  control: ReturnType<typeof useForm<ProvisionFormData>>['control'];
+  errors: ReturnType<typeof useForm<ProvisionFormData>>['formState']['errors'];
+  isPending: boolean;
+}
+
+function ProvisionBasicFields({ control, errors, isPending }: ProvisionBasicFieldsProps) {
+  return (
+    <>
+      {/* Email */}
+      <div className="space-y-2.5">
+        <div className="space-y-0.5">
+          <Label htmlFor="provision-email" className="text-sm font-medium">
+            Email
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Customer email address (creates account if needed)
+          </p>
+        </div>
+        <Controller
+          name="email"
+          control={control}
+          render={({ field }) => (
+            <Input
+              id="provision-email"
+              type="email"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              placeholder="customer@company.com"
+              disabled={isPending}
+              className="rounded-lg"
+            />
+          )}
+        />
+        {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+      </div>
+
+      {/* Name */}
+      <div className="space-y-2.5">
+        <div className="space-y-0.5">
+          <Label htmlFor="provision-name" className="text-sm font-medium">
+            Name
+          </Label>
+          <p className="text-xs text-muted-foreground">Customer display name</p>
+        </div>
+        <Controller
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <Input
+              id="provision-name"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              placeholder="Jane Doe"
+              disabled={isPending}
+              className="rounded-lg"
+            />
+          )}
+        />
+        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+      </div>
+
+      {/* Workspace Domain */}
+      <div className="space-y-2.5">
+        <div className="space-y-0.5">
+          <Label htmlFor="provision-domain" className="text-sm font-medium">
+            Domain URL
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            The domain URL that will be associated with the workspace
+          </p>
+        </div>
+        <Controller
+          name="workspaceDomain"
+          control={control}
+          render={({ field }) => (
+            <URLInput
+              id="provision-domain"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              placeholder="company.com"
+              error={!!errors.workspaceDomain}
+              disabled={isPending}
+            />
+          )}
+        />
+        {errors.workspaceDomain && (
+          <p className="text-sm text-destructive">{errors.workspaceDomain.message}</p>
+        )}
+      </div>
+    </>
+  );
+}
+
+interface PlanModeSelectorProps {
+  planMode: PlanMode;
+  onPlanModeChange: (mode: PlanMode) => void;
+  isPending: boolean;
+}
+
+function PlanModeSelector({ planMode, onPlanModeChange, isPending }: PlanModeSelectorProps) {
+  return (
+    <div className="space-y-2.5">
+      <div className="space-y-0.5">
+        <Label className="text-sm font-medium">Plan</Label>
+        <p className="text-xs text-muted-foreground">
+          Select a plan for the workspace or skip for free plan
+        </p>
+      </div>
+      <Select
+        value={planMode}
+        onValueChange={(v) => onPlanModeChange(v as PlanMode)}
+        disabled={isPending}
+      >
+        <SelectTrigger className="rounded-lg">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">No plan (free)</SelectItem>
+          <SelectItem value="existing">Existing plan</SelectItem>
+          <SelectItem value="custom">Custom plan</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+interface TrialPeriodSelectorProps {
+  trialPeriodDays: TrialPeriod;
+  onTrialPeriodChange: (period: TrialPeriod) => void;
+  isPending: boolean;
+}
+
+function TrialPeriodSelector({
+  trialPeriodDays,
+  onTrialPeriodChange,
+  isPending,
+}: TrialPeriodSelectorProps) {
+  return (
+    <div className="space-y-2.5">
+      <div className="space-y-0.5">
+        <Label className="text-sm font-medium">Trial Period</Label>
+        <p className="text-xs text-muted-foreground">Number of days before billing starts</p>
+      </div>
+      <Select
+        value={trialPeriodDays}
+        onValueChange={(v) => onTrialPeriodChange(v as TrialPeriod)}
+        disabled={isPending}
+      >
+        <SelectTrigger className="rounded-lg">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="0">No trial</SelectItem>
+          <SelectItem value="7">7 days</SelectItem>
+          <SelectItem value="14">14 days</SelectItem>
+          <SelectItem value="28">28 days</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+interface ExistingPlanSelectorProps {
+  selectedProductId: string;
+  onProductChange: (productId: string) => void;
+  plans: ReturnType<typeof useAdminPlans>['data'] extends infer R
+    ? R extends { success: true; data: { products: infer P } }
+      ? P extends (infer U)[]
+        ? U[]
+        : never
+      : never
+    : never;
+  selectedPlan: ExistingPlanSelectorProps['plans'][number] | null;
+  isPending: boolean;
+}
+
+function ExistingPlanSelector({
+  selectedProductId,
+  onProductChange,
+  plans,
+  selectedPlan,
+  isPending,
+}: ExistingPlanSelectorProps) {
+  return (
+    <div className="space-y-2.5">
+      <Label className="text-sm font-medium">Select Plan</Label>
+      <Select value={selectedProductId} onValueChange={onProductChange} disabled={isPending}>
+        <SelectTrigger className="rounded-lg">
+          {selectedPlan ? (
+            <div className="w-full min-w-0">
+              <AdminPlanSummaryRow plan={selectedPlan} avatarSize={20} className="gap-2" />
+              <AdminPlanMetadataLine
+                plan={selectedPlan}
+                showMetadataBadge={false}
+                className="pl-7"
+              />
+            </div>
+          ) : (
+            <SelectValue placeholder="Select a plan" />
+          )}
+        </SelectTrigger>
+        <SelectContent>
+          {plans.map((plan) => (
+            <SelectItem key={plan.productId} value={plan.productId}>
+              <div className="w-full min-w-0 py-0.5">
+                <AdminPlanSummaryRow plan={plan} avatarSize={20} className="gap-2" />
+                <AdminPlanMetadataLine plan={plan} showMetadataBadge={false} className="pl-7" />
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+interface FeatureLimitsTableProps {
+  customLimits: AdminCustomPlanLimits;
+  onUpdateLimit: (rt: ResourceType, field: 'quotedLimit' | 'actualLimit', value: number) => void;
+  isPending: boolean;
+}
+
+function FeatureLimitsTable({ customLimits, onUpdateLimit, isPending }: FeatureLimitsTableProps) {
+  return (
+    <div className="space-y-2">
+      <h5 className="text-sm font-semibold">Feature Limits</h5>
+      <div className="rounded-lg border">
+        <div className="grid grid-cols-3 gap-2 p-3 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
+          <div>Resource</div>
+          <div>Quoted</div>
+          <div>Actual</div>
+        </div>
+        {RESOURCE_TYPE_VALUES.map((rt) => (
+          <div
+            key={rt}
+            className="grid grid-cols-3 gap-2 p-3 border-b last:border-b-0 items-center"
+          >
+            <div className="text-sm capitalize">{rt}</div>
+            <Input
+              type="number"
+              value={customLimits[rt]?.quotedLimit ?? 0}
+              onChange={(e) => onUpdateLimit(rt, 'quotedLimit', Number(e.target.value) || 0)}
+              className="h-8 text-xs"
+              disabled={isPending}
+            />
+            <Input
+              type="number"
+              value={customLimits[rt]?.actualLimit ?? 0}
+              onChange={(e) => onUpdateLimit(rt, 'actualLimit', Number(e.target.value) || 0)}
+              className="h-8 text-xs"
+              disabled={isPending}
+            />
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">Use -1 for unlimited</p>
+    </div>
+  );
+}
+
+interface FeatureGatesListProps {
+  customGates: AdminCustomPlanGates;
+  onSetGate: (gate: FeatureGate, enabled: boolean) => void;
+  isPending: boolean;
+}
+
+function FeatureGatesList({ customGates, onSetGate, isPending }: FeatureGatesListProps) {
+  return (
+    <div className="space-y-2">
+      <h5 className="text-sm font-semibold">Feature Gates</h5>
+      <div className="rounded-lg border divide-y">
+        {FEATURE_GATE_KEYS.map((gate) => (
+          <div key={gate} className="flex items-center justify-between p-3">
+            <span className="text-sm">{FEATURE_GATE_LABELS[gate]}</span>
+            <Switch
+              checked={customGates[gate] ?? false}
+              onCheckedChange={(checked) => onSetGate(gate, checked)}
+              disabled={isPending}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface CustomPlanFormProps {
+  customPriceAmount: string;
+  customBillingCycle: BillingCycle;
+  customLimits: AdminCustomPlanLimits;
+  customGates: AdminCustomPlanGates;
+  dispatch: React.Dispatch<ProvisionFormAction>;
+  isPending: boolean;
+}
+
+function CustomPlanForm({
+  customPriceAmount,
+  customBillingCycle,
+  customLimits,
+  customGates,
+  dispatch,
+  isPending,
+}: CustomPlanFormProps) {
+  return (
+    <div className="space-y-4 rounded-lg border p-4">
+      <h4 className="text-sm font-semibold">Custom Plan</h4>
+
+      {/* Price + Billing Cycle */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="custom-price">Price</Label>
+          <Input
+            id="custom-price"
+            type="number"
+            step="0.01"
+            value={customPriceAmount}
+            onChange={(e) => dispatch({ type: 'SET_CUSTOM_PRICE', value: e.target.value })}
+            placeholder="e.g. 99.00"
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Billing Cycle</Label>
+          <Select
+            value={customBillingCycle}
+            onValueChange={(v) => dispatch({ type: 'SET_BILLING_CYCLE', value: v as BillingCycle })}
+            disabled={isPending}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="annual">Annual</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <FeatureLimitsTable
+        customLimits={customLimits}
+        onUpdateLimit={(rt, field, value) =>
+          dispatch({ type: 'UPDATE_CUSTOM_LIMIT', rt, field, value })
+        }
+        isPending={isPending}
+      />
+
+      <FeatureGatesList
+        customGates={customGates}
+        onSetGate={(gate, enabled) => dispatch({ type: 'SET_CUSTOM_GATE', gate, enabled })}
+        isPending={isPending}
+      />
+    </div>
+  );
+}
+
+interface ProvisionSuccessContentProps {
+  result: AdminWorkspaceProvisionData;
+  copiedField: string | null;
+  showAdvanced: boolean;
+  onCopy: (text: string, field: string) => void;
+}
+
+function ProvisionSuccessContent({
+  result,
+  copiedField,
+  showAdvanced,
+  onCopy,
+}: ProvisionSuccessContentProps) {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+        <div className="space-y-1 text-sm">
+          <div className="text-muted-foreground">Workspace</div>
+          <div className="font-medium">{result.workspaceName}</div>
+        </div>
+        <div className="space-y-1 text-sm">
+          <div className="text-muted-foreground">User</div>
+          <div className="font-medium">
+            {result.isNewUser ? 'New user created' : 'Existing user'}
+          </div>
+        </div>
+      </div>
+
+      {/* Checkout URL */}
+      {result.checkoutUrl && (
+        <div className="space-y-2.5">
+          <div className="space-y-0.5">
+            <Label className="text-sm font-medium">Checkout URL</Label>
+            <p className="text-xs text-muted-foreground">
+              Share this URL with the customer to complete payment
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={result.checkoutUrl}
+              readOnly
+              className="w-full rounded-lg border bg-muted px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onCopy(result.checkoutUrl!, 'checkout')}
+              className="shrink-0"
+            >
+              {copiedField === 'checkout' ? (
+                <Check className="h-4 w-4 text-green-600" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+            <Button variant="outline" size="icon" asChild className="shrink-0">
+              <a href={result.checkoutUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Workspace URL */}
+      <div className="space-y-2.5">
+        <div className="space-y-0.5">
+          <Label className="text-sm font-medium">Workspace URL</Label>
+          <p className="text-xs text-muted-foreground">Direct link to the provisioned workspace</p>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={result.workspaceUrl}
+            readOnly
+            className="w-full rounded-lg border bg-muted px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => onCopy(result.workspaceUrl, 'workspace')}
+            className="shrink-0"
+          >
+            {copiedField === 'workspace' ? (
+              <Check className="h-4 w-4 text-green-600" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+          <Button variant="outline" size="icon" asChild className="shrink-0">
+            <a href={result.workspaceUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </Button>
+        </div>
+      </div>
+
+      {/* Advanced Details */}
+      {showAdvanced && (
+        <div className="space-y-3 pt-5 border-t">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Workspace ID</p>
+            <p className="text-sm font-mono break-all">{result.workspaceId}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">User ID</p>
+            <p className="text-sm font-mono break-all">{result.userId}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================
 // FORM MODAL
 // ============================================
 
@@ -91,22 +664,22 @@ export function AdminProvisionWorkspaceModal({
   isPending,
 }: AdminProvisionWorkspaceModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [planMode, setPlanMode] = useState<PlanMode>('none');
-  const [selectedProductId, setSelectedProductId] = useState('');
-
-  // Trial period state (for existing/custom plan modes)
-  const [trialPeriodDays, setTrialPeriodDays] = useState<TrialPeriod>(DEFAULT_TRIAL_PERIOD);
-
-  // Custom plan state
-  const [customPriceAmount, setCustomPriceAmount] = useState('');
-  const [customBillingCycle, setCustomBillingCycle] = useState<BillingCycle>('monthly');
-  const [customLimits, setCustomLimits] = useState<
-    Record<ResourceType, { quotedLimit: number; actualLimit: number }>
-  >(() => cloneAdminCustomPlanLimits());
-  const [customGates, setCustomGates] = useState<Record<FeatureGate, boolean>>(() =>
-    cloneAdminCustomPlanGates()
+  const [formState, dispatch] = useReducer(
+    provisionFormReducer,
+    undefined,
+    createInitialProvisionFormState
   );
+
+  const {
+    showAdvanced,
+    planMode,
+    selectedProductId,
+    trialPeriodDays,
+    customPriceAmount,
+    customBillingCycle,
+    customLimits,
+    customGates,
+  } = formState;
 
   const { data: plansResult } = useAdminPlans({}, open);
   const plans = plansResult?.success ? plansResult.data.products : [];
@@ -131,14 +704,7 @@ export function AdminProvisionWorkspaceModal({
   const prevOpenRef = useRef(open);
   if (!open && prevOpenRef.current) {
     reset();
-    setShowAdvanced(false);
-    setPlanMode('none');
-    setSelectedProductId('');
-    setTrialPeriodDays(DEFAULT_TRIAL_PERIOD);
-    setCustomPriceAmount('');
-    setCustomBillingCycle('monthly');
-    setCustomLimits(cloneAdminCustomPlanLimits());
-    setCustomGates(cloneAdminCustomPlanGates());
+    dispatch({ type: 'RESET' });
   }
   prevOpenRef.current = open;
 
@@ -153,27 +719,12 @@ export function AdminProvisionWorkspaceModal({
 
       event.preventDefault();
       const { limits, gates } = applyAdminCustomPlanQuickstart();
-      setShowAdvanced(true);
-      setPlanMode('custom');
-      setSelectedProductId('');
-      setCustomLimits(limits);
-      setCustomGates(gates);
+      dispatch({ type: 'QUICKSTART', limits, gates });
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open]);
-
-  const updateCustomLimit = (
-    rt: ResourceType,
-    field: 'quotedLimit' | 'actualLimit',
-    value: string
-  ) => {
-    setCustomLimits((prev) => ({
-      ...prev,
-      [rt]: { ...prev[rt], [field]: Number(value) || 0 },
-    }));
-  };
 
   const canSubmit = () => {
     if (!isValid) return false;
@@ -256,90 +807,7 @@ export function AdminProvisionWorkspaceModal({
 
             {/* Form */}
             <div className="space-y-5">
-              {/* Email */}
-              <div className="space-y-2.5">
-                <div className="space-y-0.5">
-                  <Label htmlFor="provision-email" className="text-sm font-medium">
-                    Email
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Customer email address (creates account if needed)
-                  </p>
-                </div>
-                <Controller
-                  name="email"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      id="provision-email"
-                      type="email"
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      placeholder="customer@company.com"
-                      disabled={isPending}
-                      className="rounded-lg"
-                    />
-                  )}
-                />
-                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-              </div>
-
-              {/* Name */}
-              <div className="space-y-2.5">
-                <div className="space-y-0.5">
-                  <Label htmlFor="provision-name" className="text-sm font-medium">
-                    Name
-                  </Label>
-                  <p className="text-xs text-muted-foreground">Customer display name</p>
-                </div>
-                <Controller
-                  name="name"
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      id="provision-name"
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      placeholder="Jane Doe"
-                      disabled={isPending}
-                      className="rounded-lg"
-                    />
-                  )}
-                />
-                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-              </div>
-
-              {/* Workspace Domain */}
-              <div className="space-y-2.5">
-                <div className="space-y-0.5">
-                  <Label htmlFor="provision-domain" className="text-sm font-medium">
-                    Domain URL
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    The domain URL that will be associated with the workspace
-                  </p>
-                </div>
-                <Controller
-                  name="workspaceDomain"
-                  control={control}
-                  render={({ field }) => (
-                    <URLInput
-                      id="provision-domain"
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      placeholder="company.com"
-                      error={!!errors.workspaceDomain}
-                      disabled={isPending}
-                    />
-                  )}
-                />
-                {errors.workspaceDomain && (
-                  <p className="text-sm text-destructive">{errors.workspaceDomain.message}</p>
-                )}
-              </div>
+              <ProvisionBasicFields control={control} errors={errors} isPending={isPending} />
 
               {/* Advanced Options */}
               {showAdvanced && (
@@ -371,204 +839,39 @@ export function AdminProvisionWorkspaceModal({
                     />
                   </div>
 
-                  {/* Plan Mode */}
-                  <div className="space-y-2.5">
-                    <div className="space-y-0.5">
-                      <Label className="text-sm font-medium">Plan</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Select a plan for the workspace or skip for free plan
-                      </p>
-                    </div>
-                    <Select
-                      value={planMode}
-                      onValueChange={(v) => {
-                        setPlanMode(v as PlanMode);
-                        setSelectedProductId('');
-                      }}
-                      disabled={isPending}
-                    >
-                      <SelectTrigger className="rounded-lg">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No plan (free)</SelectItem>
-                        <SelectItem value="existing">Existing plan</SelectItem>
-                        <SelectItem value="custom">Custom plan</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <PlanModeSelector
+                    planMode={planMode}
+                    onPlanModeChange={(v) => dispatch({ type: 'SET_PLAN_MODE', value: v })}
+                    isPending={isPending}
+                  />
 
-                  {/* Trial Period */}
                   {(planMode === 'existing' || planMode === 'custom') && (
-                    <div className="space-y-2.5">
-                      <div className="space-y-0.5">
-                        <Label className="text-sm font-medium">Trial Period</Label>
-                        <p className="text-xs text-muted-foreground">
-                          Number of days before billing starts
-                        </p>
-                      </div>
-                      <Select
-                        value={trialPeriodDays}
-                        onValueChange={(v) => setTrialPeriodDays(v as TrialPeriod)}
-                        disabled={isPending}
-                      >
-                        <SelectTrigger className="rounded-lg">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">No trial</SelectItem>
-                          <SelectItem value="7">7 days</SelectItem>
-                          <SelectItem value="14">14 days</SelectItem>
-                          <SelectItem value="28">28 days</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <TrialPeriodSelector
+                      trialPeriodDays={trialPeriodDays}
+                      onTrialPeriodChange={(v) => dispatch({ type: 'SET_TRIAL_PERIOD', value: v })}
+                      isPending={isPending}
+                    />
                   )}
 
-                  {/* Existing Plan Selector */}
                   {planMode === 'existing' && (
-                    <div className="space-y-2.5">
-                      <Label className="text-sm font-medium">Select Plan</Label>
-                      <Select
-                        value={selectedProductId}
-                        onValueChange={setSelectedProductId}
-                        disabled={isPending}
-                      >
-                        <SelectTrigger className="rounded-lg">
-                          {selectedPlan ? (
-                            <div className="w-full min-w-0">
-                              <AdminPlanSummaryRow
-                                plan={selectedPlan}
-                                avatarSize={20}
-                                className="gap-2"
-                              />
-                              <AdminPlanMetadataLine
-                                plan={selectedPlan}
-                                showMetadataBadge={false}
-                                className="pl-7"
-                              />
-                            </div>
-                          ) : (
-                            <SelectValue placeholder="Select a plan" />
-                          )}
-                        </SelectTrigger>
-                        <SelectContent>
-                          {plans.map((plan) => (
-                            <SelectItem key={plan.productId} value={plan.productId}>
-                              <div className="w-full min-w-0 py-0.5">
-                                <AdminPlanSummaryRow
-                                  plan={plan}
-                                  avatarSize={20}
-                                  className="gap-2"
-                                />
-                                <AdminPlanMetadataLine
-                                  plan={plan}
-                                  showMetadataBadge={false}
-                                  className="pl-7"
-                                />
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <ExistingPlanSelector
+                      selectedProductId={selectedProductId}
+                      onProductChange={(v) => dispatch({ type: 'SET_SELECTED_PRODUCT', value: v })}
+                      plans={plans}
+                      selectedPlan={selectedPlan}
+                      isPending={isPending}
+                    />
                   )}
 
-                  {/* Custom Plan Form */}
                   {planMode === 'custom' && (
-                    <div className="space-y-4 rounded-lg border p-4">
-                      <h4 className="text-sm font-semibold">Custom Plan</h4>
-
-                      {/* Price + Billing Cycle */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="custom-price">Price</Label>
-                          <Input
-                            id="custom-price"
-                            type="number"
-                            step="0.01"
-                            value={customPriceAmount}
-                            onChange={(e) => setCustomPriceAmount(e.target.value)}
-                            placeholder="e.g. 99.00"
-                            disabled={isPending}
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label>Billing Cycle</Label>
-                          <Select
-                            value={customBillingCycle}
-                            onValueChange={(v) => setCustomBillingCycle(v as BillingCycle)}
-                            disabled={isPending}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="monthly">Monthly</SelectItem>
-                              <SelectItem value="annual">Annual</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {/* Feature Limits */}
-                      <div className="space-y-2">
-                        <h5 className="text-sm font-semibold">Feature Limits</h5>
-                        <div className="rounded-lg border">
-                          <div className="grid grid-cols-3 gap-2 p-3 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
-                            <div>Resource</div>
-                            <div>Quoted</div>
-                            <div>Actual</div>
-                          </div>
-                          {RESOURCE_TYPE_VALUES.map((rt) => (
-                            <div
-                              key={rt}
-                              className="grid grid-cols-3 gap-2 p-3 border-b last:border-b-0 items-center"
-                            >
-                              <div className="text-sm capitalize">{rt}</div>
-                              <Input
-                                type="number"
-                                value={customLimits[rt]?.quotedLimit ?? 0}
-                                onChange={(e) =>
-                                  updateCustomLimit(rt, 'quotedLimit', e.target.value)
-                                }
-                                className="h-8 text-xs"
-                                disabled={isPending}
-                              />
-                              <Input
-                                type="number"
-                                value={customLimits[rt]?.actualLimit ?? 0}
-                                onChange={(e) =>
-                                  updateCustomLimit(rt, 'actualLimit', e.target.value)
-                                }
-                                className="h-8 text-xs"
-                                disabled={isPending}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Use -1 for unlimited</p>
-                      </div>
-
-                      {/* Feature Gates */}
-                      <div className="space-y-2">
-                        <h5 className="text-sm font-semibold">Feature Gates</h5>
-                        <div className="rounded-lg border divide-y">
-                          {FEATURE_GATE_KEYS.map((gate) => (
-                            <div key={gate} className="flex items-center justify-between p-3">
-                              <span className="text-sm">{FEATURE_GATE_LABELS[gate]}</span>
-                              <Switch
-                                checked={customGates[gate] ?? false}
-                                onCheckedChange={(checked) =>
-                                  setCustomGates((prev) => ({ ...prev, [gate]: checked }))
-                                }
-                                disabled={isPending}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                    <CustomPlanForm
+                      customPriceAmount={customPriceAmount}
+                      customBillingCycle={customBillingCycle}
+                      customLimits={customLimits}
+                      customGates={customGates}
+                      dispatch={dispatch}
+                      isPending={isPending}
+                    />
                   )}
                 </div>
               )}
@@ -578,7 +881,7 @@ export function AdminProvisionWorkspaceModal({
             <DialogFooter className="mt-8">
               <button
                 type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
+                onClick={() => dispatch({ type: 'SET_SHOW_ADVANCED', value: !showAdvanced })}
                 className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
                 disabled={isPending}
               >
@@ -645,22 +948,25 @@ export function AdminProvisionWorkspaceSuccessModal({
   onOpenChange,
   result,
 }: AdminProvisionWorkspaceSuccessModalProps) {
-  const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [successState, setSuccessState] = useState<{
+    copiedField: string | null;
+    showAdvanced: boolean;
+  }>({ copiedField: null, showAdvanced: false });
 
   // Reset state when modal closes (adjust state during render)
   const prevSuccessOpenRef = useRef(open);
   if (!open && prevSuccessOpenRef.current) {
-    setCopiedField(null);
-    setShowAdvanced(false);
+    setSuccessState({ copiedField: null, showAdvanced: false });
   }
   prevSuccessOpenRef.current = open;
+
+  const { copiedField, showAdvanced } = successState;
 
   const handleCopy = async (text: string, field: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
+      setSuccessState((prev) => ({ ...prev, copiedField: field }));
+      setTimeout(() => setSuccessState((prev) => ({ ...prev, copiedField: null })), 2000);
       showCopiedToClipboardToast();
     } catch {
       showCopyFailedToast();
@@ -685,112 +991,23 @@ export function AdminProvisionWorkspaceSuccessModal({
           </div>
 
           {/* Summary */}
-          <div className="space-y-4">
-            <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
-              <div className="space-y-1 text-sm">
-                <div className="text-muted-foreground">Workspace</div>
-                <div className="font-medium">{result.workspaceName}</div>
-              </div>
-              <div className="space-y-1 text-sm">
-                <div className="text-muted-foreground">User</div>
-                <div className="font-medium">
-                  {result.isNewUser ? 'New user created' : 'Existing user'}
-                </div>
-              </div>
-            </div>
-
-            {/* Checkout URL */}
-            {result.checkoutUrl && (
-              <div className="space-y-2.5">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Checkout URL</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Share this URL with the customer to complete payment
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={result.checkoutUrl}
-                    readOnly
-                    className="w-full rounded-lg border bg-muted px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleCopy(result.checkoutUrl!, 'checkout')}
-                    className="shrink-0"
-                  >
-                    {copiedField === 'checkout' ? (
-                      <Check className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <Button variant="outline" size="icon" asChild className="shrink-0">
-                    <a href={result.checkoutUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Workspace URL */}
-            <div className="space-y-2.5">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Workspace URL</Label>
-                <p className="text-xs text-muted-foreground">
-                  Direct link to the provisioned workspace
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={result.workspaceUrl}
-                  readOnly
-                  className="w-full rounded-lg border bg-muted px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleCopy(result.workspaceUrl, 'workspace')}
-                  className="shrink-0"
-                >
-                  {copiedField === 'workspace' ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button variant="outline" size="icon" asChild className="shrink-0">
-                  <a href={result.workspaceUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </Button>
-              </div>
-            </div>
-
-            {/* Advanced Details */}
-            {showAdvanced && (
-              <div className="space-y-3 pt-5 border-t">
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">Workspace ID</p>
-                  <p className="text-sm font-mono break-all">{result.workspaceId}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">User ID</p>
-                  <p className="text-sm font-mono break-all">{result.userId}</p>
-                </div>
-              </div>
-            )}
-          </div>
+          <ProvisionSuccessContent
+            result={result}
+            copiedField={copiedField}
+            showAdvanced={showAdvanced}
+            onCopy={handleCopy}
+          />
 
           {/* Footer */}
           <DialogFooter className="mt-8">
             <button
               type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
+              onClick={() =>
+                setSuccessState((prev) => ({
+                  ...prev,
+                  showAdvanced: !prev.showAdvanced,
+                }))
+              }
               className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
             >
               {showAdvanced ? (

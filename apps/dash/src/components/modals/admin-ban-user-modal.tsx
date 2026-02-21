@@ -57,52 +57,52 @@ export function AdminBanUserModal({
   onConfirm,
   isPending,
 }: AdminBanUserModalProps) {
-  const [reason, setReason] = useState('');
-  const [duration, setDuration] = useState('permanent');
-  const [customDays, setCustomDays] = useState('');
-  const [confirmEmail, setConfirmEmail] = useState('');
-  const [deleteWorkspacesForRoles, setDeleteWorkspacesForRoles] = useState<WorkspaceRole[]>([
-    'owner',
-  ]);
+  const initialFormState = {
+    reason: '',
+    duration: 'permanent',
+    customDays: '',
+    confirmEmail: '',
+    deleteWorkspacesForRoles: ['owner'] as WorkspaceRole[],
+  };
+  const [form, setForm] = useState(initialFormState);
 
   // Reset form when modal closes (adjust state during render)
   const prevOpenRef = useRef(open);
   if (!open && prevOpenRef.current) {
-    setReason('');
-    setDuration('permanent');
-    setCustomDays('');
-    setConfirmEmail('');
-    setDeleteWorkspacesForRoles(['owner']);
+    setForm(initialFormState);
   }
   prevOpenRef.current = open;
 
   const handleRoleToggle = (role: WorkspaceRole) => {
-    setDeleteWorkspacesForRoles((prev) =>
-      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
-    );
+    setForm((prev) => ({
+      ...prev,
+      deleteWorkspacesForRoles: prev.deleteWorkspacesForRoles.includes(role)
+        ? prev.deleteWorkspacesForRoles.filter((r) => r !== role)
+        : [...prev.deleteWorkspacesForRoles, role],
+    }));
   };
 
   const handleConfirm = () => {
-    if (!reason.trim() || confirmEmail !== user?.email) return;
+    if (!form.reason.trim() || form.confirmEmail !== user?.email) return;
 
     let expiresInSeconds: number | undefined;
 
-    if (duration === 'custom' && customDays) {
-      expiresInSeconds = parseInt(customDays, 10) * 24 * 60 * 60;
-    } else if (duration !== 'permanent') {
-      expiresInSeconds = parseInt(duration, 10);
+    if (form.duration === 'custom' && form.customDays) {
+      expiresInSeconds = parseInt(form.customDays, 10) * 24 * 60 * 60;
+    } else if (form.duration !== 'permanent') {
+      expiresInSeconds = parseInt(form.duration, 10);
     }
 
     onConfirm({
-      reason: reason.trim(),
+      reason: form.reason.trim(),
       expiresInSeconds,
-      deleteWorkspacesForRoles,
+      deleteWorkspacesForRoles: form.deleteWorkspacesForRoles,
     });
   };
 
   if (!user) return null;
 
-  const isConfirmDisabled = !reason.trim() || confirmEmail !== user.email || isPending;
+  const isConfirmDisabled = !form.reason.trim() || form.confirmEmail !== user.email || isPending;
   const displayName = user.name || 'this user';
 
   return (
@@ -128,8 +128,10 @@ export function AdminBanUserModal({
               <textarea
                 id="reason"
                 placeholder="Enter reason for banning this user..."
-                value={reason}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
+                value={form.reason}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setForm((prev) => ({ ...prev, reason: e.target.value }))
+                }
                 rows={3}
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
@@ -139,7 +141,10 @@ export function AdminBanUserModal({
               <Label htmlFor="duration" className="mb-2 block">
                 Ban Duration
               </Label>
-              <Select value={duration} onValueChange={setDuration}>
+              <Select
+                value={form.duration}
+                onValueChange={(v) => setForm((prev) => ({ ...prev, duration: v }))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
@@ -153,7 +158,7 @@ export function AdminBanUserModal({
               </Select>
             </div>
 
-            {duration === 'custom' && (
+            {form.duration === 'custom' && (
               <div>
                 <Label htmlFor="customDays" className="mb-2 block">
                   Custom Duration (days)
@@ -163,8 +168,8 @@ export function AdminBanUserModal({
                   type="number"
                   min="1"
                   placeholder="Enter number of days"
-                  value={customDays}
-                  onChange={(e) => setCustomDays(e.target.value)}
+                  value={form.customDays}
+                  onChange={(e) => setForm((prev) => ({ ...prev, customDays: e.target.value }))}
                 />
               </div>
             )}
@@ -175,7 +180,7 @@ export function AdminBanUserModal({
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="delete-owner"
-                    checked={deleteWorkspacesForRoles.includes('owner')}
+                    checked={form.deleteWorkspacesForRoles.includes('owner')}
                     onCheckedChange={() => handleRoleToggle('owner')}
                     disabled={isPending}
                   />
@@ -189,7 +194,7 @@ export function AdminBanUserModal({
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="delete-admin"
-                    checked={deleteWorkspacesForRoles.includes('admin')}
+                    checked={form.deleteWorkspacesForRoles.includes('admin')}
                     onCheckedChange={() => handleRoleToggle('admin')}
                     disabled={isPending}
                   />
@@ -203,7 +208,7 @@ export function AdminBanUserModal({
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="delete-member"
-                    checked={deleteWorkspacesForRoles.includes('member')}
+                    checked={form.deleteWorkspacesForRoles.includes('member')}
                     onCheckedChange={() => handleRoleToggle('member')}
                     disabled={isPending}
                   />
@@ -215,9 +220,9 @@ export function AdminBanUserModal({
                   </label>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {deleteWorkspacesForRoles.length === 0
+                  {form.deleteWorkspacesForRoles.length === 0
                     ? 'No workspaces will be deleted'
-                    : `Workspaces where user has ${deleteWorkspacesForRoles.join(', ')} role will be deleted`}
+                    : `Workspaces where user has ${form.deleteWorkspacesForRoles.join(', ')} role will be deleted`}
                 </p>
               </div>
             </div>
@@ -228,8 +233,8 @@ export function AdminBanUserModal({
               </Label>
               <Input
                 id="confirm-email"
-                value={confirmEmail}
-                onChange={(e) => setConfirmEmail(e.target.value)}
+                value={form.confirmEmail}
+                onChange={(e) => setForm((prev) => ({ ...prev, confirmEmail: e.target.value }))}
                 placeholder={user.email}
                 disabled={isPending}
                 autoComplete="off"

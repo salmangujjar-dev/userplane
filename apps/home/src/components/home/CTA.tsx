@@ -54,7 +54,7 @@ export default function CTA() {
             <div className="flex flex-col gap-6">
               <h2 className="font-dm-sans font-medium text-4xl text-foreground tracking-tighter md:text-5xl lg:text-6xl leading-tight">
                 {segments.map((segment, index) => (
-                  <span key={index}>
+                  <span key={`${segment.text}-${index}`}>
                     {segment.color ? (
                       <Highlight color={segment.color}>{segment.text}</Highlight>
                     ) : (

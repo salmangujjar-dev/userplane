@@ -2,7 +2,7 @@
 
 import { SidebarInset, SidebarProvider } from '@workspace/ui/components/sidebar';
 import { useParams, usePathname } from 'next/navigation';
-import { useRef } from 'react';
+import { useEffect } from 'react';
 
 import { AppSidebar } from '@/components/navigation/sidebar';
 import { WorkspaceAccessGate } from '@/components/workspace/workspace-access-gate';
@@ -17,12 +17,12 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   // Full-screen views that render their own chrome (no sidebar)
   const isFullScreenView = !!params.recordingId || pathname.includes('/settings/integrations');
 
-  // Sync URL param to store (adjust state during render)
-  const prevWorkspaceIdRef = useRef<string | undefined>(undefined);
-  if (workspaceIdFromUrl && workspaceIdFromUrl !== prevWorkspaceIdRef.current) {
-    setWorkspace(workspaceIdFromUrl);
-  }
-  prevWorkspaceIdRef.current = workspaceIdFromUrl;
+  // Sync URL param to store after render
+  useEffect(() => {
+    if (workspaceIdFromUrl) {
+      setWorkspace(workspaceIdFromUrl);
+    }
+  }, [workspaceIdFromUrl, setWorkspace]);
 
   if (isFullScreenView) {
     return <WorkspaceAccessGate>{children}</WorkspaceAccessGate>;

@@ -159,7 +159,9 @@ interface InviteLinkSectionProps {
 function InviteLinkSection({ inviteLink, isLoading, onCopyLink }: InviteLinkSectionProps) {
   return (
     <div className="space-y-2">
-      <label htmlFor="invite-link" className="text-sm font-medium">Invite link</label>
+      <label htmlFor="invite-link" className="text-sm font-medium">
+        Invite link
+      </label>
       <div className="flex gap-2">
         <div className="flex-1 rounded-lg bg-muted px-4 py-2.5">
           <input
@@ -225,8 +227,8 @@ function SuggestionsPills({
             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <div className="flex -space-x-1.5">
-              {Array.from({ length: 3 }, (_, i) => (
-                <BoringAvatar key={`more-avatar-${i}`} size={AVATAR_SIZES.COMPACT} />
+              {Array.from({ length: 3 }, (_, i) => `more-avatar-${i}`).map((id) => (
+                <BoringAvatar key={id} size={AVATAR_SIZES.COMPACT} />
               ))}
             </div>
             <span>More</span>

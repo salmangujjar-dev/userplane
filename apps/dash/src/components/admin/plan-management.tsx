@@ -172,21 +172,18 @@ function PlanDetailSheet({
 }) {
   const updateMutation = useAdminUpdatePlan();
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [priceAmount, setPriceAmount] = useState('');
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
-  const [limits, setLimits] = useState<LimitRecord>({} as LimitRecord);
-  const [gates, setGates] = useState<GateRecord>({} as GateRecord);
+  const [formState, setFormState] = useState({
+    name: '',
+    description: '',
+    priceAmount: '',
+    billingCycle: 'monthly' as BillingCycle,
+    limits: {} as LimitRecord,
+    gates: {} as GateRecord,
+  });
 
   // Sync form state when the selected product changes (adjust state during render)
   const prevProductRef = useRef(product);
   if (product && product !== prevProductRef.current) {
-    setName(product.name ?? '');
-    setDescription(product.description ?? '');
-    setPriceAmount(product.price ? String(product.price.price / 100) : '0');
-    setBillingCycle(inferBillingCycle(product.price));
-
     const newLimits = {} as LimitRecord;
     for (const rt of RESOURCE_TYPE_VALUES) {
       const existing = product.featureLimits?.find((l) => l.resourceType === rt);
@@ -195,19 +192,29 @@ function PlanDetailSheet({
         actualLimit: existing?.actualLimit ?? 0,
       };
     }
-    setLimits(newLimits);
 
     const newGates = {} as GateRecord;
     for (const key of FEATURE_GATE_KEYS) {
       const existing = product.featureGates?.find((g) => g.gate === key);
       newGates[key] = existing?.enabled ?? false;
     }
-    setGates(newGates);
+
+    setFormState({
+      name: product.name ?? '',
+      description: product.description ?? '',
+      priceAmount: product.price ? String(product.price.price / 100) : '0',
+      billingCycle: inferBillingCycle(product.price),
+      limits: newLimits,
+      gates: newGates,
+    });
   }
   prevProductRef.current = product;
 
   const updateLimit = (rt: ResourceType, field: LimitField, value: string) => {
-    setLimits((prev) => ({ ...prev, [rt]: { ...prev[rt], [field]: Number(value) || 0 } }));
+    setFormState((prev) => ({
+      ...prev,
+      limits: { ...prev.limits, [rt]: { ...prev.limits[rt], [field]: Number(value) || 0 } },
+    }));
   };
 
   const handleSave = useCallback(() => {
@@ -216,29 +223,25 @@ function PlanDetailSheet({
     updateMutation.mutate(
       {
         productId: product.productId,
-        name,
-        description: description || null,
+        name: formState.name,
+        description: formState.description || null,
         price: {
-          amountCents: Math.round(Number(priceAmount) * 100),
-          billingCycle,
+          amountCents: Math.round(Number(formState.priceAmount) * 100),
+          billingCycle: formState.billingCycle,
           taxInclusive: product.price?.taxInclusive ?? null,
         },
-        featureLimits: RESOURCE_TYPE_VALUES.map((rt) => ({ resourceType: rt, ...limits[rt] })),
-        featureGates: FEATURE_GATE_KEYS.map((gate) => ({ gate, enabled: gates[gate] ?? false })),
+        featureLimits: RESOURCE_TYPE_VALUES.map((rt) => ({
+          resourceType: rt,
+          ...formState.limits[rt],
+        })),
+        featureGates: FEATURE_GATE_KEYS.map((gate) => ({
+          gate,
+          enabled: formState.gates[gate] ?? false,
+        })),
       },
       { onSuccess: () => onOpenChange(false) }
     );
-  }, [
-    product,
-    name,
-    description,
-    priceAmount,
-    billingCycle,
-    limits,
-    gates,
-    updateMutation,
-    onOpenChange,
-  ]);
+  }, [product, formState, updateMutation, onOpenChange]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -255,14 +258,20 @@ function PlanDetailSheet({
             <div className="space-y-3">
               <div>
                 <Label htmlFor="plan-name">Name</Label>
-                <Input id="plan-name" value={name} onChange={(e) => setName(e.target.value)} />
+                <Input
+                  id="plan-name"
+                  value={formState.name}
+                  onChange={(e) => setFormState((prev) => ({ ...prev, name: e.target.value }))}
+                />
               </div>
               <div>
                 <Label htmlFor="plan-description">Description</Label>
                 <Textarea
                   id="plan-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={formState.description}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, description: e.target.value }))
+                  }
                   rows={2}
                 />
               </div>
@@ -273,15 +282,19 @@ function PlanDetailSheet({
                     id="plan-price"
                     type="number"
                     step="0.01"
-                    value={priceAmount}
-                    onChange={(e) => setPriceAmount(e.target.value)}
+                    value={formState.priceAmount}
+                    onChange={(e) =>
+                      setFormState((prev) => ({ ...prev, priceAmount: e.target.value }))
+                    }
                   />
                 </div>
                 <div>
                   <Label>Billing Cycle</Label>
                   <Select
-                    value={billingCycle}
-                    onValueChange={(v) => setBillingCycle(v as BillingCycle)}
+                    value={formState.billingCycle}
+                    onValueChange={(v) =>
+                      setFormState((prev) => ({ ...prev, billingCycle: v as BillingCycle }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -296,10 +309,12 @@ function PlanDetailSheet({
             </div>
           </section>
 
-          <FeatureLimitsTable limits={limits} onUpdate={updateLimit} />
+          <FeatureLimitsTable limits={formState.limits} onUpdate={updateLimit} />
           <FeatureGatesPanel
-            gates={gates}
-            onChange={(gate, checked) => setGates((prev) => ({ ...prev, [gate]: checked }))}
+            gates={formState.gates}
+            onChange={(gate, checked) =>
+              setFormState((prev) => ({ ...prev, gates: { ...prev.gates, [gate]: checked } }))
+            }
           />
 
           <div className="flex justify-end pt-2">
@@ -328,11 +343,6 @@ function CreatePlanSheet({
   const contentRef = useRef<HTMLDivElement>(null);
   const createMutation = useAdminCreatePlan();
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [priceAmount, setPriceAmount] = useState('');
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
-
   const initLimits = (): LimitRecord => {
     const init = {} as LimitRecord;
     for (const rt of RESOURCE_TYPE_VALUES) init[rt] = { quotedLimit: 0, actualLimit: 0 };
@@ -345,18 +355,26 @@ function CreatePlanSheet({
     return init;
   };
 
-  const [limits, setLimits] = useState<LimitRecord>(initLimits);
-  const [gates, setGates] = useState<GateRecord>(initGates);
+  const [formState, setFormState] = useState({
+    name: '',
+    description: '',
+    priceAmount: '',
+    billingCycle: 'monthly' as BillingCycle,
+    limits: initLimits(),
+    gates: initGates(),
+  });
 
   // Reset form when sheet opens (adjust state during render)
   const prevOpenRef = useRef(open);
   if (open && !prevOpenRef.current) {
-    setName('');
-    setDescription('');
-    setPriceAmount('');
-    setBillingCycle('monthly');
-    setLimits(initLimits());
-    setGates(initGates());
+    setFormState({
+      name: '',
+      description: '',
+      priceAmount: '',
+      billingCycle: 'monthly',
+      limits: initLimits(),
+      gates: initGates(),
+    });
   }
   prevOpenRef.current = open;
 
@@ -371,8 +389,7 @@ function CreatePlanSheet({
 
       event.preventDefault();
       const { limits: quickstartLimits, gates: quickstartGates } = applyAdminCustomPlanQuickstart();
-      setLimits(quickstartLimits);
-      setGates(quickstartGates);
+      setFormState((prev) => ({ ...prev, limits: quickstartLimits, gates: quickstartGates }));
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -380,24 +397,33 @@ function CreatePlanSheet({
   }, [open]);
 
   const updateLimit = (rt: ResourceType, field: LimitField, value: string) => {
-    setLimits((prev) => ({ ...prev, [rt]: { ...prev[rt], [field]: Number(value) || 0 } }));
+    setFormState((prev) => ({
+      ...prev,
+      limits: { ...prev.limits, [rt]: { ...prev.limits[rt], [field]: Number(value) || 0 } },
+    }));
   };
 
   const handleCreate = useCallback(() => {
     createMutation.mutate(
       {
-        name,
-        description: description || undefined,
+        name: formState.name,
+        description: formState.description || undefined,
         price: {
-          amountCents: Math.round((Number(priceAmount) || 0) * 100),
-          billingCycle,
+          amountCents: Math.round((Number(formState.priceAmount) || 0) * 100),
+          billingCycle: formState.billingCycle,
         },
-        featureLimits: RESOURCE_TYPE_VALUES.map((rt) => ({ resourceType: rt, ...limits[rt] })),
-        featureGates: FEATURE_GATE_KEYS.map((gate) => ({ gate, enabled: gates[gate] ?? false })),
+        featureLimits: RESOURCE_TYPE_VALUES.map((rt) => ({
+          resourceType: rt,
+          ...formState.limits[rt],
+        })),
+        featureGates: FEATURE_GATE_KEYS.map((gate) => ({
+          gate,
+          enabled: formState.gates[gate] ?? false,
+        })),
       },
       { onSuccess: (result) => result.success && onOpenChange(false) }
     );
-  }, [name, description, priceAmount, billingCycle, limits, gates, createMutation, onOpenChange]);
+  }, [formState, createMutation, onOpenChange]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -418,8 +444,8 @@ function CreatePlanSheet({
                 <Label htmlFor="create-name">Name</Label>
                 <Input
                   id="create-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={formState.name}
+                  onChange={(e) => setFormState((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="e.g. Enterprise Monthly"
                 />
               </div>
@@ -427,8 +453,10 @@ function CreatePlanSheet({
                 <Label htmlFor="create-description">Description</Label>
                 <Textarea
                   id="create-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={formState.description}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, description: e.target.value }))
+                  }
                   rows={2}
                   placeholder="Optional description"
                 />
@@ -436,8 +464,10 @@ function CreatePlanSheet({
               <div>
                 <Label>Billing Cycle</Label>
                 <Select
-                  value={billingCycle}
-                  onValueChange={(v) => setBillingCycle(v as BillingCycle)}
+                  value={formState.billingCycle}
+                  onValueChange={(v) =>
+                    setFormState((prev) => ({ ...prev, billingCycle: v as BillingCycle }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -454,22 +484,26 @@ function CreatePlanSheet({
                   id="create-price"
                   type="number"
                   step="0.01"
-                  value={priceAmount}
-                  onChange={(e) => setPriceAmount(e.target.value)}
+                  value={formState.priceAmount}
+                  onChange={(e) =>
+                    setFormState((prev) => ({ ...prev, priceAmount: e.target.value }))
+                  }
                   placeholder="e.g. 99.00"
                 />
               </div>
             </div>
           </section>
 
-          <FeatureLimitsTable limits={limits} onUpdate={updateLimit} />
+          <FeatureLimitsTable limits={formState.limits} onUpdate={updateLimit} />
           <FeatureGatesPanel
-            gates={gates}
-            onChange={(gate, checked) => setGates((prev) => ({ ...prev, [gate]: checked }))}
+            gates={formState.gates}
+            onChange={(gate, checked) =>
+              setFormState((prev) => ({ ...prev, gates: { ...prev.gates, [gate]: checked } }))
+            }
           />
 
           <div className="flex justify-end pt-2">
-            <Button onClick={handleCreate} disabled={createMutation.isPending || !name}>
+            <Button onClick={handleCreate} disabled={createMutation.isPending || !formState.name}>
               {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Create Plan
             </Button>

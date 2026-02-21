@@ -360,18 +360,7 @@ export class EntitlementService {
 
     for (const resourceType of RESOURCE_TYPE_VALUES) {
       const entitlement = entitlementsList.find((e) => e.resourceType === resourceType);
-      let quotedLimit = entitlement?.quotedLimit ?? 0;
-
-      // For annual plans on period-based resources, show monthly fair share (limit / 12)
-      const billingCadence = entitlement?.billingCadence ?? null;
-      if (
-        billingCadence === 'annual' &&
-        quotedLimit > 0 &&
-        quotedLimit !== UNLIMITED_QUOTED_LIMIT &&
-        (PERIOD_BASED_RESOURCES as readonly string[]).includes(resourceType)
-      ) {
-        quotedLimit = Math.floor(quotedLimit / 12);
-      }
+      const quotedLimit = entitlement?.quotedLimit ?? 0;
 
       if (entitlement) {
         const consumed = entitlement.resourceConsumed;

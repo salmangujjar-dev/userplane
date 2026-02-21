@@ -30,6 +30,7 @@ import {
   PRICING_PAGE_HIGHLIGHTS,
   type PricingFAQItem,
 } from '@/constants/pricing-page';
+import type { HighlightConfig } from '@/constants/types';
 
 import Highlight from './Highlight';
 
@@ -80,7 +81,7 @@ interface SectionHeaderProps {
   label: string;
   title: string;
   subtitle: string;
-  highlights: { wordIndex: number; color: 'blue' | 'yellow' | 'green' | 'purple' }[];
+  highlights: HighlightConfig[];
 }
 
 function SectionHeader({ label, title, subtitle, highlights }: SectionHeaderProps) {
@@ -95,7 +96,9 @@ function SectionHeader({ label, title, subtitle, highlights }: SectionHeaderProp
           {words.map((word, index) => {
             const color = highlightMap.get(index);
             return (
-              <span key={index}>{color ? <Highlight color={color}>{word}</Highlight> : word} </span>
+              <span key={`${word}-${index}`}>
+                {color ? <Highlight color={color}>{word}</Highlight> : word}{' '}
+              </span>
             );
           })}
         </h2>
@@ -189,8 +192,8 @@ function PlanCard({ plan, highlights, isAnnual }: PlanCardProps) {
 
       {/* Features */}
       <ul className="space-y-3 flex-1">
-        {highlights.map((feature, index) => (
-          <li key={index} className="flex items-start gap-3 text-sm">
+        {highlights.map((feature) => (
+          <li key={feature} className="flex items-start gap-3 text-sm">
             <Check className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
             <span className="text-zinc-700">{feature}</span>
           </li>
@@ -499,13 +502,13 @@ function DesktopFeatureComparisonTable({ cycle, onCycleChange }: FeatureComparis
                 {features.map((feature) => (
                   <tr key={feature.key} className="border-b border-zinc-100 last:border-b-0">
                     <td className="px-4 py-3 text-sm text-zinc-700">{feature.name}</td>
-                    {planNames.map((planName, idx) => {
+                    {planNames.map((planName) => {
                       const planFeatures = PLAN_CATEGORY_FEATURES[planName];
                       const value = planFeatures?.[category]?.[feature.key] ?? false;
                       const isHighlighted = planName === 'Scale Up';
                       return (
                         <FeatureValueCell
-                          key={`${feature.key}-${idx}`}
+                          key={`${feature.key}-${planName}`}
                           value={value}
                           isHighlighted={isHighlighted}
                         />
@@ -594,7 +597,7 @@ function PricingFAQ() {
       <div className="bg-white rounded-2xl border border-zinc-200 p-6 md:p-8 w-full min-w-0">
         {PRICING_FAQ_ITEMS.map((item, index) => (
           <FAQAccordionItem
-            key={index}
+            key={item.question}
             item={item}
             isOpen={openIndex === index}
             onToggle={() => toggleItem(index)}
@@ -635,7 +638,7 @@ export default function PricingPage() {
               {words.map((word, index) => {
                 const color = highlightMap.get(index);
                 return (
-                  <span key={index}>
+                  <span key={`${word}-${index}`}>
                     {color ? <Highlight color={color}>{word}</Highlight> : word}{' '}
                   </span>
                 );

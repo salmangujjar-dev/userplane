@@ -8,7 +8,7 @@ import { Skeleton } from '@workspace/ui/components/skeleton';
 import { ArrowDown, ArrowUp, ArrowUpDown, Building2, Clock } from 'lucide-react';
 import { redirect, RedirectType, useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useReducer, useRef, useState } from 'react';
 
 import { WorkspaceCard } from '@/components/admin/workspace-card';
 import { FilterDropdown } from '@/components/filters/filter-dropdown';
@@ -68,6 +68,91 @@ interface WorkspaceToResetToken {
   workspaceName: string;
 }
 
+interface ProvisionResultData {
+  checkoutUrl: string | null;
+  workspaceUrl: string;
+  workspaceId: string;
+  workspaceName: string;
+  userId: string;
+  isNewUser: boolean;
+}
+
+interface ModalState {
+  workspaceToDeactivate: WorkspaceToDeactivate | null;
+  workspaceToRestore: WorkspaceToRestore | null;
+  workspaceToResetToken: WorkspaceToResetToken | null;
+  showCreateInviteModal: boolean;
+  showInviteSuccessModal: boolean;
+  inviteResult: AdminCreateWorkspaceInviteData | null;
+  showProvisionModal: boolean;
+  showProvisionSuccessModal: boolean;
+  provisionResult: ProvisionResultData | null;
+}
+
+type ModalAction =
+  | { type: 'SET_WORKSPACE_TO_DEACTIVATE'; payload: WorkspaceToDeactivate | null }
+  | { type: 'SET_WORKSPACE_TO_RESTORE'; payload: WorkspaceToRestore | null }
+  | { type: 'SET_WORKSPACE_TO_RESET_TOKEN'; payload: WorkspaceToResetToken | null }
+  | { type: 'SHOW_CREATE_INVITE' }
+  | { type: 'HIDE_CREATE_INVITE' }
+  | { type: 'INVITE_SUCCESS'; payload: AdminCreateWorkspaceInviteData }
+  | { type: 'SET_SHOW_INVITE_SUCCESS'; payload: boolean }
+  | { type: 'SHOW_PROVISION' }
+  | { type: 'HIDE_PROVISION' }
+  | { type: 'PROVISION_SUCCESS'; payload: ProvisionResultData }
+  | { type: 'SET_SHOW_PROVISION_SUCCESS'; payload: boolean };
+
+const initialModalState: ModalState = {
+  workspaceToDeactivate: null,
+  workspaceToRestore: null,
+  workspaceToResetToken: null,
+  showCreateInviteModal: false,
+  showInviteSuccessModal: false,
+  inviteResult: null,
+  showProvisionModal: false,
+  showProvisionSuccessModal: false,
+  provisionResult: null,
+};
+
+function modalReducer(state: ModalState, action: ModalAction): ModalState {
+  switch (action.type) {
+    case 'SET_WORKSPACE_TO_DEACTIVATE':
+      return { ...state, workspaceToDeactivate: action.payload };
+    case 'SET_WORKSPACE_TO_RESTORE':
+      return { ...state, workspaceToRestore: action.payload };
+    case 'SET_WORKSPACE_TO_RESET_TOKEN':
+      return { ...state, workspaceToResetToken: action.payload };
+    case 'SHOW_CREATE_INVITE':
+      return { ...state, showCreateInviteModal: true };
+    case 'HIDE_CREATE_INVITE':
+      return { ...state, showCreateInviteModal: false };
+    case 'INVITE_SUCCESS':
+      return {
+        ...state,
+        showCreateInviteModal: false,
+        inviteResult: action.payload,
+        showInviteSuccessModal: true,
+      };
+    case 'SET_SHOW_INVITE_SUCCESS':
+      return { ...state, showInviteSuccessModal: action.payload };
+    case 'SHOW_PROVISION':
+      return { ...state, showProvisionModal: true };
+    case 'HIDE_PROVISION':
+      return { ...state, showProvisionModal: false };
+    case 'PROVISION_SUCCESS':
+      return {
+        ...state,
+        showProvisionModal: false,
+        provisionResult: action.payload,
+        showProvisionSuccessModal: true,
+      };
+    case 'SET_SHOW_PROVISION_SUCCESS':
+      return { ...state, showProvisionSuccessModal: action.payload };
+    default:
+      return state;
+  }
+}
+
 function WorkspaceCardSkeleton() {
   return (
     <div className="rounded-xl border border-border p-6">
@@ -79,6 +164,150 @@ function WorkspaceCardSkeleton() {
         </div>
         <Skeleton className="h-8 w-8" />
       </div>
+    </div>
+  );
+}
+
+interface AdminWorkspacesHeaderProps {
+  search: string;
+  onSearchChange: (value: string) => void;
+  selectedStatus: string[];
+  onStatusChange: (value: string[]) => void;
+  selectedSortBy: string[];
+  onSortByChange: (value: string[]) => void;
+  selectedSortDirection: string[];
+  onSortDirectionChange: (value: string[]) => void;
+  getSortDirectionIcon: () => typeof ArrowUpDown;
+}
+
+function AdminWorkspacesHeader({
+  search,
+  onSearchChange,
+  selectedStatus,
+  onStatusChange,
+  selectedSortBy,
+  onSortByChange,
+  selectedSortDirection,
+  onSortDirectionChange,
+  getSortDirectionIcon,
+}: AdminWorkspacesHeaderProps) {
+  return (
+    <div className="mb-6">
+      <div>
+        <h2 className="text-lg font-semibold">Workspaces</h2>
+        <p className="text-sm text-muted-foreground mt-1">Manage userplane workspaces</p>
+      </div>
+      <div className="flex items-center gap-2 mt-3 flex-wrap">
+        <SearchInput
+          placeholder="Search by name or ID..."
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-80"
+        />
+        <div className="flex items-center gap-2">
+          <FilterDropdown
+            label="Status"
+            options={ADMIN_WORKSPACE_STATUS_OPTIONS}
+            selected={selectedStatus}
+            onSelectionChange={onStatusChange}
+            placeholder="Filter status..."
+            icon={Building2}
+            singleSelect
+          />
+          <FilterDropdown
+            label="Sort by"
+            options={ADMIN_WORKSPACE_SORT_OPTIONS}
+            selected={selectedSortBy}
+            onSelectionChange={onSortByChange}
+            placeholder="Sort by..."
+            icon={Clock}
+            singleSelect
+          />
+          <FilterDropdown
+            label="Order"
+            options={SORT_DIRECTION_OPTIONS}
+            selected={selectedSortDirection}
+            onSelectionChange={onSortDirectionChange}
+            placeholder="Sort order..."
+            icon={getSortDirectionIcon()}
+            singleSelect
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface AdminWorkspacesListProps {
+  isLoading: boolean;
+  workspaces: {
+    workspaceId: string;
+    workspaceName: string;
+    memberCount: number;
+    projectCount: number;
+    domainCount: number;
+    linkCount: number;
+    recordingCount: number;
+    isDeleted: boolean;
+  }[];
+  searchQuery: string;
+  onSelectWorkspace: (workspaceId: string) => void;
+  onDeactivate: (workspaceId: string, workspaceName: string) => void;
+  onRestore: (workspaceId: string, workspaceName: string) => void;
+  onResetInviteToken: (workspaceId: string, workspaceName: string) => void;
+}
+
+function AdminWorkspacesList({
+  isLoading,
+  workspaces,
+  searchQuery,
+  onSelectWorkspace,
+  onDeactivate,
+  onRestore,
+  onResetInviteToken,
+}: AdminWorkspacesListProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <WorkspaceCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  if (workspaces.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">
+          {searchQuery ? 'No workspaces found matching your search' : 'No workspaces found'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      {workspaces.map((workspace) => (
+        <WorkspaceCard
+          key={workspace.workspaceId}
+          workspaceId={workspace.workspaceId}
+          workspaceName={workspace.workspaceName}
+          memberCount={workspace.memberCount}
+          projectCount={workspace.projectCount}
+          domainCount={workspace.domainCount}
+          linkCount={workspace.linkCount}
+          recordingCount={workspace.recordingCount}
+          isDeleted={workspace.isDeleted}
+          onClick={() => onSelectWorkspace(workspace.workspaceId)}
+          onDeactivate={() => onDeactivate(workspace.workspaceId, workspace.workspaceName)}
+          onRestore={() => onRestore(workspace.workspaceId, workspace.workspaceName)}
+          onResetInviteToken={() =>
+            onResetInviteToken(workspace.workspaceId, workspace.workspaceName)
+          }
+        />
+      ))}
     </div>
   );
 }
@@ -105,29 +334,11 @@ function AdminRecordingsPageContent() {
     sortDirection: (selectedSortDirection[0] as 'asc' | 'desc') || 'desc',
   });
 
-  // Modal states
-  const [workspaceToDeactivate, setWorkspaceToDeactivate] = useState<WorkspaceToDeactivate | null>(
-    null
-  );
-  const [workspaceToRestore, setWorkspaceToRestore] = useState<WorkspaceToRestore | null>(null);
-  const [workspaceToResetToken, setWorkspaceToResetToken] = useState<WorkspaceToResetToken | null>(
-    null
-  );
+  // Ref to track previous debounced filters (avoids debouncedFilters in useEffect deps)
+  const prevDebouncedRef = useRef(debouncedFilters);
 
-  const [showCreateInviteModal, setShowCreateInviteModal] = useState(false);
-  const [showInviteSuccessModal, setShowInviteSuccessModal] = useState(false);
-  const [inviteResult, setInviteResult] = useState<AdminCreateWorkspaceInviteData | null>(null);
-
-  const [showProvisionModal, setShowProvisionModal] = useState(false);
-  const [showProvisionSuccessModal, setShowProvisionSuccessModal] = useState(false);
-  const [provisionResult, setProvisionResult] = useState<{
-    checkoutUrl: string | null;
-    workspaceUrl: string;
-    workspaceId: string;
-    workspaceName: string;
-    userId: string;
-    isNewUser: boolean;
-  } | null>(null);
+  // Modal states (consolidated via reducer to avoid excessive useState and cascading setState)
+  const [modalState, dispatch] = useReducer(modalReducer, initialModalState);
 
   // Mutations
   const deactivateMutation = useAdminDeactivateWorkspace();
@@ -138,6 +349,7 @@ function AdminRecordingsPageContent() {
   const provisionMutation = useAdminWorkspaceProvision();
 
   // Debounce all filter changes (search, status, sort) together
+  // Uses ref to compare previous filters, avoiding debouncedFilters in deps
   useEffect(() => {
     const timer = setTimeout(() => {
       const newFilters = {
@@ -148,26 +360,21 @@ function AdminRecordingsPageContent() {
       };
 
       // Check if filters actually changed to avoid unnecessary page resets
+      const prev = prevDebouncedRef.current;
       const filtersChanged =
-        newFilters.search !== debouncedFilters.search ||
-        newFilters.status !== debouncedFilters.status ||
-        newFilters.sortBy !== debouncedFilters.sortBy ||
-        newFilters.sortDirection !== debouncedFilters.sortDirection;
+        newFilters.search !== prev.search ||
+        newFilters.status !== prev.status ||
+        newFilters.sortBy !== prev.sortBy ||
+        newFilters.sortDirection !== prev.sortDirection;
 
       if (filtersChanged) {
+        prevDebouncedRef.current = newFilters;
         setDebouncedFilters(newFilters);
         void setCurrentPage(1);
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [
-    search,
-    selectedStatus,
-    selectedSortBy,
-    selectedSortDirection,
-    debouncedFilters,
-    setCurrentPage,
-  ]);
+  }, [search, selectedStatus, selectedSortBy, selectedSortDirection, setCurrentPage]);
 
   // Fetch workspaces
   const { data: workspacesResult, isLoading: isLoadingWorkspaces } = useAdminSearchWorkspaces({
@@ -219,40 +426,46 @@ function AdminRecordingsPageContent() {
   };
 
   const handleDeactivate = (workspaceId: string, workspaceName: string) => {
-    setWorkspaceToDeactivate({ workspaceId, workspaceName });
+    dispatch({ type: 'SET_WORKSPACE_TO_DEACTIVATE', payload: { workspaceId, workspaceName } });
   };
 
   const confirmDeactivate = (notify?: AdminNotifyDuration) => {
-    if (workspaceToDeactivate) {
+    if (modalState.workspaceToDeactivate) {
       deactivateMutation.mutate(
-        { workspaceId: workspaceToDeactivate.workspaceId, notify },
-        { onSuccess: () => setWorkspaceToDeactivate(null) }
+        { workspaceId: modalState.workspaceToDeactivate.workspaceId, notify },
+        {
+          onSuccess: () => dispatch({ type: 'SET_WORKSPACE_TO_DEACTIVATE', payload: null }),
+        }
       );
     }
   };
 
   const handleRestore = (workspaceId: string, workspaceName: string) => {
-    setWorkspaceToRestore({ workspaceId, workspaceName });
+    dispatch({ type: 'SET_WORKSPACE_TO_RESTORE', payload: { workspaceId, workspaceName } });
   };
 
   const confirmRestore = (notify?: AdminNotifyDuration) => {
-    if (workspaceToRestore) {
+    if (modalState.workspaceToRestore) {
       restoreMutation.mutate(
-        { workspaceId: workspaceToRestore.workspaceId, notify },
-        { onSuccess: () => setWorkspaceToRestore(null) }
+        { workspaceId: modalState.workspaceToRestore.workspaceId, notify },
+        {
+          onSuccess: () => dispatch({ type: 'SET_WORKSPACE_TO_RESTORE', payload: null }),
+        }
       );
     }
   };
 
   const handleResetInviteToken = (workspaceId: string, workspaceName: string) => {
-    setWorkspaceToResetToken({ workspaceId, workspaceName });
+    dispatch({ type: 'SET_WORKSPACE_TO_RESET_TOKEN', payload: { workspaceId, workspaceName } });
   };
 
   const confirmResetInviteToken = () => {
-    if (workspaceToResetToken) {
+    if (modalState.workspaceToResetToken) {
       resetTokenMutation.mutate(
-        { workspaceId: workspaceToResetToken.workspaceId },
-        { onSuccess: () => setWorkspaceToResetToken(null) }
+        { workspaceId: modalState.workspaceToResetToken.workspaceId },
+        {
+          onSuccess: () => dispatch({ type: 'SET_WORKSPACE_TO_RESET_TOKEN', payload: null }),
+        }
       );
     }
   };
@@ -264,10 +477,10 @@ function AdminRecordingsPageContent() {
   const handleCreateInvite = (data: { workspaceUrl: string; plan?: PlanId }) => {
     createInviteMutation.mutate(data, {
       onSuccess: (result) => {
-        setShowCreateInviteModal(false);
         if (result.success) {
-          setInviteResult(result.data);
-          setShowInviteSuccessModal(true);
+          dispatch({ type: 'INVITE_SUCCESS', payload: result.data });
+        } else {
+          dispatch({ type: 'HIDE_CREATE_INVITE' });
         }
       },
     });
@@ -276,10 +489,10 @@ function AdminRecordingsPageContent() {
   const handleProvision = (data: Parameters<typeof provisionMutation.mutate>[0]) => {
     provisionMutation.mutate(data, {
       onSuccess: (result) => {
-        setShowProvisionModal(false);
         if (result.success) {
-          setProvisionResult(result.data);
-          setShowProvisionSuccessModal(true);
+          dispatch({ type: 'PROVISION_SUCCESS', payload: result.data });
+        } else {
+          dispatch({ type: 'HIDE_PROVISION' });
         }
       },
     });
@@ -297,96 +510,33 @@ function AdminRecordingsPageContent() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <AdminTopActions
-          onCreateInviteClick={() => setShowCreateInviteModal(true)}
-          onProvisionClick={() => setShowProvisionModal(true)}
+          onCreateInviteClick={() => dispatch({ type: 'SHOW_CREATE_INVITE' })}
+          onProvisionClick={() => dispatch({ type: 'SHOW_PROVISION' })}
         />
 
         <main className="flex-1 overflow-y-auto px-6 pb-8">
           <div className="space-y-6">
-            <div className="mb-6">
-              <div>
-                <h2 className="text-lg font-semibold">Workspaces</h2>
-                <p className="text-sm text-muted-foreground mt-1">Manage userplane workspaces</p>
-              </div>
-              <div className="flex items-center gap-2 mt-3 flex-wrap">
-                <SearchInput
-                  placeholder="Search by name or ID..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-80"
-                />
-                <div className="flex items-center gap-2">
-                  <FilterDropdown
-                    label="Status"
-                    options={ADMIN_WORKSPACE_STATUS_OPTIONS}
-                    selected={selectedStatus}
-                    onSelectionChange={setSelectedStatus}
-                    placeholder="Filter status..."
-                    icon={Building2}
-                    singleSelect
-                  />
-                  <FilterDropdown
-                    label="Sort by"
-                    options={ADMIN_WORKSPACE_SORT_OPTIONS}
-                    selected={selectedSortBy}
-                    onSelectionChange={setSelectedSortBy}
-                    placeholder="Sort by..."
-                    icon={Clock}
-                    singleSelect
-                  />
-                  <FilterDropdown
-                    label="Order"
-                    options={SORT_DIRECTION_OPTIONS}
-                    selected={selectedSortDirection}
-                    onSelectionChange={setSelectedSortDirection}
-                    placeholder="Sort order..."
-                    icon={getSortDirectionIcon()}
-                    singleSelect
-                  />
-                </div>
-              </div>
-            </div>
+            <AdminWorkspacesHeader
+              search={search}
+              onSearchChange={setSearch}
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
+              selectedSortBy={selectedSortBy}
+              onSortByChange={setSelectedSortBy}
+              selectedSortDirection={selectedSortDirection}
+              onSortDirectionChange={setSelectedSortDirection}
+              getSortDirectionIcon={getSortDirectionIcon}
+            />
 
-            {isLoadingWorkspaces ? (
-              <div className="grid grid-cols-1 gap-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <WorkspaceCardSkeleton key={i} />
-                ))}
-              </div>
-            ) : workspaces.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  {debouncedFilters.search
-                    ? 'No workspaces found matching your search'
-                    : 'No workspaces found'}
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {workspaces.map((workspace) => (
-                  <WorkspaceCard
-                    key={workspace.workspaceId}
-                    workspaceId={workspace.workspaceId}
-                    workspaceName={workspace.workspaceName}
-                    memberCount={workspace.memberCount}
-                    projectCount={workspace.projectCount}
-                    domainCount={workspace.domainCount}
-                    linkCount={workspace.linkCount}
-                    recordingCount={workspace.recordingCount}
-                    isDeleted={workspace.isDeleted}
-                    onClick={() => handleSelectWorkspace(workspace.workspaceId)}
-                    onDeactivate={() =>
-                      handleDeactivate(workspace.workspaceId, workspace.workspaceName)
-                    }
-                    onRestore={() => handleRestore(workspace.workspaceId, workspace.workspaceName)}
-                    onResetInviteToken={() =>
-                      handleResetInviteToken(workspace.workspaceId, workspace.workspaceName)
-                    }
-                  />
-                ))}
-              </div>
-            )}
+            <AdminWorkspacesList
+              isLoading={isLoadingWorkspaces}
+              workspaces={workspaces}
+              searchQuery={debouncedFilters.search}
+              onSelectWorkspace={handleSelectWorkspace}
+              onDeactivate={handleDeactivate}
+              onRestore={handleRestore}
+              onResetInviteToken={handleResetInviteToken}
+            />
 
             {!isLoadingWorkspaces && totalWorkspaces > 0 && (
               <PaginationControls
@@ -401,53 +551,63 @@ function AdminRecordingsPageContent() {
 
       {/* Modals */}
       <AdminDeactivateWorkspaceModal
-        open={!!workspaceToDeactivate}
-        onOpenChange={(open) => !open && setWorkspaceToDeactivate(null)}
-        workspace={workspaceToDeactivate}
+        open={!!modalState.workspaceToDeactivate}
+        onOpenChange={(open) =>
+          !open && dispatch({ type: 'SET_WORKSPACE_TO_DEACTIVATE', payload: null })
+        }
+        workspace={modalState.workspaceToDeactivate}
         onConfirm={confirmDeactivate}
         isPending={deactivateMutation.isPending}
       />
 
       <AdminRestoreWorkspaceModal
-        open={!!workspaceToRestore}
-        onOpenChange={(open) => !open && setWorkspaceToRestore(null)}
-        workspace={workspaceToRestore}
+        open={!!modalState.workspaceToRestore}
+        onOpenChange={(open) =>
+          !open && dispatch({ type: 'SET_WORKSPACE_TO_RESTORE', payload: null })
+        }
+        workspace={modalState.workspaceToRestore}
         onConfirm={confirmRestore}
         isPending={restoreMutation.isPending}
       />
 
       <ResetInviteTokenModal
-        open={!!workspaceToResetToken}
-        onOpenChange={(open) => !open && setWorkspaceToResetToken(null)}
-        workspace={workspaceToResetToken}
+        open={!!modalState.workspaceToResetToken}
+        onOpenChange={(open) =>
+          !open && dispatch({ type: 'SET_WORKSPACE_TO_RESET_TOKEN', payload: null })
+        }
+        workspace={modalState.workspaceToResetToken}
         onConfirm={confirmResetInviteToken}
         isPending={resetTokenMutation.isPending}
       />
 
       <AdminCreateWorkspaceInviteModal
-        open={showCreateInviteModal}
-        onOpenChange={setShowCreateInviteModal}
+        open={modalState.showCreateInviteModal}
+        onOpenChange={(open) =>
+          dispatch(open ? { type: 'SHOW_CREATE_INVITE' } : { type: 'HIDE_CREATE_INVITE' })
+        }
         onSubmit={handleCreateInvite}
         isPending={createInviteMutation.isPending}
       />
 
       <AdminCreateWorkspaceInviteSuccessModal
-        open={showInviteSuccessModal}
-        onOpenChange={setShowInviteSuccessModal}
-        result={inviteResult}
+        open={modalState.showInviteSuccessModal}
+        onOpenChange={(open) => dispatch({ type: 'SET_SHOW_INVITE_SUCCESS', payload: open })}
+        result={modalState.inviteResult}
       />
 
       <AdminProvisionWorkspaceModal
-        open={showProvisionModal}
-        onOpenChange={setShowProvisionModal}
+        open={modalState.showProvisionModal}
+        onOpenChange={(open) =>
+          dispatch(open ? { type: 'SHOW_PROVISION' } : { type: 'HIDE_PROVISION' })
+        }
         onSubmit={handleProvision}
         isPending={provisionMutation.isPending}
       />
 
       <AdminProvisionWorkspaceSuccessModal
-        open={showProvisionSuccessModal}
-        onOpenChange={setShowProvisionSuccessModal}
-        result={provisionResult}
+        open={modalState.showProvisionSuccessModal}
+        onOpenChange={(open) => dispatch({ type: 'SET_SHOW_PROVISION_SUCCESS', payload: open })}
+        result={modalState.provisionResult}
       />
     </div>
   );

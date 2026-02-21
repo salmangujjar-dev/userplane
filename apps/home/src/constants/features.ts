@@ -1,3 +1,5 @@
+import { mergeTransformOptions } from '@workspace/storage/media';
+
 import { mediaClient } from '../lib/media';
 import type { HighlightConfig } from './types';
 
@@ -34,28 +36,36 @@ export const FEATURES_HIGHLIGHTS: HighlightConfig[] = [
  */
 export const FEATURES: Feature[] = [
   {
-    image: mediaClient.getFeatureMediaUrl('features/one-click-screen-recordings.png'),
+    image: mediaClient.getFeatureMediaUrl('features/one-click-screen-recordings.webp', {
+      transform: mergeTransformOptions('feature', { width: 1400 }),
+    }),
     imageAlt: 'One click recordings',
     title: 'One click recordings',
     description:
       'One-click recording links that works everywhere. No apps, installs, or browser extensions needed. A simple link that lets you capture and replay the issue.',
   },
   {
-    image: mediaClient.getFeatureMediaUrl('features/complete-issue-context.png'),
+    image: mediaClient.getFeatureMediaUrl('features/complete-issue-context.webp', {
+      transform: mergeTransformOptions('feature', { width: 1400 }),
+    }),
     imageAlt: 'Replay customer issues',
     title: 'Replay customer issues',
     description:
       'Watch exactly what went wrong. Review and replay customer sessions without the back and forth. Get complete visibility into the customer issue.',
   },
   {
-    image: mediaClient.getFeatureMediaUrl('features/native-integrations.png'),
+    image: mediaClient.getFeatureMediaUrl('features/native-integrations.webp', {
+      transform: mergeTransformOptions('feature', { width: 1400 }),
+    }),
     imageAlt: 'Native Intercom integration',
     title: 'Native Intercom integration',
     description:
       'Best-in-class Intercom integration. Request and receive screen recordings without leaving Intercom. Recordings live where your team works.',
   },
   {
-    image: mediaClient.getFeatureMediaUrl('features/privacy-and-security.png'),
+    image: mediaClient.getFeatureMediaUrl('features/privacy-and-security.webp', {
+      transform: mergeTransformOptions('feature', { width: 1400 }),
+    }),
     imageAlt: 'Privacy and security controls',
     title: 'Privacy and security built-in',
     description:

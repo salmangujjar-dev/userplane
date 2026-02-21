@@ -19,6 +19,9 @@ export default defineConfig({
       allowedHosts: ['home-dev.userplane.io'],
     },
   },
+  prefetch: {
+    defaultStrategy: 'hover',
+  },
   integrations: [react()],
   image: {
     // Use custom Cloudflare image service for on-the-fly transforms

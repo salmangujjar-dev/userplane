@@ -8,17 +8,7 @@
  */
 import { ZodError } from 'zod';
 
-import {
-  type DashboardConfig,
-  type EnvConfig,
-  type HomeConfig,
-  type RawEnvConfig,
-  rawEnvSchema,
-  type StorageConfig,
-} from './schema';
-
-// Re-export types for external use
-export type { DashboardConfig, EnvConfig, HomeConfig, StorageConfig };
+import { type EnvConfig, type RawEnvConfig, rawEnvSchema } from './schema';
 
 // =============================================================================
 // Environment Parsing

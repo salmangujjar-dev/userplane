@@ -3,14 +3,6 @@ import { NAV_LINKS } from './navigation';
 import { getMarketingUrl } from './urls';
 
 /**
- * Footer link interface
- */
-export interface FooterLink {
-  label: string;
-  href: string;
-}
-
-/**
  * Footer copyright text
  */
 export const FOOTER_COPYRIGHT = 'Userplane. All rights reserved.';

@@ -168,7 +168,12 @@ export function FilterDropdown({
             className
           )}
         >
-          <TriggerIcon selected={selected} options={options} showAvatars={showAvatars} icon={Icon} />
+          <TriggerIcon
+            selected={selected}
+            options={options}
+            showAvatars={showAvatars}
+            icon={Icon}
+          />
           <span className="truncate">{getDisplayLabel()}</span>
           {selected.length > 0 ? (
             <>

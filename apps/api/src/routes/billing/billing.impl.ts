@@ -13,12 +13,13 @@
  * See: https://docs.dodopayments.com/features/customer-portal
  */
 
-import { billingError, DEFAULT_TRIAL_PERIOD_DAYS } from '@workspace/contract';
+import { billingError } from '@workspace/contract';
 import type { DodoPayments } from '@workspace/payments/client';
 import { buildFlatMetadata, parseFlatMetadata } from '@workspace/payments/metadata';
 import { getProductByPlanId, getProductByProductId } from '@workspace/payments/products';
 import type { PlanId } from '@workspace/pricing';
 
+import { env } from '@/api/env';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { billingRateLimitMiddleware } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';
@@ -268,7 +269,7 @@ export const managePlanImpl = (
         const session = await dodoClient.checkoutSessions.create({
           product_cart: [{ product_id: resolvedProductId, quantity: 1 }],
           subscription_data: {
-            trial_period_days: DEFAULT_TRIAL_PERIOD_DAYS,
+            trial_period_days: env.billing.trialPeriodDays,
           },
           metadata: {
             workspace_id: workspaceId,

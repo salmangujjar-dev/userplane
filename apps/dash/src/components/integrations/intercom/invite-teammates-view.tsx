@@ -8,7 +8,7 @@ import Logo from '@workspace/ui/components/logo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import { cn } from '@workspace/ui/lib/utils';
 import { Loader2, Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -48,6 +48,150 @@ interface TeammateItem {
   isCurrentUser: boolean;
 }
 
+interface TeammatesSelectionHeaderProps {
+  selectedCount: number;
+  hasSelectableTeammates: boolean;
+  allSelected: boolean;
+  onSelectAll: () => void;
+}
+
+function TeammatesSelectionHeader({
+  selectedCount,
+  hasSelectableTeammates,
+  allSelected,
+  onSelectAll,
+}: TeammatesSelectionHeaderProps) {
+  return (
+    <div className="flex items-center justify-between px-1 mb-2">
+      <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
+      {hasSelectableTeammates && (
+        <button
+          type="button"
+          onClick={onSelectAll}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {allSelected ? 'Deselect all' : 'Select all'}
+        </button>
+      )}
+    </div>
+  );
+}
+
+interface TeammateListItemProps {
+  teammate: TeammateItem;
+  isSelected: boolean;
+  onToggle: (teammate: TeammateItem) => void;
+}
+
+function TeammateListItem({ teammate, isSelected, onToggle }: TeammateListItemProps) {
+  return (
+    <label
+      className={cn(
+        'flex items-center gap-3 p-3 transition-colors',
+        teammate.isCurrentUser ? 'opacity-60' : 'cursor-pointer hover:bg-muted/50'
+      )}
+    >
+      <Checkbox
+        checked={teammate.isCurrentUser || isSelected}
+        onCheckedChange={() => !teammate.isCurrentUser && onToggle(teammate)}
+        disabled={teammate.isCurrentUser}
+      />
+      <BoringAvatar name={teammate.name} email={teammate.email} size={AVATAR_SIZES.GROUP} />
+      <div className="flex flex-col min-w-0 flex-1">
+        {teammate.name ? (
+          <>
+            <span className="text-sm font-medium truncate">
+              {teammate.name}
+              {teammate.isCurrentUser && ' (You)'}
+            </span>
+            <span className="text-xs text-muted-foreground truncate">{teammate.email}</span>
+          </>
+        ) : (
+          <span className="text-sm font-medium truncate">
+            {teammate.email}
+            {teammate.isCurrentUser && ' (You)'}
+          </span>
+        )}
+      </div>
+    </label>
+  );
+}
+
+interface AddEmailFormProps {
+  register: ReturnType<typeof useForm<EmailFormData>>['register'];
+  onSubmit: ReturnType<typeof useForm<EmailFormData>>['handleSubmit'];
+  onAddEmail: (data: EmailFormData) => void;
+  error?: string;
+}
+
+function AddEmailForm({ register: registerField, onSubmit, onAddEmail, error }: AddEmailFormProps) {
+  return (
+    <form onSubmit={onSubmit(onAddEmail)} className="mt-3 pt-3 border-t">
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <Input
+            {...registerField('email')}
+            type="email"
+            placeholder="Add email address..."
+            className={error ? 'border-destructive' : ''}
+          />
+          {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+        </div>
+        <Button type="submit" variant="secondary" size="icon" className="shrink-0">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+interface InviteActionsFooterProps {
+  isProcessing: boolean;
+  completionLabel: string;
+  processingLabel: string;
+  onAction: () => void;
+  onSkip: () => void;
+}
+
+function InviteActionsFooter({
+  isProcessing,
+  completionLabel,
+  processingLabel,
+  onAction,
+  onSkip,
+}: InviteActionsFooterProps) {
+  return (
+    <div className="space-y-4">
+      <Button
+        onClick={onAction}
+        size="lg"
+        className="w-full rounded-full px-7 py-6"
+        disabled={isProcessing}
+      >
+        {isProcessing ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            {processingLabel}
+          </>
+        ) : (
+          completionLabel
+        )}
+      </Button>
+
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={onSkip}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          disabled={isProcessing}
+        >
+          Skip for now
+        </button>
+      </div>
+    </div>
+  );
+}
+
 interface InviteTeammatesViewProps {
   workspaceId: string;
   teammates: Teammate[];
@@ -78,7 +222,7 @@ export function InviteTeammatesView({
   onComplete,
   onSkip,
 }: InviteTeammatesViewProps) {
-  const [activeTab, setActiveTab] = useState('teammates');
+  const [viewState, setViewState] = useState({ activeTab: 'teammates', currentPage: 1 });
 
   // Fetch current user to show in the team list
   const { data: accountResult } = useAccount();
@@ -89,17 +233,16 @@ export function InviteTeammatesView({
     const initialSelection = teammates.slice(0, AUTO_SELECT_LIMIT).map((t) => t.email);
     return new Set(initialSelection);
   });
-  const [currentPage, setCurrentPage] = useState(1);
 
   // Manual emails state - just stores the email strings (validated on add)
   const [manualEmails, setManualEmails] = useState<string[]>([]);
 
-  // Policy state (email domains for invite policy)
-  const [policy, setPolicy] = useState<WorkspaceInvitePolicy>(initialPolicy);
-  const [emailDomains, setEmailDomains] = useState<string[]>(initialDomains || []);
-
-  // Workspace domain state (URL for recordings) - initialized from props
-  const [domainUrl, setDomainUrl] = useState(initialDomainUrl);
+  // Policy + domain config state
+  const [configState, setConfigState] = useState({
+    policy: initialPolicy as WorkspaceInvitePolicy,
+    emailDomains: (initialDomains || []) as string[],
+    domainUrl: initialDomainUrl,
+  });
   const existingDomainId = initialDomainId;
   const originalDomainUrl = initialDomainUrl;
 
@@ -122,18 +265,24 @@ export function InviteTeammatesView({
   const updateDomainMutation = useUpdateDomain(workspaceId);
 
   // Sync state with initial values during render
-  const [prevInitialPolicy, setPrevInitialPolicy] = useState(initialPolicy);
-  const [prevInitialDomains, setPrevInitialDomains] = useState(initialDomains);
-  const [prevInitialDomainUrl, setPrevInitialDomainUrl] = useState(initialDomainUrl);
-  if (prevInitialPolicy !== initialPolicy || prevInitialDomains !== initialDomains) {
-    setPrevInitialPolicy(initialPolicy);
-    setPrevInitialDomains(initialDomains);
-    setPolicy(initialPolicy);
-    setEmailDomains(initialDomains || []);
+  const prevInitialPolicyRef = useRef(initialPolicy);
+  const prevInitialDomainsRef = useRef(initialDomains);
+  const prevInitialDomainUrlRef = useRef(initialDomainUrl);
+  if (
+    prevInitialPolicyRef.current !== initialPolicy ||
+    prevInitialDomainsRef.current !== initialDomains
+  ) {
+    prevInitialPolicyRef.current = initialPolicy;
+    prevInitialDomainsRef.current = initialDomains;
+    setConfigState((prev) => ({
+      ...prev,
+      policy: initialPolicy,
+      emailDomains: initialDomains || [],
+    }));
   }
-  if (prevInitialDomainUrl !== initialDomainUrl) {
-    setPrevInitialDomainUrl(initialDomainUrl);
-    setDomainUrl(initialDomainUrl);
+  if (prevInitialDomainUrlRef.current !== initialDomainUrl) {
+    prevInitialDomainUrlRef.current = initialDomainUrl;
+    setConfigState((prev) => ({ ...prev, domainUrl: initialDomainUrl }));
   }
 
   // Create unified teammates list (current user first, then manual emails, then teammates from props)
@@ -181,22 +330,23 @@ export function InviteTeammatesView({
   // Pagination over unified list
   const totalPages = Math.ceil(allTeammates.length / ITEMS_PER_PAGE);
   const paginatedTeammates = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const start = (viewState.currentPage - 1) * ITEMS_PER_PAGE;
     return allTeammates.slice(start, start + ITEMS_PER_PAGE);
-  }, [allTeammates, currentPage]);
+  }, [allTeammates, viewState.currentPage]);
 
   // Check if policy has changes
   const hasPolicyChanges = useMemo(() => {
-    const policyChanged = policy !== initialPolicy;
+    const policyChanged = configState.policy !== initialPolicy;
     const domainsChanged =
-      JSON.stringify(emailDomains.sort()) !== JSON.stringify((initialDomains || []).sort());
+      JSON.stringify(configState.emailDomains.sort()) !==
+      JSON.stringify((initialDomains || []).sort());
     return policyChanged || domainsChanged;
-  }, [policy, emailDomains, initialPolicy, initialDomains]);
+  }, [configState.policy, configState.emailDomains, initialPolicy, initialDomains]);
 
   // Check if workspace domain has changes
   const hasDomainChanges = useMemo(() => {
-    return domainUrl.trim() !== '' && domainUrl !== originalDomainUrl;
-  }, [domainUrl, originalDomainUrl]);
+    return configState.domainUrl.trim() !== '' && configState.domainUrl !== originalDomainUrl;
+  }, [configState.domainUrl, originalDomainUrl]);
 
   const isProcessing =
     sendInvites.isPending ||
@@ -265,21 +415,24 @@ export function InviteTeammatesView({
     setSelectedEmails((prev) => new Set([...prev, email]));
     reset();
     // Reset to page 1 to show the newly added email
-    setCurrentPage(1);
+    setViewState((prev) => ({ ...prev, currentPage: 1 }));
   };
 
   const handlePolicyChange = (newPolicy: WorkspaceInvitePolicy) => {
-    setPolicy(newPolicy);
+    setConfigState((prev) => ({ ...prev, policy: newPolicy }));
   };
 
   const handleAddEmailDomain = (domain: string) => {
-    if (domain && !emailDomains.includes(domain)) {
-      setEmailDomains([...emailDomains, domain]);
+    if (domain && !configState.emailDomains.includes(domain)) {
+      setConfigState((prev) => ({ ...prev, emailDomains: [...prev.emailDomains, domain] }));
     }
   };
 
   const handleRemoveEmailDomain = (domainToRemove: string) => {
-    setEmailDomains(emailDomains.filter((d) => d !== domainToRemove));
+    setConfigState((prev) => ({
+      ...prev,
+      emailDomains: prev.emailDomains.filter((d) => d !== domainToRemove),
+    }));
   };
 
   // Save workspace domain (create or update)
@@ -293,7 +446,7 @@ export function InviteTeammatesView({
       if (existingDomainId) {
         // Update existing domain
         updateDomainMutation.mutate(
-          { domainId: existingDomainId, url: domainUrl },
+          { domainId: existingDomainId, url: configState.domainUrl },
           {
             onSuccess: (result) => {
               if (!result.success) {
@@ -308,7 +461,7 @@ export function InviteTeammatesView({
         );
       } else {
         // Create new domain
-        createDomainMutation.mutate(domainUrl, {
+        createDomainMutation.mutate(configState.domainUrl, {
           onSuccess: (result) => {
             if (!result.success) {
               showErrorToastToast(result.error);
@@ -334,8 +487,8 @@ export function InviteTeammatesView({
       updatePolicyMutation.mutate(
         {
           workspaceId,
-          policy,
-          domains: emailDomains.length > 0 ? emailDomains : null,
+          policy: configState.policy,
+          domains: configState.emailDomains.length > 0 ? configState.emailDomains : null,
         },
         {
           onSuccess: (result) => {
@@ -406,7 +559,11 @@ export function InviteTeammatesView({
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs
+          value={viewState.activeTab}
+          onValueChange={(v) => setViewState((prev) => ({ ...prev, activeTab: v }))}
+          className="w-full"
+        >
           <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="teammates">Teammates</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -415,63 +572,22 @@ export function InviteTeammatesView({
           {/* Fixed height container to prevent layout shifts between tabs */}
           <div className="h-[380px] mt-4">
             <TabsContent value="teammates" className="mt-0 h-full flex flex-col">
-              {/* Header with select all */}
-              <div className="flex items-center justify-between px-1 mb-2">
-                <span className="text-sm text-muted-foreground">
-                  {selectedEmails.size} selected
-                </span>
-                {selectableTeammates.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleSelectAll}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {allSelected ? 'Deselect all' : 'Select all'}
-                  </button>
-                )}
-              </div>
+              <TeammatesSelectionHeader
+                selectedCount={selectedEmails.size}
+                hasSelectableTeammates={selectableTeammates.length > 0}
+                allSelected={allSelected}
+                onSelectAll={handleSelectAll}
+              />
 
               {/* Unified teammates list */}
               <div className="divide-y flex-1 overflow-y-auto">
                 {paginatedTeammates.map((teammate) => (
-                  <label
+                  <TeammateListItem
                     key={teammate.id}
-                    className={cn(
-                      'flex items-center gap-3 p-3 transition-colors',
-                      teammate.isCurrentUser ? 'opacity-60' : 'cursor-pointer hover:bg-muted/50'
-                    )}
-                  >
-                    <Checkbox
-                      checked={teammate.isCurrentUser || selectedEmails.has(teammate.email)}
-                      onCheckedChange={() =>
-                        !teammate.isCurrentUser && handleToggleTeammate(teammate)
-                      }
-                      disabled={teammate.isCurrentUser}
-                    />
-                    <BoringAvatar
-                      name={teammate.name}
-                      email={teammate.email}
-                      size={AVATAR_SIZES.GROUP}
-                    />
-                    <div className="flex flex-col min-w-0 flex-1">
-                      {teammate.name ? (
-                        <>
-                          <span className="text-sm font-medium truncate">
-                            {teammate.name}
-                            {teammate.isCurrentUser && ' (You)'}
-                          </span>
-                          <span className="text-xs text-muted-foreground truncate">
-                            {teammate.email}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-sm font-medium truncate">
-                          {teammate.email}
-                          {teammate.isCurrentUser && ' (You)'}
-                        </span>
-                      )}
-                    </div>
-                  </label>
+                    teammate={teammate}
+                    isSelected={selectedEmails.has(teammate.email)}
+                    onToggle={handleToggleTeammate}
+                  />
                 ))}
               </div>
 
@@ -479,41 +595,31 @@ export function InviteTeammatesView({
               {totalPages > 1 && (
                 <div className="flex justify-center pt-3">
                   <PaginationControls
-                    currentPage={currentPage}
+                    currentPage={viewState.currentPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={(p) => setViewState((prev) => ({ ...prev, currentPage: p }))}
                   />
                 </div>
               )}
 
-              {/* Email input form at bottom */}
-              <form onSubmit={handleSubmit(onAddEmail)} className="mt-3 pt-3 border-t">
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Input
-                      {...register('email')}
-                      type="email"
-                      placeholder="Add email address..."
-                      className={errors.email ? 'border-destructive' : ''}
-                    />
-                    {errors.email && (
-                      <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
-                    )}
-                  </div>
-                  <Button type="submit" variant="secondary" size="icon" className="shrink-0">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </form>
+              <AddEmailForm
+                register={register}
+                onSubmit={handleSubmit}
+                onAddEmail={onAddEmail}
+                error={errors.email?.message}
+              />
             </TabsContent>
 
             <TabsContent value="settings" className="mt-0 h-full overflow-y-auto">
               <div className="space-y-6">
-                <WorkspaceDomainsSection value={domainUrl} onChange={setDomainUrl} />
+                <WorkspaceDomainsSection
+                  value={configState.domainUrl}
+                  onChange={(v) => setConfigState((prev) => ({ ...prev, domainUrl: v }))}
+                />
 
                 <InvitePolicyTab
-                  policy={policy}
-                  domains={emailDomains}
+                  policy={configState.policy}
+                  domains={configState.emailDomains}
                   onPolicyChange={handlePolicyChange}
                   onAddDomain={handleAddEmailDomain}
                   onRemoveDomain={handleRemoveEmailDomain}
@@ -523,38 +629,19 @@ export function InviteTeammatesView({
           </div>
         </Tabs>
 
-        <div className="space-y-4">
-          <Button
-            onClick={handleLetsGo}
-            size="lg"
-            className="w-full rounded-full px-7 py-6"
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                {createDomainMutation.isPending || updateDomainMutation.isPending
-                  ? 'Saving domain...'
-                  : updatePolicyMutation.isPending
-                    ? 'Saving settings...'
-                    : 'Sending invites...'}
-              </>
-            ) : (
-              completionLabel
-            )}
-          </Button>
-
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={onSkip}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              disabled={isProcessing}
-            >
-              Skip for now
-            </button>
-          </div>
-        </div>
+        <InviteActionsFooter
+          isProcessing={isProcessing}
+          completionLabel={completionLabel}
+          processingLabel={
+            createDomainMutation.isPending || updateDomainMutation.isPending
+              ? 'Saving domain...'
+              : updatePolicyMutation.isPending
+                ? 'Saving settings...'
+                : 'Sending invites...'
+          }
+          onAction={handleLetsGo}
+          onSkip={onSkip}
+        />
       </div>
     </div>
   );

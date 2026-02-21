@@ -50,13 +50,19 @@ export function InvitePolicyTab({
       {/* Policy Selection */}
       <div className="space-y-3">
         <div>
-          <label id="invite-policy-label" htmlFor="invite-policy" className="text-sm font-medium">Invite Policy</label>
+          <label id="invite-policy-label" htmlFor="invite-policy" className="text-sm font-medium">
+            Invite Policy
+          </label>
           <p className="text-xs text-muted-foreground mt-0.5">
             Control how teammates can join your workspace
           </p>
         </div>
         <Select value={policy} onValueChange={onPolicyChange}>
-          <SelectTrigger id="invite-policy" className="w-full" aria-labelledby="invite-policy-label">
+          <SelectTrigger
+            id="invite-policy"
+            className="w-full"
+            aria-labelledby="invite-policy-label"
+          >
             <SelectValue placeholder="Select policy" />
           </SelectTrigger>
           <SelectContent>
@@ -80,7 +86,9 @@ export function InvitePolicyTab({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <span id="allowed-email-domains-label" className="text-sm font-medium">Allowed Email Domains</span>
+              <span id="allowed-email-domains-label" className="text-sm font-medium">
+                Allowed Email Domains
+              </span>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {policy === 'whitelisted'
                   ? 'Users with these email domains can join directly'
@@ -93,7 +101,11 @@ export function InvitePolicyTab({
           </div>
 
           {/* Scrollable domains container with fixed max height */}
-          <div className="max-h-[140px] overflow-y-auto space-y-2 pr-1" role="list" aria-labelledby="allowed-email-domains-label">
+          <div
+            className="max-h-[140px] overflow-y-auto space-y-2 pr-1"
+            role="list"
+            aria-labelledby="allowed-email-domains-label"
+          >
             {domains.length === 0 ? (
               <div className="rounded-lg border border-dashed p-4 text-center">
                 <p className="text-sm text-muted-foreground">No domains added yet</p>
