@@ -878,35 +878,31 @@ export const AdminWorkspaceProvisionCustomPlanSchema = z
   })
   .strict();
 
-const AdminWorkspaceProvisionBaseBodySchema = z
-  .object({
-    email: EmailSchema,
-    name: AdminProvisionNameSchema,
-    workspaceDomain: AdminProvisionWorkspaceDomainSchema,
-    workspaceName: AdminProvisionNameSchema.optional(),
-  })
-  .strict();
+const AdminWorkspaceProvisionBaseBodySchema = z.object({
+  email: EmailSchema,
+  name: AdminProvisionNameSchema,
+  workspaceDomain: AdminProvisionWorkspaceDomainSchema,
+  workspaceName: AdminProvisionNameSchema.optional(),
+});
 
 const defaultTrialPeriod = String(
   DEFAULT_TRIAL_PERIOD_DAYS
 ) as (typeof ADMIN_TRIAL_PERIOD_VALUES)[number];
 
+// NOTE: No .strict() on sub-schemas — they are combined via .and() (intersection),
+// and .strict() on each side would reject the other side's keys.
 const AdminWorkspaceProvisionPlanSelectionSchema = z.discriminatedUnion('planMode', [
-  z.object({ planMode: z.literal('free') }).strict(),
-  z
-    .object({
-      planMode: z.literal('existing'),
-      productId: z.string().min(1),
-      trialPeriodDays: z.enum(ADMIN_TRIAL_PERIOD_VALUES).optional().default(defaultTrialPeriod),
-    })
-    .strict(),
-  z
-    .object({
-      planMode: z.literal('custom'),
-      customPlan: AdminWorkspaceProvisionCustomPlanSchema,
-      trialPeriodDays: z.enum(ADMIN_TRIAL_PERIOD_VALUES).optional().default(defaultTrialPeriod),
-    })
-    .strict(),
+  z.object({ planMode: z.literal('free') }),
+  z.object({
+    planMode: z.literal('existing'),
+    productId: z.string().min(1),
+    trialPeriodDays: z.enum(ADMIN_TRIAL_PERIOD_VALUES).optional().default(defaultTrialPeriod),
+  }),
+  z.object({
+    planMode: z.literal('custom'),
+    customPlan: AdminWorkspaceProvisionCustomPlanSchema,
+    trialPeriodDays: z.enum(ADMIN_TRIAL_PERIOD_VALUES).optional().default(defaultTrialPeriod),
+  }),
 ]);
 
 /** Workspace provisioning input */
@@ -1023,3 +1019,36 @@ export type AdminWorkspaceProvisionCustomPlan = z.infer<
  */
 export type AdminUpdateSubscriptionInput = z.infer<typeof AdminUpdateSubscriptionInputSchema>;
 export type AdminUpdateSubscriptionData = z.infer<typeof AdminUpdateSubscriptionDataSchema>;
+
+// ============================================
+// ADMIN TRIAL EXTENSION SCHEMAS
+// ============================================
+
+const TRIAL_EXTENSION_DAYS = [3, 7, 14] as const;
+
+/**
+ * Admin trial extension input
+ * Extends the trial period by a fixed number of days via DodoPayments.
+ */
+export const AdminExtendTrialInputSchema = z.object({
+  params: z.object({ workspaceId: WorkspaceIdSchema }),
+  body: z.object({
+    extensionDays: z
+      .enum(TRIAL_EXTENSION_DAYS.map(String) as [string, ...string[]])
+      .transform(Number),
+  }),
+});
+
+/**
+ * Admin trial extension response data
+ */
+export const AdminExtendTrialDataSchema = z.object({
+  subscriptionId: z.string(),
+  newTrialEnd: z.string(),
+});
+
+/**
+ * Types - Trial Extension
+ */
+export type AdminExtendTrialInput = z.infer<typeof AdminExtendTrialInputSchema>;
+export type AdminExtendTrialData = z.infer<typeof AdminExtendTrialDataSchema>;

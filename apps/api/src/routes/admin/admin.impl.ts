@@ -1163,6 +1163,31 @@ const updateWorkspaceSubscriptionImpl = (
 };
 
 /**
+ * Extend workspace trial implementation
+ * Pushes next_billing_date forward in DodoPayments
+ */
+const extendWorkspaceTrialImpl = (
+  adminService: AdminService,
+  adminSubscriptionService: AdminSubscriptionService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspaces.subscription.extendTrial.handler(async ({ input }) => {
+      const result = await adminSubscriptionService.extendTrial(
+        input.params.workspaceId,
+        input.body.extensionDays
+      );
+
+      return {
+        message: 'Trial extended. Changes will take effect shortly.',
+        data: result,
+      };
+    });
+};
+
+/**
  * Create admin procedures
  */
 export const createAdminProcedures = (
@@ -1231,6 +1256,7 @@ export const createAdminProcedures = (
       subscription: {
         get: getWorkspaceSubscriptionImpl(adminService, billingService),
         update: updateWorkspaceSubscriptionImpl(adminService, adminSubscriptionService),
+        extendTrial: extendWorkspaceTrialImpl(adminService, adminSubscriptionService),
       },
       provision: adminProvisionWorkspaceImpl(adminService, adminWorkspaceService, emailService),
     },

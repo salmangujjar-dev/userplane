@@ -161,4 +161,15 @@ export const AdminErrors = {
     status: 502,
     message: 'Failed to update subscription in DodoPayments',
   },
+
+  // Trial errors
+  TRIAL_NOT_ACTIVE: {
+    status: 400,
+    message: 'Subscription is not currently in a trial period',
+  },
+
+  TRIAL_EXTENSION_FAILED: {
+    status: 502,
+    message: 'Failed to extend trial in DodoPayments',
+  },
 } as const;

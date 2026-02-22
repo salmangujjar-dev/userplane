@@ -27,6 +27,7 @@ import {
 import type {
   AdminCreateWorkspaceInviteData,
   AdminEntitlementsData,
+  AdminExtendTrialData,
   AdminNotifyDuration,
   AdminRestoreProjectData,
   AdminRestoreWorkspaceData,
@@ -456,6 +457,37 @@ export function useAdminUpdateSubscription() {
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to update subscription');
+    },
+  });
+}
+
+export function useAdminExtendTrial() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    SafeResult<AdminExtendTrialData>,
+    Error,
+    { workspaceId: string; extensionDays: number }
+  >({
+    mutationFn: async ({ workspaceId, extensionDays }) => {
+      const [error, response] = await apiClient.admin.workspaces.subscription.extendTrial({
+        params: { workspaceId },
+        body: { extensionDays: String(extensionDays) as '3' | '7' | '14' },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result, { workspaceId }) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      showUpdatedToast('Trial', 'Trial period extended');
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.workspaceSubscription(workspaceId),
+      });
+    },
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to extend trial');
     },
   });
 }

@@ -10,6 +10,8 @@ import {
   AdminDeactivateWorkspaceInputSchema,
   AdminEntitlementsDataSchema,
   AdminErrors,
+  AdminExtendTrialDataSchema,
+  AdminExtendTrialInputSchema,
   AdminGetEntitlementsInputSchema,
   AdminGetPlanInputSchema,
   AdminGetUserInputSchema,
@@ -598,6 +600,35 @@ export const updateWorkspaceSubscription = oc
   })
   .input(AdminUpdateSubscriptionInputSchema)
   .output(ApiResponseSchema(AdminUpdateSubscriptionDataSchema));
+
+// ============================================
+// TRIAL EXTENSION
+// ============================================
+
+/**
+ * POST /admin/workspaces/:workspaceId/subscription/extend-trial
+ * Extend the trial period for a workspace subscription
+ */
+export const extendWorkspaceTrial = oc
+  .route({
+    method: 'POST',
+    path: '/admin/workspaces/{workspaceId}/subscription/extend-trial',
+    inputStructure: 'detailed',
+    summary: 'Extend workspace trial',
+    description:
+      'Extend the trial period for a workspace subscription by updating next_billing_date in DodoPayments',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    WORKSPACE_NOT_FOUND: AdminErrors.WORKSPACE_NOT_FOUND,
+    SUBSCRIPTION_NOT_FOUND: AdminErrors.SUBSCRIPTION_NOT_FOUND,
+    TRIAL_NOT_ACTIVE: AdminErrors.TRIAL_NOT_ACTIVE,
+    TRIAL_EXTENSION_FAILED: AdminErrors.TRIAL_EXTENSION_FAILED,
+  })
+  .input(AdminExtendTrialInputSchema)
+  .output(ApiResponseSchema(AdminExtendTrialDataSchema));
 
 // ============================================
 // PLAN MANAGEMENT

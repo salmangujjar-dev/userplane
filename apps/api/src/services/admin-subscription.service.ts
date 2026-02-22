@@ -108,4 +108,64 @@ export class AdminSubscriptionService {
 
     return { subscriptionId, updated: true };
   }
+
+  /**
+   * Extend a workspace's trial period by pushing the next_billing_date
+   * forward in DodoPayments. Only valid when the subscription is currently
+   * in trial (trialEnd exists and is in the future).
+   */
+  async extendTrial(
+    workspaceId: string,
+    extensionDays: number
+  ): Promise<{ subscriptionId: string; newTrialEnd: string }> {
+    // 1. Look up local subscription
+    const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
+    if (!subscription) {
+      throw adminError.SUBSCRIPTION_NOT_FOUND();
+    }
+
+    const { subscriptionId, trialEnd } = subscription;
+
+    // 2. Verify the subscription is currently in trial
+    if (!trialEnd || new Date(trialEnd) <= new Date()) {
+      throw adminError.TRIAL_NOT_ACTIVE();
+    }
+
+    // 3. Calculate new trial end date
+    const currentTrialEnd = new Date(trialEnd);
+    const newTrialEnd = new Date(currentTrialEnd);
+    newTrialEnd.setDate(newTrialEnd.getDate() + extensionDays);
+
+    const newBillingDate = newTrialEnd.toISOString();
+
+    logger.debug(
+      { workspaceId, subscriptionId, currentTrialEnd, newTrialEnd: newBillingDate, extensionDays },
+      'Extending trial via DodoPayments'
+    );
+
+    // 4. Update next_billing_date in DodoPayments
+    try {
+      await this.deps.dodoClient.subscriptions.update(subscriptionId, {
+        next_billing_date: newBillingDate,
+      });
+
+      logger.info(
+        { workspaceId, subscriptionId, newTrialEnd: newBillingDate },
+        'Trial extended via DodoPayments'
+      );
+    } catch (error) {
+      logger.error(
+        { workspaceId, subscriptionId, err: error },
+        'Failed to extend trial in DodoPayments'
+      );
+      captureException(error, undefined, {
+        operation: 'admin_extend_trial',
+        workspaceId,
+        subscriptionId,
+      });
+      throw adminError.TRIAL_EXTENSION_FAILED();
+    }
+
+    return { subscriptionId, newTrialEnd: newBillingDate };
+  }
 }
