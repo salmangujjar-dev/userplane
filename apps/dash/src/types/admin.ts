@@ -17,6 +17,7 @@ export type {
   // Entitlement types
   AdminEntitlement,
   AdminEntitlementsData,
+  AdminExtendTrialData,
   AdminGetEntitlementsInput,
   AdminGetUserInput,
   AdminGetWorkspaceInput,

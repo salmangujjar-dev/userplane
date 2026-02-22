@@ -16,6 +16,13 @@ import {
 } from '@workspace/ui/components/accordion';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Switch } from '@workspace/ui/components/switch';
 import {
@@ -29,6 +36,7 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 
 import {
+  useAdminExtendTrial,
   useAdminUpdateSubscription,
   useAdminWorkspaceEntitlements,
   useAdminWorkspaceSubscription,
@@ -141,6 +149,13 @@ function SubscriptionOverview({
     Partial<Record<ResourceType, Partial<ResourceLimits>>>
   >({});
   const updateSubscriptionMutation = useAdminUpdateSubscription();
+  const extendTrialMutation = useAdminExtendTrial();
+
+  // Determine if trial is currently active
+  const isInTrial =
+    accessDetail.accessStatus === 'trial' &&
+    contractDetail.trialEnd &&
+    new Date(contractDetail.trialEnd) > new Date();
 
   // Compute whether there are pending changes
   const hasChanges = useMemo(
@@ -259,7 +274,38 @@ function SubscriptionOverview({
                 value={contractDetail.cancelAtPeriodEnd ? 'Off' : 'On'}
               />
               {contractDetail.trialEnd && (
-                <DetailRow label="Trial Ends" value={formatDateValue(contractDetail.trialEnd)} />
+                <DetailRow
+                  label="Trial Ends"
+                  value={
+                    <div className="flex items-center gap-2">
+                      <span>{formatDateValue(contractDetail.trialEnd)}</span>
+                      {isInTrial && (
+                        <Select
+                          onValueChange={(value) =>
+                            extendTrialMutation.mutate({
+                              workspaceId,
+                              extensionDays: Number(value),
+                            })
+                          }
+                          disabled={extendTrialMutation.isPending}
+                        >
+                          <SelectTrigger className="h-7 w-[130px] text-xs">
+                            <SelectValue
+                              placeholder={
+                                extendTrialMutation.isPending ? 'Extending...' : 'Extend trial'
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="3">+3 days</SelectItem>
+                            <SelectItem value="7">+7 days</SelectItem>
+                            <SelectItem value="14">+14 days</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  }
+                />
               )}
               {contractDetail.cancelledAt && (
                 <DetailRow
