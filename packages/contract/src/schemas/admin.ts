@@ -931,6 +931,45 @@ export type AdminWorkspaceProvisionInput = z.infer<typeof AdminWorkspaceProvisio
 export type AdminWorkspaceProvisionData = z.infer<typeof AdminWorkspaceProvisionDataSchema>;
 
 // ============================================
+// ADMIN SUBSCRIPTION UPDATE SCHEMAS
+// ============================================
+
+/**
+ * Admin subscription update input
+ * Allows partial overrides of feature gates and/or entitlements.
+ * Changes are routed through DodoPayments (eventual consistency via webhooks).
+ */
+export const AdminUpdateSubscriptionInputSchema = z.object({
+  params: z.object({ workspaceId: WorkspaceIdSchema }),
+  body: z
+    .object({
+      featureGates: FeatureGatesSchema.partial().optional(),
+      entitlements: z
+        .record(
+          z.enum(RESOURCE_TYPE_VALUES),
+          z
+            .object({
+              quotedLimit: z.number().int().min(-1),
+              actualLimit: z.number().int().min(-1),
+            })
+            .partial()
+        )
+        .optional(),
+    })
+    .refine((data) => data.featureGates || data.entitlements, {
+      message: 'At least one of featureGates or entitlements must be provided',
+    }),
+});
+
+/**
+ * Admin subscription update response data
+ */
+export const AdminUpdateSubscriptionDataSchema = z.object({
+  subscriptionId: z.string(),
+  updated: z.boolean(),
+});
+
+// ============================================
 // ADMIN WORKSPACE SUBSCRIPTION SCHEMAS
 // ============================================
 
@@ -978,3 +1017,9 @@ export type AdminUpdatePlanInput = z.infer<typeof AdminUpdatePlanInputSchema>;
 export type AdminWorkspaceProvisionCustomPlan = z.infer<
   typeof AdminWorkspaceProvisionCustomPlanSchema
 >;
+
+/**
+ * Types - Subscription Update
+ */
+export type AdminUpdateSubscriptionInput = z.infer<typeof AdminUpdateSubscriptionInputSchema>;
+export type AdminUpdateSubscriptionData = z.infer<typeof AdminUpdateSubscriptionDataSchema>;

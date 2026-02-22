@@ -150,4 +150,15 @@ export const AdminErrors = {
     status: 404,
     message: 'Plan product not found',
   },
+
+  // Subscription update errors
+  SUBSCRIPTION_NOT_FOUND: {
+    status: 404,
+    message: 'No active subscription found for this workspace',
+  },
+
+  SUBSCRIPTION_UPDATE_FAILED: {
+    status: 502,
+    message: 'Failed to update subscription in DodoPayments',
+  },
 } as const;

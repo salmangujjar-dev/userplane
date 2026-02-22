@@ -1,7 +1,13 @@
 'use client';
 
-import type { FeatureGate, PlanFeatureGates, PlanId } from '@workspace/pricing';
-import { FEATURE_GATE_LABELS, PLAN_NAMES } from '@workspace/pricing';
+import type {
+  FeatureGate,
+  PlanFeatureGates,
+  PlanId,
+  ResourceLimits,
+  ResourceType,
+} from '@workspace/pricing';
+import { FEATURE_GATE_LABELS, PLAN_NAMES, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
 import {
   Accordion,
   AccordionContent,
@@ -9,23 +15,9 @@ import {
   AccordionTrigger,
 } from '@workspace/ui/components/accordion';
 import { Button } from '@workspace/ui/components/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-} from '@workspace/ui/components/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
 import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
 import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Switch } from '@workspace/ui/components/switch';
 import {
   Table,
   TableBody,
@@ -34,15 +26,14 @@ import {
   TableHeader,
   TableRow,
 } from '@workspace/ui/components/table';
-import { Check, MoreVertical, Pencil, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
-  useAdminUpdateEntitlements,
+  useAdminUpdateSubscription,
   useAdminWorkspaceEntitlements,
   useAdminWorkspaceSubscription,
 } from '@/features/admin';
-import type { AdminEntitlement, AdminUpdateEntitlementItem } from '@/types';
+import type { AdminEntitlement } from '@/types';
 
 interface SubscriptionTabProps {
   workspaceId: string;
@@ -67,6 +58,18 @@ function getPlanDisplayName(planId: string | null): string {
   return planId;
 }
 
+const RESOURCE_LABELS: Record<string, string> = {
+  seats: 'Seats',
+  links: 'Links',
+  recordings: 'Recordings',
+  screenshots: 'Screenshots',
+  files: 'Files',
+};
+
+function formatLimit(value: number): string {
+  return value === -1 ? 'Unlimited' : value.toString();
+}
+
 // ============================================
 // SECTION A: SUBSCRIPTION OVERVIEW
 // ============================================
@@ -81,6 +84,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 }
 
 interface SubscriptionOverviewProps {
+  workspaceId: string;
   contractDetail: {
     status: string | null;
     planId: string | null;
@@ -106,6 +110,7 @@ interface SubscriptionOverviewProps {
 }
 
 function SubscriptionOverview({
+  workspaceId,
   contractDetail,
   accessDetail,
   featureGates,
@@ -113,6 +118,102 @@ function SubscriptionOverview({
 }: SubscriptionOverviewProps) {
   const gates = Object.entries(featureGates) as [FeatureGate, boolean][];
   const enabledCount = gates.filter(([, enabled]) => enabled).length;
+
+  // Fetch current entitlements for pre-populating feature limits
+  const { data: entitlementsResult } = useAdminWorkspaceEntitlements(workspaceId);
+
+  // Build a lookup of current limits by resource type
+  const currentLimitsMap = useMemo(() => {
+    const entitlements = entitlementsResult?.success ? entitlementsResult.data.entitlements : [];
+    const map: Partial<Record<ResourceType, { quotedLimit: number; actualLimit: number }>> = {};
+    for (const e of entitlements) {
+      map[e.resourceType as ResourceType] = {
+        quotedLimit: e.quotedLimit,
+        actualLimit: e.actualLimit,
+      };
+    }
+    return map;
+  }, [entitlementsResult]);
+
+  // Track local overrides for editing (gates + limits)
+  const [localGates, setLocalGates] = useState<Partial<PlanFeatureGates>>({});
+  const [localLimits, setLocalLimits] = useState<
+    Partial<Record<ResourceType, Partial<ResourceLimits>>>
+  >({});
+  const updateSubscriptionMutation = useAdminUpdateSubscription();
+
+  // Compute whether there are pending changes
+  const hasChanges = useMemo(
+    () => Object.keys(localGates).length > 0 || Object.keys(localLimits).length > 0,
+    [localGates, localLimits]
+  );
+
+  const handleGateToggle = useCallback(
+    (gate: FeatureGate, checked: boolean) => {
+      setLocalGates((prev) => {
+        const originalValue = featureGates[gate];
+        if (checked === originalValue) {
+          const next = { ...prev };
+          delete next[gate];
+          return next;
+        }
+        return { ...prev, [gate]: checked };
+      });
+    },
+    [featureGates]
+  );
+
+  const handleLimitChange = useCallback(
+    (
+      resourceType: ResourceType,
+      field: 'quotedLimit' | 'actualLimit',
+      value: string,
+      originalValue: number
+    ) => {
+      const parsed = parseInt(value, 10);
+      setLocalLimits((prev) => {
+        const existing = prev[resourceType] ?? {};
+        if (!isNaN(parsed) && parsed === originalValue) {
+          // Reverted to original — remove this field override
+          const updated = { ...existing };
+          delete updated[field];
+          if (Object.keys(updated).length === 0) {
+            const next = { ...prev };
+            delete next[resourceType];
+            return next;
+          }
+          return { ...prev, [resourceType]: updated };
+        }
+        return {
+          ...prev,
+          [resourceType]: { ...existing, [field]: isNaN(parsed) ? undefined : parsed },
+        };
+      });
+    },
+    []
+  );
+
+  const handleSave = useCallback(() => {
+    if (!hasChanges) return;
+    updateSubscriptionMutation.mutate(
+      {
+        workspaceId,
+        featureGates: Object.keys(localGates).length > 0 ? localGates : undefined,
+        entitlements: Object.keys(localLimits).length > 0 ? localLimits : undefined,
+      },
+      {
+        onSuccess: () => {
+          setLocalGates({});
+          setLocalLimits({});
+        },
+      }
+    );
+  }, [workspaceId, localGates, localLimits, hasChanges, updateSubscriptionMutation]);
+
+  const handleDiscard = useCallback(() => {
+    setLocalGates({});
+    setLocalLimits({});
+  }, []);
 
   return (
     <div>
@@ -123,7 +224,6 @@ function SubscriptionOverview({
         </p>
       </div>
 
-      {/* Accordion sections */}
       <Accordion type="multiple">
         {/* Subscription Details */}
         <AccordionItem value="subscription" className="border rounded-lg overflow-hidden px-4 mb-2">
@@ -184,29 +284,126 @@ function SubscriptionOverview({
           </AccordionContent>
         </AccordionItem>
 
-        {/* Feature Gates */}
-        <AccordionItem value="features" className="border rounded-lg overflow-hidden px-4 mb-2">
+        {/* Entitlements — feature gates + feature limits, single save to DodoPayments */}
+        <AccordionItem value="entitlements" className="border rounded-lg overflow-hidden px-4 mb-2">
           <AccordionTrigger className="hover:no-underline">
             <div className="flex flex-col items-start">
-              <span className="text-sm font-medium">Feature gates</span>
+              <span className="text-sm font-medium">Entitlements</span>
               <span className="text-xs text-muted-foreground">
-                {enabledCount} of {gates.length} enabled
+                {enabledCount} of {gates.length} gates enabled
+                {hasChanges && ' · unsaved changes'}
               </span>
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <div className="space-y-2 pb-1">
-              {gates.map(([gate, enabled]) => (
-                <div key={gate} className="flex items-center justify-between py-0.5">
-                  <span className="text-sm">{FEATURE_GATE_LABELS[gate] ?? gate}</span>
-                  {enabled ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <X className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-              ))}
+            {/* Feature Gates sub-section */}
+            <div className="mb-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Feature Gates</p>
+              <div className="space-y-2">
+                {gates.map(([gate, enabled]) => {
+                  const effectiveValue = localGates[gate] ?? enabled;
+                  const isOverridden = gate in localGates;
+                  return (
+                    <div key={gate} className="flex items-center justify-between py-0.5">
+                      <span className={`text-sm ${isOverridden ? 'font-medium' : ''}`}>
+                        {FEATURE_GATE_LABELS[gate] ?? gate}
+                      </span>
+                      <Switch
+                        checked={effectiveValue}
+                        onCheckedChange={(checked) => handleGateToggle(gate, checked)}
+                        disabled={updateSubscriptionMutation.isPending}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Feature Limits sub-section */}
+            <div className="pt-4 border-t">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Feature Limits</p>
+              <div className="space-y-3">
+                <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-center text-xs text-muted-foreground mb-1">
+                  <span>Resource</span>
+                  <span className="w-28 text-center">Quoted Limit</span>
+                  <span className="w-28 text-center">Actual Limit</span>
+                </div>
+                {RESOURCE_TYPE_VALUES.map((resourceType) => {
+                  const current = currentLimitsMap[resourceType];
+                  const localOverride = localLimits[resourceType];
+                  const quotedValue = localOverride?.quotedLimit ?? current?.quotedLimit;
+                  const actualValue = localOverride?.actualLimit ?? current?.actualLimit;
+                  return (
+                    <div
+                      key={resourceType}
+                      className="grid grid-cols-[1fr_auto_auto] gap-2 items-center"
+                    >
+                      <span className="text-sm">
+                        {RESOURCE_LABELS[resourceType] ?? resourceType}
+                      </span>
+                      <Input
+                        type="number"
+                        min={-1}
+                        placeholder="—"
+                        className="h-8 text-sm w-28"
+                        value={quotedValue ?? ''}
+                        onChange={(e) =>
+                          handleLimitChange(
+                            resourceType,
+                            'quotedLimit',
+                            e.target.value,
+                            current?.quotedLimit ?? NaN
+                          )
+                        }
+                        disabled={updateSubscriptionMutation.isPending}
+                      />
+                      <Input
+                        type="number"
+                        min={-1}
+                        placeholder="—"
+                        className="h-8 text-sm w-28"
+                        value={actualValue ?? ''}
+                        onChange={(e) =>
+                          handleLimitChange(
+                            resourceType,
+                            'actualLimit',
+                            e.target.value,
+                            current?.actualLimit ?? NaN
+                          )
+                        }
+                        disabled={updateSubscriptionMutation.isPending}
+                      />
+                    </div>
+                  );
+                })}
+                <p className="text-xs text-muted-foreground">
+                  Use -1 for unlimited. Changes are synced via DodoPayments.
+                </p>
+              </div>
+            </div>
+
+            {/* Unified save/discard */}
+            {hasChanges && (
+              <div className="flex gap-2 justify-end pt-3 border-t mt-4">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-full px-4"
+                  onClick={handleDiscard}
+                  disabled={updateSubscriptionMutation.isPending}
+                >
+                  Discard
+                </Button>
+                <Button
+                  size="sm"
+                  className="rounded-full px-4"
+                  onClick={handleSave}
+                  disabled={updateSubscriptionMutation.isPending}
+                >
+                  {updateSubscriptionMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            )}
           </AccordionContent>
         </AccordionItem>
 
@@ -249,173 +446,23 @@ function SubscriptionOverview({
 }
 
 // ============================================
-// SECTION D: ENTITLEMENTS TABLE (preserved)
+// SECTION B: RESOURCE USAGE TABLE (read-only)
 // ============================================
 
-const RESOURCE_LABELS: Record<string, string> = {
-  seats: 'Seats',
-  links: 'Links',
-  recordings: 'Recordings',
-  screenshots: 'Screenshots',
-  files: 'Files',
-};
-
-function formatLimit(value: number): string {
-  return value === -1 ? 'Unlimited' : value.toString();
-}
-
-interface EditEntitlementModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  entitlement: AdminEntitlement | null;
-  onConfirm: (update: AdminUpdateEntitlementItem) => void;
-  isPending: boolean;
-}
-
-function EditEntitlementModal({
-  open,
-  onOpenChange,
-  entitlement,
-  onConfirm,
-  isPending,
-}: EditEntitlementModalProps) {
-  const [quotedLimit, setQuotedLimit] = useState('');
-  const [actualLimit, setActualLimit] = useState('');
-
-  useEffect(() => {
-    if (open && entitlement) {
-      setQuotedLimit(entitlement.quotedLimit.toString());
-      setActualLimit(entitlement.actualLimit.toString());
-    }
-  }, [open, entitlement]);
-
-  const handleConfirm = () => {
-    if (!entitlement) return;
-
-    const update: AdminUpdateEntitlementItem = {
-      resourceType: entitlement.resourceType as AdminUpdateEntitlementItem['resourceType'],
-    };
-
-    const newQuotedLimit = parseInt(quotedLimit, 10);
-    const newActualLimit = parseInt(actualLimit, 10);
-
-    if (!isNaN(newQuotedLimit) && newQuotedLimit !== entitlement.quotedLimit) {
-      update.quotedLimit = newQuotedLimit;
-    }
-    if (!isNaN(newActualLimit) && newActualLimit !== entitlement.actualLimit) {
-      update.actualLimit = newActualLimit;
-    }
-
-    if (update.quotedLimit === undefined && update.actualLimit === undefined) {
-      onOpenChange(false);
-      return;
-    }
-
-    onConfirm(update);
-  };
-
-  if (!entitlement) return null;
-
-  const resourceLabel = RESOURCE_LABELS[entitlement.resourceType] || entitlement.resourceType;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
-        <div className="space-y-6 py-4">
-          <div className="flex items-start gap-4">
-            <Logo variant="tiled" size="md" showText={false} />
-            <div className="flex flex-col space-y-1">
-              <DialogTitle className="text-xl font-semibold">Edit Entitlement</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                Update limits for <strong>{resourceLabel}</strong>. Use -1 for unlimited.
-              </DialogDescription>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="quotedLimit" className="mb-2 block">
-                Quoted Limit
-              </Label>
-              <Input
-                id="quotedLimit"
-                type="number"
-                value={quotedLimit}
-                onChange={(e) => setQuotedLimit(e.target.value)}
-                min={-1}
-                disabled={isPending}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Advertised limit shown to customers. Use -1 for unlimited.
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="actualLimit" className="mb-2 block">
-                Actual Limit
-              </Label>
-              <Input
-                id="actualLimit"
-                type="number"
-                value={actualLimit}
-                onChange={(e) => setActualLimit(e.target.value)}
-                min={-1}
-                disabled={isPending}
-              />
-              <p className="text-xs text-muted-foreground mt-1">Use -1 for unlimited</p>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <div className="flex gap-2 w-full justify-end">
-            <Button
-              type="button"
-              variant="secondary"
-              className="rounded-full px-6"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              className="rounded-full px-6"
-              onClick={handleConfirm}
-              disabled={isPending}
-            >
-              {isPending ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function EntitlementsSection({ workspaceId }: { workspaceId: string }) {
+function ResourceUsageSection({ workspaceId }: { workspaceId: string }) {
   const { data: entitlementsResult, isLoading } = useAdminWorkspaceEntitlements(workspaceId);
-  const updateMutation = useAdminUpdateEntitlements();
-
-  const [editingEntitlement, setEditingEntitlement] = useState<AdminEntitlement | null>(null);
 
   const entitlements: AdminEntitlement[] = entitlementsResult?.success
     ? entitlementsResult.data.entitlements
     : [];
 
-  const handleConfirmEdit = (update: AdminUpdateEntitlementItem) => {
-    updateMutation.mutate(
-      { workspaceId, entitlements: [update] },
-      { onSuccess: () => setEditingEntitlement(null) }
-    );
-  };
-
   return (
     <div>
       <div className="mb-4">
-        <h3 className="text-sm font-semibold">Resource Entitlements</h3>
+        <h3 className="text-sm font-semibold">Resource Usage</h3>
         <p className="text-xs text-muted-foreground">
-          Manage resource limits for this workspace. Use -1 for unlimited.
+          Current resource consumption and limits. Limits are managed via the Entitlements section
+          above.
         </p>
       </div>
 
@@ -428,7 +475,6 @@ function EntitlementsSection({ workspaceId }: { workspaceId: string }) {
                 <TableHead className="text-right">Consumed</TableHead>
                 <TableHead className="text-right">Quoted Limit</TableHead>
                 <TableHead className="text-right">Actual Limit</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -447,14 +493,11 @@ function EntitlementsSection({ workspaceId }: { workspaceId: string }) {
                     <TableCell className="text-right">
                       <Skeleton className="h-4 w-12 ml-auto" />
                     </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-8 w-8 ml-auto" />
-                    </TableCell>
                   </TableRow>
                 ))
               ) : entitlements.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                     No entitlements found
                   </TableCell>
                 </TableRow>
@@ -473,21 +516,6 @@ function EntitlementsSection({ workspaceId }: { workspaceId: string }) {
                     <TableCell className="text-right">
                       <span className="text-sm">{formatLimit(entitlement.actualLimit)}</span>
                     </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditingEntitlement(entitlement)}>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Edit Limits
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -495,16 +523,6 @@ function EntitlementsSection({ workspaceId }: { workspaceId: string }) {
           </Table>
         </div>
       </div>
-
-      <EditEntitlementModal
-        open={editingEntitlement !== null}
-        onOpenChange={(open) => {
-          if (!open) setEditingEntitlement(null);
-        }}
-        entitlement={editingEntitlement}
-        onConfirm={handleConfirmEdit}
-        isPending={updateMutation.isPending}
-      />
     </div>
   );
 }
@@ -553,6 +571,7 @@ export function SubscriptionTab({ workspaceId }: SubscriptionTabProps) {
         </p>
       ) : (
         <SubscriptionOverview
+          workspaceId={workspaceId}
           contractDetail={subscription.contractDetail}
           accessDetail={subscription.accessDetail}
           featureGates={subscription.featureGates}
@@ -560,7 +579,7 @@ export function SubscriptionTab({ workspaceId }: SubscriptionTabProps) {
         />
       )}
 
-      <EntitlementsSection workspaceId={workspaceId} />
+      <ResourceUsageSection workspaceId={workspaceId} />
     </div>
   );
 }

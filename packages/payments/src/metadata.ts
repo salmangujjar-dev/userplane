@@ -152,6 +152,49 @@ export function parseFlatMetadata(metadata: Record<string, unknown>): ProductPla
 }
 
 /**
+ * Merge partial admin overrides with full product defaults into a complete
+ * flat metadata object ready for a DodoPayments subscription metadata update.
+ *
+ * Only overridden keys are written — missing keys inherit from the product defaults.
+ * Both gates and limits must be fully populated after the merge (the existing
+ * `buildFlatMetadata` handles that), so callers must supply complete defaults.
+ */
+export function mergeAndBuildFlatMetadata(
+  defaults: { featureLimits: DodoFeatureLimits; featureGates: PlanFeatureGates },
+  overrides: {
+    featureGates?: Partial<PlanFeatureGates>;
+    featureLimits?: Partial<Record<ResourceType, Partial<ResourceLimits>>>;
+  },
+  billingCadence?: BillingCadence | null
+): Record<string, string> {
+  // Merge gates
+  const mergedGates: PlanFeatureGates = { ...defaults.featureGates };
+  if (overrides.featureGates) {
+    for (const gate of FEATURE_GATE_KEYS) {
+      if (gate in overrides.featureGates) {
+        mergedGates[gate] = overrides.featureGates[gate]!;
+      }
+    }
+  }
+
+  // Merge limits
+  const mergedLimits: DodoFeatureLimits = { ...defaults.featureLimits };
+  if (overrides.featureLimits) {
+    for (const resourceType of RESOURCE_TYPE_VALUES) {
+      const override = overrides.featureLimits[resourceType];
+      if (override) {
+        mergedLimits[resourceType] = {
+          quotedLimit: override.quotedLimit ?? defaults.featureLimits[resourceType].quotedLimit,
+          actualLimit: override.actualLimit ?? defaults.featureLimits[resourceType].actualLimit,
+        };
+      }
+    }
+  }
+
+  return buildFlatMetadata(mergedLimits, mergedGates, billingCadence);
+}
+
+/**
  * Fetch and parse product metadata from DodoPayments.
  *
  * Reads flat metadata keys (one per limit field, one per feature gate) from the

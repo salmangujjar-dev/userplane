@@ -14,6 +14,7 @@ import type { AdminService } from '@/api/services/admin.service';
 import type { AdminPlanService } from '@/api/services/admin-plan.service';
 import type { AdminProjectService } from '@/api/services/admin-project.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
+import type { AdminSubscriptionService } from '@/api/services/admin-subscription.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import type { BillingService } from '@/api/services/billing.service';
 import type { EmailService } from '@/api/services/email.service';
@@ -1137,6 +1138,31 @@ const getWorkspaceSubscriptionImpl = (
 };
 
 /**
+ * Update workspace subscription implementation
+ * Routes overrides through DodoPayments (eventual consistency via webhooks)
+ */
+const updateWorkspaceSubscriptionImpl = (
+  adminService: AdminService,
+  adminSubscriptionService: AdminSubscriptionService
+) => {
+  const adminMiddleware = createAdminMiddleware(adminService);
+
+  return authWithAdminRateLimit
+    .use(adminMiddleware)
+    .admin.workspaces.subscription.update.handler(async ({ input }) => {
+      const result = await adminSubscriptionService.updateSubscription(input.params.workspaceId, {
+        featureGates: input.body.featureGates,
+        entitlements: input.body.entitlements,
+      });
+
+      return {
+        message: 'Subscription update submitted. Changes will take effect shortly.',
+        data: result,
+      };
+    });
+};
+
+/**
  * Create admin procedures
  */
 export const createAdminProcedures = (
@@ -1151,7 +1177,8 @@ export const createAdminProcedures = (
   emailService: EmailService,
   entitlementService: EntitlementService,
   adminPlanService: AdminPlanService,
-  billingService: BillingService
+  billingService: BillingService,
+  adminSubscriptionService: AdminSubscriptionService
 ) => {
   return {
     users: {
@@ -1203,6 +1230,7 @@ export const createAdminProcedures = (
       },
       subscription: {
         get: getWorkspaceSubscriptionImpl(adminService, billingService),
+        update: updateWorkspaceSubscriptionImpl(adminService, adminSubscriptionService),
       },
       provision: adminProvisionWorkspaceImpl(adminService, adminWorkspaceService, emailService),
     },

@@ -36,6 +36,8 @@ import {
   AdminUnbanUserInputSchema,
   AdminUpdateEntitlementsInputSchema,
   AdminUpdatePlanInputSchema,
+  AdminUpdateSubscriptionDataSchema,
+  AdminUpdateSubscriptionInputSchema,
   AdminUserDetailSchema,
   AdminUserSessionsDataSchema,
   AdminUsersListDataSchema,
@@ -572,6 +574,30 @@ export const getWorkspaceSubscription = oc
   })
   .input(AdminGetWorkspaceSubscriptionInputSchema)
   .output(ApiResponseSchema(AdminWorkspaceSubscriptionDataSchema));
+
+/**
+ * PATCH /admin/workspaces/:workspaceId/subscription
+ * Update subscription feature gates and/or entitlements via DodoPayments
+ */
+export const updateWorkspaceSubscription = oc
+  .route({
+    method: 'PATCH',
+    path: '/admin/workspaces/{workspaceId}/subscription',
+    inputStructure: 'detailed',
+    summary: 'Update workspace subscription',
+    description:
+      'Update subscription feature gates and/or entitlements by writing overrides to DodoPayments subscription metadata',
+    tags: ['Admin'],
+  })
+  .errors({
+    UNAUTHORIZED: AdminErrors.UNAUTHORIZED,
+    NOT_ADMIN: AdminErrors.NOT_ADMIN,
+    WORKSPACE_NOT_FOUND: AdminErrors.WORKSPACE_NOT_FOUND,
+    SUBSCRIPTION_NOT_FOUND: AdminErrors.SUBSCRIPTION_NOT_FOUND,
+    SUBSCRIPTION_UPDATE_FAILED: AdminErrors.SUBSCRIPTION_UPDATE_FAILED,
+  })
+  .input(AdminUpdateSubscriptionInputSchema)
+  .output(ApiResponseSchema(AdminUpdateSubscriptionDataSchema));
 
 // ============================================
 // PLAN MANAGEMENT

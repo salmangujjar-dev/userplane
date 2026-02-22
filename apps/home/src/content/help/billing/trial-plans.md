@@ -9,7 +9,7 @@ Every new Userplane workspace starts with a 14-day trial. During the trial you g
 
 ## What is included
 
-The trial gives you the same experience as a paid plan. All features are available, including recordings, recording links, console and network capture, custom metadata, and branding.
+The trial gives you the same experience as a paid plan. All features which are available in the paid plan are made available during the trial as well including recordings, recording links, console and network capture, custom metadata, and branding.
 
 You cannot upgrade, downgrade, or purchase add-ons during the trial.
 

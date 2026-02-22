@@ -43,6 +43,7 @@ export type {
   AdminUnbanUserInput,
   AdminUpdateEntitlementItem,
   AdminUpdateEntitlementsInput,
+  AdminUpdateSubscriptionData,
   AdminUserDetail,
   // User types
   AdminUserListItem,

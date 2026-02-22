@@ -42,6 +42,7 @@ import { AdminService } from '@/api/services/admin.service';
 import { AdminPlanService } from '@/api/services/admin-plan.service';
 import { AdminProjectService } from '@/api/services/admin-project.service';
 import { AdminRecordingService } from '@/api/services/admin-recording.service';
+import { AdminSubscriptionService } from '@/api/services/admin-subscription.service';
 import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
 import { BillingService } from '@/api/services/billing.service';
 import { BillingMutationService } from '@/api/services/billing-mutation.service';
@@ -55,6 +56,7 @@ import { IntercomService } from '@/api/services/intercom-oauth.service';
 import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
 import { NotificationService } from '@/api/services/notification.service';
+import { PlanMetadataResolver } from '@/api/services/plan-metadata-resolver';
 import { ProjectService } from '@/api/services/project.service';
 import { ProvisionerService } from '@/api/services/provisioner.service';
 import { RecordingService } from '@/api/services/recording.service';
@@ -108,6 +110,16 @@ export const billingService = new BillingService({
 });
 
 export const adminPlanService = new AdminPlanService({
+  dodoClient: getDodoClient(),
+});
+
+const metadataResolver = new PlanMetadataResolver({
+  dodoClient: getDodoClient(),
+});
+
+export const adminSubscriptionService = new AdminSubscriptionService({
+  subscriptionRepo,
+  metadataResolver,
   dodoClient: getDodoClient(),
 });
 
