@@ -70,15 +70,6 @@ export const LinkProjectSchema = z.object({
 });
 
 /**
- * Creator info in link
- */
-// export const LinkCreatorSchema = z.object({
-//   id: z.string(),
-//   name: z.string(),
-//   email: z.string().email(),
-// });
-
-/**
  * Link item in list
  */
 export const LinkItemSchema = z.object({

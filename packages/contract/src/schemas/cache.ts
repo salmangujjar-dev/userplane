@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { ResourceUsageSchema } from './billing';
 import {
   DomainIdSchema,
   DomainStatusSchema,
@@ -19,12 +20,6 @@ import { WorkspacePreferencesSchema } from './workspace';
 // ============================================================
 // Usage/entitlement cache
 // ============================================================
-
-const ResourceUsageSchema = z.object({
-  consumed: z.number(),
-  limit: z.number(),
-  percentUsed: z.number(),
-});
 
 export const UsageSummarySchema = z.object({
   planId: z.string(),

@@ -59,10 +59,6 @@ export const BillingErrors = {
     message: 'Payment service error',
     status: 502,
   },
-  PLAN_CHANGE_REQUEST_FAILED: {
-    message: 'Failed to submit plan change request',
-    status: 500,
-  },
   PLAN_LIMIT_EXCEEDED: {
     status: 403,
     message: 'You have reached your plan limit. Upgrade for more.',

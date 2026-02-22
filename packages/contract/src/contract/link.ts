@@ -135,6 +135,7 @@ export const deleteLink = oc
     LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
     LINK_GONE: LinkErrors.LINK_GONE,
     LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
+    LINK_DELETE_FORBIDDEN: LinkErrors.LINK_DELETE_FORBIDDEN,
     LINK_DELETE_FAILED: LinkErrors.LINK_DELETE_FAILED,
   })
   .input(DeleteLinkSchema)
