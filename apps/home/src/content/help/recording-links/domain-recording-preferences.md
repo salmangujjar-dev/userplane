@@ -2,20 +2,21 @@
 title: 'Domain Recording Preferences'
 excerpt: 'Control what data is captured per domain — console logs, network activity, client actions, and more'
 order: 5
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 Each verified domain in your workspace can have its own recording preferences. These settings control what data is captured alongside the video when a customer records on that domain.
 
 ## Available preferences
 
-| Preference                 | Description                                                                                                                                           |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Hide sensitive fields**  | Automatically blur sensitive form fields and inputs during recording. See [Sensitive Data Redaction](/help/recording-links/sensitive-data-redaction). |
-| **Capture console logs**   | Record browser console output (errors, warnings, messages).                                                                                           |
-| **Capture client actions** | Record user interactions (clicks, inputs, navigation).                                                                                                |
-| **Capture network logs**   | Record HTTP requests and responses (URLs, status codes, timing).                                                                                      |
-| **Capture backend logs**   | Record server-side logs forwarded during the session.                                                                                                 |
+| Preference                         | Description                                                                                                                                           |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Hide sensitive fields**          | Automatically blur sensitive form fields and inputs during recording. See [Sensitive Data Redaction](/help/recording-links/sensitive-data-redaction). |
+| **Capture console logs**           | Record browser console output (errors, warnings, messages).                                                                                           |
+| **Capture client actions**         | Record user interactions (clicks, inputs, navigation).                                                                                                |
+| **Capture network logs**           | Record HTTP requests and responses (URLs, status codes, timing).                                                                                      |
+| **Capture backend logs**           | Record server-side logs forwarded during the session.                                                                                                 |
+| **Capture voice and device audio** | Record the user's voice and device system audio alongside the video.                                                                                  |
 
 ## Configuring preferences
 
@@ -30,7 +31,7 @@ Domain recording preferences are only available for **verified** domains. If a d
 
 ## Defaults
 
-All capture preferences are enabled by default when a domain is first verified. You can disable any preference that does not apply to your use case.
+All capture preferences are enabled by default when a domain is first verified, except voice and device audio capture, which is disabled by default. You can toggle any preference to match your use case.
 
 ## Related articles
 

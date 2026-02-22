@@ -2,7 +2,7 @@
 title: 'Contact Us'
 excerpt: 'Get in touch with the Userplane team — we would love to hear from you'
 order: 1
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 Can't find what you're looking for in the Help Center? No worries — we're happy to help. Here are the best ways to reach us.
@@ -18,6 +18,10 @@ A few things that help us help you faster:
 - **Steps to reproduce** — so we can see exactly what you're seeing.
 - **Screenshots or a recording link** — a picture (or recording) is worth a thousand words.
 - **Browser and OS** — especially helpful for recording-related issues.
+
+## Trial extensions
+
+Need more time to evaluate Userplane? If your 14-day trial is ending and you have not had enough time to explore the product, reach out to us at [support@userplane.io](mailto:support@userplane.io) and we will be happy to extend your trial.
 
 ## Feature requests
 

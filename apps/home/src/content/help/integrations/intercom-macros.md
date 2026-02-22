@@ -2,7 +2,7 @@
 title: 'Intercom Macros'
 excerpt: 'Use reusable recording links in Intercom macros for quick one-click insertion'
 order: 3
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 Intercom macros let agents insert pre-written responses into conversations with a single click. By adding a [reusable recording link](/help/recording-links/reusable-recording-links) to a macro, agents can quickly request screen recordings without creating a new link each time.
@@ -33,6 +33,18 @@ Since the link is reusable, every customer who clicks it creates a separate reco
 - Create separate macros for different projects or issue types, each with its own reusable link.
 - Include a brief explanation in the macro text so the customer knows what to expect.
 - Use a branded recording link (with a verified domain) for a more professional experience.
+
+## Attaching metadata via URL parameters
+
+You can append the `userplane-meta` query parameter to a recording link in your macro to automatically attach metadata to every recording created from that macro. This is useful for tagging recordings with the macro name, issue type, or support tier.
+
+For example:
+
+```
+https://record.userplane.io/r/abc123?userplane-meta=source%3Dintercom,macro%3Dbug-report
+```
+
+This attaches `source: intercom` and `macro: bug-report` to each recording. See [Metadata SDK](/help/developer-docs/metadata-sdk) for the full URL parameter format.
 
 ## Related articles
 

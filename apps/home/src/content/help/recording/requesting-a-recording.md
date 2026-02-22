@@ -2,7 +2,7 @@
 title: 'Requesting a Recording'
 excerpt: 'Create a recording link and share it with your customer to capture a screen recording'
 order: 1
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 A recording starts with a link. You create a recording link in Userplane, share it with your customer, and they record their screen directly in the browser — no installs required.
@@ -25,7 +25,11 @@ If you use Intercom, you can create and send recording links directly from the [
 
 ## What happens next
 
-After the customer finishes recording, the recording appears in your [Recordings](https://dash.userplane.io/_/recordings) page. You will also receive a notification if [incoming recording notifications](/help/account/notification-preferences) are enabled.
+After the customer finishes recording, the recording appears in your [Recordings](https://dash.userplane.io/_/recordings) page. Incoming recording notifications are opt-in. To receive email alerts when recordings arrive, enable "Incoming recordings" in your [notification preferences](/help/account/notification-preferences).
+
+## Sharing with non-members
+
+You can send a recording link to anyone, including people outside your workspace. However, they need to join the workspace to view the recording. The recording link itself is open to any recipient for recording purposes.
 
 ## Related articles
 

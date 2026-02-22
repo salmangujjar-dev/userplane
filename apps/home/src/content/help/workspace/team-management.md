@@ -2,7 +2,7 @@
 title: 'Team Management'
 excerpt: 'Add, remove, and manage workspace members and their roles'
 order: 6
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 The Team section in Workspace Settings lets you manage who has access to your workspace and what they can do.
@@ -33,6 +33,10 @@ See [Roles & Permissions](/help/workspace/roles-and-permissions) for what each r
 2. Click **Remove**.
 
 Removed members lose access to the workspace immediately. Their past recordings and links remain in the workspace.
+
+## Seat limits and add-ons
+
+Each plan includes a set number of seats. If your workspace reaches its seat limit, you will need to either remove an existing member or purchase additional seats. See [Seat Add-Ons](/help/billing/seat-add-ons) for details on purchasing extra seats without upgrading your plan.
 
 ## Related articles
 

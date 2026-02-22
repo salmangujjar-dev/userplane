@@ -2,7 +2,7 @@
 title: 'Notification Preferences'
 excerpt: 'Control which email notifications you receive from Userplane'
 order: 1
-lastUpdated: 2026-02-11
+lastUpdated: 2026-02-22
 ---
 
 Userplane sends email notifications to keep you informed about recordings, usage, and workspace activity. You can enable or disable each notification type from your workspace settings, subject to your role.
@@ -38,6 +38,8 @@ Only toggles your role can control are shown. If you do not see a notification t
 | **Usage notifications** | Enabled for all roles                                         |
 | **Incoming recordings** | Disabled for all roles                                        |
 | **Admin notifications** | Enabled for owners (locked), disabled for admins (can opt in) |
+
+Incoming recording notifications are opt-in. Enable this toggle to receive an email each time a recording is submitted.
 
 ## Role changes
 

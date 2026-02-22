@@ -2,7 +2,7 @@
 title: 'Recording Limits & Duration'
 excerpt: 'Default recording duration, maximum file sizes, and supported video formats'
 order: 7
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 Userplane enforces limits on recording duration and file size to ensure reliable capture and playback.
@@ -18,6 +18,7 @@ The minimum recording duration is **1 second**. Recordings shorter than this are
 | Resource        | Maximum size |
 | --------------- | ------------ |
 | Video recording | **500 MB**   |
+| Audio recording | 50 MB        |
 | Thumbnail       | 10 MB        |
 | Console logs    | 50 MB        |
 | Company logo    | 4 MB         |
@@ -38,6 +39,10 @@ Recordings are captured in **WebM** or **MP4** containers depending on browser s
 ## Supported thumbnail formats
 
 Thumbnails are captured as PNG, JPEG, or WebP images.
+
+## Audio capture
+
+When voice and device audio capture is enabled in your [domain recording preferences](/help/recording-links/domain-recording-preferences), Userplane records the user's microphone input and system audio alongside the screen video. The audio track is stored separately and played back in sync with the video in the recording detail view.
 
 ## Log file formats
 
