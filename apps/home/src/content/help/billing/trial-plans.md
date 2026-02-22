@@ -15,7 +15,7 @@ You cannot upgrade, downgrade, or purchase add-ons during the trial.
 
 ## Trial duration
 
-The trial lasts **14 days** from the date your workspace is created. A countdown is displayed in Workspace Settings so you always know how much time remains.
+The trial lasts **7 days** from the date your workspace is created. A countdown is displayed in Workspace Settings so you always know how much time remains.
 
 ## Requesting an extension
 
