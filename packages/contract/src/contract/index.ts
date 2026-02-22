@@ -79,6 +79,7 @@ export const adminContract = {
     },
     subscription: {
       get: admin.getWorkspaceSubscription,
+      update: admin.updateWorkspaceSubscription,
     },
   },
   projects: {

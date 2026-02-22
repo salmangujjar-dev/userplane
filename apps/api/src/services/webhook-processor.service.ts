@@ -565,11 +565,10 @@ export class WebhookProcessorService {
       'Applying transition'
     );
 
-    // Fetch Dodo product metadata for plan/addon changes
-    const metadata =
-      (planId && planChanged) || addonsChanged
-        ? await this.deps.metadataResolver.fetchForProduct(subscription.product_id)
-        : null;
+    // Always resolve metadata from the subscription so admin overrides
+    // (stored as embedded snapshots in subscription metadata) are picked up,
+    // not just on plan/addon changes.
+    const metadata = await this.deps.metadataResolver.resolveForSubscription(subscription);
 
     const subscriptionUpdateData: UpdateSubscriptionData = {
       status: targetStatus,
@@ -650,47 +649,45 @@ export class WebhookProcessorService {
       await this.deps.entitlementService.resetPeriodUsage(workspaceId, { tx });
     }
 
-    // Handle plan/add-on changes with metadata
-    if (opts.planChanged || opts.addonsChanged) {
-      if (opts.metadata?.featureLimits) {
-        logger.debug(
-          {
-            workspaceId,
-            planId: opts.planId,
-            addonsChanged: opts.addonsChanged,
-          },
-          'Updating entitlements from metadata for plan/add-on change'
-        );
-        await this.deps.entitlementService.updateFromMetadata(
+    // Update entitlements when metadata is available.
+    // This covers plan changes, addon changes, AND admin-only metadata overrides
+    // (where plan/addons didn't change but subscription metadata was updated).
+    if (opts.metadata?.featureLimits) {
+      logger.debug(
+        {
           workspaceId,
-          opts.metadata.featureLimits!,
-          {
-            tx,
-            addons: opts.incomingAddons,
-            billingCadence: opts.billingCadence,
-          }
-        );
-      } else {
-        logger.error(
-          {
-            workspaceId,
-            planId: opts.planId,
-            productId: opts.productId,
-            addonsChanged: opts.addonsChanged,
-          },
-          'Plan/add-on change without feature_limits metadata - entitlements NOT updated'
-        );
-        captureException(
-          new Error('Plan/add-on change without feature_limits metadata'),
-          undefined,
-          {
-            operation: 'webhook_addon_change_no_metadata',
-            workspaceId,
-            planId: opts.planId,
-            productId: opts.productId,
-          }
-        );
-      }
+          planId: opts.planId,
+          planChanged: opts.planChanged,
+          addonsChanged: opts.addonsChanged,
+        },
+        'Updating entitlements from metadata'
+      );
+      await this.deps.entitlementService.updateFromMetadata(
+        workspaceId,
+        opts.metadata.featureLimits,
+        {
+          tx,
+          addons: opts.incomingAddons,
+          billingCadence: opts.billingCadence,
+        }
+      );
+    } else if (opts.planChanged || opts.addonsChanged) {
+      // Plan or addon changed but no metadata available — this is an error
+      logger.error(
+        {
+          workspaceId,
+          planId: opts.planId,
+          productId: opts.productId,
+          addonsChanged: opts.addonsChanged,
+        },
+        'Plan/add-on change without feature_limits metadata - entitlements NOT updated'
+      );
+      captureException(new Error('Plan/add-on change without feature_limits metadata'), undefined, {
+        operation: 'webhook_addon_change_no_metadata',
+        workspaceId,
+        planId: opts.planId,
+        productId: opts.productId,
+      });
     }
   }
 

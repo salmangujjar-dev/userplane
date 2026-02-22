@@ -23,6 +23,7 @@ import {
   adminProjectService,
   adminRecordingService,
   adminService,
+  adminSubscriptionService,
   adminWorkspaceService,
   billingService,
   domainRepo,
@@ -125,7 +126,8 @@ const adminProcedures = createAdminProcedures(
   emailService,
   entitlementService,
   adminPlanService,
-  billingService
+  billingService,
+  adminSubscriptionService
 );
 const projectProcedures = createProjectProcedures(
   projectService,

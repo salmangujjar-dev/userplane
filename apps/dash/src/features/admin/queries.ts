@@ -1,7 +1,12 @@
 'use client';
 
 import { type QueryKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { FeatureGate, ResourceType } from '@workspace/pricing';
+import type {
+  FeatureGate,
+  PlanFeatureGates,
+  ResourceLimits,
+  ResourceType,
+} from '@workspace/pricing';
 
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';
@@ -26,6 +31,7 @@ import type {
   AdminRestoreProjectData,
   AdminRestoreWorkspaceData,
   AdminUpdateEntitlementItem,
+  AdminUpdateSubscriptionData,
   AdminUserDetail,
   AdminUserSession,
   AdminUserSessionsData,
@@ -409,6 +415,48 @@ export function useAdminWorkspaceSubscription(workspaceId: string | null, enable
     enabled: enabled && !!workspaceId,
     staleTime: 30 * 1000,
     retry: 1,
+  });
+}
+
+// ============================================
+// SUBSCRIPTION MUTATIONS
+// ============================================
+
+export function useAdminUpdateSubscription() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    SafeResult<AdminUpdateSubscriptionData>,
+    Error,
+    {
+      workspaceId: string;
+      featureGates?: Partial<PlanFeatureGates>;
+      entitlements?: Partial<Record<ResourceType, Partial<ResourceLimits>>>;
+    }
+  >({
+    mutationFn: async ({ workspaceId, featureGates, entitlements }) => {
+      const [error, response] = await apiClient.admin.workspaces.subscription.update({
+        params: { workspaceId },
+        body: { featureGates, entitlements },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result, { workspaceId }) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      showUpdatedToast('Subscription', 'Changes will take effect shortly');
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.workspaceSubscription(workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: adminKeys.workspaceEntitlements(workspaceId),
+      });
+    },
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to update subscription');
+    },
   });
 }
 
