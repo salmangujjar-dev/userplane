@@ -2,7 +2,7 @@
 title: 'Customizing Recording Links'
 excerpt: 'Overview of branding options and per-domain recording preferences'
 order: 3
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 Userplane gives you two ways to customize the recording experience for your customers:
@@ -30,6 +30,7 @@ Each verified domain can have its own settings for what data is captured alongsi
 - Capture client actions
 - Capture network logs
 - Capture backend logs
+- Capture voice and device audio
 
 These preferences only take effect after the domain is [verified](/help/workspace/domain-verification). See [Domain Recording Preferences](/help/recording-links/domain-recording-preferences) for details.
 

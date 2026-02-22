@@ -2,7 +2,7 @@
 title: 'Recording Data Reference'
 excerpt: 'Technical reference for all data captured in a recording — video, logs, actions, and metadata'
 order: 4
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 This reference documents all data types that can be captured during a Userplane recording and their formats.
@@ -32,6 +32,14 @@ A thumbnail image is captured for each recording and displayed in the grid view.
 
 - **Formats:** PNG, JPEG, WebP
 - **Maximum size:** 10 MB
+
+## Audio
+
+When voice and device audio capture is enabled in [domain recording preferences](/help/recording-links/domain-recording-preferences), the user's microphone input and system audio are recorded alongside the video.
+
+- **Format:** WebM (Opus codec)
+- **Maximum size:** 50 MB
+- **Controlled by:** `recordingCaptureAudio` domain preference
 
 ## Console logs
 
@@ -77,13 +85,20 @@ Automatically collected from the customer's browser:
 
 ## Custom metadata
 
-Key-value pairs set via the [Metadata SDK](/help/developer-docs/metadata-sdk):
+Key-value pairs attached to a recording via the [Metadata SDK](/help/developer-docs/metadata-sdk) or the `userplane-meta` URL parameter:
 
-- Set dynamically with `metadata(callback)`
-- Set statically with `set(key, value)`
-- Cleared with `clearMetadata()`
+- Set dynamically with `metadata(callback)` (SDK)
+- Set statically with `set(key, value)` (SDK)
+- Passed via URL with `?userplane-meta=key1%3Dval1,key2%3Dval2`
+- Cleared with `clearMetadata()` (SDK only)
+
+When both methods are used, values are merged. SDK values take priority for the same key.
 
 Custom metadata appears in the [Info Panel](/help/recording/info-panel) alongside system metadata.
+
+## Customer notes
+
+Free-text notes submitted by the recording customer. Customers can optionally add a note when they finish recording to describe what they were doing or what they expected to happen. Notes appear in the Info Panel between link info and system metadata.
 
 ## Data capture controls
 
@@ -96,5 +111,6 @@ What data is captured depends on your [domain recording preferences](/help/recor
 | `recordingCaptureClientAction` | Client action capture           |
 | `recordingCaptureNetworkLog`   | Network log capture             |
 | `recordingCaptureServerLog`    | Backend log capture             |
+| `recordingCaptureAudio`        | Voice and device audio capture  |
 
 These preferences are configured per verified domain in Workspace Settings.

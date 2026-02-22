@@ -2,7 +2,7 @@
 title: 'Metadata SDK'
 excerpt: 'Attach custom metadata to recordings — user info, feature flags, session context, and more'
 order: 2
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 The Userplane SDK includes a metadata API that lets you attach custom key-value data to recordings. This data appears in the [Info Panel](/help/recording/info-panel) when your support team reviews a recording, giving them additional context about the user and their session without having to ask.
@@ -237,6 +237,48 @@ window.addEventListener('error', (event) => {
 });
 ```
 
+## URL parameter metadata (userplane-meta)
+
+If you cannot use the SDK — for example, in helpdesk macros, server-rendered pages, or third-party tools — you can attach metadata to a recording via a URL query parameter instead.
+
+### Format
+
+Append the `userplane-meta` parameter to any recording link URL:
+
+```
+?userplane-meta=key1%3Dval1,key2%3Dval2
+```
+
+The value is a comma-separated list of key-value pairs. Each pair uses `=` as the delimiter between key and name, and the entire value must be URL-encoded (so `=` becomes `%3D`).
+
+**Decoded format:** `key1=val1,key2=val2`
+
+### Examples
+
+**Helpdesk macro link:**
+
+```
+https://record.userplane.io/r/abc123?userplane-meta=ticketId%3D98765,priority%3Dhigh
+```
+
+This attaches `ticketId: 98765` and `priority: high` to the recording.
+
+**Server-rendered page:**
+
+```html
+<a href="https://record.userplane.io/r/abc123?userplane-meta=userId%3Dusr_456,plan%3Denterprise">
+  Record your screen
+</a>
+```
+
+### How URL metadata appears
+
+Values appear in the Info Panel identically to SDK-set metadata — as key-value pairs in the custom metadata section. There is no visual distinction between URL parameter metadata and SDK metadata.
+
+### Merging with SDK metadata
+
+If both URL parameter metadata and SDK metadata are present, the values are merged. When the same key exists in both sources, the SDK value takes priority.
+
 ## Tips
 
 - Use `set()` for stable values that are known at initialization — user ID, account name, plan, app version, environment.
@@ -244,9 +286,11 @@ window.addEventListener('error', (event) => {
 - Call `clearMetadata()` on logout to avoid leaking user data into subsequent recordings.
 - Keep metadata keys descriptive. Your support team will see them as-is in the Info Panel.
 - Avoid attaching large objects. Metadata should be concise context, not a full state dump.
+- If you cannot install the SDK, use the `userplane-meta` URL parameter to pass metadata through recording link URLs. This is especially useful for helpdesk macros and server-rendered pages.
 
 ## Related articles
 
 - [Info Panel](/help/recording/info-panel) — where metadata appears in the recording view.
 - [Web SDK](/help/developer-docs/web-sdk) — initialize the SDK and control recordings programmatically.
 - [Setting Up Userplane Scripts](/help/developer-docs/setting-up-userplane-scripts) — install and configure the embed script.
+- [Intercom Macros](/help/integrations/intercom-macros) — use recording links with URL metadata in Intercom macros.

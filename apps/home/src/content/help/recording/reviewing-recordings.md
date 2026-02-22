@@ -2,7 +2,7 @@
 title: 'Reviewing Recordings'
 excerpt: 'Browse, filter, and sort recordings in the grid view'
 order: 6
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 The [Recordings](https://dash.userplane.io/_/recordings) page gives you a grid view of all recordings in your workspace. From here you can browse, filter, sort, and open recordings for detailed review.
@@ -33,4 +33,4 @@ Navigate between pages using the pagination controls at the bottom of the grid. 
 
 ## Opening a recording
 
-Click any recording card to open the [recording playback](/help/recording/recording-playback) detail view, where you can watch the video and inspect console logs, network activity, and more.
+Click any recording card to open the [recording playback](/help/recording/recording-playback) detail view, where you can watch the video and inspect console logs, network activity, customer notes, and more.

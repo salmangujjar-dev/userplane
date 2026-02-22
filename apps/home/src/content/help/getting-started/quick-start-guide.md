@@ -2,7 +2,7 @@
 title: 'Quick Start Guide'
 excerpt: 'Get up and running with Userplane — create a recording link, send it to a customer, and see exactly what went wrong.'
 order: 1
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 Userplane helps your support team request screen recordings from customers in just a few seconds. Instead of asking customers to describe what went wrong, you can send them a simple link and get a full video of the issue, complete with console logs, network activity, and more.
@@ -28,7 +28,7 @@ Userplane helps your support team request screen recordings from customers in ju
 2. Browse recordings in the grid view, or filter by project, member, or link to find what you need.
 3. Click a recording to open the detail view with resizable panels.
 4. Use the right-hand tabs to dig into the details:
-   - **Info** — link details, system metadata (browser, OS, URL), and custom metadata.
+   - **Info** — link details, customer notes, system metadata (browser, OS, URL), and custom metadata.
    - **Console** — browser console logs including errors, warnings, and messages.
    - **Network** — HTTP requests with timing and status codes.
    - **Actions** — clicks, inputs, and page navigations.
@@ -42,6 +42,8 @@ Every recording includes a video of your customer's screen. Depending on your [d
 - Network request and response data
 - Client-side actions (clicks, inputs, navigation)
 - Server-side and backend logs
+- Voice and device audio (when enabled)
+- Customer notes
 - System metadata (browser, OS, page URL)
 
 Sensitive data can be automatically redacted to keep things secure. See [Sensitive Data Redaction](/help/recording-links/sensitive-data-redaction) for more details.

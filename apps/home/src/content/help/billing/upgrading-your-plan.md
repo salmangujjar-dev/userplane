@@ -1,8 +1,8 @@
 ---
 title: 'Upgrading Your Plan'
 excerpt: 'Move to a higher plan tier for more seats, recordings, and features'
-order: 2
-lastUpdated: 2026-02-07
+order: 3
+lastUpdated: 2026-02-22
 ---
 
 Upgrading your plan gives your workspace more seats, recording links, recordings, and access to additional features.
@@ -26,7 +26,7 @@ The upgrade flow depends on your role:
 
 ## Previewing as an admin
 
-Admins can view plan details and pricing but are redirected to the checkout flow alongside the owner approval process.
+Admins can view plan details and pricing, including a preview of the new plan's resource allocations and cost. From there, they are redirected to the checkout flow alongside the owner approval process.
 
 ## Requesting as a member
 
@@ -42,8 +42,14 @@ When you upgrade:
 - The new plan takes effect immediately.
 - Existing usage counts carry over to the new plan's limits.
 - Billing is adjusted for the remaining time in your current billing period.
+- Seat add-ons are retained on the new plan.
+- Any flexible credits are applied to the next invoice.
+- On annual plans, unused rollover resources carry over.
+
+Upgrades are not available during the trial period. Choose a plan after your trial ends or when you are ready to commit. See [Trial Plans](/help/billing/trial-plans) for details.
 
 ## Related articles
 
 - [Subscription Overview](/help/billing/subscription-overview) — plan tiers and pricing.
 - [Understanding Usage Limits](/help/billing/understanding-usage-limits) — what each plan includes.
+- [Trial Plans](/help/billing/trial-plans) — how the 14-day trial works.

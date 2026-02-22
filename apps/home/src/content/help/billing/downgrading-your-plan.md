@@ -1,8 +1,8 @@
 ---
 title: 'Downgrading Your Plan'
 excerpt: 'Move to a lower plan tier or cancel your subscription'
-order: 3
-lastUpdated: 2026-02-07
+order: 4
+lastUpdated: 2026-02-22
 ---
 
 You can downgrade your plan or cancel your subscription at any time. Downgrades take effect at the end of your current billing period.
@@ -14,6 +14,7 @@ When you downgrade:
 1. Your current plan remains active until the end of the billing period.
 2. At the next billing cycle, your workspace moves to the new (lower) plan.
 3. Usage limits adjust to the new plan's allowances.
+4. On annual plans, any unused rollover resources are recalculated for the new plan.
 
 ## Cancelling your subscription
 
@@ -27,6 +28,14 @@ If a payment fails (e.g. expired credit card), your subscription enters an **on-
 - You can update your payment details to resolve the issue.
 
 If payment is not resolved within 14 days, the subscription is cancelled.
+
+## Plan preview
+
+Before confirming a downgrade, you can preview the new plan's resource allocations and pricing. This lets you compare what you have now with what the lower plan includes, so there are no surprises.
+
+## Add-ons and credits
+
+Seat add-ons are retained when you downgrade. If a billing adjustment results in a credit, it is applied automatically to your next invoice. See [Flexible credits](/help/billing/subscription-overview) for details.
 
 ## Managing billing
 

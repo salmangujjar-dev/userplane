@@ -2,7 +2,7 @@
 title: 'Subscription Overview'
 excerpt: 'Understand Userplane plans, pricing, and how to check your current subscription'
 order: 1
-lastUpdated: 2026-02-07
+lastUpdated: 2026-02-22
 ---
 
 Userplane offers five plan tiers to fit teams of different sizes and needs.
@@ -17,7 +17,9 @@ Userplane offers five plan tiers to fit teams of different sizes and needs.
 | **Scale Up**   | $249    | $199               |
 | **Enterprise** | Custom  | Custom             |
 
-Annual plans are billed yearly at a discounted monthly rate.
+Annual plans are billed yearly at a discounted monthly rate. On annual plans, unused resources from one month roll over to the next within your billing year. See [Understanding Usage Limits](/help/billing/understanding-usage-limits) for details on rollover.
+
+New accounts start with a **14-day trial** that includes full access to all features. See [Trial Plans](/help/billing/trial-plans) for more information.
 
 For a full comparison of what is included in each plan, visit the [pricing page](https://userplane.io/pricing).
 
@@ -25,13 +27,25 @@ For a full comparison of what is included in each plan, visit the [pricing page]
 
 Each plan includes a set of resources:
 
-- **Seats** — the number of workspace members.
+- **Seats** — the number of workspace members. Need more? Purchase [seat add-ons](/help/billing/seat-add-ons).
 - **Recording links** — how many recording links you can create per billing period.
 - **Recordings** — how many recordings you can receive per billing period.
 - **Screenshots** — available on Scale Up and Enterprise plans.
 - **Files** — available on Scale Up and Enterprise plans.
 
 See [Understanding Usage Limits](/help/billing/understanding-usage-limits) for detailed per-plan breakdowns.
+
+## Custom plans
+
+If the standard tiers don't fit your needs, we can create a custom plan tailored to your team size and requirements. [Contact support](/help/support/contact-us) to discuss options.
+
+## Seat add-ons
+
+Need extra seats without upgrading your entire plan? You can purchase additional seats on any paid plan. See [Seat Add-Ons](/help/billing/seat-add-ons) for details.
+
+## Flexible credits
+
+If a billing adjustment results in a credit (for example, from a mid-cycle downgrade or a prorated change), the credit is applied automatically to your next invoice. Credits do not expire within your subscription.
 
 ## Checking your current plan
 
@@ -42,3 +56,5 @@ See [Understanding Usage Limits](/help/billing/understanding-usage-limits) for d
 
 - [Upgrading Your Plan](/help/billing/upgrading-your-plan) — move to a higher tier.
 - [Downgrading Your Plan](/help/billing/downgrading-your-plan) — move to a lower tier or cancel.
+
+When changing plans, you can preview the new plan's resources and pricing before confirming. Seat add-ons are retained across plan changes, and any flexible credits are applied to the next invoice.
