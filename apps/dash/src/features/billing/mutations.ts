@@ -28,6 +28,8 @@ interface ManagePlanInput {
  * Server routes to appropriate flow based on subscription status and user role
  */
 export function useManagePlan(callbacks?: ManagePlanCallbacks) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (input: ManagePlanInput) => {
       const [error, response] = await apiClient.billing.managePlan({
@@ -44,7 +46,7 @@ export function useManagePlan(callbacks?: ManagePlanCallbacks) {
       }
       return result;
     },
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       if (!result.success) {
         if (callbacks?.onError) {
           callbacks.onError(
@@ -59,6 +61,14 @@ export function useManagePlan(callbacks?: ManagePlanCallbacks) {
         return;
       }
       const data = result.data;
+      if (data.type === 'execute') {
+        void queryClient.invalidateQueries({
+          queryKey: billingKeys.subscription(variables.workspaceId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: billingKeys.usage(variables.workspaceId),
+        });
+      }
       if (data.type === 'checkout' && callbacks?.onCheckout) {
         callbacks.onCheckout({ checkoutUrl: data.data.checkoutUrl, slug: data.data.slug });
       } else if (data.type === 'preview' && callbacks?.onPreview) {

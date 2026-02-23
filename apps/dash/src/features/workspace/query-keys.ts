@@ -52,7 +52,7 @@ export const workspaceKeys = {
       includeDomains?: boolean;
       includeMembers?: boolean;
     }
-  ) => [...workspaceKeys.all, 'resource-counts', workspaceId, options] as const,
+  ) => [...workspaceKeys.all, 'resource-counts', workspaceId, options ?? {}] as const,
 
   // Invite
   invite: (workspaceId: string) => [...workspaceKeys.all, 'invite', workspaceId] as const,
@@ -62,7 +62,7 @@ export const workspaceKeys = {
 
   // Search & Suggestions
   suggestions: (pagination?: { page?: number; perPage?: number }) =>
-    [...workspaceKeys.all, 'suggestions', pagination] as const,
+    [...workspaceKeys.all, 'suggestions', pagination ?? {}] as const,
   search: (workspaceId: string, options: { type: string; query: string; limit?: number }) =>
     [...workspaceKeys.all, 'search', workspaceId, options] as const,
   count: () => [...workspaceKeys.all, 'count'] as const,

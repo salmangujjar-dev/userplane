@@ -271,6 +271,8 @@ interface RestoreProjectInput {
  * Restores project within its workspace
  */
 export function useRestoreProject() {
+  const queryClient = useQueryClient();
+
   return useMutation<SafeResult<ProjectRestoreData>, Error, RestoreProjectInput>({
     mutationFn: async (input: RestoreProjectInput) => {
       const [error, response] = await apiClient.project.restore({
@@ -279,11 +281,15 @@ export function useRestoreProject() {
 
       return handleSafeResult(error, response?.data ?? null);
     },
-    onSuccess: (result) => {
+    onSuccess: (result, input) => {
       if (!result.success) {
         showErrorToastToast(result.error);
         return;
       }
+      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: workspaceKeys.resourceCounts(input.workspaceId),
+      });
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to restore project');
