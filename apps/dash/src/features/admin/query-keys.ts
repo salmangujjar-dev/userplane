@@ -16,7 +16,7 @@ export const adminKeys = {
   }) => [...adminKeys.users(), 'search', params] as const,
   userDetail: (userId: string) => [...adminKeys.users(), 'detail', userId] as const,
   userSessions: (userId: string, pagination?: { limit?: number; offset?: number }) =>
-    [...adminKeys.users(), 'sessions', userId, pagination] as const,
+    [...adminKeys.users(), 'sessions', userId, pagination ?? {}] as const,
   userWorkspaces: (userId: string, pagination?: { limit?: number; offset?: number }) =>
     [...adminKeys.users(), 'workspaces', userId, pagination] as const,
 
@@ -44,7 +44,7 @@ export const adminKeys = {
       sortDirection?: string;
       filterStatus?: string;
     }
-  ) => [...adminKeys.workspaces(), 'projects', workspaceId, params] as const,
+  ) => [...adminKeys.workspaces(), 'projects', workspaceId, params ?? {}] as const,
 
   // Entitlements
   workspaceEntitlements: (workspaceId: string) =>
@@ -58,6 +58,10 @@ export const adminKeys = {
   recordings: () => [...adminKeys.all, 'recordings'] as const,
   recordingDetail: (recordingId: string) =>
     [...adminKeys.recordings(), 'detail', recordingId] as const,
+  workspaceRecordingStats: (workspaceId: string, filters?: Record<string, unknown>) =>
+    [...adminKeys.all, 'workspace-recording-stats', workspaceId, filters ?? {}] as const,
+  workspaceMemberRecordingStats: (workspaceId: string, filters?: Record<string, unknown>) =>
+    [...adminKeys.all, 'workspace-member-recording-stats', workspaceId, filters ?? {}] as const,
 
   // Plans
   plans: () => [...adminKeys.all, 'plans'] as const,

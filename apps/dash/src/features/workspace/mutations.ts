@@ -115,6 +115,8 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
 }
 
 export function useRotateInvite() {
+  const queryClient = useQueryClient();
+
   return useMutation<SafeResult<InviteUrlData>, Error, string>({
     mutationFn: async (workspaceId: string) => {
       const [error, response] = await apiClient.workspace.invite.rotate({
@@ -131,6 +133,9 @@ export function useRotateInvite() {
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to rotate invite token');
+    },
+    onSettled: (_, __, workspaceId) => {
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.invite(workspaceId) });
     },
   });
 }
@@ -581,6 +586,8 @@ type CreateWorkspaceData =
  * Handles API call, loading states, and error handling
  */
 export function useCreateWorkspace() {
+  const queryClient = useQueryClient();
+
   return useMutation<SafeResult<CreateWorkspaceData>, Error, CreateWorkspaceInput>({
     mutationFn: async (input: CreateWorkspaceInput) => {
       const body =
@@ -605,6 +612,8 @@ export function useCreateWorkspace() {
         showErrorToastToast(result.error);
         return;
       }
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.count() });
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to create workspace');
@@ -799,6 +808,8 @@ const MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024;
  * Uploads file to R2 storage and returns the full CDN URL
  */
 export function useUploadWorkspaceLogo(workspaceId: string | null) {
+  const queryClient = useQueryClient();
+
   return useMutation<LogoUploadData, Error, File>({
     mutationFn: async (file: File) => {
       if (!workspaceId) {
@@ -829,6 +840,11 @@ export function useUploadWorkspaceLogo(workspaceId: string | null) {
 
       const data = (await response.json()) as LogoUploadResponse;
       return { url: data.data.url };
+    },
+    onSuccess: () => {
+      if (workspaceId) {
+        queryClient.invalidateQueries({ queryKey: workspaceKeys.preferences(workspaceId) });
+      }
     },
     // Toast handling moved to component using toast.promise
   });
@@ -986,6 +1002,8 @@ interface RestoreWorkspaceInput {
  * Restores workspace and associated projects/links
  */
 export function useRestoreWorkspace() {
+  const queryClient = useQueryClient();
+
   return useMutation<SafeResult<WorkspaceRestoreData>, Error, RestoreWorkspaceInput>({
     mutationFn: async (input: RestoreWorkspaceInput) => {
       const [error, response] = await apiClient.workspace.restore({
@@ -999,6 +1017,8 @@ export function useRestoreWorkspace() {
         showErrorToastToast(result.error);
         return;
       }
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.count() });
     },
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to restore workspace');

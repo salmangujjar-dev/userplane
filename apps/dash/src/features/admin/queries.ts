@@ -356,9 +356,7 @@ export function useAdminWorkspaceRecordingStats(
   }
 ) {
   return useQuery({
-    queryKey: adminKeys.recordingDetail(
-      `workspace-stats-${workspaceId}-${JSON.stringify(filters)}`
-    ),
+    queryKey: adminKeys.workspaceRecordingStats(workspaceId ?? '', filters),
     queryFn: async () => {
       if (!workspaceId) return null;
 
@@ -383,7 +381,7 @@ export function useAdminWorkspaceMemberRecordingStats(
   }
 ) {
   return useQuery({
-    queryKey: adminKeys.recordingDetail(`member-stats-${workspaceId}-${JSON.stringify(filters)}`),
+    queryKey: adminKeys.workspaceMemberRecordingStats(workspaceId ?? '', filters),
     queryFn: async () => {
       if (!workspaceId) return null;
 

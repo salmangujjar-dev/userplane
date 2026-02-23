@@ -117,9 +117,11 @@ export function useUpdateRecordingExpiry(workspaceId: string | null) {
     onError: (error: unknown) => {
       handleUnknownError(error, 'Failed to update recording expiration');
     },
-    onSettled: () => {
+    onSettled: (_, __, { recordingId }) => {
       queryClient.invalidateQueries({ queryKey: recordingKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: recordingKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: recordingKeys.detail(workspaceId ?? '', recordingId),
+      });
     },
   });
 }
