@@ -6,10 +6,10 @@
 
 import { createMediaClient } from '@workspace/storage/media';
 
-import { env } from './env';
+import { env } from '@/env';
 
 export const mediaClient = createMediaClient({
-  cdnDomain: env.media.cdnDomain,
-  imageZone: env.media.imageZone,
-  skipTransform: env.media.skipTransform,
+  cdnDomain: env.storage.cdnDomain,
+  imageZone: env.storage.imageZone,
+  skipTransform: env.storage.skipTransform,
 });

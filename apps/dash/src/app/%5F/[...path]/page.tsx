@@ -1,8 +1,8 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { redirect, useParams, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
 
 import { useWorkspaces } from '@/features/workspace';
 
@@ -27,6 +27,7 @@ function LoadingFallback() {
  * This route is authenticated by middleware, ensuring only logged-in users reach here
  */
 function UnderscoreCatchAllContent() {
+  const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
 
@@ -47,26 +48,24 @@ function UnderscoreCatchAllContent() {
     perPage: 1,
   });
 
-  // Redirect during render using Next.js redirect()
-  if (!isLoadingWorkspaces) {
+  useEffect(() => {
+    if (isLoadingWorkspaces) return;
+
     if (isWorkspacesError || !workspacesData || !workspacesData.success) {
-      // If error or no workspaces, redirect to suggest page
-      redirect('/workspace/suggest');
+      router.replace('/workspace/suggest');
+      return;
     }
 
     if (workspacesData.data.workspaces && workspacesData.data.workspaces.length > 0) {
       const firstWorkspace = workspacesData.data.workspaces[0];
       if (firstWorkspace) {
-        // Redirect to first workspace with the path
-        redirect(`/workspace/${firstWorkspace.workspaceId}/${fullPath}${suffix}`);
-      } else {
-        redirect('/workspace/suggest');
+        router.replace(`/workspace/${firstWorkspace.workspaceId}/${fullPath}${suffix}`);
+        return;
       }
-    } else {
-      // No workspaces, redirect to suggest page
-      redirect('/workspace/suggest');
     }
-  }
+
+    router.replace('/workspace/suggest');
+  }, [isLoadingWorkspaces, isWorkspacesError, workspacesData, router, fullPath, suffix]);
 
   // Show loading while checking workspaces
   return <LoadingFallback />;

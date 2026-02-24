@@ -3,6 +3,7 @@
 import { SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
+import { Loader2 } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { Suspense } from 'react';
 
@@ -79,7 +80,11 @@ function DomainSetupContent() {
 export default function DomainSetupPage() {
   return (
     <Suspense
-      fallback={<div className="flex min-h-svh items-center justify-center">Loading...</div>}
+      fallback={
+        <div className="flex min-h-svh items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      }
     >
       <DomainSetupContent />
     </Suspense>

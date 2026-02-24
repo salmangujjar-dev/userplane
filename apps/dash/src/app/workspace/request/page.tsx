@@ -362,9 +362,39 @@ function AccessRequestPageContent() {
   );
 }
 
+function AccessRequestSkeleton() {
+  return (
+    <AccessRequestLayout>
+      <div className="flex flex-col items-center gap-3">
+        <Logo showText={false} />
+        <Skeleton className="h-7 w-48" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-8 p-6 rounded-xl border bg-card">
+          <div className="flex items-center gap-3 min-w-0">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex flex-col gap-2 min-w-0">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-8 rounded-full" />
+          </div>
+        </div>
+        <div className="flex justify-center pt-2">
+          <Skeleton className="h-4 w-28" />
+        </div>
+      </div>
+    </AccessRequestLayout>
+  );
+}
+
 export default function AccessRequestPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<AccessRequestSkeleton />}>
       <AccessRequestPageContent />
     </Suspense>
   );

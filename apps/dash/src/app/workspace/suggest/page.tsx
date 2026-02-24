@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/component
 import { Globe, Loader2, Shield } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
 import { Suspense, useEffect, useState } from 'react';
 
@@ -269,11 +269,11 @@ function WorkspaceSuggestPageContent() {
   });
 
   // Redirect when no workspaces available
-  if (!isLoading) {
-    if (!suggestionsData?.success || suggestionsData.data.workspaces.length === 0) {
-      redirect('/workspace/create');
+  useEffect(() => {
+    if (!isLoading && (!suggestionsData?.success || suggestionsData.data.workspaces.length === 0)) {
+      router.replace('/workspace/create');
     }
-  }
+  }, [isLoading, suggestionsData, router]);
 
   // Auto-select first workspace when data loads
   useEffect(() => {
@@ -394,7 +394,7 @@ function WorkspaceSuggestPageContent() {
 
 export default function WorkspaceSuggestPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<WorkspaceSuggestSkeleton />}>
       <WorkspaceSuggestPageContent />
     </Suspense>
   );

@@ -9,7 +9,7 @@ let serverPostHog: PostHog | null = null;
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs' || process.env.NEXT_RUNTIME === 'edge') {
-    const { env } = await import('./src/lib/env');
+    const { env } = await import('@/env');
     if (env.posthog.apiKey) {
       serverPostHog = new PostHog(env.posthog.apiKey, {
         host: env.posthog.host,

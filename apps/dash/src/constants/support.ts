@@ -4,12 +4,12 @@
  * so URLs stay consistent and environment-aware (dev vs prod home site)
  */
 
-import { clientEnv } from '@/lib/env';
+import { env } from '@/env';
 
 /**
  * Build a full help article URL from a relative path
  */
-const helpUrl = (path: string) => `${clientEnv.homeUrl}/help/${path}`;
+const helpUrl = (path: string) => `${env.home.url}/help/${path}`;
 
 /**
  * Help article links used across the dashboard

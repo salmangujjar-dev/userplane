@@ -5,11 +5,11 @@
  */
 import posthog from 'posthog-js';
 
-import { clientEnv } from '@/lib/env';
+import { env } from '@/env';
 
-if (clientEnv.posthog.apiKey) {
-  posthog.init(clientEnv.posthog.apiKey, {
-    api_host: clientEnv.posthog.host,
+if (env.posthog.apiKey) {
+  posthog.init(env.posthog.apiKey, {
+    api_host: env.posthog.host,
     autocapture: false,
     enable_recording_console_log: true,
     capture_pageview: true,
