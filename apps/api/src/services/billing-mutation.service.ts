@@ -377,7 +377,12 @@ export class BillingMutationService {
       newPlan: {
         planId: newPlanId,
         planName: newPlanName,
-        billingInterval: newPlanId.includes('annual') ? 'annual' : 'monthly',
+        billingInterval:
+          preview.new_plan.payment_frequency_interval === 'Year' ||
+          (preview.new_plan.payment_frequency_interval === 'Month' &&
+            preview.new_plan.payment_frequency_count >= 12)
+            ? 'annual'
+            : 'monthly',
         nextBillingDate: new Date(preview.new_plan.next_billing_date),
         recurringPreTaxAmount: preview.new_plan.recurring_pre_tax_amount / 100,
         paymentFrequencyInterval: preview.new_plan.payment_frequency_interval,

@@ -85,6 +85,15 @@ export class WebhookProcessorService {
     return new Date(parseInt(webhookTimestamp, 10) * 1000);
   }
 
+  /**
+   * Compare two addon lists for equality, ignoring order.
+   */
+  private static hasAddonsChanged(current: AddonItems, incoming: AddonItems): boolean {
+    const normalize = (addons: AddonItems) =>
+      JSON.stringify([...addons].sort((a, b) => a.addonId.localeCompare(b.addonId)));
+    return normalize(current) !== normalize(incoming);
+  }
+
   private async skipResult(
     webhookId: string,
     skipReason: string,
@@ -436,14 +445,32 @@ export class WebhookProcessorService {
       await this.updateWorkspaceCustomerId(workspaceId, customerId, { tx });
     }
 
-    // Shared tail: update entitlements, mark processed, invalidate cache
+    // Update entitlements: preserve consumption for plan changes, reset for genuinely new subscriptions
     const billingCadence = metadata.billingCadence;
-    logger.debug({ workspaceId, planId, billingCadence }, 'Updating entitlements from metadata');
-    await this.deps.entitlementService.updateFromMetadata(workspaceId, metadata.featureLimits, {
-      tx,
-      addons: incomingAddons,
-      billingCadence,
-    });
+    if (existingWorkspaceSubscription) {
+      // Plan change — preserve consumption
+      logger.debug({ workspaceId, planId, billingCadence }, 'Updating entitlements (plan change)');
+      await this.deps.entitlementService.updateFromMetadata(workspaceId, metadata.featureLimits, {
+        tx,
+        addons: incomingAddons,
+        billingCadence,
+      });
+    } else {
+      // Truly new subscription — reset consumption
+      logger.debug(
+        { workspaceId, planId, billingCadence },
+        'Provisioning entitlements (new subscription)'
+      );
+      await this.deps.entitlementService.provisionFromMetadata(
+        workspaceId,
+        metadata.featureLimits,
+        {
+          tx,
+          addons: incomingAddons,
+          billingCadence,
+        }
+      );
+    }
 
     await this.deps.webhookEventsRepo.markProcessed(
       webhookId,
@@ -549,8 +576,10 @@ export class WebhookProcessorService {
     const subscriptionId = subscription.subscription_id;
     const planId = getPlanIdFromProductId(subscription.product_id);
     const planChanged = !!planId && planId !== current.planId;
-    const addonsChanged =
-      JSON.stringify(current.addons ?? []) !== JSON.stringify(incomingAddons ?? []);
+    const addonsChanged = WebhookProcessorService.hasAddonsChanged(
+      current.addons ?? [],
+      incomingAddons ?? []
+    );
     logger.debug(
       {
         subscriptionId,

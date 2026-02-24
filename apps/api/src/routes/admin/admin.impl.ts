@@ -5,6 +5,7 @@
 
 import { isValidRoleName } from '@workspace/auth';
 import type { WorkspaceRole } from '@workspace/contract';
+import type { ResourceLimits, ResourceType } from '@workspace/pricing';
 
 import { generateWorkspaceId } from '@/api/lib/id';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
@@ -942,9 +943,12 @@ const getWorkspaceEntitlementsImpl = (
 
 /**
  * Update workspace entitlements implementation
+ * Routes through AdminSubscriptionService → DodoPayments metadata so the
+ * webhook processor picks up changes via the embedded snapshot mechanism.
  */
 const updateWorkspaceEntitlementsImpl = (
   adminService: AdminService,
+  adminSubscriptionService: AdminSubscriptionService,
   entitlementService: EntitlementService
 ) => {
   const adminMiddleware = createAdminMiddleware(adminService);
@@ -952,10 +956,21 @@ const updateWorkspaceEntitlementsImpl = (
   return authWithAdminRateLimit
     .use(adminMiddleware)
     .admin.workspaces.entitlements.update.handler(async ({ input }) => {
-      const entitlements = await entitlementService.adminUpdateEntitlements(
-        input.params.workspaceId,
-        input.body.entitlements
-      );
+      // Map array of entitlement items to the overrides shape
+      const entitlementOverrides: Partial<Record<ResourceType, Partial<ResourceLimits>>> = {};
+      for (const item of input.body.entitlements) {
+        const limits: Partial<ResourceLimits> = {};
+        if (item.quotedLimit !== undefined) limits.quotedLimit = item.quotedLimit;
+        if (item.actualLimit !== undefined) limits.actualLimit = item.actualLimit;
+        entitlementOverrides[item.resourceType as ResourceType] = limits;
+      }
+
+      await adminSubscriptionService.updateSubscription(input.params.workspaceId, {
+        entitlements: entitlementOverrides,
+      });
+
+      // Return fresh entitlement state
+      const entitlements = await entitlementService.getAllEntitlements(input.params.workspaceId);
 
       return {
         message: 'Entitlements updated successfully',
@@ -1251,7 +1266,11 @@ export const createAdminProcedures = (
       ),
       entitlements: {
         get: getWorkspaceEntitlementsImpl(adminService, entitlementService),
-        update: updateWorkspaceEntitlementsImpl(adminService, entitlementService),
+        update: updateWorkspaceEntitlementsImpl(
+          adminService,
+          adminSubscriptionService,
+          entitlementService
+        ),
       },
       subscription: {
         get: getWorkspaceSubscriptionImpl(adminService, billingService),
