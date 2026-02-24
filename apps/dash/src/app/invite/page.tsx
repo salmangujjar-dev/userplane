@@ -2,6 +2,7 @@
 
 import { Button } from '@workspace/ui/components/button';
 import Logo from '@workspace/ui/components/logo';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -204,9 +205,25 @@ function InvitePageContent() {
   );
 }
 
+function InvitePageSkeleton() {
+  return (
+    <InviteLayout>
+      <div className="flex flex-col items-center gap-3">
+        <Logo showText={false} />
+        <Skeleton className="h-7 w-64" />
+        <Skeleton className="h-4 w-80" />
+      </div>
+      <div className="space-y-6">
+        <Skeleton className="h-14 w-full rounded-full" />
+        <Skeleton className="h-10 w-32 mx-auto" />
+      </div>
+    </InviteLayout>
+  );
+}
+
 export default function InvitePage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<InvitePageSkeleton />}>
       <InvitePageContent />
     </Suspense>
   );

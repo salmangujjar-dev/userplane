@@ -826,7 +826,7 @@ export function useUploadWorkspaceLogo(workspaceId: string | null) {
       const formData = new FormData();
       formData.append('logo', file);
 
-      const apiUrl = env.apiUrl;
+      const apiUrl = env.api.url;
       const response = await fetch(`${apiUrl}/api/v1/workspace/${workspaceId}/logo`, {
         method: 'POST',
         body: formData,
@@ -990,7 +990,7 @@ export function useUpdateWorkspaceName(
 // WORKSPACE RESTORE
 // ============================================
 
-import { env } from '@/lib/env';
+import { env } from '@/env';
 import type { WorkspaceRestoreData } from '@/types';
 
 interface RestoreWorkspaceInput {

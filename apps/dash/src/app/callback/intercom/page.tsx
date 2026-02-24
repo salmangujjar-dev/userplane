@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import posthog from 'posthog-js';
+import { redirect, unstable_rethrow } from 'next/navigation';
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -39,10 +38,8 @@ export default async function IntercomCallbackPage({ searchParams }: Props) {
     // Decode payload (second part)
     payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
   } catch (error) {
+    unstable_rethrow(error);
     // Failed to decode state - redirect to error page
-    posthog.captureException(error, {
-      error_boundary: 'intercom-callback',
-    });
     redirect('/workspace/create?error=invalid_state');
   }
 
