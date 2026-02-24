@@ -9,9 +9,7 @@ import { billingError, linkError } from '@workspace/contract';
 
 import { env } from '@/api/env';
 import { generateLinkId } from '@/api/lib/id';
-import { createLogger } from '@/api/lib/logger';
 import { parseLinkReference } from '@/api/lib/parser';
-import { captureException } from '@/api/posthog';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
@@ -26,8 +24,6 @@ import type {
   LinkSortOptions,
   Transaction,
 } from '@/api/types';
-
-const logger = createLogger('link-service');
 
 export interface LinkServiceDeps {
   linkRepo: LinkRepository;
@@ -205,8 +201,8 @@ export class LinkService {
       throw linkError.LINK_PROJECT_DELETED();
     }
 
-    // Check link entitlement before creating
-    const canAddLink = await this.deps.entitlementService.canConsumeLinks(workspaceId);
+    // Read-only UX guard: check link capacity before creating
+    const canAddLink = await this.deps.entitlementService.checkCapacity(workspaceId, 'links');
     if (!canAddLink.allowed) {
       throw billingError.PLAN_LIMIT_EXCEEDED({
         resource: 'links',
@@ -216,8 +212,8 @@ export class LinkService {
       });
     }
 
-    // Check recording entitlement — creating a link when recordings are exhausted is pointless
-    const canRecord = await this.deps.entitlementService.canConsumeRecordings(workspaceId);
+    // Read-only UX guard: creating a link when recordings are exhausted is pointless
+    const canRecord = await this.deps.entitlementService.checkCapacity(workspaceId, 'recordings');
     if (!canRecord.allowed) {
       throw billingError.PLAN_LIMIT_EXCEEDED({
         resource: 'recordings',
@@ -277,19 +273,18 @@ export class LinkService {
       throw linkError.LINK_CREATE_FAILED();
     }
 
-    // Consume link entitlement after successfully creating link
-    try {
-      await this.deps.entitlementService.consumeLinks(params.workspaceId, 1, options);
-    } catch (error) {
-      // Log but don't fail - link is already created
-      // Consumption tracking failure shouldn't block the link creation
-      logger.error(
-        { err: error, workspaceId: params.workspaceId },
-        'Failed to track link consumption'
-      );
-      captureException(error, undefined, {
-        operation: 'track_link_consumption',
-        workspace_id: params.workspaceId,
+    // Atomically check and consume link entitlement inside the caller's transaction
+    const linkResult = await this.deps.entitlementService.tryConsumeLinks(
+      params.workspaceId,
+      1,
+      options
+    );
+    if (!linkResult.allowed) {
+      throw billingError.PLAN_LIMIT_EXCEEDED({
+        resource: 'links',
+        current: linkResult.current,
+        limit: linkResult.limit,
+        reason: linkResult.reason,
       });
     }
 

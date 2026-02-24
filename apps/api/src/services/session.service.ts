@@ -20,6 +20,7 @@ import type {
 } from '@workspace/cache';
 import { linkKeys, workspaceRecordingKeys } from '@workspace/cache';
 import { billingError, sessionError } from '@workspace/contract';
+import type { DbClient } from '@workspace/db';
 import type { PlanFeatureGates } from '@workspace/pricing';
 import type {
   ClientActionsStorageClient,
@@ -83,6 +84,7 @@ export interface SessionServiceDeps {
   tokenService: TokenService;
   entitlementService: EntitlementService;
   cacheService: CacheService;
+  db: DbClient;
 }
 
 /**
@@ -307,14 +309,21 @@ export class SessionService {
       }
     }
 
-    // Check recording entitlement before initializing session
-    const canRecord = await this.deps.entitlementService.canConsumeRecordings(linkData.workspaceId);
-    if (!canRecord.allowed) {
+    // Read-only capacity check before initializing session
+    const hasRoom = await this.deps.entitlementService.hasCapacity(
+      linkData.workspaceId,
+      'recordings'
+    );
+    if (!hasRoom) {
+      const details = await this.deps.entitlementService.checkCapacity(
+        linkData.workspaceId,
+        'recordings'
+      );
       throw billingError.PLAN_LIMIT_EXCEEDED({
         resource: 'recordings',
-        current: canRecord.current,
-        limit: canRecord.limit,
-        reason: canRecord.reason,
+        current: details.current,
+        limit: details.limit,
+        reason: details.reason,
       });
     }
 
@@ -401,14 +410,21 @@ export class SessionService {
       throw sessionError.SESSION_DURATION_TOO_LONG();
     }
 
-    // Check recording entitlement before creating
-    const canRecord = await this.deps.entitlementService.canConsumeRecordings(sessionPayload.wid);
-    if (!canRecord.allowed) {
+    // Read-only capacity check before creating recording
+    const hasRoom = await this.deps.entitlementService.hasCapacity(
+      sessionPayload.wid,
+      'recordings'
+    );
+    if (!hasRoom) {
+      const details = await this.deps.entitlementService.checkCapacity(
+        sessionPayload.wid,
+        'recordings'
+      );
       throw billingError.PLAN_LIMIT_EXCEEDED({
         resource: 'recordings',
-        current: canRecord.current,
-        limit: canRecord.limit,
-        reason: canRecord.reason,
+        current: details.current,
+        limit: details.limit,
+        reason: details.reason,
       });
     }
 
@@ -582,26 +598,33 @@ export class SessionService {
     // Verify all requested files are uploaded and mark as available
     await this.verifyUploadedFiles(recording, 'minimal');
 
-    // Mark recording as available
-    const updated = await this.deps.recordingRepo.markAsAvailable(recording.recordingId);
-    if (!updated) {
-      throw sessionError.SESSION_UPLOAD_FAILED();
-    }
+    // Atomically mark as available and consume recording entitlement in a transaction
+    const result = await this.deps.db.transaction(async (tx) => {
+      const updated = await this.deps.recordingRepo.markAsAvailable(recording.recordingId, { tx });
+      if (!updated) {
+        throw sessionError.SESSION_UPLOAD_FAILED();
+      }
 
-    // Track recording consumption after successful upload
-    // Note: We consume when recording becomes available, not when pending
-    try {
-      await this.deps.entitlementService.consumeRecordings(recording.workspaceId);
-    } catch (error) {
-      // Log but don't fail - recording is already created
-      // Consumption tracking failure shouldn't block the upload
-      logger.error({ err: error }, 'Failed to track recording consumption');
-      captureException(error, undefined, { operation: 'track_recording_consumption' });
-    }
+      const consumeResult = await this.deps.entitlementService.tryConsumeRecordings(
+        recording.workspaceId,
+        1,
+        { tx }
+      );
+      if (!consumeResult.allowed) {
+        throw billingError.PLAN_LIMIT_EXCEEDED({
+          resource: 'recordings',
+          current: consumeResult.current,
+          limit: consumeResult.limit,
+          reason: consumeResult.reason,
+        });
+      }
+
+      return updated;
+    });
 
     return {
       success: true,
-      recordingId: recording.recordingId,
+      recordingId: result.recordingId,
       status: 'available',
       created: true,
     };

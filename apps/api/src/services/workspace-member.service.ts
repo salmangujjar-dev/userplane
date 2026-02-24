@@ -126,19 +126,6 @@ export class WorkspaceMemberService {
       params.workspaceId
     );
 
-    // For new members (not restores), check seat entitlement
-    if (!deletedMember?.isDeleted) {
-      const canAddSeat = await this.deps.entitlementService.canConsumeSeats(params.workspaceId);
-      if (!canAddSeat.allowed) {
-        throw billingError.PLAN_LIMIT_EXCEEDED({
-          resource: 'seats',
-          current: canAddSeat.current,
-          limit: canAddSeat.limit,
-          reason: canAddSeat.reason,
-        });
-      }
-    }
-
     let member;
     const notificationDefaults = getDefaultNotificationPreferences(params.role);
 
@@ -162,18 +149,18 @@ export class WorkspaceMemberService {
       );
     }
 
-    // Consume seat entitlement after successfully adding member
-    try {
-      await this.deps.entitlementService.consumeSeats(params.workspaceId, 1, options);
-    } catch (error) {
-      // Log but don't fail - member is already added
-      logger.error(
-        { err: error, workspaceId: params.workspaceId },
-        'Failed to track seat consumption'
-      );
-      captureException(error, undefined, {
-        operation: 'track_seat_consumption',
-        workspace_id: params.workspaceId,
+    // Atomically check and consume seat entitlement inside the caller's transaction
+    const seatResult = await this.deps.entitlementService.tryConsumeSeats(
+      params.workspaceId,
+      1,
+      options
+    );
+    if (!seatResult.allowed) {
+      throw billingError.PLAN_LIMIT_EXCEEDED({
+        resource: 'seats',
+        current: seatResult.current,
+        limit: seatResult.limit,
+        reason: seatResult.reason,
       });
     }
 

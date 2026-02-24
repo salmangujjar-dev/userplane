@@ -276,6 +276,7 @@ export const sessionService = new SessionService({
   tokenService,
   entitlementService,
   cacheService,
+  db,
 });
 
 // Intercom OAuth service

@@ -11,11 +11,7 @@
  */
 
 import type { CacheService } from '@workspace/cache';
-import type {
-  AddonItem,
-  AdminUpdateEntitlementItem,
-  SubscriptionAccessStatus,
-} from '@workspace/contract';
+import type { AddonItem, SubscriptionAccessStatus } from '@workspace/contract';
 import type { DodoFeatureLimits } from '@workspace/payments/types';
 import type { BillingCadence, PlanId, PlanName, ResourceType } from '@workspace/pricing';
 import {
@@ -188,18 +184,147 @@ export class EntitlementService {
     await this.deps.cacheService.invalidateUsage(workspaceId);
   }
 
-  // --- Generic resource consumption methods ---
+  // --- Atomic resource consumption methods ---
 
   /**
-   * Check if workspace can consume a resource (enforcement)
-   *
-   * Enforcement logic:
-   * - Checks subscription access status (cancellation, on_hold grace period)
-   * - Enforces: current usage + amount <= actualLimit (absolute ceiling)
-   *
-   * Returns -1 actualLimit as unlimited
+   * Compute the effective limit for a resource, applying fair-share for annual period-based resources.
    */
-  async canConsume(
+  private async computeEffectiveLimit(
+    workspaceId: string,
+    entitlement: { actualLimit: number; billingCadence: BillingCadence | null },
+    resourceType: ResourceType
+  ): Promise<number> {
+    let effectiveActualLimit = entitlement.actualLimit;
+
+    const billingCadence = entitlement.billingCadence;
+    if (
+      billingCadence === 'annual' &&
+      (PERIOD_BASED_RESOURCES as readonly string[]).includes(resourceType)
+    ) {
+      const subscriptionStatus = await this.deps.billingService.getSubscriptionStatus(workspaceId);
+      const currentPeriodStart = subscriptionStatus.contractDetail.currentPeriodStart;
+      effectiveActualLimit = calculateFairShareLimit(
+        entitlement.actualLimit,
+        billingCadence,
+        currentPeriodStart
+      );
+    }
+
+    return effectiveActualLimit;
+  }
+
+  /**
+   * Atomically check limit and consume a resource in a single SQL statement.
+   * Returns CanConsumeResult — `allowed: true` with updated counts, or `allowed: false` with reason.
+   */
+  async tryConsume(
+    workspaceId: string,
+    resourceType: ResourceType,
+    amount: number = 1,
+    options?: { tx?: Transaction }
+  ): Promise<CanConsumeResult> {
+    const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
+      workspaceId,
+      resourceType,
+      options
+    );
+
+    if (!entitlement) {
+      return {
+        allowed: false,
+        reason: 'No entitlement found for this resource',
+        current: 0,
+        limit: 0,
+      };
+    }
+
+    const effectiveLimit = await this.computeEffectiveLimit(workspaceId, entitlement, resourceType);
+
+    const updated = await this.deps.entitlementRepo.consumeIfAllowed(
+      workspaceId,
+      resourceType,
+      amount,
+      effectiveLimit,
+      options
+    );
+
+    if (!updated) {
+      const accessStatus = await this.deps.billingService.getSubscriptionAccessStatus(workspaceId);
+      const reason = this.getSubscriptionAccessDeniedReason(
+        accessStatus.accessStatus,
+        entitlement.resourceConsumed,
+        effectiveLimit
+      );
+
+      return {
+        allowed: false,
+        reason,
+        current: entitlement.resourceConsumed,
+        limit: effectiveLimit,
+      };
+    }
+
+    await this.deps.cacheService.invalidateUsage(workspaceId);
+
+    return {
+      allowed: true,
+      current: updated.resourceConsumed,
+      limit: effectiveLimit,
+    };
+  }
+
+  /**
+   * Read-only capacity check — returns true if the resource has room for `amount` more units.
+   * Does NOT consume anything. Use for UX guards before resource creation.
+   */
+  async hasCapacity(
+    workspaceId: string,
+    resourceType: ResourceType,
+    amount: number = 1
+  ): Promise<boolean> {
+    const entitlement = await this.deps.entitlementRepo.findByWorkspaceAndResource(
+      workspaceId,
+      resourceType
+    );
+
+    if (!entitlement) return false;
+
+    const effectiveLimit = await this.computeEffectiveLimit(workspaceId, entitlement, resourceType);
+    return this.checkLimitThresholds(entitlement.resourceConsumed, effectiveLimit, amount)
+      .canConsume;
+  }
+
+  // --- Resource-specific aliases ---
+
+  async tryConsumeSeats(
+    workspaceId: string,
+    amount: number = 1,
+    options?: { tx?: Transaction }
+  ): Promise<CanConsumeResult> {
+    return this.tryConsume(workspaceId, 'seats', amount, options);
+  }
+
+  async tryConsumeLinks(
+    workspaceId: string,
+    amount: number = 1,
+    options?: { tx?: Transaction }
+  ): Promise<CanConsumeResult> {
+    return this.tryConsume(workspaceId, 'links', amount, options);
+  }
+
+  async tryConsumeRecordings(
+    workspaceId: string,
+    amount: number = 1,
+    options?: { tx?: Transaction }
+  ): Promise<CanConsumeResult> {
+    return this.tryConsume(workspaceId, 'recordings', amount, options);
+  }
+
+  /**
+   * Read-only capacity check with full result details (for UX — shows current/limit/reason).
+   * Does NOT consume anything.
+   */
+  async checkCapacity(
     workspaceId: string,
     resourceType: ResourceType,
     amount: number = 1
@@ -221,22 +346,11 @@ export class EntitlementService {
     }
 
     const current = entitlement.resourceConsumed;
-    let effectiveActualLimit = entitlement.actualLimit;
-
-    // Apply fair-share for annual cadence on period-based resources
-    const billingCadence = entitlement.billingCadence;
-    if (
-      billingCadence === 'annual' &&
-      (PERIOD_BASED_RESOURCES as readonly string[]).includes(resourceType)
-    ) {
-      const subscriptionStatus = await this.deps.billingService.getSubscriptionStatus(workspaceId);
-      const currentPeriodStart = subscriptionStatus.contractDetail.currentPeriodStart;
-      effectiveActualLimit = calculateFairShareLimit(
-        entitlement.actualLimit,
-        billingCadence,
-        currentPeriodStart
-      );
-    }
+    const effectiveActualLimit = await this.computeEffectiveLimit(
+      workspaceId,
+      entitlement,
+      resourceType
+    );
 
     const thresholds = this.checkLimitThresholds(current, effectiveActualLimit, amount);
 
@@ -260,59 +374,6 @@ export class EntitlementService {
       current,
       limit: effectiveActualLimit,
     };
-  }
-
-  /**
-   * Record resource consumption
-   * Called after successful resource creation
-   * Invalidates usage summary cache after consumption
-   */
-  async consume(
-    workspaceId: string,
-    resourceType: ResourceType,
-    amount: number = 1,
-    options?: { tx?: Transaction }
-  ): Promise<void> {
-    await this.deps.entitlementRepo.incrementConsumed(workspaceId, resourceType, amount, options);
-    await this.deps.cacheService.invalidateUsage(workspaceId);
-  }
-
-  // --- Resource-specific aliases (retained for existing callers) ---
-
-  async canConsumeSeats(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
-    return this.canConsume(workspaceId, 'seats', amount);
-  }
-
-  async consumeSeats(
-    workspaceId: string,
-    amount: number = 1,
-    options?: { tx?: Transaction }
-  ): Promise<void> {
-    await this.consume(workspaceId, 'seats', amount, options);
-  }
-
-  async canConsumeRecordings(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
-    return this.canConsume(workspaceId, 'recordings', amount);
-  }
-
-  async consumeRecordings(
-    workspaceId: string,
-    amount: number = 1,
-    options?: { tx?: Transaction }
-  ): Promise<void> {
-    await this.consume(workspaceId, 'recordings', amount, options);
-  }
-
-  async canConsumeLinks(workspaceId: string, amount: number = 1): Promise<CanConsumeResult> {
-    return this.canConsume(workspaceId, 'links', amount);
-  }
-
-  async consumeLinks(
-    workspaceId: string,
-    amount: number = 1,
-    options?: { tx?: Transaction }
-  ): Promise<void> {
-    await this.consume(workspaceId, 'links', amount, options);
   }
 
   /**
@@ -407,36 +468,6 @@ export class EntitlementService {
    * Get all raw entitlements for a workspace (admin use)
    */
   async getAllEntitlements(workspaceId: string) {
-    return this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
-  }
-
-  /**
-   * Admin update entitlement limits for a workspace
-   * Applies partial updates (only specified fields) per resource type.
-   * Invalidates usage cache and returns fresh state.
-   */
-  async adminUpdateEntitlements(workspaceId: string, updates: AdminUpdateEntitlementItem[]) {
-    for (const update of updates) {
-      const existing = await this.deps.entitlementRepo.findByWorkspaceAndResource(
-        workspaceId,
-        update.resourceType as ResourceType
-      );
-
-      if (!existing) continue;
-
-      const newLimits = {
-        quotedLimit: update.quotedLimit ?? existing.quotedLimit,
-        actualLimit: update.actualLimit ?? existing.actualLimit,
-      };
-
-      await this.deps.entitlementRepo.updateLimits(
-        workspaceId,
-        update.resourceType as ResourceType,
-        newLimits
-      );
-    }
-
-    await this.deps.cacheService.invalidateUsage(workspaceId);
     return this.deps.entitlementRepo.findByWorkspaceId(workspaceId);
   }
 

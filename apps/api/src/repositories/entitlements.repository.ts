@@ -152,6 +152,40 @@ export class EntitlementRepository {
   }
 
   /**
+   * Atomic check-and-increment: only increments if the new total stays within effectiveLimit.
+   * Returns the updated row if allowed, null if the limit would be exceeded (zero rows matched).
+   */
+  async consumeIfAllowed(
+    workspaceId: string,
+    resourceType: ResourceType,
+    amount: number,
+    effectiveLimit: number,
+    options?: { tx?: Transaction }
+  ) {
+    if (amount <= 0) throw new Error('amount must be positive');
+
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(entitlements)
+      .set({
+        resourceConsumed: sql`${entitlements.resourceConsumed} + ${amount}`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(entitlements.workspaceId, workspaceId),
+          eq(entitlements.resourceType, resourceType),
+          eq(entitlements.isDeleted, false),
+          sql`${entitlements.resourceConsumed} + ${amount} <= ${effectiveLimit}`
+        )
+      )
+      .returning();
+
+    return updated || null;
+  }
+
+  /**
    * Atomically increment resource consumption
    * Uses SQL-level increment to prevent race conditions
    */
@@ -161,6 +195,7 @@ export class EntitlementRepository {
     amount: number = 1,
     options?: { tx?: Transaction }
   ) {
+    if (amount <= 0) throw new Error('amount must be positive');
     const dbClient = options?.tx || this.db;
 
     const [updated] = await dbClient
@@ -192,6 +227,7 @@ export class EntitlementRepository {
     amount: number = 1,
     options?: { tx?: Transaction }
   ) {
+    if (amount <= 0) throw new Error('amount must be positive');
     const dbClient = options?.tx || this.db;
 
     const [updated] = await dbClient

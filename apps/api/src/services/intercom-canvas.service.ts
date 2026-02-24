@@ -365,9 +365,9 @@ export class IntercomCanvasService {
 
     const { workspaceId } = accessResult.context;
 
-    // Check entitlement
-    const canAddLink = await this.deps.entitlementService.canConsumeLinks(workspaceId);
-    if (!canAddLink.allowed) {
+    // Read-only capacity check
+    const hasRoom = await this.deps.entitlementService.hasCapacity(workspaceId, 'links');
+    if (!hasRoom) {
       return { canvas: buildLimitExceededCanvas({ workspaceId, limitType: 'links' }) };
     }
 
