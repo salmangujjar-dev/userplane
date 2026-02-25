@@ -28,10 +28,10 @@
         "@orpc/server": "^1.12.3",
         "@workspace/auth": "workspace:*",
         "@workspace/cache": "workspace:*",
+        "@workspace/common-logger": "workspace:*",
         "@workspace/contract": "workspace:*",
         "@workspace/db": "workspace:*",
         "@workspace/email": "workspace:*",
-        "@workspace/logger": "workspace:*",
         "@workspace/payments": "workspace:*",
         "@workspace/pricing": "workspace:*",
         "@workspace/shared": "workspace:*",
@@ -70,8 +70,8 @@
         "@tanstack/react-query": "^5.90.10",
         "@workspace/auth": "workspace:*",
         "@workspace/client": "workspace:*",
+        "@workspace/common-logger": "workspace:*",
         "@workspace/contract": "workspace:*",
-        "@workspace/logger": "workspace:*",
         "@workspace/payments": "workspace:*",
         "@workspace/pricing": "workspace:*",
         "@workspace/shared": "workspace:*",
@@ -122,7 +122,7 @@
         "@types/canvas-confetti": "^1.9.0",
         "@types/react": "^19.2.6",
         "@types/react-dom": "^19.2.3",
-        "@workspace/logger": "workspace:*",
+        "@workspace/common-logger": "workspace:*",
         "@workspace/pricing": "workspace:*",
         "@workspace/shared": "workspace:*",
         "@workspace/storage": "workspace:*",
@@ -192,8 +192,8 @@
         "@types/react": "^19.2.6",
         "@types/react-dom": "^19.2.3",
         "@workspace/client": "workspace:*",
+        "@workspace/common-logger": "workspace:*",
         "@workspace/contract": "workspace:*",
-        "@workspace/logger": "workspace:*",
         "@workspace/postbridge": "workspace:*",
         "@workspace/shared": "workspace:*",
         "@workspace/storage": "workspace:*",
@@ -312,6 +312,20 @@
         "typescript": "5.8.2",
       },
     },
+    "packages/common-logger": {
+      "name": "@workspace/common-logger",
+      "version": "0.0.0",
+      "dependencies": {
+        "pino": "^9.5.0",
+        "pino-pretty": "^13.0.0",
+      },
+      "devDependencies": {
+        "@workspace/eslint-config": "workspace:*",
+        "@workspace/typescript-config": "workspace:*",
+        "eslint": "^9.32.0",
+        "typescript": "5.7.3",
+      },
+    },
     "packages/console-logger": {
       "name": "@workspace/console-logger",
       "version": "0.0.0",
@@ -351,8 +365,8 @@
       "name": "@workspace/db",
       "version": "0.0.1",
       "dependencies": {
+        "@workspace/common-logger": "workspace:*",
         "@workspace/contract": "workspace:*",
-        "@workspace/logger": "workspace:*",
         "@workspace/payments": "workspace:*",
         "@workspace/pricing": "workspace:*",
         "better-auth": "^1.4.17",
@@ -375,7 +389,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@react-email/components": "^1.0.4",
-        "@workspace/logger": "workspace:*",
+        "@workspace/common-logger": "workspace:*",
         "@workspace/shared": "workspace:*",
         "@workspace/storage": "workspace:*",
         "react": "^19.2.0",
@@ -433,20 +447,6 @@
         "globals": "^15.15.0",
         "typescript": "^5.9.2",
         "typescript-eslint": "^8.39.0",
-      },
-    },
-    "packages/logger": {
-      "name": "@workspace/logger",
-      "version": "0.0.0",
-      "dependencies": {
-        "pino": "^9.5.0",
-        "pino-pretty": "^13.0.0",
-      },
-      "devDependencies": {
-        "@workspace/eslint-config": "workspace:*",
-        "@workspace/typescript-config": "workspace:*",
-        "eslint": "^9.32.0",
-        "typescript": "5.7.3",
       },
     },
     "packages/metadata": {
@@ -2047,6 +2047,8 @@
 
     "@workspace/client": ["@workspace/client@workspace:packages/client"],
 
+    "@workspace/common-logger": ["@workspace/common-logger@workspace:packages/common-logger"],
+
     "@workspace/console-logger": ["@workspace/console-logger@workspace:packages/console-logger"],
 
     "@workspace/contract": ["@workspace/contract@workspace:packages/contract"],
@@ -2058,8 +2060,6 @@
     "@workspace/embed": ["@workspace/embed@workspace:packages/embed"],
 
     "@workspace/eslint-config": ["@workspace/eslint-config@workspace:packages/eslint-config"],
-
-    "@workspace/logger": ["@workspace/logger@workspace:packages/logger"],
 
     "@workspace/metadata": ["@workspace/metadata@workspace:packages/metadata"],
 

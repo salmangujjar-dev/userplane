@@ -2,7 +2,7 @@
  * App-local logger factory for the API server.
  * Wraps the shared logger package with API-specific env configuration.
  */
-import { createServerLogger, type LogLevel } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@workspace/common-logger';
 
 import { env } from '@/api/env';
 

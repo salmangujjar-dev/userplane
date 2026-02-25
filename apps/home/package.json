@@ -23,7 +23,7 @@
     "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
-    "@workspace/logger": "workspace:*",
+    "@workspace/common-logger": "workspace:*",
     "@workspace/pricing": "workspace:*",
     "@workspace/shared": "workspace:*",
     "@workspace/storage": "workspace:*",

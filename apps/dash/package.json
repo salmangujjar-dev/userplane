@@ -19,7 +19,7 @@
     "@workspace/auth": "workspace:*",
     "@workspace/client": "workspace:*",
     "@workspace/contract": "workspace:*",
-    "@workspace/logger": "workspace:*",
+    "@workspace/common-logger": "workspace:*",
     "@workspace/payments": "workspace:*",
     "@workspace/pricing": "workspace:*",
     "@workspace/shared": "workspace:*",

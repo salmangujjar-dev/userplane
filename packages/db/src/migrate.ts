@@ -1,4 +1,4 @@
-import { createServerLogger, type LogLevel } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@workspace/common-logger';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';

@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@workspace/contract": "workspace:*",
-    "@workspace/logger": "workspace:*",
+    "@workspace/common-logger": "workspace:*",
     "@workspace/payments": "workspace:*",
     "@workspace/pricing": "workspace:*",
     "better-auth": "^1.4.17",

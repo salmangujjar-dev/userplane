@@ -4,7 +4,7 @@
  *
  * Types are inferred from Zod schemas in schema.ts to ensure consistency.
  */
-import { createServerLogger, type LogLevel } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@workspace/common-logger';
 import { parseAppEnv } from '@workspace/shared/env';
 import { ZodError } from 'zod';
 
