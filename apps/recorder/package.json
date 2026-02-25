@@ -28,7 +28,7 @@
     "@workspace/contract": "workspace:*",
     "@workspace/shared": "workspace:*",
     "@workspace/storage": "workspace:*",
-    "@workspace/logger": "workspace:*",
+    "@workspace/common-logger": "workspace:*",
     "@workspace/postbridge": "workspace:*",
     "@workspace/ui": "workspace:*",
     "astro": "^5.15.9",

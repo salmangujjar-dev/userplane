@@ -1,4 +1,4 @@
-import { createServerLogger, type LogLevel } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@workspace/common-logger';
 import { Pool } from 'pg';
 
 const isDev = process.env.NODE_ENV !== 'production';
