@@ -18,6 +18,7 @@ import {
   buildEndpointMatchers,
   CUSTOM_EVENT_NAME,
   DEFAULT_INTERNAL_ENDPOINTS,
+  LOGGER_NAME,
   LOGGER_PREFIX,
 } from './constants';
 import { BatchedDispatcher, ImmediateDispatcher } from './dispatch-strategy';
@@ -164,6 +165,18 @@ export class LogProcessor {
 
   isSending(): boolean {
     return this._isSending;
+  }
+
+  // ─── Internal Log Filtering ─────────────────────────────────────
+
+  private isInternalConsoleLog(args: unknown[]): boolean {
+    if (!Array.isArray(args) || args.length === 0) return false;
+    const first = args[0];
+    return (
+      typeof first === 'object' &&
+      first !== null &&
+      (first as Record<string, unknown>).context === LOGGER_NAME
+    );
   }
 
   // ─── Internal Endpoint Filtering ────────────────────────────────
@@ -617,6 +630,8 @@ export class LogProcessor {
     timestamp: number,
     isInitialLog: boolean
   ): void {
+    if (this.isInternalConsoleLog(event.args)) return;
+
     const entry: ProcessedConsoleEntry = {
       isInitialConsoleLog: isInitialLog,
       log_type: 'console',
