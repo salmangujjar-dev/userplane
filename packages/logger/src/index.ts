@@ -78,6 +78,7 @@ export {
 export type {
   BaseLogEvent,
   BatchSavePayload,
+  CaptureOptions,
   ConsoleLogEvent,
   DispatchContext,
   DispatchMode,

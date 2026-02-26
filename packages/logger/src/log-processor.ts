@@ -24,6 +24,7 @@ import {
 import { BatchedDispatcher, ImmediateDispatcher } from './dispatch-strategy';
 import { requestTeardown } from './event-bridge';
 import type {
+  CaptureOptions,
   ConsoleLogEvent,
   DispatchContext,
   DispatchMode,
@@ -67,8 +68,11 @@ export class LogProcessor {
   private _isFocused: boolean = false;
   private _isSending: boolean = false;
   private _isPaused: boolean = false;
+  private _isDestroyed: boolean = false;
   private _workspaceId: string;
-  private _loggingEnabled: boolean;
+  private _captureConsole: boolean = true;
+  private _captureNetwork: boolean = true;
+  private _captureActivity: boolean = true;
   private _maskResponseBody: boolean = false;
   private _scriptUrl: string;
   private _initialLogCaptured: boolean = false;
@@ -94,7 +98,6 @@ export class LogProcessor {
     tabId: string,
     saveFunction: SaveFunction,
     workspaceId: string,
-    loggingEnabled: boolean,
     scriptUrl: string,
     serverDeltaMs: number,
     internalEndpoints?: string[],
@@ -103,10 +106,10 @@ export class LogProcessor {
       flushInterval?: number;
       maxBufferSize?: number;
       flushFunction?: FlushFunction;
+      capture?: CaptureOptions;
     }
   ) {
     this._workspaceId = workspaceId;
-    this._loggingEnabled = loggingEnabled;
     this._scriptUrl = scriptUrl;
     this._serverDeltaMs = serverDeltaMs;
     this._tabId = tabId;
@@ -114,6 +117,12 @@ export class LogProcessor {
     this._internalEndpointMatchers = buildEndpointMatchers(
       internalEndpoints ?? DEFAULT_INTERNAL_ENDPOINTS
     );
+
+    if (options?.capture) {
+      this._captureConsole = options.capture.console !== false;
+      this._captureNetwork = options.capture.network !== false;
+      this._captureActivity = options.capture.activity !== false;
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias -- ctx getters need stable `self` reference
     const self = this;
@@ -151,8 +160,10 @@ export class LogProcessor {
     this._initialLogCaptured = false;
   }
 
-  setLoggingEnabled(enabled: boolean): void {
-    this._loggingEnabled = enabled;
+  setCaptureOptions(options: CaptureOptions): void {
+    if (options.console !== undefined) this._captureConsole = options.console;
+    if (options.network !== undefined) this._captureNetwork = options.network;
+    if (options.activity !== undefined) this._captureActivity = options.activity;
   }
 
   setMaskResponseBody(mask: boolean): void {
@@ -197,7 +208,19 @@ export class LogProcessor {
    * into the page and sets up the event relay listener.
    */
   start(isResume: boolean = false, pausedFor: number = 0): void {
-    if (this._isSending) return;
+    if (this._isDestroyed) {
+      log.debug('start() ignored — instance is destroyed');
+      return;
+    }
+    if (this._isSending) {
+      log.debug('start() ignored — already sending');
+      return;
+    }
+
+    log.debug(
+      { isResume, isPaused: this._isPaused, pausedFor },
+      'start() transitioning to Sending'
+    );
 
     if (!isResume) {
       // Remove and re-add the relay listener
@@ -207,60 +230,62 @@ export class LogProcessor {
       // Set server delta for the low-level logger
       window.__userplane_server_delta_ms = this._serverDeltaMs;
 
-      // If already loaded, don't inject again
-      if (window.__userplane_logger_loaded) return;
+      // Only inject the script if not already loaded
+      if (window.__userplane_logger_loaded) {
+        log.debug('start() script already loaded, skipping injection');
+      } else {
+        // Inject the logger script
+        const script = document.createElement('script');
+        script.src = this._scriptUrl;
+        let loaded = false;
 
-      // Inject the logger script
-      const script = document.createElement('script');
-      script.src = this._scriptUrl;
-      let loaded = false;
-
-      const confirmLoad = (): void => {
-        if (loaded) {
-          log.info('initialization successful - console logs ready');
-        }
-      };
-
-      script.onload = () => {
-        loaded = true;
-        script.remove();
-        setTimeout(confirmLoad, 1000);
-      };
-
-      script.onerror = () => {
-        log.error({ scriptUrl: this._scriptUrl }, 'failed to load logger script');
-        loaded = false;
-        this._saveFunction?.({
-          event: 'log_console',
-          tabId: this._tabId,
-          data: {
-            log_type: 'console',
-            type: 'console',
-            args: [`${LOGGER_PREFIX} logger failed to load`, this._scriptUrl],
-            timestamp: this.serverNow(),
-            url: '',
-          },
-          is_single_log: true,
-          timestamp: this.serverNow(),
-          has_focus: this._isFocused,
-          tab_details: {
-            location: window.location.href,
-            title: document.title,
-            window_width: window.innerWidth,
-            window_height: window.innerHeight,
-          },
-        });
-      };
-
-      (document.head || document.documentElement).appendChild(script);
-
-      // Warn if tab is hidden (script loading may be delayed)
-      if (document.hidden) {
-        setTimeout(() => {
-          if (!loaded) {
-            log.warn('logger script delayed (tab hidden), waiting...');
+        const confirmLoad = (): void => {
+          if (loaded) {
+            log.info('initialization successful - console logs ready');
           }
-        }, 5000);
+        };
+
+        script.onload = () => {
+          loaded = true;
+          script.remove();
+          setTimeout(confirmLoad, 1000);
+        };
+
+        script.onerror = () => {
+          log.error({ scriptUrl: this._scriptUrl }, 'failed to load logger script');
+          loaded = false;
+          this._saveFunction?.({
+            event: 'log_console',
+            tabId: this._tabId,
+            data: {
+              log_type: 'console',
+              type: 'console',
+              args: [`${LOGGER_PREFIX} logger failed to load`, this._scriptUrl],
+              timestamp: this.serverNow(),
+              url: '',
+            },
+            is_single_log: true,
+            timestamp: this.serverNow(),
+            has_focus: this._isFocused,
+            tab_details: {
+              location: window.location.href,
+              title: document.title,
+              window_width: window.innerWidth,
+              window_height: window.innerHeight,
+            },
+          });
+        };
+
+        (document.head || document.documentElement).appendChild(script);
+
+        // Warn if tab is hidden (script loading may be delayed)
+        if (document.hidden) {
+          setTimeout(() => {
+            if (!loaded) {
+              log.warn('logger script delayed (tab hidden), waiting...');
+            }
+          }, 5000);
+        }
       }
     }
 
@@ -308,7 +333,15 @@ export class LogProcessor {
    * If false, fully unpatches and removes all hooks.
    */
   stop(isPause: boolean = false): void {
-    if (!this._isSending && !this._isPaused) return;
+    if (!this._isSending && !this._isPaused) {
+      log.debug('stop() ignored — already stopped');
+      return;
+    }
+
+    log.debug(
+      { isPause, wasSending: this._isSending, wasPaused: this._isPaused },
+      isPause ? 'stop() transitioning to Paused' : 'stop() transitioning to Stopped'
+    );
 
     if (isPause) {
       // Pause: stop interval + flush, but keep unload listeners
@@ -338,6 +371,16 @@ export class LogProcessor {
    * Destroys the logger completely.
    */
   destroy(): void {
+    if (this._isDestroyed) {
+      log.debug('destroy() ignored — already destroyed');
+      return;
+    }
+
+    log.debug(
+      { wasSending: this._isSending, wasPaused: this._isPaused },
+      'destroy() transitioning to Destroyed'
+    );
+
     try {
       this.stop(false);
       // eslint-disable-next-line no-empty -- intentional: destroy must not throw
@@ -346,6 +389,7 @@ export class LogProcessor {
     this._saveFunction = undefined;
     this.tabs.clear();
     this.currentActive = null;
+    this._isDestroyed = true;
   }
 
   // ─── Protocol Formatting ────────────────────────────────────────
@@ -380,7 +424,7 @@ export class LogProcessor {
    * In immediate mode, dispatches right away. In batched mode, buffers entries.
    */
   private emitEntry(entry: ProcessedLogEntry): void {
-    if (!this._isSending || !this._loggingEnabled) return;
+    if (!this._isSending) return;
     this._dispatcher.emit(entry);
   }
 
@@ -444,6 +488,23 @@ export class LogProcessor {
    */
   processLogEvent(event: LogEvent): void {
     const { isInitialLog, timestamp } = this._resolveEventMeta(event);
+
+    // Early-exit for disabled capture categories
+    switch (event.type) {
+      case 'console':
+        if (!this._captureConsole) return;
+        break;
+      case 'network':
+      case 'fetch-error':
+      case 'network-error':
+      case 'resource':
+      case 'resource-error':
+        if (!this._captureNetwork) return;
+        break;
+      case 'tracking_steps':
+        if (!this._captureActivity) return;
+        break;
+    }
 
     if (!event.has_focus && event.type !== 'tracking_steps' && !isInitialLog) return;
 

@@ -379,6 +379,12 @@ export interface SavePayload {
   };
 }
 
+export interface CaptureOptions {
+  console?: boolean;
+  network?: boolean;
+  activity?: boolean;
+}
+
 export type DispatchMode = 'immediate' | 'batched';
 
 export interface BatchSavePayload {
