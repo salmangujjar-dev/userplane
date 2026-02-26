@@ -7,7 +7,14 @@ export { initPatches } from './patcher';
 
 export type { BatchedDispatcherOptions } from './dispatch-strategy';
 export { BatchedDispatcher, ImmediateDispatcher } from './dispatch-strategy';
-export { disableDispatch, dispatch, enableDispatch, isDispatchActive } from './event-bridge';
+export {
+  disableDispatch,
+  dispatch,
+  enableDispatch,
+  isDispatchActive,
+  onTeardown,
+  requestTeardown,
+} from './event-bridge';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 

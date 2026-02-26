@@ -9,7 +9,6 @@ export const EXTENSION_TAG = 'USERPLANE-EXTENSION';
 
 // Window property keys
 export const WIN_LOGGER_LOADED = '__userplane_logger_loaded';
-export const WIN_LOGGER_UNPATCH = '__userplane_logger_unpatch';
 export const WIN_LOGGER_ORIGINALS = '__userplane_logger_originals';
 export const WIN_PRISTINE_NATIVES = '__userplane_pristine_natives';
 export const WIN_SERVER_DELTA = '__userplane_server_delta_ms';

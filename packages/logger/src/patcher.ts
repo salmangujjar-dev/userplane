@@ -24,7 +24,7 @@
 import { createLogger } from '@workspace/console-logger';
 
 import { CONSOLE_PATCHED_FLAG, TAB_REF_PREFIX } from './constants';
-import { disableDispatch } from './event-bridge';
+import { disableDispatch, onTeardown } from './event-bridge';
 
 declare const __DEV__: boolean;
 import {
@@ -86,7 +86,7 @@ export function initPatches(): void {
 
   // ─── Unpatch function ─────────────────────────────────────────────
 
-  window.__userplane_logger_unpatch = function (): void {
+  function unpatch(): void {
     disableDispatch();
 
     const originals = window.__userplane_logger_originals;
@@ -239,7 +239,9 @@ export function initPatches(): void {
     } catch {
       /* best-effort */
     }
-  };
+  }
+
+  onTeardown(unpatch);
 
   // ─── Validate pristine natives ────────────────────────────────────
 

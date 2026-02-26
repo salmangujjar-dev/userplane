@@ -21,6 +21,7 @@ import {
   LOGGER_PREFIX,
 } from './constants';
 import { BatchedDispatcher, ImmediateDispatcher } from './dispatch-strategy';
+import { requestTeardown } from './event-bridge';
 import type {
   ConsoleLogEvent,
   DispatchContext,
@@ -308,9 +309,7 @@ export class LogProcessor {
       this._dispatcher.stop();
 
       // Unpatch everything
-      if (typeof window.__userplane_logger_unpatch === 'function') {
-        window.__userplane_logger_unpatch();
-      }
+      requestTeardown();
       this._initialLogCaptured = false;
       try {
         document.removeEventListener(CUSTOM_EVENT_NAME, this.loggerRelayListener as EventListener);
@@ -491,7 +490,7 @@ export class LogProcessor {
       log_type: 'network',
       requestId,
       startedDateTime:
-        typeof startedDateTime === 'number' && startedDateTime > 0 ? startedDateTime : status,
+        typeof startedDateTime === 'number' && startedDateTime > 0 ? startedDateTime : timestamp,
       timestamp,
       url,
       method,
