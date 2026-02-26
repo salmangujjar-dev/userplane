@@ -1,0 +1,299 @@
+/**
+ * logger.ts
+ *
+ * Low-level browser API patcher that intercepts and captures:
+ * - Console output (log, info, warn, error, debug, trace)
+ * - Network requests (fetch, XMLHttpRequest)
+ * - Navigation events (pushState, replaceState, popstate, hashchange, Navigation API)
+ * - User interactions (clicks, pointer events)
+ * - Focus/visibility changes
+ * - Resource loading (via PerformanceObserver)
+ * - Resource load errors (script, img, link, iframe, video, audio, source)
+ * - Content Security Policy violations
+ * - Unhandled promise rejections
+ * - Global JS errors
+ * - Page unload events
+ *
+ * All captured events are dispatched as CustomEvents on `document` with the
+ * event name `__userplane_logger`. The LoggerManager class listens for these events.
+ *
+ * This module also provides a full unpatch mechanism to restore all original
+ * browser APIs to their pristine state.
+ */
+
+import { createLogger } from '@workspace/console-logger';
+
+import { CONSOLE_PATCHED_FLAG } from './constants';
+import { disableDispatch } from './dispatcher';
+
+declare const __DEV__: boolean;
+import {
+  getRepeatTracker,
+  initFocusState,
+  observeResources,
+  patchBeforeUnload,
+  patchClicks,
+  patchConsole,
+  patchCSP,
+  patchFetch,
+  patchFocus,
+  patchGlobalErrors,
+  patchNavigation,
+  patchResourceErrors,
+  patchUnhandledRejection,
+  patchXHR,
+} from './interceptors';
+import type { PristineNatives } from './types';
+
+const log = createLogger('userplane-logger', {
+  level: typeof __DEV__ !== 'undefined' && __DEV__ ? 'debug' : 'warn',
+});
+
+/**
+ * Initializes the logger by patching all browser APIs.
+ *
+ * Prerequisites:
+ * - `window.__userplane_pristine_natives` must be set before calling this
+ *   (contains references to the original, unpatched browser APIs)
+ * - `window.__userplane_server_delta_ms` may be set for clock synchronization
+ */
+export function initLogger(): void {
+  // Guard against double-initialization
+  if (window.__userplane_logger_loaded) return;
+  window.__userplane_logger_loaded = true;
+
+  // Server time delta for clock synchronization
+  const serverDelta = window.__userplane_server_delta_ms;
+  const serverDeltaMs =
+    typeof serverDelta === 'number' && Number.isFinite(serverDelta) ? serverDelta : 0;
+
+  // ─── Handler references (for cleanup during unpatch) ──────────────
+
+  let unhandledRejectionHandler: ((e: PromiseRejectionEvent) => void) | null = null;
+  let globalErrorHandler: ((e: ErrorEvent) => void) | null = null;
+  let resourceErrorHandler: ((e: Event) => void) | null = null;
+  let performanceObserver: PerformanceObserver | null = null;
+  let cspHandler: ((e: SecurityPolicyViolationEvent) => void) | null = null;
+  let navigationHandlers: {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- navigation handler type is intentionally generic
+    routeChangeHandler: Function;
+    onPopState: () => void;
+    onHashChange: () => void;
+  } | null = null;
+  let clickHandler: ((e: Event) => void) | null = null;
+  let focusHandler: ((e: Event) => void) | null = null;
+  let beforeUnloadHandler: ((e: BeforeUnloadEvent) => void) | null = null;
+
+  // ─── Unpatch function ─────────────────────────────────────────────
+
+  window.__userplane_logger_unpatch = function (): void {
+    disableDispatch();
+
+    const originals = window.__userplane_logger_originals;
+    const pristine = window.__userplane_pristine_natives;
+
+    if (!originals) return;
+
+    // Restore fetch
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
+      delete (window as any).fetch;
+      // eslint-disable-next-line no-empty -- intentional: browser API restoration is best-effort
+    } catch {}
+
+    // Restore history methods
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
+      delete (history as any).pushState;
+      // eslint-disable-next-line no-empty -- intentional: browser API restoration is best-effort
+    } catch {}
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
+      delete (history as any).replaceState;
+      // eslint-disable-next-line no-empty -- intentional: browser API restoration is best-effort
+    } catch {}
+
+    // Restore XHR methods
+    if (originals.current) {
+      const { fetch: origFetch, xhrOpen, xhrSend, xhrSetRequestHeader } = originals.current;
+      if (origFetch) window.fetch = origFetch;
+      if (xhrOpen) XMLHttpRequest.prototype.open = xhrOpen;
+      if (xhrSend) XMLHttpRequest.prototype.send = xhrSend;
+      if (xhrSetRequestHeader) XMLHttpRequest.prototype.setRequestHeader = xhrSetRequestHeader;
+    }
+
+    // Restore console methods
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- console method references are dynamically typed
+    const consoleSources = (pristine?.console || originals.console || {}) as Record<
+      string,
+      Function
+    >;
+    ['log', 'info', 'warn', 'error', 'debug'].forEach((method) => {
+      if (consoleSources[method]) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching requires dynamic property access
+        (console as any)[method] = consoleSources[method];
+      }
+    });
+
+    // Restore history
+    if (originals.history.pushState) {
+      history.pushState = originals.history.pushState;
+    }
+    if (originals.history.replaceState) {
+      history.replaceState = originals.history.replaceState;
+    }
+
+    // Remove event listeners
+    if (typeof unhandledRejectionHandler === 'function') {
+      window.removeEventListener('unhandledrejection', unhandledRejectionHandler as EventListener);
+    }
+    if (typeof globalErrorHandler === 'function') {
+      window.removeEventListener('error', globalErrorHandler as EventListener, true);
+    }
+    if (typeof resourceErrorHandler === 'function') {
+      window.removeEventListener('error', resourceErrorHandler as EventListener, true);
+    }
+    if (typeof cspHandler === 'function') {
+      window.removeEventListener('securitypolicyviolation', cspHandler as EventListener, true);
+    }
+
+    if (navigationHandlers) {
+      window.removeEventListener('popstate', navigationHandlers.onPopState);
+      window.removeEventListener('hashchange', navigationHandlers.onHashChange);
+    }
+
+    if (typeof clickHandler === 'function') {
+      const opts: EventListenerOptions = { capture: true };
+      document.removeEventListener('click', clickHandler, opts);
+      document.removeEventListener('pointerdown', clickHandler, opts);
+    }
+
+    if (typeof focusHandler === 'function') {
+      window.removeEventListener('blur', focusHandler, true);
+      window.removeEventListener('focus', focusHandler, true);
+      document.removeEventListener('visibilitychange', focusHandler, true);
+    }
+
+    if (typeof beforeUnloadHandler === 'function') {
+      window.removeEventListener('beforeunload', beforeUnloadHandler as EventListener, true);
+    }
+
+    // Clean up Navigation API hook
+    try {
+      window.__userplane_removeNavigationApiHook?.();
+      delete window.__userplane_removeNavigationApiHook;
+      // eslint-disable-next-line no-empty -- intentional: Navigation API cleanup is best-effort
+    } catch {}
+
+    // Disconnect performance observer
+    if (performanceObserver) {
+      performanceObserver.disconnect();
+    }
+
+    // Null out all references
+    unhandledRejectionHandler = null;
+    globalErrorHandler = null;
+    resourceErrorHandler = null;
+    cspHandler = null;
+    navigationHandlers = null;
+    clickHandler = null;
+    focusHandler = null;
+    beforeUnloadHandler = null;
+    performanceObserver = null;
+    window.__userplane_logger_loaded = false;
+
+    // Clear repeat tracker timers
+    try {
+      const tracker = getRepeatTracker();
+      for (const entry of tracker.values()) {
+        if (entry?.timer) clearTimeout(entry.timer);
+      }
+      tracker.clear();
+      // eslint-disable-next-line no-empty -- intentional: repeat tracker cleanup is best-effort
+    } catch {}
+
+    // Clear patched flags
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching cleanup requires dynamic access
+      delete (console as any)[CONSOLE_PATCHED_FLAG];
+      // eslint-disable-next-line no-empty -- intentional: cleanup is best-effort
+    } catch {}
+  };
+
+  // ─── Validate pristine natives ────────────────────────────────────
+
+  const pristine: PristineNatives | undefined = window.__userplane_pristine_natives;
+  if (!pristine) {
+    log.warn('no pristine natives found');
+    return;
+  }
+
+  const tabId = pristine.tabId;
+
+  // ─── Store original references ────────────────────────────────────
+
+  window.__userplane_logger_originals = {
+    native: {
+      fetch: pristine.fetch,
+      xhrOpen: pristine.xhr?.open,
+      xhrSend: pristine.xhr?.send,
+      xhrSetHeader: pristine.xhr?.setRequestHeader,
+    },
+    current: {
+      fetch: window.fetch,
+      xhrOpen: XMLHttpRequest.prototype.open,
+      xhrSend: XMLHttpRequest.prototype.send,
+      xhrSetRequestHeader: XMLHttpRequest.prototype.setRequestHeader,
+    },
+    console: pristine.console || {
+      log: console.log,
+      info: console.info,
+      warn: console.warn,
+      error: console.error,
+      debug: console.debug,
+    },
+    history: pristine.history || {
+      pushState: history.pushState,
+      replaceState: history.replaceState,
+    },
+  };
+
+  // ─── Patch all browser APIs ───────────────────────────────────────
+
+  // 1. Console interception
+  patchConsole(serverDeltaMs);
+
+  // 2. Unhandled promise rejections
+  unhandledRejectionHandler = patchUnhandledRejection(serverDeltaMs);
+
+  // 3. Global JS errors
+  globalErrorHandler = patchGlobalErrors(serverDeltaMs);
+
+  // 4. Navigation (history API, popstate, hashchange, Navigation API)
+  navigationHandlers = patchNavigation(tabId);
+
+  // 5. Click/pointer tracking
+  clickHandler = patchClicks(tabId);
+
+  // 6. Focus/visibility tracking
+  focusHandler = patchFocus(tabId);
+  initFocusState(tabId);
+
+  // 7. Page unload
+  beforeUnloadHandler = patchBeforeUnload(tabId);
+
+  // 8. Fetch interception
+  patchFetch(serverDeltaMs);
+
+  // 9. XHR interception
+  patchXHR(serverDeltaMs);
+
+  // 10. Resource loading (PerformanceObserver)
+  performanceObserver = observeResources(serverDeltaMs);
+
+  // 11. Resource load errors
+  resourceErrorHandler = patchResourceErrors(serverDeltaMs);
+
+  // 12. CSP violations
+  cspHandler = patchCSP(serverDeltaMs);
+}
