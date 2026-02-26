@@ -1,0 +1,10 @@
+export { patchClicks } from './clicks';
+export { getRepeatTracker, patchConsole } from './console';
+export { patchCSP } from './csp';
+export { patchGlobalErrors, patchUnhandledRejection } from './errors';
+export { patchFetch } from './fetch';
+export { initFocusState, patchFocus } from './focus';
+export { getLastHref, patchNavigation } from './navigation';
+export { observeResources, patchResourceErrors } from './resources';
+export { patchBeforeUnload } from './unload';
+export { patchXHR } from './xhr';
