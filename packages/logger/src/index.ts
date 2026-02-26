@@ -1,11 +1,13 @@
 // ─── Core Modules ───────────────────────────────────────────────────────────
 
-export { initLogger } from './logger';
-export { LoggerManager } from './logger-manager';
+export { LogProcessor } from './log-processor';
+export { initPatches } from './patcher';
 
-// ─── Dispatcher ─────────────────────────────────────────────────────────────
+// ─── Dispatch ───────────────────────────────────────────────────────────────
 
-export { disableDispatch, dispatch, enableDispatch, isDispatchActive } from './dispatcher';
+export type { BatchedDispatcherOptions } from './dispatch-strategy';
+export { BatchedDispatcher, ImmediateDispatcher } from './dispatch-strategy';
+export { disableDispatch, dispatch, enableDispatch, isDispatchActive } from './event-bridge';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -68,7 +70,12 @@ export {
 
 export type {
   BaseLogEvent,
+  BatchSavePayload,
   ConsoleLogEvent,
+  DispatchContext,
+  DispatchMode,
+  DispatchStrategy,
+  FlushFunction,
   LastNavigation,
   LogEvent,
   LogEventType,

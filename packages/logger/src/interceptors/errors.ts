@@ -1,5 +1,5 @@
 import { LOGGER_FILE_PATTERNS, LOGGER_NAME } from '../constants';
-import { dispatch } from '../dispatcher';
+import { dispatch } from '../event-bridge';
 import type { ConsoleLogEvent } from '../types';
 import { serializeValue } from '../utils/serialization';
 

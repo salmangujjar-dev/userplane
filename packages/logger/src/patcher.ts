@@ -1,5 +1,5 @@
 /**
- * logger.ts
+ * patcher.ts
  *
  * Low-level browser API patcher that intercepts and captures:
  * - Console output (log, info, warn, error, debug, trace)
@@ -23,8 +23,8 @@
 
 import { createLogger } from '@workspace/console-logger';
 
-import { CONSOLE_PATCHED_FLAG } from './constants';
-import { disableDispatch } from './dispatcher';
+import { CONSOLE_PATCHED_FLAG, TAB_REF_PREFIX } from './constants';
+import { disableDispatch } from './event-bridge';
 
 declare const __DEV__: boolean;
 import {
@@ -57,7 +57,7 @@ const log = createLogger('userplane-logger', {
  *   (contains references to the original, unpatched browser APIs)
  * - `window.__userplane_server_delta_ms` may be set for clock synchronization
  */
-export function initLogger(): void {
+export function initPatches(): void {
   // Guard against double-initialization
   if (window.__userplane_logger_loaded) return;
   window.__userplane_logger_loaded = true;
@@ -114,6 +114,25 @@ export function initLogger(): void {
     } catch {}
 
     // Restore XHR methods
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
+    try {
+      delete (XMLHttpRequest.prototype as any).open;
+    } catch {
+      /* best-effort */
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
+    try {
+      delete (XMLHttpRequest.prototype as any).setRequestHeader;
+    } catch {
+      /* best-effort */
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
+    try {
+      delete (XMLHttpRequest.prototype as any).send;
+    } catch {
+      /* best-effort */
+    }
+
     if (originals.current) {
       const { fetch: origFetch, xhrOpen, xhrSend, xhrSetRequestHeader } = originals.current;
       if (origFetch) window.fetch = origFetch;
@@ -123,12 +142,19 @@ export function initLogger(): void {
     }
 
     // Restore console methods
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- console method references are dynamically typed
+    ['log', 'info', 'warn', 'error', 'debug', 'trace'].forEach((method) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
+      try {
+        delete (console as any)[method];
+      } catch {
+        /* best-effort */
+      }
+    });
     const consoleSources = (pristine?.console || originals.console || {}) as Record<
       string,
-      Function
+      (...args: unknown[]) => void
     >;
-    ['log', 'info', 'warn', 'error', 'debug'].forEach((method) => {
+    ['log', 'info', 'warn', 'error', 'debug', 'trace'].forEach((method) => {
       if (consoleSources[method]) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching requires dynamic property access
         (console as any)[method] = consoleSources[method];
@@ -228,7 +254,10 @@ export function initLogger(): void {
     return;
   }
 
-  const tabId = pristine.tabId;
+  const tabId =
+    typeof window.name === 'string' && window.name.startsWith(TAB_REF_PREFIX)
+      ? window.name
+      : undefined;
 
   // ─── Store original references ────────────────────────────────────
 
