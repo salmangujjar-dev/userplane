@@ -22,6 +22,7 @@ import {
 } from './constants';
 import { BatchedDispatcher, ImmediateDispatcher } from './dispatch-strategy';
 import type {
+  ConsoleLogEvent,
   DispatchContext,
   DispatchMode,
   DispatchStrategy,
@@ -34,6 +35,7 @@ import type {
   SaveFunction,
   TabInfo,
   TrackingStepData,
+  TrackingStepLogEvent,
 } from './types';
 
 declare const __DEV__: boolean;
@@ -60,6 +62,7 @@ export class LogProcessor {
 
   private _tabId: string;
   private _saveFunction: SaveFunction | undefined;
+  private _isFocused: boolean = false;
   private _isSending: boolean = false;
   private _isPaused: boolean = false;
   private _workspaceId: string;
@@ -155,8 +158,7 @@ export class LogProcessor {
   }
 
   setFocus(focused: boolean): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic property set for external focus tracking
-    (this as any)._isFocused = focused;
+    this._isFocused = focused;
   }
 
   isSending(): boolean {
@@ -218,12 +220,22 @@ export class LogProcessor {
           event: 'log_console',
           tabId: this._tabId,
           data: {
+            log_type: 'console',
             type: 'console',
             args: [`${LOGGER_PREFIX} logger failed to load`, this._scriptUrl],
+            timestamp: this.serverNow(),
+            url: '',
           },
+          is_single_log: true,
           timestamp: this.serverNow(),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- error payload shape differs from standard SavePayload
-        } as any);
+          has_focus: this._isFocused,
+          tab_details: {
+            location: window.location.href,
+            title: document.title,
+            window_width: window.innerWidth,
+            window_height: window.innerHeight,
+          },
+        });
       };
 
       (document.head || document.documentElement).appendChild(script);
@@ -398,17 +410,17 @@ export class LogProcessor {
     let isInitialLog = false;
 
     if (!this._initialLogCaptured) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console event args are untyped at this level
-      const args = (event as any).args;
-      if (
-        event.type === 'console' &&
-        args &&
-        args.length > 0 &&
-        typeof args[0] === 'string' &&
-        args[0].includes('initialization successful')
-      ) {
-        this._initialLogCaptured = true;
-        isInitialLog = true;
+      if (event.type === 'console') {
+        const { args } = event;
+        if (
+          args &&
+          args.length > 0 &&
+          typeof args[0] === 'string' &&
+          args[0].includes('initialization successful')
+        ) {
+          this._initialLogCaptured = true;
+          isInitialLog = true;
+        }
       }
     }
 
@@ -421,8 +433,7 @@ export class LogProcessor {
   processLogEvent(event: LogEvent): void {
     const { isInitialLog, timestamp } = this._resolveEventMeta(event);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- has_focus is set dynamically by the content script
-    if (!(event as any).has_focus && event.type !== 'tracking_steps' && !isInitialLog) return;
+    if (!event.has_focus && event.type !== 'tracking_steps' && !isInitialLog) return;
 
     switch (event.type) {
       case 'network':
@@ -602,8 +613,11 @@ export class LogProcessor {
     this.emitEntry(entry);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console event fields are untyped
-  private _handleConsoleEvent(event: any, timestamp: number, isInitialLog: boolean): void {
+  private _handleConsoleEvent(
+    event: ConsoleLogEvent,
+    timestamp: number,
+    isInitialLog: boolean
+  ): void {
     const entry: ProcessedConsoleEntry = {
       isInitialConsoleLog: isInitialLog,
       log_type: 'console',
@@ -617,8 +631,7 @@ export class LogProcessor {
     this.emitEntry(entry);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tracking step event is loosely typed from content script
-  private _handleTrackingStepEvent(event: any): void {
+  private _handleTrackingStepEvent(event: TrackingStepLogEvent): void {
     event.data.tabId = this._tabId;
     event.tabId = this._tabId;
     this._handleRawStep(event);
@@ -648,15 +661,14 @@ export class LogProcessor {
     this._addUserStep(tabId, data);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tracking step event shape varies by action
-  private _handleRawStep(event: any): void {
+  private _handleRawStep(event: TrackingStepLogEvent): void {
     if (event.type !== 'tracking_steps') return;
 
     const data: TrackingStepData = event.data;
     const action = data.action;
     const url = data.url;
     const title = data.title;
-    const tabId: string = event.tabId;
+    const tabId: string = event.tabId ?? this._tabId;
 
     const tab: TabInfo = this.tabs.get(tabId) || {
       state: TAB_STATE.UNKNOWN,
@@ -716,8 +728,7 @@ export class LogProcessor {
     const entry: ProcessedUserStepEntry = {
       log_type: 'console',
       type: 'userStep',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- TrackingStepData may carry an untyped timestamp
-      timestamp: (data as any).timestamp || this.serverNow(),
+      timestamp: (data.timestamp as number | undefined) || this.serverNow(),
       data,
     };
 

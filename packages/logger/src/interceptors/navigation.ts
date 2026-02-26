@@ -34,7 +34,10 @@ function throttledRouteChange(
  */
 function createPushStateWrapper(
   original: typeof history.pushState,
-  nativeOriginals: { pushState: typeof history.pushState }
+  nativeOriginals: {
+    pushState: typeof history.pushState;
+    replaceState: typeof history.replaceState;
+  }
 ): typeof history.pushState {
   return function (this: History, ...args: Parameters<typeof history.pushState>) {
     const [, title, url] = args;
@@ -64,7 +67,10 @@ function createPushStateWrapper(
  */
 function createReplaceStateWrapper(
   original: typeof history.replaceState,
-  nativeOriginals: { replaceState: typeof history.replaceState }
+  nativeOriginals: {
+    pushState: typeof history.pushState;
+    replaceState: typeof history.replaceState;
+  }
 ): typeof history.replaceState {
   return function (this: History, ...args: Parameters<typeof history.replaceState>) {
     const [, title, url] = args;
@@ -153,18 +159,15 @@ export function patchNavigation(_tabId: string | undefined): {
   let currentPushState = history.pushState;
   let currentReplaceState = history.replaceState;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- history API types are intentionally loosened for cross-browser compat
-  history.pushState = createPushStateWrapper(currentPushState, nativeOriginals as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- history API types are intentionally loosened for cross-browser compat
-  history.replaceState = createReplaceStateWrapper(currentReplaceState, nativeOriginals as any);
+  history.pushState = createPushStateWrapper(currentPushState, nativeOriginals);
+  history.replaceState = createReplaceStateWrapper(currentReplaceState, nativeOriginals);
 
   // Use defineProperty to intercept future overwrites
   Object.defineProperty(history, 'pushState', {
     configurable: true,
     get: () => currentPushState,
     set(fn) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- history API types are intentionally loosened for cross-browser compat
-      currentPushState = createPushStateWrapper(fn, nativeOriginals as any);
+      currentPushState = createPushStateWrapper(fn, nativeOriginals);
     },
   });
 
@@ -172,8 +175,7 @@ export function patchNavigation(_tabId: string | undefined): {
     configurable: true,
     get: () => currentReplaceState,
     set(fn) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- history API types are intentionally loosened for cross-browser compat
-      currentReplaceState = createReplaceStateWrapper(fn, nativeOriginals as any);
+      currentReplaceState = createReplaceStateWrapper(fn, nativeOriginals);
     },
   });
 
