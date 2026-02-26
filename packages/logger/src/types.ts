@@ -39,7 +39,6 @@ export interface LoggerOriginals {
 declare global {
   interface Window {
     __userplane_logger_loaded?: boolean;
-    __userplane_logger_unpatch?: () => void;
     __userplane_logger_originals?: LoggerOriginals;
     __userplane_pristine_natives?: PristineNatives;
     __userplane_server_delta_ms?: number;
