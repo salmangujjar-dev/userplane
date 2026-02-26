@@ -12,7 +12,6 @@ export interface PristineNatives {
     pushState: typeof history.pushState;
     replaceState: typeof history.replaceState;
   };
-  tabId?: string;
 }
 
 export interface LoggerOriginals {
@@ -381,7 +380,26 @@ export interface SavePayload {
   };
 }
 
-export type SaveFunction = (payload: SavePayload) => void;
+export type DispatchMode = 'immediate' | 'batched';
+
+export interface BatchSavePayload {
+  event: 'log_batch';
+  tabId: string;
+  data: ProcessedLogEntry[];
+  is_single_log: false;
+  timestamp: number;
+  has_focus: boolean;
+  tab_details: {
+    location: string;
+    title: string;
+    window_width: number;
+    window_height: number;
+  };
+}
+
+export type SaveFunction = (payload: SavePayload | BatchSavePayload) => void;
+
+export type FlushFunction = (payload: BatchSavePayload) => void;
 
 export interface ProcessedLogEntry {
   log_type: 'console' | 'network' | 'userStep';
@@ -424,4 +442,20 @@ export interface ProcessedUserStepEntry extends ProcessedLogEntry {
   type: 'userStep';
   timestamp: number;
   data: TrackingStepData;
+}
+
+// ─── Dispatch Strategy ─────────────────────────────────────────────────────
+
+export interface DispatchContext {
+  readonly tabId: string;
+  serverNow(): number;
+  saveFunction: SaveFunction | undefined;
+}
+
+export interface DispatchStrategy {
+  emit(entry: ProcessedLogEntry): void;
+  start(): void;
+  pause(): void;
+  stop(): void;
+  destroy(): void;
 }

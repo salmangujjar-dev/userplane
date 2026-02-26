@@ -1,5 +1,5 @@
 import { LOGGER_NAME } from '../constants';
-import { dispatch } from '../dispatcher';
+import { dispatch } from '../event-bridge';
 import type {
   ConsoleLogEvent,
   NetworkErrorLogEvent,
@@ -62,17 +62,15 @@ function logNetworkErrorToConsole(
 }
 
 /**
- * Patches XMLHttpRequest.prototype.open, .setRequestHeader, and .send
- * to intercept and log all XHR requests.
+ * Creates a wrapper for XMLHttpRequest.prototype.open that tracks request metadata.
  */
-export function patchXHR(serverDeltaMs: number): void {
-  const originals = window.__userplane_logger_originals!.native;
-  const nativeOpen = originals.xhrOpen!;
-  const nativeSend = originals.xhrSend!;
-  const nativeSetHeader = originals.xhrSetHeader!;
-
-  // Patch open
-  XMLHttpRequest.prototype.open = function (
+function createOpenWrapper(
+  _original: typeof XMLHttpRequest.prototype.open,
+  nativeOpen: typeof XMLHttpRequest.prototype.open,
+  serverDeltaMs: number
+): typeof XMLHttpRequest.prototype.open {
+  return function (
+    this: XMLHttpRequest,
     method: string,
     url: string | URL,
     async: boolean = true,
@@ -105,18 +103,33 @@ export function patchXHR(serverDeltaMs: number): void {
     // eslint-disable-next-line prefer-rest-params, @typescript-eslint/no-explicit-any -- XHR patching requires forwarding original arguments object
     return nativeOpen.apply(this, arguments as any);
   };
+}
 
-  // Patch setRequestHeader
-  XMLHttpRequest.prototype.setRequestHeader = function (name: string, value: string) {
+/**
+ * Creates a wrapper for XMLHttpRequest.prototype.setRequestHeader that captures headers.
+ */
+function createSetRequestHeaderWrapper(
+  _original: typeof XMLHttpRequest.prototype.setRequestHeader,
+  nativeSetHeader: typeof XMLHttpRequest.prototype.setRequestHeader
+): typeof XMLHttpRequest.prototype.setRequestHeader {
+  return function (this: XMLHttpRequest, name: string, value: string) {
     const tracking = xhrMetadata.get(this);
     if (tracking) {
       tracking.request.headers[name] = value;
     }
     return nativeSetHeader.call(this, name, value);
   };
+}
 
-  // Patch send
-  XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
+/**
+ * Creates a wrapper for XMLHttpRequest.prototype.send that intercepts and logs requests.
+ */
+function createSendWrapper(
+  _original: typeof XMLHttpRequest.prototype.send,
+  nativeSend: typeof XMLHttpRequest.prototype.send,
+  serverDeltaMs: number
+): typeof XMLHttpRequest.prototype.send {
+  return function (this: XMLHttpRequest, body?: Document | XMLHttpRequestBodyInit | null) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias -- XHR patching needs this reference for async callbacks
     const xhr = this;
     const tracking = xhrMetadata.get(xhr);
@@ -311,4 +324,64 @@ export function patchXHR(serverDeltaMs: number): void {
     // eslint-disable-next-line prefer-rest-params, @typescript-eslint/no-explicit-any -- XHR patching requires forwarding original arguments object
     return nativeSend.apply(this, arguments as any);
   };
+}
+
+/**
+ * Patches XMLHttpRequest.prototype.open, .setRequestHeader, and .send
+ * to intercept and log all XHR requests.
+ *
+ * Uses defineProperty to re-wrap if other code overwrites XHR methods.
+ */
+export function patchXHR(serverDeltaMs: number): void {
+  const originals = window.__userplane_logger_originals!.native;
+  const nativeOpen = originals.xhrOpen!;
+  const nativeSend = originals.xhrSend!;
+  const nativeSetHeader = originals.xhrSetHeader!;
+
+  const proto = XMLHttpRequest.prototype;
+
+  // Patch open
+  let currentOpen = createOpenWrapper(proto.open, nativeOpen, serverDeltaMs);
+  try {
+    Object.defineProperty(proto, 'open', {
+      configurable: true,
+      get: () => currentOpen,
+      set(fn) {
+        currentOpen = createOpenWrapper(fn, nativeOpen, serverDeltaMs);
+      },
+    });
+  } catch {
+    // Fallback to direct assignment if prototype is frozen/non-configurable
+    proto.open = currentOpen;
+  }
+
+  // Patch setRequestHeader
+  let currentSetHeader = createSetRequestHeaderWrapper(proto.setRequestHeader, nativeSetHeader);
+  try {
+    Object.defineProperty(proto, 'setRequestHeader', {
+      configurable: true,
+      get: () => currentSetHeader,
+      set(fn) {
+        currentSetHeader = createSetRequestHeaderWrapper(fn, nativeSetHeader);
+      },
+    });
+  } catch {
+    // Fallback to direct assignment if prototype is frozen/non-configurable
+    proto.setRequestHeader = currentSetHeader;
+  }
+
+  // Patch send
+  let currentSend = createSendWrapper(proto.send, nativeSend, serverDeltaMs);
+  try {
+    Object.defineProperty(proto, 'send', {
+      configurable: true,
+      get: () => currentSend,
+      set(fn) {
+        currentSend = createSendWrapper(fn, nativeSend, serverDeltaMs);
+      },
+    });
+  } catch {
+    // Fallback to direct assignment if prototype is frozen/non-configurable
+    proto.send = currentSend;
+  }
 }

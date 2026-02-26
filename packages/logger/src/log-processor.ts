@@ -1,7 +1,7 @@
 /**
- * logger-manager.ts
+ * log-processor.ts
  *
- * High-level logger manager that:
+ * High-level log processor that:
  * - Listens for `__userplane_logger` CustomEvents from the low-level patcher
  * - Processes and normalizes raw events into structured log entries
  * - Routes entries through a save function callback
@@ -20,14 +20,18 @@ import {
   DEFAULT_INTERNAL_ENDPOINTS,
   LOGGER_PREFIX,
 } from './constants';
+import { BatchedDispatcher, ImmediateDispatcher } from './dispatch-strategy';
 import type {
+  DispatchContext,
+  DispatchMode,
+  DispatchStrategy,
+  FlushFunction,
   LogEvent,
   ProcessedConsoleEntry,
   ProcessedLogEntry,
   ProcessedNetworkEntry,
   ProcessedUserStepEntry,
   SaveFunction,
-  SavePayload,
   TabInfo,
   TrackingStepData,
 } from './types';
@@ -51,7 +55,7 @@ const ALLOWED_RESPONSE_CONTENT_TYPES = [
   'text/plain',
 ];
 
-export class LoggerManager {
+export class LogProcessor {
   // ─── Configuration ──────────────────────────────────────────────
 
   private _tabId: string;
@@ -66,23 +70,14 @@ export class LoggerManager {
   private _serverDeltaMs: number;
   private _internalEndpointMatchers: RegExp[];
 
-  // ─── Send / Interval State ─────────────────────────────────────
+  // ─── Dispatch ──────────────────────────────────────────────────
 
-  private _sendDelay = 1000;
-  private _sendTimeout: Record<string, ReturnType<typeof setTimeout>> = {};
-  private _sendInterval: ReturnType<typeof setInterval> | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- console method references are dynamically typed
-  private _originalConsole: Record<string, Function> | undefined;
-  private _nocache = 2;
+  private readonly _dispatcher: DispatchStrategy;
 
   // ─── Tab Management ─────────────────────────────────────────────
 
   readonly tabs = new Map<string, TabInfo>();
   private currentActive: string | null = null;
-
-  // ─── Exposed Constants ─────────────────────────────────────────
-
-  readonly STATE = TAB_STATE;
 
   // ─── Event Listener Reference ───────────────────────────────────
 
@@ -97,7 +92,13 @@ export class LoggerManager {
     loggingEnabled: boolean,
     scriptUrl: string,
     serverDeltaMs: number,
-    internalEndpoints?: string[]
+    internalEndpoints?: string[],
+    options?: {
+      dispatchMode?: DispatchMode;
+      flushInterval?: number;
+      maxBufferSize?: number;
+      flushFunction?: FlushFunction;
+    }
   ) {
     this._workspaceId = workspaceId;
     this._loggingEnabled = loggingEnabled;
@@ -108,6 +109,27 @@ export class LoggerManager {
     this._internalEndpointMatchers = buildEndpointMatchers(
       internalEndpoints ?? DEFAULT_INTERNAL_ENDPOINTS
     );
+
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- ctx getters need stable `self` reference
+    const self = this;
+    const ctx: DispatchContext = {
+      get tabId() {
+        return self._tabId;
+      },
+      serverNow: () => this.serverNow(),
+      get saveFunction() {
+        return self._saveFunction;
+      },
+    };
+
+    this._dispatcher =
+      (options?.dispatchMode ?? 'immediate') === 'batched'
+        ? new BatchedDispatcher(ctx, {
+            flushInterval: options?.flushInterval,
+            maxBufferSize: options?.maxBufferSize,
+            flushFunction: options?.flushFunction,
+          })
+        : new ImmediateDispatcher(ctx);
   }
 
   // ─── Time ───────────────────────────────────────────────────────
@@ -228,6 +250,9 @@ export class LoggerManager {
       });
     }
 
+    // Start the dispatcher (no-op for immediate, starts interval + listeners for batched)
+    this._dispatcher.start();
+
     // Log resume event
     if (isResume) {
       this._addUserStep(this._tabId, {
@@ -260,12 +285,17 @@ export class LoggerManager {
     if (!this._isSending && !this._isPaused) return;
 
     if (isPause) {
+      // Pause: stop interval + flush, but keep unload listeners
+      this._dispatcher.pause();
       this._addUserStep(this._tabId, {
         action: 'recorder-pause',
         tabId: this._tabId,
       } as TrackingStepData);
     } else {
-      // Full stop - unpatch everything
+      // Full stop: interval + flush + remove listeners
+      this._dispatcher.stop();
+
+      // Unpatch everything
       if (typeof window.__userplane_logger_unpatch === 'function') {
         window.__userplane_logger_unpatch();
       }
@@ -288,6 +318,7 @@ export class LoggerManager {
       this.stop(false);
       // eslint-disable-next-line no-empty -- intentional: destroy must not throw
     } catch {}
+    this._dispatcher.destroy();
     this._saveFunction = undefined;
     this.tabs.clear();
     this.currentActive = null;
@@ -322,31 +353,11 @@ export class LoggerManager {
 
   /**
    * Sends a processed log entry through the save function.
+   * In immediate mode, dispatches right away. In batched mode, buffers entries.
    */
   private emitEntry(entry: ProcessedLogEntry): void {
     if (!this._isSending || !this._loggingEnabled) return;
-
-    let eventType: 'log_console' | 'log_network' = 'log_console';
-    if (entry.log_type !== 'userStep' && entry.log_type !== 'console') {
-      eventType = 'log_network';
-    }
-
-    const payload: SavePayload = {
-      event: eventType,
-      tabId: this._tabId,
-      data: entry,
-      is_single_log: true,
-      timestamp: this.serverNow(),
-      has_focus: document.hasFocus(),
-      tab_details: {
-        location: window.location.href,
-        title: document.title,
-        window_width: window.innerWidth,
-        window_height: window.innerHeight,
-      },
-    };
-
-    this._saveFunction?.(payload);
+    this._dispatcher.emit(entry);
   }
 
   // ─── Duration Computation ───────────────────────────────────────
@@ -711,30 +722,5 @@ export class LoggerManager {
     };
 
     this.emitEntry(entry);
-  }
-
-  // ─── Utilities ──────────────────────────────────────────────────
-
-  /**
-   * Attempts to detect the current script URL from document.currentScript or stack trace.
-   */
-  getCurrentScriptName(): string | null {
-    if (document.currentScript && (document.currentScript as HTMLScriptElement).src) {
-      return (document.currentScript as HTMLScriptElement).src;
-    }
-
-    try {
-      throw new Error();
-    } catch (err) {
-      if ((err as Error).stack) {
-        const line = (err as Error).stack!.split('\n').find((l) => l.includes('.js'));
-        if (line) {
-          const match = line.match(/(https?:\/\/.*?\.js)/);
-          return match ? match[0] : null;
-        }
-      }
-    }
-
-    return null;
   }
 }

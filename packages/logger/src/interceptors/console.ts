@@ -1,5 +1,5 @@
 import { CONSOLE_PATCHED_FLAG, LOGGER_NAME, LOGGER_PREFIX } from '../constants';
-import { dispatch } from '../dispatcher';
+import { dispatch } from '../event-bridge';
 import type { ConsoleLogEvent, LogEvent, RepeatEntry } from '../types';
 import { cleanPayload } from '../utils/clean';
 import { parseStack, serializeValue } from '../utils/serialization';
@@ -69,7 +69,105 @@ function tryBatchRepeat(
 }
 
 /**
+ * Creates a console wrapper for the given level that intercepts and logs calls.
+ */
+function createConsoleWrapper(
+  level: ConsoleLevel,
+  serverDeltaMs: number
+): (...args: unknown[]) => void {
+  return function (...rawArgs: unknown[]) {
+    // Capture and serialize args
+    try {
+      const serializedArgs = rawArgs.map(serializeValue).filter((v) => v !== undefined);
+
+      let trace: string[] = [];
+      let stackTop = '';
+      try {
+        const parsed = parseStack(new Error().stack || '');
+        stackTop = parsed.top;
+        trace = parsed.stackLines;
+        // eslint-disable-next-line no-empty -- intentional: stack parsing is best-effort
+      } catch {}
+
+      const batched = tryBatchRepeat(level, serializedArgs, stackTop, (count) => {
+        const event: ConsoleLogEvent = {
+          source: LOGGER_NAME,
+          has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
+          type: 'console',
+          subtype: level,
+          level,
+          args: serializedArgs,
+          trace,
+          timestamp: now(serverDeltaMs),
+        };
+        if (count > 1) {
+          event.repeatCount = count - 1;
+        }
+        return truncatePayload(
+          cleanPayload(event as unknown as Record<string, unknown>)
+        ) as unknown as LogEvent;
+      });
+
+      if (!batched) {
+        const event: ConsoleLogEvent = {
+          source: LOGGER_NAME,
+          has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
+          type: 'console',
+          subtype: level,
+          level,
+          args: serializedArgs,
+          trace,
+          timestamp: now(serverDeltaMs),
+        };
+        try {
+          dispatch(
+            truncatePayload(
+              cleanPayload(event as unknown as Record<string, unknown>)
+            ) as unknown as LogEvent
+          );
+          // eslint-disable-next-line no-empty -- intentional: dispatch failure must not break console
+        } catch {}
+      }
+      // eslint-disable-next-line no-empty -- intentional: console patching must never throw
+    } catch {}
+
+    // Forward to original console
+    try {
+      const originals = window.__userplane_logger_originals;
+      const pristine = window.__userplane_pristine_natives;
+      const originalFn = originals?.console?.[level];
+      const pristineFn = pristine?.console?.[level];
+      const args = Array.isArray(rawArgs) ? rawArgs : [rawArgs];
+
+      if (typeof originalFn === 'function') {
+        return Reflect.apply(originalFn, console, args);
+      }
+      if (typeof pristineFn === 'function') {
+        return Reflect.apply(pristineFn, console, args);
+      }
+    } catch (err) {
+      try {
+        dispatch({
+          source: LOGGER_NAME,
+          has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
+          type: 'console',
+          subtype: 'error',
+          level: 'error',
+          args: [
+            `${LOGGER_PREFIX} console forward failed: ${(err as Error)?.message || String(err)}`,
+          ],
+          timestamp: now(serverDeltaMs),
+        } as ConsoleLogEvent);
+        // eslint-disable-next-line no-empty -- intentional: error reporting must not throw
+      } catch {}
+    }
+  };
+}
+
+/**
  * Patches all console methods to intercept and log calls.
+ *
+ * Uses defineProperty to re-wrap if other code overwrites console methods.
  */
 export function patchConsole(serverDeltaMs: number): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching requires dynamic property access
@@ -81,93 +179,25 @@ export function patchConsole(serverDeltaMs: number): void {
     if (patchedFlags[level]) return;
     patchedFlags[level] = true;
 
-    console[level] = function (...rawArgs: unknown[]) {
-      // Capture and serialize args
-      try {
-        const serializedArgs = rawArgs.map(serializeValue).filter((v) => v !== undefined);
+    let currentWrapper = createConsoleWrapper(level, serverDeltaMs);
 
-        let trace: string[] = [];
-        let stackTop = '';
-        try {
-          const parsed = parseStack(new Error().stack || '');
-          stackTop = parsed.top;
-          trace = parsed.stackLines;
-          // eslint-disable-next-line no-empty -- intentional: stack parsing is best-effort
-        } catch {}
-
-        const batched = tryBatchRepeat(level, serializedArgs, stackTop, (count) => {
-          const event: ConsoleLogEvent = {
-            source: LOGGER_NAME,
-            has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
-            type: 'console',
-            subtype: level,
-            level,
-            args: serializedArgs,
-            trace,
-            timestamp: now(serverDeltaMs),
-          };
-          if (count > 1) {
-            event.repeatCount = count - 1;
+    try {
+      Object.defineProperty(console, level, {
+        configurable: true,
+        get: () => currentWrapper,
+        set(fn) {
+          // Update originals store so wrapper delegates to the new function
+          if (window.__userplane_logger_originals?.console) {
+            window.__userplane_logger_originals.console[level] = fn;
           }
-          return truncatePayload(
-            cleanPayload(event as unknown as Record<string, unknown>)
-          ) as unknown as LogEvent;
-        });
-
-        if (!batched) {
-          const event: ConsoleLogEvent = {
-            source: LOGGER_NAME,
-            has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
-            type: 'console',
-            subtype: level,
-            level,
-            args: serializedArgs,
-            trace,
-            timestamp: now(serverDeltaMs),
-          };
-          try {
-            dispatch(
-              truncatePayload(
-                cleanPayload(event as unknown as Record<string, unknown>)
-              ) as unknown as LogEvent
-            );
-            // eslint-disable-next-line no-empty -- intentional: dispatch failure must not break console
-          } catch {}
-        }
-        // eslint-disable-next-line no-empty -- intentional: console patching must never throw
-      } catch {}
-
-      // Forward to original console
-      try {
-        const originals = window.__userplane_logger_originals;
-        const pristine = window.__userplane_pristine_natives;
-        const originalFn = originals?.console?.[level];
-        const pristineFn = pristine?.console?.[level];
-        const args = Array.isArray(rawArgs) ? rawArgs : [rawArgs];
-
-        if (typeof originalFn === 'function') {
-          return Reflect.apply(originalFn, console, args);
-        }
-        if (typeof pristineFn === 'function') {
-          return Reflect.apply(pristineFn, console, args);
-        }
-      } catch (err) {
-        try {
-          dispatch({
-            source: LOGGER_NAME,
-            has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
-            type: 'console',
-            subtype: 'error',
-            level: 'error',
-            args: [
-              `${LOGGER_PREFIX} console forward failed: ${(err as Error)?.message || String(err)}`,
-            ],
-            timestamp: now(serverDeltaMs),
-          } as ConsoleLogEvent);
-          // eslint-disable-next-line no-empty -- intentional: error reporting must not throw
-        } catch {}
-      }
-    };
+          currentWrapper = createConsoleWrapper(level, serverDeltaMs);
+        },
+      });
+    } catch {
+      // Fallback to direct assignment for non-configurable console methods
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching requires dynamic property access
+      (console as any)[level] = currentWrapper;
+    }
   });
 }
 

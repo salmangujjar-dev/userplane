@@ -1,5 +1,5 @@
 import { LOGGER_NAME } from '../constants';
-import { dispatch } from '../dispatcher';
+import { dispatch } from '../event-bridge';
 import type { ResourceErrorLogEvent, ResourceLogEvent } from '../types';
 import { inferContentType } from '../utils/content-type';
 import { extractPerformanceData } from '../utils/performance';

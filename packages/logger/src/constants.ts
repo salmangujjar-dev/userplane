@@ -1,3 +1,6 @@
+// Tab reference
+export const TAB_REF_PREFIX = 'userplane_tab_';
+
 // Branding / naming constants
 export const LOGGER_NAME = 'userplane-logger';
 export const LOGGER_PREFIX = '[Userplane]';

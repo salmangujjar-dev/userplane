@@ -1,5 +1,5 @@
 import { LOGGER_NAME } from '../constants';
-import { dispatch } from '../dispatcher';
+import { dispatch } from '../event-bridge';
 import type { TrackingStepLogEvent } from '../types';
 
 /**
