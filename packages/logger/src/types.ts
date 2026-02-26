@@ -162,7 +162,7 @@ export type LogEventType =
   | 'resource-error'
   | 'tracking_steps';
 
-export interface BaseLogEvent {
+export interface BaseLogEvent extends Record<string, unknown> {
   source: 'userplane-logger';
   has_focus?: boolean;
   tabId?: string;

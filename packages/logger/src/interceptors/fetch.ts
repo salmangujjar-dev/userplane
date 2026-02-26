@@ -58,7 +58,7 @@ function logNetworkErrorToConsole(
         level,
         args: [message],
         timestamp: now(serverDeltaMs),
-      } as unknown as Record<string, unknown>) as unknown as ConsoleLogEvent
+      } as ConsoleLogEvent)
     );
     // eslint-disable-next-line no-empty -- intentional: network error console logging is best-effort
   } catch {}
@@ -140,8 +140,7 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
                   responseInfo.duration = responseInfo.performance.duration;
                 }
                 if (responseInfo.performance?.nextHopProtocol) {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- performance data is dynamic
-                  (responseInfo as any).nextHopProtocol = responseInfo.performance.nextHopProtocol;
+                  responseInfo.nextHopProtocol = responseInfo.performance.nextHopProtocol;
                 }
                 // eslint-disable-next-line no-empty -- intentional: performance enrichment is optional
               } catch {}

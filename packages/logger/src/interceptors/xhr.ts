@@ -55,7 +55,7 @@ function logNetworkErrorToConsole(
         level,
         args: [message],
         timestamp: now(serverDeltaMs),
-      } as unknown as Record<string, unknown>) as unknown as ConsoleLogEvent
+      } as ConsoleLogEvent)
     );
     // eslint-disable-next-line no-empty -- intentional: header parsing is best-effort
   } catch {}
@@ -100,8 +100,7 @@ function createOpenWrapper(
     };
 
     xhrMetadata.set(this, tracking);
-    // eslint-disable-next-line prefer-rest-params, @typescript-eslint/no-explicit-any -- XHR patching requires forwarding original arguments object
-    return nativeOpen.apply(this, arguments as any);
+    return nativeOpen.apply(this, [method, url, async, user, password]);
   };
 }
 
@@ -129,7 +128,11 @@ function createSendWrapper(
   nativeSend: typeof XMLHttpRequest.prototype.send,
   serverDeltaMs: number
 ): typeof XMLHttpRequest.prototype.send {
-  return function (this: XMLHttpRequest, body?: Document | XMLHttpRequestBodyInit | null) {
+  return function (
+    this: XMLHttpRequest,
+    ...args: Parameters<typeof XMLHttpRequest.prototype.send>
+  ) {
+    const [body] = args;
     // eslint-disable-next-line @typescript-eslint/no-this-alias -- XHR patching needs this reference for async callbacks
     const xhr = this;
     const tracking = xhrMetadata.get(xhr);
@@ -174,9 +177,7 @@ function createSendWrapper(
           tracking.response.duration = tracking.response.performance.duration;
         }
         if (tracking.response.performance?.nextHopProtocol) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- performance data is added dynamically to response
-          (tracking.response as any).nextHopProtocol =
-            tracking.response.performance.nextHopProtocol;
+          tracking.response.nextHopProtocol = tracking.response.performance.nextHopProtocol;
         }
 
         if (handled) return;
@@ -321,8 +322,7 @@ function createSendWrapper(
       { once: true }
     );
 
-    // eslint-disable-next-line prefer-rest-params, @typescript-eslint/no-explicit-any -- XHR patching requires forwarding original arguments object
-    return nativeSend.apply(this, arguments as any);
+    return nativeSend.apply(this, args);
   };
 }
 

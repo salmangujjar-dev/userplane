@@ -103,9 +103,7 @@ function createConsoleWrapper(
         if (count > 1) {
           event.repeatCount = count - 1;
         }
-        return truncatePayload(
-          cleanPayload(event as unknown as Record<string, unknown>)
-        ) as unknown as LogEvent;
+        return truncatePayload(cleanPayload(event));
       });
 
       if (!batched) {
@@ -120,11 +118,7 @@ function createConsoleWrapper(
           timestamp: now(serverDeltaMs),
         };
         try {
-          dispatch(
-            truncatePayload(
-              cleanPayload(event as unknown as Record<string, unknown>)
-            ) as unknown as LogEvent
-          );
+          dispatch(truncatePayload(cleanPayload(event)));
           // eslint-disable-next-line no-empty -- intentional: dispatch failure must not break console
         } catch {}
       }
@@ -170,10 +164,15 @@ function createConsoleWrapper(
  * Uses defineProperty to re-wrap if other code overwrites console methods.
  */
 export function patchConsole(serverDeltaMs: number): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching requires dynamic property access
-  const patchedFlags = ((console as any)[CONSOLE_PATCHED_FLAG] =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching requires dynamic property access
-    (console as any)[CONSOLE_PATCHED_FLAG] || {});
+  // `console` has no index signature in TypeScript, so dynamic property access
+  // (e.g. console[level], console[CONSOLE_PATCHED_FLAG]) is a type error.
+  // One cast here; all dynamic accesses below go through this alias.
+  const consoleRecord = console as unknown as Record<string, unknown>;
+  const patchedFlags = (consoleRecord[CONSOLE_PATCHED_FLAG] =
+    (consoleRecord[CONSOLE_PATCHED_FLAG] as Record<string, boolean>) || {}) as Record<
+    string,
+    boolean
+  >;
 
   CONSOLE_LEVELS.forEach((level) => {
     if (patchedFlags[level]) return;
@@ -195,8 +194,7 @@ export function patchConsole(serverDeltaMs: number): void {
       });
     } catch {
       // Fallback to direct assignment for non-configurable console methods
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching requires dynamic property access
-      (console as any)[level] = currentWrapper;
+      consoleRecord[level] = currentWrapper;
     }
   });
 }

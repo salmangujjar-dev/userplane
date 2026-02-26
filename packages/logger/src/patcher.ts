@@ -96,39 +96,36 @@ export function initPatches(): void {
 
     // Restore fetch
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
-      delete (window as any).fetch;
-      // eslint-disable-next-line no-empty -- intentional: browser API restoration is best-effort
-    } catch {}
+      Reflect.deleteProperty(window, 'fetch');
+    } catch {
+      /* best-effort */
+    }
 
     // Restore history methods
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
-      delete (history as any).pushState;
-      // eslint-disable-next-line no-empty -- intentional: browser API restoration is best-effort
-    } catch {}
+      Reflect.deleteProperty(history, 'pushState');
+    } catch {
+      /* best-effort */
+    }
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
-      delete (history as any).replaceState;
-      // eslint-disable-next-line no-empty -- intentional: browser API restoration is best-effort
-    } catch {}
+      Reflect.deleteProperty(history, 'replaceState');
+    } catch {
+      /* best-effort */
+    }
 
     // Restore XHR methods
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
     try {
-      delete (XMLHttpRequest.prototype as any).open;
+      Reflect.deleteProperty(XMLHttpRequest.prototype, 'open');
     } catch {
       /* best-effort */
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
     try {
-      delete (XMLHttpRequest.prototype as any).setRequestHeader;
+      Reflect.deleteProperty(XMLHttpRequest.prototype, 'setRequestHeader');
     } catch {
       /* best-effort */
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
     try {
-      delete (XMLHttpRequest.prototype as any).send;
+      Reflect.deleteProperty(XMLHttpRequest.prototype, 'send');
     } catch {
       /* best-effort */
     }
@@ -143,9 +140,8 @@ export function initPatches(): void {
 
     // Restore console methods
     ['log', 'info', 'warn', 'error', 'debug', 'trace'].forEach((method) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser API restoration requires dynamic property access
       try {
-        delete (console as any)[method];
+        Reflect.deleteProperty(console, method);
       } catch {
         /* best-effort */
       }
@@ -156,8 +152,7 @@ export function initPatches(): void {
     >;
     ['log', 'info', 'warn', 'error', 'debug', 'trace'].forEach((method) => {
       if (consoleSources[method]) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching requires dynamic property access
-        (console as any)[method] = consoleSources[method];
+        Reflect.set(console, method, consoleSources[method]);
       }
     });
 
@@ -240,10 +235,10 @@ export function initPatches(): void {
 
     // Clear patched flags
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- console patching cleanup requires dynamic access
-      delete (console as any)[CONSOLE_PATCHED_FLAG];
-      // eslint-disable-next-line no-empty -- intentional: cleanup is best-effort
-    } catch {}
+      Reflect.deleteProperty(console, CONSOLE_PATCHED_FLAG);
+    } catch {
+      /* best-effort */
+    }
   };
 
   // ─── Validate pristine natives ────────────────────────────────────
