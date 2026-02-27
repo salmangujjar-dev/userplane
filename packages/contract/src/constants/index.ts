@@ -8,4 +8,5 @@ export * from './headers';
 export * from './pagination';
 export * from './retention';
 export * from './session';
+export * from './share';
 export * from './workspace';

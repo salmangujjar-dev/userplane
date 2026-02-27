@@ -176,6 +176,8 @@ export type {
   RecordingContract,
   SessionClient,
   SessionContract,
+  ShareClient,
+  ShareContract,
   StatusClient,
   StatusContract,
   UserplaneClient,

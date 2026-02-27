@@ -31,6 +31,8 @@ export * from './recording';
 export * from './recording.errors';
 export * from './session';
 export * from './session.errors';
+export * from './share';
+export * from './share.errors';
 export * from './status';
 export * from './token';
 export * from './workspace';
