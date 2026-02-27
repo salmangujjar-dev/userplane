@@ -50,13 +50,13 @@ export function ShareLinkView({
           {linkLabel}
         </label>
         <div className="flex gap-2">
-          <div className="flex-1 rounded-lg bg-muted px-4 py-2.5">
+          <div className="flex-1 min-w-0 rounded-lg bg-muted px-4 py-2.5">
             <input
               id="recording-link"
               type="text"
               value={activeLink}
               readOnly
-              className="w-full bg-transparent text-sm focus:outline-none"
+              className="w-full bg-transparent text-sm focus:outline-none truncate"
             />
           </div>
           <Button

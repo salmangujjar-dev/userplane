@@ -45,7 +45,7 @@ export function EmailShareSection({
             errors.emails ? 'border border-destructive' : ''
           }`}
         >
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 overflow-hidden">
             {fields.map((field, index) => (
               <EmailTag
                 key={field.id}
@@ -62,7 +62,7 @@ export function EmailShareSection({
               onChange={(e) => setEmailInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={fields.length === 0 ? 'Type email and press space or enter' : ''}
-              className="flex-1 min-w-[200px] bg-transparent text-sm focus:outline-none py-1"
+              className="flex-1 min-w-[120px] sm:min-w-[200px] bg-transparent text-sm focus:outline-none py-1"
               disabled={fields.length >= MAX_EMAIL_RECIPIENTS}
             />
           </div>
