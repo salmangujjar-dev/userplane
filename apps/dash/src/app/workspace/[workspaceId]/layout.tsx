@@ -25,21 +25,17 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
     }
   }, [workspaceIdFromUrl, setWorkspace]);
 
-  if (isFullScreenView) {
-    return (
-      <WorkspaceAccessGate>
-        <UpsellProvider>{children}</UpsellProvider>
-      </WorkspaceAccessGate>
-    );
-  }
-
   return (
     <WorkspaceAccessGate>
       <UpsellProvider>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>{children}</SidebarInset>
-        </SidebarProvider>
+        {isFullScreenView ? (
+          children
+        ) : (
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>{children}</SidebarInset>
+          </SidebarProvider>
+        )}
       </UpsellProvider>
     </WorkspaceAccessGate>
   );

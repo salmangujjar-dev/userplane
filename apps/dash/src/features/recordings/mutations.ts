@@ -126,6 +126,27 @@ export function useUpdateRecordingExpiry(workspaceId: string | null) {
   });
 }
 
+interface GenerateShareTokenInput {
+  recordingId: string;
+  expiresInSeconds?: number;
+}
+
+export function useGenerateShareToken(workspaceId: string | null) {
+  return useMutation({
+    mutationFn: async ({ recordingId, expiresInSeconds }: GenerateShareTokenInput) => {
+      if (!workspaceId) throw new Error('No workspace ID');
+      const [error, response] = await apiClient.share.generateToken({
+        params: { workspaceId, recordingId },
+        body: { expiresInSeconds },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onError: (error: unknown) => {
+      handleUnknownError(error, 'Failed to generate share link');
+    },
+  });
+}
+
 interface ShareRecordingInput {
   recordingId: string;
   emails: string[];

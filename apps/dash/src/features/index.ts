@@ -77,6 +77,7 @@ export { useCreateLink, useDeleteLink, useUpdateLink, useWorkspaceLinks } from '
 // Recording hooks
 export {
   useDeleteRecording,
+  useGenerateShareToken,
   useRecording,
   useRecordingConsoleLog,
   useRecordingNetworkLog,
