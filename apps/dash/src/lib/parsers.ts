@@ -153,3 +153,12 @@ export const billingAddonModalParser = createParser<'seats' | null>({
   parse: (value) => (value === 'seats' ? value : null),
   serialize: (value) => value || '',
 });
+
+const SHARE_MODE_VALUES = ['choose', 'internal', 'external'] as const;
+
+export type ShareMode = (typeof SHARE_MODE_VALUES)[number];
+
+export const shareModeParser = createParser<ShareMode>({
+  parse: (value) => (SHARE_MODE_VALUES.includes(value as ShareMode) ? (value as ShareMode) : null),
+  serialize: (value) => value,
+});

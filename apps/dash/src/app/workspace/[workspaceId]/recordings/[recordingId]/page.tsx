@@ -7,11 +7,12 @@ import {
 } from '@workspace/ui/components/resizable';
 import { useParams, useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
+import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { EditRecordingModal } from '@/components/modals/edit-recording-modal';
-import { ShareRecordingModal } from '@/components/modals/share-recording-modal';
+import { ShareRecordingModal } from '@/components/modals/share-recording';
 import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
 import { RecordingPlayer } from '@/components/recordings/recording-player';
@@ -24,6 +25,7 @@ import {
   useUpdateRecordingExpiry,
 } from '@/features/recordings';
 import { useWorkspaceRole } from '@/features/workspace';
+import { booleanParser } from '@/lib/parsers';
 import { showCopiedToClipboardToast, showCopyFailedToast } from '@/lib/toasts';
 import { useWorkspaceId } from '@/stores/workspace';
 
@@ -34,7 +36,7 @@ export default function RecordingDetailPage() {
   const recordingId = params.recordingId as string;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useQueryState('share', booleanParser);
 
   const {
     data: recordingResult,
@@ -91,7 +93,7 @@ export default function RecordingDetailPage() {
   };
 
   const handleShare = () => {
-    setShowShareModal(true);
+    void setShowShareModal(true);
   };
 
   return (
@@ -144,7 +146,7 @@ export default function RecordingDetailPage() {
 
       <ShareRecordingModal
         open={showShareModal}
-        onOpenChange={setShowShareModal}
+        onOpenChange={(open) => void setShowShareModal(open)}
         recordingId={recordingId}
       />
     </div>
