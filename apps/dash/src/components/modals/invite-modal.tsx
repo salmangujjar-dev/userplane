@@ -106,7 +106,7 @@ function EmailInputArea({
         Email addresses
       </label>
       <div
-        className={`w-full rounded-lg bg-muted px-3 py-2 min-h-[100px] focus-within:ring-2 focus-within:ring-ring ${
+        className={`w-full rounded-lg bg-muted px-3 py-2 min-h-[72px] sm:min-h-[100px] focus-within:ring-2 focus-within:ring-ring ${
           hasError ? 'border border-destructive' : ''
         }`}
       >
@@ -127,7 +127,7 @@ function EmailInputArea({
             onChange={(e) => onEmailInputChange(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder={fields.length === 0 ? 'Type email and press space or enter' : ''}
-            className="flex-1 min-w-[200px] bg-transparent text-sm focus:outline-none py-1"
+            className="flex-1 min-w-[120px] sm:min-w-[200px] bg-transparent text-sm focus:outline-none py-1"
             disabled={fields.length >= maxEmails}
           />
         </div>
@@ -155,13 +155,13 @@ function InviteLinkSection({ inviteLink, isLoading, onCopyLink }: InviteLinkSect
         Invite link
       </label>
       <div className="flex gap-2">
-        <div className="flex-1 rounded-lg bg-muted px-4 py-2.5">
+        <div className="flex-1 min-w-0 rounded-lg bg-muted px-4 py-2.5">
           <input
             id="invite-link"
             type="text"
             value={inviteLink}
             readOnly
-            className="w-full bg-transparent text-sm focus:outline-none"
+            className="w-full bg-transparent text-sm focus:outline-none truncate"
           />
         </div>
         <Button
@@ -210,7 +210,7 @@ function SuggestionsPills({
             className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 hover:bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <BoringAvatar size={AVATAR_SIZES.COMPACT} name={s.name} email={s.email} />
-            <span className="truncate max-w-[120px]">{s.name || s.email}</span>
+            <span className="truncate max-w-[100px] sm:max-w-[120px]">{s.name || s.email}</span>
           </button>
         ))}
         {hasMore && (
@@ -362,7 +362,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
               <Logo variant="tiled" size="md" showText={false} />
               <div className="flex flex-col space-y-1">
                 <DialogTitle className="text-xl font-semibold">Invite teammates</DialogTitle>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <DialogDescription className="text-sm text-muted-foreground">
                     {canSendEmails
                       ? 'Send the invite link or email invitations to your team'
@@ -423,12 +423,12 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
             )}
           </div>
 
-          <DialogFooter className="mt-6">
+          <DialogFooter className="mt-6 !flex-col sm:!flex-row sm:items-center gap-3 sm:gap-2">
             {canSendEmails && (
               <button
                 type="button"
                 onClick={() => setShowEmailInvite(!showEmailInvite)}
-                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors sm:mr-auto"
               >
                 {showEmailInvite ? (
                   <>
@@ -443,7 +443,7 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
                 )}
               </button>
             )}
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2 sm:ml-auto">
               <Button
                 type="button"
                 variant="secondary"

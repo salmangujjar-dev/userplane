@@ -260,9 +260,9 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
             )}
           </div>
 
-          <DialogFooter className="mt-6">
+          <DialogFooter className="mt-6 !flex-col sm:!flex-row sm:items-center gap-3 sm:gap-2">
             {currentMode === 'choose' && selectedMode === 'external' && (
-              <div className="flex items-center gap-2 mr-auto">
+              <div className="flex items-center gap-2 sm:mr-auto">
                 <label
                   htmlFor="duration-select"
                   className="text-xs text-muted-foreground whitespace-nowrap"
@@ -292,7 +292,7 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
               <button
                 type="button"
                 onClick={() => setShowEmailShare(!showEmailShare)}
-                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors sm:mr-auto"
               >
                 {showEmailShare ? (
                   <>
@@ -307,7 +307,7 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
                 )}
               </button>
             )}
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2 sm:ml-auto">
               {currentMode === 'choose' ? (
                 <>
                   <Button
