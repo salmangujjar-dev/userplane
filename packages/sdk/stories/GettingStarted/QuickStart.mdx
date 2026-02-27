@@ -1,0 +1,104 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Getting Started/Quick Start" />
+
+# Quick Start
+
+Get the Userplane SDK running in your app in under 5 minutes.
+
+## Step 1 — Install
+
+```bash
+# npm
+npm install @workspace/sdk
+
+# bun
+bun add @workspace/sdk
+```
+
+## Step 2 — Add Your Workspace ID
+
+The SDK reads your workspace ID from a `<meta>` tag in your HTML. Add it to your page's `<head>`:
+
+```html
+<meta name="userplane:workspace" content="ws_your_workspace_id_here" />
+```
+
+You can also pass it directly in code (see [Initialize Options](?path=/docs/configuration-initialize-options--docs)):
+
+```typescript
+initialize({ workspaceId: 'ws_your_workspace_id_here' });
+```
+
+> **Where do I get my workspace ID?** Log in to your Userplane dashboard and copy the workspace ID from Settings → Workspace.
+
+## Step 3 — Initialize the SDK
+
+Call `initialize()` once when your app loads. The right place is your app's entry point — `main.ts`, `index.ts`, `_app.tsx`, etc.
+
+```typescript
+import { initialize } from '@workspace/sdk';
+
+initialize();
+```
+
+`initialize()` is a **no-op if called a second time** — it's safe to call in hot-module-replacement environments.
+
+## Step 4 — Open the Recorder
+
+By default, the SDK opens the recorder automatically when it finds a `userplane-token` URL parameter. Share a recording link from your Userplane dashboard and open it — the SDK handles the rest.
+
+To open the recorder programmatically:
+
+```typescript
+import { open } from '@workspace/sdk';
+
+// Open without a token (uses URL param fallback)
+open();
+
+// Open with a specific token
+open('tok_abc123');
+```
+
+## Step 5 — Verify It Works
+
+Open your browser's DevTools console. After `initialize()` runs you should see no errors. Check that the SDK is initialized:
+
+```typescript
+import { isInitialized, isBridgeConnected } from '@workspace/sdk';
+
+console.log('SDK initialized:', isInitialized());
+
+// After opening a recording session:
+console.log('Bridge connected:', isBridgeConnected());
+```
+
+Inspect the DOM — you should see an `<iframe>` and an overlay `<div>` injected into `<body>` when the recorder is open.
+
+## Complete Example
+
+```typescript
+import { initialize, open, getRecordingState } from '@workspace/sdk';
+
+// Initialize once at app startup
+initialize({
+  workspaceId: 'ws_your_workspace_id',
+});
+
+// Later — open a specific session
+function startRecording(sessionToken: string) {
+  const opened = open(sessionToken);
+  if (!opened) {
+    console.warn('Could not open recorder — SDK not initialized?');
+  }
+}
+
+// Check state at any time
+console.log(getRecordingState()); // 'inactive' | 'active' | 'retained'
+```
+
+## Next Steps
+
+- **[CDN & Script Tag](?path=/docs/getting-started-cdn-script-tag--docs)** — Use the SDK without a bundler
+- **[Framework Guides](?path=/docs/getting-started-framework-guides--docs)** — Next.js, Vue, SvelteKit setup
+- **[Initialize Options](?path=/docs/configuration-initialize-options--docs)** — All configuration options

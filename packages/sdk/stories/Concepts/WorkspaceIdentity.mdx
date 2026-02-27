@@ -1,0 +1,105 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Concepts/Workspace Identity" />
+
+# Workspace Identity
+
+A **workspace ID** identifies your Userplane workspace. It determines which workspace's settings, branding, and domain verification rules apply to recordings.
+
+## What Is a Workspace ID?
+
+Workspace IDs are opaque string identifiers (e.g., `ws_abc123def456`). They are not secrets — they're safe to include in client-side code. Authentication and authorization happen server-side via your Userplane workspace settings.
+
+## Three Ways to Provide a Workspace ID
+
+### 1. Meta Tag (Recommended for Most Apps)
+
+Add a `<meta>` tag to your page's `<head>`:
+
+```html
+<meta name="userplane:workspace" content="ws_your_workspace_id" />
+```
+
+The SDK reads this tag on initialization via CSS selector `meta[name="userplane:workspace"]`. The `content` attribute value becomes the workspace ID.
+
+**Why the meta tag approach?**
+- Framework-agnostic — works in plain HTML, React, Vue, Svelte, etc.
+- Separated from your JS bundle (easy to template by environment)
+- Easy to verify in DevTools
+
+### 2. `workspaceId` Option
+
+Pass the workspace ID directly to `initialize()`:
+
+```typescript
+initialize({ workspaceId: 'ws_abc123' });
+```
+
+This takes precedence over the meta tag.
+
+### 3. Multiple Workspace IDs
+
+If your app serves multiple workspaces, pass an array or a comma-separated string:
+
+```typescript
+// Array form
+initialize({ workspaceId: ['ws_aaa', 'ws_bbb'] });
+
+// Comma-separated string
+initialize({ workspaceId: 'ws_aaa,ws_bbb' });
+```
+
+When multiple IDs are provided, the SDK sends all of them with the recording. This enables cross-workspace recording scenarios.
+
+## Precedence Rules
+
+When both a meta tag and a `workspaceId` option are present, the option wins:
+
+```
+workspaceId option (string)   → highest priority
+workspaceId option (array)    → second priority
+meta[name="userplane:workspace"] → fallback
+```
+
+The SDK merges and deduplicates IDs from all sources when an array is involved.
+
+## Reading the Meta Tag
+
+The SDK uses this CSS selector to find the workspace meta tag:
+
+```typescript
+const META_SELECTOR = 'meta[name="userplane:workspace"]';
+const el = document.querySelector(META_SELECTOR);
+const workspaceId = el?.getAttribute('content');
+```
+
+Multiple meta tags with the same name are not supported — only the first match is used.
+
+## Dynamic Workspace IDs
+
+Because `initialize()` reads the workspace ID at call time, you can set the meta tag dynamically before calling `initialize()`:
+
+```typescript
+// Set workspace ID based on user or tenant
+const meta = document.createElement('meta');
+meta.name = 'userplane:workspace';
+meta.content = getCurrentUserWorkspaceId();
+document.head.appendChild(meta);
+
+initialize(); // reads the meta tag you just created
+```
+
+Or pass it directly:
+
+```typescript
+initialize({ workspaceId: getCurrentUserWorkspaceId() });
+```
+
+## Verifying Your Workspace ID
+
+Use browser DevTools to confirm the meta tag is present:
+
+```javascript
+document.querySelector('meta[name="userplane:workspace"]')?.content
+// Should return your workspace ID string
+```

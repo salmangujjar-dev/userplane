@@ -1,8 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 
 import { BlurManager } from '../src';
+import { trackManager, trackManagers } from './story-cleanup';
 
-const meta: Meta = {
+type BlurDemoArgs = {
+  autoStart: boolean;
+};
+
+const meta: Meta<BlurDemoArgs> = {
   title: 'Blurr/Adaptive Blur',
   parameters: {
     docs: {
@@ -11,15 +16,25 @@ const meta: Meta = {
       },
     },
   },
+  argTypes: {
+    autoStart: {
+      control: 'boolean',
+      description: 'Automatically start blurring on load',
+      defaultValue: true,
+    },
+  },
 };
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<BlurDemoArgs>;
 
 export const TextSizes: Story = {
   name: 'Text Size Adaptation',
-  render: () => {
+  args: {
+    autoStart: true,
+  },
+  render: (args) => {
     const container = document.createElement('div');
     container.innerHTML = `
       <div style="font-family: system-ui, sans-serif; padding: 20px; max-width: 700px;">
@@ -59,7 +74,7 @@ export const TextSizes: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const statusEl = container.querySelector('#status') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
 
@@ -77,7 +92,9 @@ export const TextSizes: Story = {
       updateStatus();
     });
 
-    blurManager.start();
+    if (args.autoStart) {
+      blurManager.start();
+    }
     updateStatus();
 
     return container;
@@ -85,7 +102,10 @@ export const TextSizes: Story = {
 };
 
 export const MixedContent: Story = {
-  render: () => {
+  args: {
+    autoStart: true,
+  },
+  render: (args) => {
     const container = document.createElement('div');
     container.innerHTML = `
       <div style="font-family: system-ui, sans-serif; padding: 20px; max-width: 700px;">
@@ -125,7 +145,7 @@ export const MixedContent: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const statusEl = container.querySelector('#status') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
 
@@ -143,7 +163,9 @@ export const MixedContent: Story = {
       updateStatus();
     });
 
-    blurManager.start();
+    if (args.autoStart) {
+      blurManager.start();
+    }
     updateStatus();
 
     return container;
@@ -152,7 +174,10 @@ export const MixedContent: Story = {
 
 export const CustomOptions: Story = {
   name: 'Custom Blur Options',
-  render: () => {
+  args: {
+    autoStart: true,
+  },
+  render: (args) => {
     const container = document.createElement('div');
     container.innerHTML = `
       <div style="font-family: system-ui, sans-serif; padding: 20px; max-width: 700px;">
@@ -197,6 +222,7 @@ export const CustomOptions: Story = {
       minBlurRadius: 10,
       textBlurDivisor: 2,
     });
+    trackManagers([defaultManager, strongManager]);
 
     const statusEl = container.querySelector('#status') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
@@ -221,9 +247,11 @@ export const CustomOptions: Story = {
       updateStatus();
     });
 
-    defaultManager.start();
-    strongManager.start();
-    isStarted = true;
+    if (args.autoStart) {
+      defaultManager.start();
+      strongManager.start();
+      isStarted = true;
+    }
     updateStatus();
 
     return container;

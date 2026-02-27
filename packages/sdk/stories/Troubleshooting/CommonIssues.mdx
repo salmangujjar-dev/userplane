@@ -1,0 +1,150 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Troubleshooting/Common Issues" />
+
+# Common Issues
+
+A table of symptoms, causes, and fixes for the most common Userplane SDK integration problems.
+
+---
+
+## Recorder Not Opening
+
+### Symptom
+Calling `initialize()` with a URL containing `userplane-token` does nothing. The recorder never appears.
+
+### Possible Causes & Fixes
+
+| Cause | Fix |
+|-------|-----|
+| No workspace ID found | Add `<meta name="userplane:workspace" content="ws_...">` to `<head>`, or pass `workspaceId` to `initialize()` |
+| Meta tag not found at init time | Ensure the meta tag is in the HTML before `initialize()` is called — check that it's server-rendered, not added by JS after load |
+| SSR guard missing | Wrap `initialize()` in `if (typeof window !== 'undefined')` or call from `useEffect` |
+| `openImmediately: false` | You set this deliberately — call `open(token)` manually |
+| URL params not present | Check `window.location.href` — does it contain `userplane-token`? |
+| `initialize()` not called | Verify `initialize()` is actually called — add a `console.log` before it |
+
+**Quick diagnostic:**
+```javascript
+// In DevTools console:
+document.querySelector('meta[name="userplane:workspace"]')?.content
+// Should return your workspace ID
+```
+
+---
+
+## SDK Initializes Twice (React StrictMode)
+
+### Symptom
+In development mode with React 18+, you see duplicate initialization logs or effects run twice.
+
+### Cause
+React StrictMode intentionally double-invokes effects in development to help detect side effects.
+
+### Fix
+Nothing — `initialize()` is idempotent. The second call is a no-op. If you're seeing unexpected behavior, make sure you're not using `initialized` state to conditionally call `open()`:
+
+```typescript
+// Bad — runs twice in StrictMode, opens twice
+useEffect(() => {
+  initialize();
+  open(token); // This is wrong — open() inside the effect
+}, []);
+
+// Good — initialize once, open is triggered by URL params
+useEffect(() => {
+  initialize({ openImmediately: true }); // auto-opens from URL
+}, []);
+```
+
+---
+
+## Recorder Opens But Immediately Closes
+
+### Symptom
+The recorder iframe flashes briefly, then disappears.
+
+### Possible Causes & Fixes
+
+| Cause | Fix |
+|-------|-----|
+| Bridge connection failed | Check DevTools console for PostBridge errors; verify the recorder URL is reachable |
+| Token already consumed | Tokens may be single-use — request a fresh token from your dashboard |
+| Recorder app error | Open the recorder URL directly in a new tab to see if the app itself has errors |
+| Content Security Policy blocking postMessage | Add `frame-src` and `script-src` rules to allow the recorder origin |
+
+**CSP fix:**
+```html
+<meta http-equiv="Content-Security-Policy"
+  content="frame-src https://recorder.userplane.com; ">
+```
+
+---
+
+## Metadata Not Appearing in Recordings
+
+### Symptom
+Recordings don't show custom metadata set via `set()` or `metadata()`.
+
+### Possible Causes & Fixes
+
+| Cause | Fix |
+|-------|-----|
+| Metadata set after recording started | Set metadata before or immediately after `initialize()` — the recorder requests metadata at session start |
+| `clearMetadata()` called inadvertently | Check for `clearMetadata()` calls that might be clearing your data |
+| Async `metadata()` function timing out | Simplify async functions; use cached data to avoid slow fetches |
+| Non-serializable value | Use only JSON-serializable types; convert `Date` to `.toISOString()` |
+
+---
+
+## URL Parameters Not Cleared
+
+### Symptom
+After the recorder opens, `userplane-token` and `userplane-action` still appear in the URL.
+
+### Cause
+The SDK uses `history.replaceState` to clear URL params. This may fail if:
+- `history.replaceState` is not available (very old browsers)
+- Your router intercepts `history.replaceState` calls
+
+### Fix
+If your router is intercepting history calls, use `applyUserplaneData`:
+
+```typescript
+initialize({
+  applyUserplaneData: (_data) => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('userplane-token');
+    url.searchParams.delete('userplane-action');
+    // Use your router's replace method instead
+    router.replace(url.toString(), { shallow: true });
+    return url.toString();
+  },
+});
+```
+
+---
+
+## `open()` Returns `false`
+
+### Symptom
+`open(token)` returns `false` and the recorder doesn't appear.
+
+### Possible Causes
+
+| Cause | Diagnostic | Fix |
+|-------|-----------|-----|
+| SDK not initialized | `isInitialized()` returns `false` | Call `initialize()` first |
+| Recorder already mounted | `isRecorderMounted()` returns `true` | Call `unmount()` first |
+| Empty/invalid token | Token is `undefined` or empty string | Verify your token generation |
+| Workspace ID missing | No workspace in options or meta tag | Add workspace ID |
+
+```typescript
+// Debugging open() failures:
+import { isInitialized, isRecorderMounted, open } from '@workspace/sdk';
+
+console.log('Initialized:', isInitialized());
+console.log('Mounted:', isRecorderMounted());
+const result = open('tok_abc');
+console.log('Opened:', result);
+```

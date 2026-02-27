@@ -1,0 +1,128 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Getting Started/CDN & Script Tag" />
+
+# CDN & Script Tag
+
+Use Userplane in any page with a single `<script>` tag — no bundler, no npm, no build step.
+
+## The Embed Package
+
+CDN distribution is handled by `@workspace/embed`, which wraps the SDK in a two-stage loader optimised for long-term caching with instant updates.
+
+## Basic Usage
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- 1. Declare your workspace ID -->
+  <meta name="userplane:workspace" content="ws_your_workspace_id" />
+
+  <!-- 2. Load the bootstrap loader -->
+  <script src="https://cdn.userplane.com/embed/script.js"></script>
+</head>
+<body>
+  <!-- SDK auto-initializes — no extra JS needed -->
+</body>
+</html>
+```
+
+That's it. The SDK calls `initialize()` automatically when the script executes.
+
+## How It Works: Two-Stage Loading
+
+```
+Browser requests script.js (5-min cache, stable URL)
+        │
+        ▼
+script.js fetches manifest.json?t={Date.now()} (bypasses cache)
+        │
+        ▼
+manifest.json returns: { "main.js": "main.a1b2c3d4.js" }
+        │
+        ▼
+script.js injects <script type="module" src="cdn.../main.a1b2c3d4.js">
+        │
+        ▼
+main.a1b2c3d4.js executes (1-year immutable cache)
+SDK auto-initializes → window.userplane available
+```
+
+| File | URL | Cache-Control |
+|------|-----|---------------|
+| Bootstrap | `cdn.userplane.com/embed/script.js` | `public, max-age=300` (5 min) |
+| Manifest | `cdn.userplane.com/embed/manifest.json` | `public, max-age=300` (5 min) |
+| Main bundle | `cdn.userplane.com/embed/main.{hash}.js` | `public, max-age=31536000, immutable` (1 year) |
+
+**Why this design?**
+
+- `script.js` is a tiny (~1KB) stable URL — users always load the same URL
+- `manifest.json` maps to the current content-hashed filename — updated on every deploy
+- `main.{hash}.js` is immutable — the hash changes only when the code changes, so returning users load it from cache instantly
+
+## The `window.userplane` Global
+
+After the script loads, all SDK functions are available under `window.userplane`:
+
+```javascript
+// Auto-initialized — open() works immediately
+window.userplane.open('tok_abc123');
+
+// State inspection
+window.userplane.isInitialized();      // true
+window.userplane.isRecorderMounted();  // true if recorder is open
+window.userplane.getRecordingState();  // 'inactive' | 'active' | 'retained'
+
+// Metadata
+window.userplane.set('userId', 'user_123');
+window.userplane.metadata(() => ({
+  plan: 'pro',
+  currentPage: window.location.pathname,
+}));
+```
+
+## Auto-Initialization
+
+The embed script calls `initialize()` automatically — you don't need to call it manually. The SDK reads the workspace ID from `<meta name="userplane:workspace">` and opens the recorder when `userplane-token` is found in the URL.
+
+If you need to call SDK functions before auto-init completes (unlikely), wait for the script's `load` event:
+
+```html
+<script id="up-script" src="https://cdn.userplane.com/embed/script.js"></script>
+<script>
+  document.getElementById('up-script').addEventListener('load', () => {
+    window.userplane.set('userId', getCurrentUserId());
+  });
+</script>
+```
+
+## CSP Compatibility
+
+`script.js` preserves its own CSP nonce when injecting the main module. If your page uses a CSP `script-src` with nonces:
+
+```html
+<script src="https://cdn.userplane.com/embed/script.js" nonce="abc123"></script>
+```
+
+The injected `main.{hash}.js` script element will automatically receive the same nonce.
+
+You'll also need to allow the CDN origin:
+
+```
+Content-Security-Policy: script-src 'nonce-abc123' https://cdn.userplane.com;
+                         frame-src https://recorder.userplane.com;
+```
+
+## CDN vs npm — When to Use Which
+
+| Situation | Recommendation |
+|-----------|---------------|
+| Static site / no build step | CDN |
+| CMS (WordPress, Webflow, Framer, etc.) | CDN |
+| App with its own bundler (Vite, webpack, etc.) | npm |
+| Next.js / Nuxt / SvelteKit | npm |
+| Need TypeScript types | npm |
+| Need tree-shaking | npm |
+
+The npm package (`@workspace/sdk`) gives you full TypeScript types, tree-shaking, and control over initialization. The CDN embed (`script.js`) gives you zero-config drop-in integration with automatic cache busting.

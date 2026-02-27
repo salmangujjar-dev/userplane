@@ -1,0 +1,102 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Lifecycle/Unload Protection" />
+
+# Unload Protection
+
+The SDK adds a `beforeunload` event handler during active recording sessions to warn users before they accidentally navigate away.
+
+## Why It Exists
+
+If a user navigates away or closes the tab during an active recording, the recording may be lost or incomplete. The `beforeunload` handler triggers the browser's built-in "Leave page?" confirmation dialog:
+
+```
+┌──────────────────────────────────────┐
+│  Leave site?                         │
+│                                      │
+│  Changes you made may not be saved.  │
+│                                      │
+│  [Leave]        [Cancel]             │
+└──────────────────────────────────────┘
+```
+
+This gives users a chance to finish or cancel their recording before navigating away.
+
+## When It's Active
+
+Unload protection is enabled in **both active and retained states**:
+
+| Recording State | Unload Protection |
+|----------------|-------------------|
+| `'inactive'` | Disabled |
+| `'active'` | **Enabled** |
+| `'retained'` | **Enabled** |
+
+It's active in `'retained'` because the user may still be reviewing their recording — navigating away at that point would close the recorder UI.
+
+## Lifecycle
+
+```
+initSession() called by recorder
+        └── beforeunload handler registered ← ENABLED
+
+recordingActive() called
+        └── (already active)
+
+recordingRetained() called
+        └── (still active)
+
+finishSession() called by recorder
+        └── beforeunload handler removed ← DISABLED
+
+unmount() called
+        └── beforeunload handler removed ← DISABLED (safety cleanup)
+```
+
+## Checking the Status
+
+The `tabUnloadEnabled` field in `RecordingContext` reflects whether the handler is active:
+
+```typescript
+import { getRecordingContext } from '@workspace/sdk';
+
+const ctx = getRecordingContext();
+console.log(ctx?.tabUnloadEnabled); // true when active/retained
+```
+
+## Browser Behavior Notes
+
+Modern browsers have restrictions on the `beforeunload` dialog:
+
+1. **The message is ignored** — browsers display their own generic message, not a custom one. You cannot set a custom "You have an active recording" message.
+
+2. **Only shown for user-initiated navigation** — programmatic navigation (`window.location.href = '...'`, `router.push()`, etc.) may not trigger the dialog in all browsers.
+
+3. **Chrome behavior** — Chrome only shows the dialog if the user has interacted with the page (clicked, typed, etc.). Pages where no interaction occurred may not show the dialog.
+
+4. **Safari behavior** — Safari shows the dialog for all `beforeunload` handlers that call `event.preventDefault()`.
+
+## Testing Unload Protection
+
+To verify the handler is working in development:
+
+```typescript
+import { getRecordingContext } from '@workspace/sdk';
+
+// During an active session, try navigating away
+// The browser should show a "Leave page?" dialog
+
+// Verify the handler is registered:
+const ctx = getRecordingContext();
+console.assert(ctx?.tabUnloadEnabled === true, 'Unload protection should be active');
+```
+
+## Disabling in Tests
+
+If your automated tests trigger false positives due to the `beforeunload` handler, you can disable it by calling `unmount()` at the end of each test:
+
+```typescript
+afterEach(() => {
+  unmount(); // removes the beforeunload handler and cleans up all state
+});
+```

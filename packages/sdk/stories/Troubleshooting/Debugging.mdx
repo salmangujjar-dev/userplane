@@ -1,0 +1,165 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Troubleshooting/Debugging Guide" />
+
+# Debugging Guide
+
+Step-by-step techniques for diagnosing Userplane SDK issues in the browser.
+
+## Step 1 — Verify SDK Is Initialized
+
+In DevTools console:
+
+```javascript
+// Check if initialize() has been called
+window.__userplane?.isInitialized?.() // works if window.userplane is set
+
+// Or import in your code and check:
+import { isInitialized } from '@workspace/sdk';
+console.log('Initialized:', isInitialized());
+```
+
+Expected: `true` after `initialize()` runs.
+
+If `false`, check:
+- Is `initialize()` being called at all? Add `console.log('calling initialize')` before it.
+- Is it guarded by an SSR check that never evaluates to `true`?
+- Is it in a `useEffect` that hasn't run yet?
+
+---
+
+## Step 2 — Check Workspace ID
+
+```javascript
+// Inspect the meta tag
+document.querySelector('meta[name="userplane:workspace"]')?.content
+// Expected: 'ws_your_workspace_id'
+```
+
+If `undefined`:
+- Meta tag is missing or has incorrect `name` attribute
+- Meta tag is added by JavaScript after `initialize()` runs
+- Typo in the `name` value (`userplane:workspace` not `userplane-workspace`)
+
+---
+
+## Step 3 — Check URL Parameters
+
+```javascript
+// Inspect current URL parameters
+new URL(window.location.href).searchParams.get('userplane-token')
+new URL(window.location.href).searchParams.get('userplane-action')
+```
+
+If `null` when you expect a token:
+- The URL params were already consumed and cleaned by the SDK (expected behavior after `initialize()`)
+- The URL never had them — check the link you're testing with
+
+---
+
+## Step 4 — Inspect the DOM for the Iframe
+
+```javascript
+// Check if recorder iframe is mounted
+document.querySelector('iframe[src*="userplane"]')
+// Expected: an <iframe> element when recorder is open
+
+// Check if overlay is mounted
+document.querySelector('#userplane-overlay')
+```
+
+If the iframe is in the DOM but invisible, check:
+- Is the overlay behind another element with a higher z-index?
+- Is the iframe hidden by CSS on the overlay? (`visibility: hidden`, `opacity: 0`)
+
+---
+
+## Step 5 — Check Bridge Connection
+
+```javascript
+import { isBridgeConnected, isRecorderMounted } from '@workspace/sdk';
+
+console.log('Recorder mounted:', isRecorderMounted());
+console.log('Bridge connected:', isBridgeConnected());
+```
+
+If `isRecorderMounted()` is `true` but `isBridgeConnected()` is `false`:
+- The iframe loaded but PostBridge handshake failed
+- Check for Content Security Policy errors in the console (`Refused to load frame...`)
+- Check if the recorder app at `recorderBaseUrl` is reachable
+
+---
+
+## Step 6 — Check Recording State
+
+```javascript
+import { getRecordingState, getRecordingContext } from '@workspace/sdk';
+
+console.log('State:', getRecordingState());
+console.log('Context:', JSON.stringify(getRecordingContext(), null, 2));
+```
+
+Use this to verify state transitions during a session:
+
+```javascript
+// Poll state changes during testing
+const interval = setInterval(() => {
+  console.log(new Date().toISOString(), getRecordingState());
+}, 1000);
+// Remember to clear it: clearInterval(interval)
+```
+
+---
+
+## Step 7 — Inspect `window.name` for Tab Reference
+
+```javascript
+// Check if tab reference is stored
+console.log(window.name);
+// Expected: 'userplane_tab_<21-char-id>'
+```
+
+If `window.name` is empty or doesn't start with `userplane_tab_`:
+- `initialize()` hasn't been called
+- `clearTabRef()` was called
+- `window.name` was set by something else (check for conflicts)
+
+---
+
+## Step 8 — Check Network Requests
+
+In DevTools Network tab, filter by `userplane`:
+
+1. **Recorder iframe load** — look for a request to `recorder.userplane.com/r?...`
+   - Status 200 → iframe loaded OK
+   - Status 4xx/5xx → recorder app error
+   - No request → iframe src was never set (SDK issue)
+
+2. **Verification API call** — for `verify` actions, look for `POST /v1/domains/verify`
+   - Check request body: `{ token, workspaceIds, origin }`
+   - Check response for `VerificationResult`
+
+3. **Metadata in WebSocket** — recording data is sent via WebSocket from the recorder iframe, not directly from the SDK
+
+---
+
+## Step 9 — Verbose Logging
+
+The SDK uses `@workspace/console-logger` with a `__DEV__` guard. In development builds, verbose logs are automatically enabled. Look for messages prefixed with `[sdk]` in the console.
+
+If you're on a production build and need verbose logging, you can temporarily set the debug flag before loading the SDK:
+
+```javascript
+window.__USERPLANE_DEBUG__ = true; // (if supported by your build)
+```
+
+---
+
+## Common Console Errors
+
+| Error | Meaning | Fix |
+|-------|---------|-----|
+| `Refused to load frame...` | CSP blocking iframe | Add `frame-src https://recorder.userplane.com` to CSP |
+| `postMessage failed...` | Cross-origin postMessage blocked | Verify `targetOrigin` matches recorder origin |
+| `initialize() called multiple times` | Warning from SDK (non-fatal) | Call `initialize()` only once |
+| `No workspace ID found` | Missing meta tag or workspaceId | Add workspace config |

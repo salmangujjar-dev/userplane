@@ -1,0 +1,95 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Concepts/Tab Identity" />
+
+# Tab Identity
+
+Every browser tab that runs the Userplane SDK gets a unique, persistent identifier called a **tab reference** (`tabRef`). It enables the SDK to coordinate state across multiple tabs and page reloads within the same tab.
+
+## What Is a Tab Reference?
+
+A tab reference is a string of the form:
+
+```
+userplane_tab_<21-char-nanoid>
+```
+
+Example: `userplane_tab_V1StGXR8_Z5jdHi6B-myT`
+
+It is generated once per tab using [nanoid](https://github.com/ai/nanoid) and stored in `window.name`.
+
+## Why `window.name`?
+
+`window.name` is a browser property that:
+
+- **Persists across page reloads** within the same tab
+- **Does not persist** when the user opens a new tab or window
+- **Is not shared** between tabs (each tab has its own `window.name`)
+- **Survives navigation** to different origins within the same tab
+
+This makes it the ideal per-tab storage for an identifier that must:
+1. Survive React hot reloads and page refreshes
+2. Be unique per tab (not shared across tabs)
+3. Not require `localStorage` (which is shared across tabs of the same origin)
+
+## Cross-Tab Scenario
+
+```
+Tab A (recording)          Tab B (user navigates here)
+─────────────────          ──────────────────────────
+tabRef: up_tab_AAA         tabRef: up_tab_BBB
+state: 'active'            state: 'inactive'
+                           captureIframe tracks Tab A's state
+                           → knows Tab A is recording
+```
+
+The capture iframe in Tab B can poll Tab A's state using the tab reference as an identifier, allowing the SDK to display cross-tab recording status.
+
+## Public API
+
+```typescript
+import { getTabRef, clearTabRef } from '@workspace/sdk';
+
+// Get the current tab's reference (null if SDK not initialized)
+const tabRef = getTabRef();
+// 'userplane_tab_V1StGXR8_Z5jdHi6B-myT' or null
+
+// Clear the tab reference (useful for testing / reset)
+clearTabRef();
+```
+
+## Lifecycle
+
+| Event | Tab Reference Behavior |
+|-------|----------------------|
+| SDK initialized (first time) | Generated and stored in `window.name` |
+| Page reload | Persists — read back from `window.name` |
+| Navigate to different URL | Persists within same tab |
+| New tab opened | New reference generated (different tab) |
+| `clearTabRef()` called | Removed from `window.name` |
+| `window.name` manually cleared | Reference is gone; new one generated on next `initialize()` |
+
+## Internal Usage
+
+The tab reference is sent to the recorder as part of the bridge connection:
+
+```typescript
+// SDK exposes this to the recorder via the host schema
+getTabRef: () => string
+```
+
+The recorder uses it to identify which tab initiated the session, enabling cross-tab state synchronization.
+
+## Testing Considerations
+
+During automated tests, you may want to clear the tab reference between test runs to ensure a clean state:
+
+```typescript
+beforeEach(() => {
+  clearTabRef();
+});
+```
+
+Or if using `window.name` for other purposes, be aware that `initialize()` will set it to the tab reference format, potentially overwriting existing values.
+
+> **Note:** `window.name` is set to the tab reference string directly (not namespaced), so it will replace any existing `window.name` value.

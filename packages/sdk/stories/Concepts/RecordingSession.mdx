@@ -1,0 +1,136 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Concepts/Recording Sessions" />
+
+# Recording Sessions
+
+A **recording session** is a single screen-recording run. Each session has a unique identity, belongs to a workspace, and progresses through a well-defined state machine.
+
+## Session Identity
+
+Every session has two identifiers:
+
+| Identifier | Description | Example |
+|------------|-------------|---------|
+| `sessionId` | Unique ID for the recording itself | `sess_abc123` |
+| `linkId` | ID of the shareable link that triggered this session | `lnk_xyz789` |
+
+The `linkId` connects the recording to a sharing link in your Userplane workspace. Multiple sessions can originate from the same link.
+
+Retrieve these with:
+
+```typescript
+import { getSessionId, getLinkId } from '@workspace/sdk';
+
+console.log(getSessionId()); // 'sess_abc123' or null
+console.log(getLinkId());    // 'lnk_xyz789' or null
+```
+
+Both return `null` when no session is active.
+
+## Session States
+
+A session moves through three states:
+
+```
+                    ┌──────────────────────────────────────────────┐
+                    │                                              │
+                    ▼                                              │
+          ┌─────────────────┐                                      │
+          │    inactive     │◄── Initial state / after close       │
+          └────────┬────────┘                                      │
+                   │                                               │
+                   │  initSession() called by recorder             │
+                   │                                               │
+                   ▼                                               │
+          ┌─────────────────┐                                      │
+          │     active      │◄── Recording in progress             │
+          └────────┬────────┘                                      │
+                   │                                               │
+         ┌─────────┴──────────┐                                    │
+         │                    │                                    │
+         ▼                    ▼                                    │
+  ┌─────────────┐    ┌──────────────────┐                          │
+  │  inactive   │    │    retained      │◄── Recording paused/     │
+  │  (done)     │    │                  │    submitted but iframe  │
+  └─────────────┘    └────────┬─────────┘    still open           │
+                              │                                    │
+                              │  finishSession() or close()        │
+                              └────────────────────────────────────┘
+```
+
+| State | Meaning |
+|-------|---------|
+| `'inactive'` | No session exists. Recorder is idle or unmounted. |
+| `'active'` | A recording is actively in progress. |
+| `'retained'` | The recording was submitted or paused, but the recorder iframe is still mounted. The user can review the recording before dismissing. |
+
+```typescript
+import { getRecordingState } from '@workspace/sdk';
+
+const state = getRecordingState(); // 'inactive' | 'active' | 'retained'
+```
+
+## The "Retained" State
+
+`'retained'` is the key nuance. When a user finishes recording, the session transitions from `'active'` to `'retained'` — the recording has been sent to Userplane but the recorder UI is still visible (e.g., for a preview or confirmation screen). Only when the user explicitly closes the recorder does the state return to `'inactive'`.
+
+This matters for the **unload protection** feature: the SDK keeps the `beforeunload` handler active during both `'active'` and `'retained'` states to prevent accidental navigation while reviewing.
+
+## Session Lifetime
+
+```
+Page load
+    │
+    ▼
+initialize() called
+    │
+    ▼
+URL param detected (userplane-token)
+    │
+    ▼
+Recorder iframe mounts
+    │
+    ▼
+Bridge connects (host ↔ guest)
+    │
+    ▼
+Recorder calls initSession() → state: 'active'
+    │
+    ▼
+User records...
+    │
+    ▼
+Recorder calls recordingRetained() → state: 'retained'
+    │
+    ▼
+User reviews / closes
+    │
+    ▼
+Recorder calls finishSession() → state: 'inactive'
+    │
+    ▼
+Recorder iframe unmounts
+URL params cleaned from URL
+```
+
+## Full Context
+
+For richer state inspection, use `getRecordingContext()`:
+
+```typescript
+import { getRecordingContext } from '@workspace/sdk';
+
+const ctx = getRecordingContext();
+// {
+//   state: 'active',
+//   sessionInfo: {
+//     workspaceId: 'ws_abc',
+//     sessionId: 'sess_xyz',
+//     linkId: 'lnk_123',
+//   },
+//   tabUnloadEnabled: true,
+// }
+```
+
+Returns `null` if the SDK is not initialized.

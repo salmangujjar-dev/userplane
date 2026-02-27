@@ -1,0 +1,155 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/Recorder Control" />
+
+# Recorder Control
+
+Functions for controlling the recorder iframe's lifecycle.
+
+---
+
+## `open(token?)`
+
+Open the recorder. If a token is provided, opens with that token. Otherwise uses the token from the URL parameters (detected at `initialize()` time).
+
+### Signature
+
+```typescript
+function open(token?: string): boolean
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `token` | `string` | No | Recording token (`tok_...`) or verification token (`vtok_...`) |
+
+### Return Value
+
+`true` if the recorder was successfully opened. `false` if:
+- SDK is not initialized
+- Recorder is already mounted
+- No token available (not provided and none in URL)
+
+### Example
+
+```typescript
+import { open } from '@workspace/sdk';
+
+// Open with URL token (token must have been in URL at initialize() time)
+open();
+
+// Open with specific token
+const opened = open('tok_abc123def456');
+if (!opened) {
+  console.warn('Failed to open recorder');
+}
+```
+
+### Common Pitfalls
+
+- Calling `open()` before `initialize()` returns `false`
+- Calling `open()` when recorder is already mounted returns `false`
+- Calling `open()` without a token when `openImmediately: false` was set — no token was captured at init time
+
+---
+
+## `unmount()`
+
+Close the recorder and remove it from the DOM.
+
+### Signature
+
+```typescript
+function unmount(): void
+```
+
+### Side Effects
+
+1. Disconnects the bridge connection
+2. Removes the overlay `<div>` from `document.body`
+3. Removes the iframe from `document.body`
+4. Removes the `beforeunload` handler (if active)
+5. Resets recording state to `'inactive'`
+
+### Example
+
+```typescript
+import { unmount, isRecorderMounted } from '@workspace/sdk';
+
+if (isRecorderMounted()) {
+  unmount();
+}
+```
+
+### Notes
+
+- Safe to call when recorder is not mounted (no-op)
+- Does not reset the SDK's initialization state — `isInitialized()` remains `true`
+- Does not affect the capture iframe (which stays mounted)
+
+---
+
+## `isRecorderMounted()`
+
+Check if the recorder iframe is currently in the DOM.
+
+### Signature
+
+```typescript
+function isRecorderMounted(): boolean
+```
+
+### Return Value
+
+`true` if the recorder iframe has been mounted and not yet unmounted.
+
+```typescript
+import { isRecorderMounted } from '@workspace/sdk';
+
+console.log(isRecorderMounted()); // false (before open())
+
+open('tok_abc');
+// ... after iframe loads ...
+console.log(isRecorderMounted()); // true
+
+unmount();
+console.log(isRecorderMounted()); // false
+```
+
+---
+
+## `isBridgeConnected()`
+
+Check if the PostBridge RPC connection to the recorder is established.
+
+### Signature
+
+```typescript
+function isBridgeConnected(): boolean
+```
+
+### Return Value
+
+`true` if the PostBridge handshake has completed and RPC calls can be made.
+
+### Timing
+
+The bridge connects **after** the iframe loads — there is a brief window between `open()` (iframe created) and `isBridgeConnected()` returning `true`:
+
+```
+open() called       iframe loads        bridge handshake
+      │                   │                    │
+      ▼                   ▼                    ▼
+isRecorderMounted() = true              isBridgeConnected() = true
+```
+
+```typescript
+import { isBridgeConnected, isRecorderMounted } from '@workspace/sdk';
+
+// Both true only after bridge is fully connected
+console.log(isRecorderMounted());   // true (iframe in DOM)
+console.log(isBridgeConnected());   // may be false (handshake not done yet)
+```
+
+For most use cases, you don't need to wait for the bridge to connect — the SDK handles this internally.

@@ -1,0 +1,199 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/Types" />
+
+# Types
+
+All TypeScript types exported by `@workspace/sdk`.
+
+---
+
+## `InitializeOptions`
+
+Configuration object for `initialize()`.
+
+```typescript
+interface InitializeOptions {
+  /** Workspace ID(s). Single, comma-separated, or array. Falls back to meta tag. */
+  workspaceId?: string | string[];
+
+  /** Base URL for the recorder app. Default: 'https://recorder.userplane.com' */
+  recorderBaseUrl?: string;
+
+  /** Base URL for the verification API. Default: 'https://api.userplane.com' */
+  verificationBaseUrl?: string;
+
+  /**
+   * Controls auto-open behavior.
+   * - true (default): auto-open if URL has userplane-token
+   * - false: don't auto-open; call open() manually
+   * - string: open immediately with this specific token
+   */
+  openImmediately?: boolean | string;
+
+  /** Enable hidden capture iframe. Default: true */
+  captureEnabled?: boolean;
+
+  /** Custom URL parameter parser. Returns null if no userplane data found. */
+  parseUserplaneData?: (href: string) => SerializableUserplaneData | null;
+
+  /** Custom URL cleanup function. Returns the cleaned URL string. */
+  applyUserplaneData?: (data: SerializableUserplaneData) => string;
+}
+```
+
+---
+
+## `RecordingState`
+
+```typescript
+type RecordingState = 'inactive' | 'active' | 'retained';
+```
+
+| Value | Description |
+|-------|-------------|
+| `'inactive'` | No active recording session |
+| `'active'` | Recording is in progress |
+| `'retained'` | Recording submitted, recorder UI still open |
+
+---
+
+## `RecordingContext`
+
+Returned by `getRecordingContext()`.
+
+```typescript
+interface RecordingContext {
+  /** Current recording state */
+  state: RecordingState;
+
+  /** Session info — null when state is 'inactive' */
+  sessionInfo: RecordingSessionInfo | null;
+
+  /** Whether the beforeunload protection handler is active */
+  tabUnloadEnabled: boolean;
+}
+```
+
+---
+
+## `RecordingSessionInfo`
+
+Information about an active recording session.
+
+```typescript
+interface RecordingSessionInfo {
+  /** Workspace ID this session belongs to */
+  workspaceId: string;
+
+  /** Unique session ID */
+  sessionId: string;
+
+  /** Sharing link ID that triggered this session (optional) */
+  linkId?: string;
+}
+```
+
+---
+
+## `ActionType`
+
+The type of action triggered by a URL token.
+
+```typescript
+type ActionType = 'recording' | 'verify' | 'capture';
+```
+
+| Value | Description |
+|-------|-------------|
+| `'recording'` | Screen recording session |
+| `'verify'` | Domain verification flow |
+| `'capture'` | Background capture/coordination |
+
+---
+
+## `SerializableUserplaneData`
+
+Parsed representation of URL parameters.
+
+```typescript
+interface SerializableUserplaneData {
+  /** The authentication token */
+  token: string | null;
+
+  /** The action type */
+  action: ActionType | null;
+}
+```
+
+---
+
+## `MetadataFunction`
+
+Type for dynamic metadata callbacks registered with `metadata()`.
+
+```typescript
+type MetadataFunction = () => SerializableObject | Promise<SerializableObject>;
+```
+
+---
+
+## `Serializable`
+
+Any JSON-serializable value. Used for metadata values.
+
+```typescript
+type Serializable = string | number | boolean | null | SerializableObject | Serializable[];
+
+type SerializableObject = { [key: string]: Serializable };
+```
+
+---
+
+## Internal Types (Not Exported)
+
+These types appear in the SDK's internal code but are not part of the public API:
+
+```typescript
+// Frame configuration (used internally by FrameConfigBuilder)
+interface FrameConfig {
+  url: string;
+  zIndex: string;
+  overlayBackgroundColor: string;
+  backdropBlur: boolean;
+  sandbox: string;
+  allow: string;
+  allowFullscreen: boolean;
+  onLoad?: () => void;
+  onError?: () => void;
+}
+
+// Cross-tab recorder state tracking
+interface CaptureRecorderState {
+  recorderTabId: string | null;
+  recorderState: RecordingState;
+  lastStateUpdate: number;
+}
+
+// Blur state for privacy features
+type BlurrState = 'enabled' | 'disabled';
+
+// Domain verification result
+interface VerificationResult {
+  success: boolean;
+  data?: VerificationData;
+  error?: VerificationError;
+}
+
+interface VerificationData {
+  domainStatus: string;
+  workspaceId: string;
+  domainId: string;
+  domainUrl: string;
+}
+
+interface VerificationError {
+  code: string;
+  message: string;
+}
+```

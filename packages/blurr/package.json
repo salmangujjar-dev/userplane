@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "tsc --watch",
-    "dev:storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6008",
+    "dev:storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6009",
     "build": "rm -rf dist && tsc",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
@@ -22,7 +22,7 @@
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6008",
+    "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6009",
     "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
   },
   "keywords": [

@@ -1,8 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 
 import { BlurManager, getSelectorStats } from '../src';
+import { trackManager } from './story-cleanup';
 
-const meta: Meta = {
+type BlurDemoArgs = {
+  autoStart: boolean;
+};
+
+const meta: Meta<BlurDemoArgs> = {
   title: 'Blurr/Provider Compatibility',
   parameters: {
     docs: {
@@ -11,11 +16,18 @@ const meta: Meta = {
       },
     },
   },
+  argTypes: {
+    autoStart: {
+      control: 'boolean',
+      description: 'Automatically start blurring on load',
+      defaultValue: true,
+    },
+  },
 };
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<BlurDemoArgs>;
 
 export const ProviderSelectors: Story = {
   name: 'Supported Providers',
@@ -56,7 +68,10 @@ export const ProviderSelectors: Story = {
 
 export const FullStory: Story = {
   name: 'FullStory Selectors',
-  render: () => {
+  args: {
+    autoStart: true,
+  },
+  render: (args) => {
     const container = document.createElement('div');
     container.innerHTML = `
       <div style="font-family: system-ui, sans-serif; padding: 20px; max-width: 600px;">
@@ -96,7 +111,7 @@ export const FullStory: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const statusEl = container.querySelector('#status') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
 
@@ -114,7 +129,9 @@ export const FullStory: Story = {
       updateStatus();
     });
 
-    blurManager.start();
+    if (args.autoStart) {
+      blurManager.start();
+    }
     updateStatus();
 
     return container;
@@ -123,7 +140,10 @@ export const FullStory: Story = {
 
 export const Hotjar: Story = {
   name: 'Hotjar Selectors',
-  render: () => {
+  args: {
+    autoStart: true,
+  },
+  render: (args) => {
     const container = document.createElement('div');
     container.innerHTML = `
       <div style="font-family: system-ui, sans-serif; padding: 20px; max-width: 600px;">
@@ -158,7 +178,7 @@ export const Hotjar: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const statusEl = container.querySelector('#status') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
 
@@ -176,7 +196,9 @@ export const Hotjar: Story = {
       updateStatus();
     });
 
-    blurManager.start();
+    if (args.autoStart) {
+      blurManager.start();
+    }
     updateStatus();
 
     return container;
@@ -185,7 +207,10 @@ export const Hotjar: Story = {
 
 export const Sentry: Story = {
   name: 'Sentry Selectors',
-  render: () => {
+  args: {
+    autoStart: true,
+  },
+  render: (args) => {
     const container = document.createElement('div');
     container.innerHTML = `
       <div style="font-family: system-ui, sans-serif; padding: 20px; max-width: 600px;">
@@ -220,7 +245,7 @@ export const Sentry: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const statusEl = container.querySelector('#status') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
 
@@ -238,7 +263,9 @@ export const Sentry: Story = {
       updateStatus();
     });
 
-    blurManager.start();
+    if (args.autoStart) {
+      blurManager.start();
+    }
     updateStatus();
 
     return container;

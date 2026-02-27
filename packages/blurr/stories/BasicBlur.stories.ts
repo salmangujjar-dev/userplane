@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 
 import { BlurManager } from '../src';
+import { trackManager } from './story-cleanup';
 
 type BlurDemoArgs = {
   autoStart: boolean;
@@ -69,7 +70,7 @@ export const DataAttribute: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const statusEl = container.querySelector('#status') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
 
@@ -137,7 +138,7 @@ export const CSSClass: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const statusEl = container.querySelector('#status') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
 
@@ -208,7 +209,7 @@ export const FormInputs: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const statusEl = container.querySelector('#status') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
 

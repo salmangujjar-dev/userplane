@@ -1,0 +1,121 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/initialize" />
+
+# `initialize(options?)`
+
+Initializes the Userplane SDK. Must be called once before any other SDK functions.
+
+## Signature
+
+```typescript
+function initialize(options?: InitializeOptions): void
+```
+
+## Parameters
+
+### `options` (optional)
+
+```typescript
+interface InitializeOptions {
+  workspaceId?: string | string[];
+  recorderBaseUrl?: string;
+  verificationBaseUrl?: string;
+  openImmediately?: boolean | string;
+  captureEnabled?: boolean;
+  parseUserplaneData?: (href: string) => SerializableUserplaneData | null;
+  applyUserplaneData?: (data: SerializableUserplaneData) => string;
+}
+```
+
+See [Initialize Options](?path=/docs/configuration-initialize-options--docs) for complete option documentation.
+
+## Return Value
+
+`void` — no return value.
+
+## Side Effects
+
+1. **Generates a tab reference** — calls `getOrCreateTabRef()`, creating or restoring the `window.name`-based tab ID
+2. **Reads workspace IDs** — from `options.workspaceId` and/or `<meta name="userplane:workspace">`
+3. **Creates `FrameManagerFactory`** — the factory is used to create frame managers on `open()`
+4. **Optionally mounts capture iframe** — if `captureEnabled !== false`, creates and mounts `CaptureFrameManager`
+5. **Optionally opens recorder** — if `openImmediately !== false` and a URL token is found (or `openImmediately` is a token string)
+
+## Calling Twice
+
+`initialize()` is idempotent — calling it a second time is a no-op:
+
+```typescript
+initialize({ workspaceId: 'ws_a' });
+initialize({ workspaceId: 'ws_b' }); // no-op — SDK already initialized
+```
+
+This is safe in React StrictMode (double-invoke in dev) and hot-module-replacement environments.
+
+## SSR Guard
+
+`initialize()` requires `window` and `document`. Guard it in SSR environments:
+
+```typescript
+if (typeof window !== 'undefined') {
+  initialize();
+}
+```
+
+Or use `useEffect` in React (effects only run in the browser):
+
+```typescript
+useEffect(() => {
+  initialize();
+}, []);
+```
+
+## Examples
+
+### Minimal
+
+```typescript
+import { initialize } from '@workspace/sdk';
+
+// Workspace ID from <meta name="userplane:workspace">
+initialize();
+```
+
+### With Workspace ID
+
+```typescript
+initialize({ workspaceId: 'ws_abc123' });
+```
+
+### Deferred Open
+
+```typescript
+initialize({ openImmediately: false });
+// Later:
+open('tok_abc123');
+```
+
+### Custom Base URLs (Staging)
+
+```typescript
+initialize({
+  workspaceId: 'ws_staging_abc',
+  recorderBaseUrl: 'https://recorder.staging.example.com',
+  verificationBaseUrl: 'https://api.staging.example.com',
+});
+```
+
+### With Metadata Pre-set
+
+```typescript
+import { initialize, set, metadata } from '@workspace/sdk';
+
+initialize({ workspaceId: 'ws_abc' });
+
+// Set metadata right after — will be included in first recording
+set('appVersion', '2.0.0');
+metadata(() => ({
+  currentUser: store.user.id,
+}));
+```

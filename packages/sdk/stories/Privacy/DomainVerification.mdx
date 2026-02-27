@@ -1,0 +1,113 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Privacy/Domain Verification" />
+
+# Domain Verification
+
+Domain verification confirms that the SDK is running on an authorized domain. It prevents unauthorized websites from initiating recordings under your workspace.
+
+## What Is Domain Verification?
+
+When you add a domain to your Userplane workspace, you're declaring that recordings from that domain are authorized. Domain verification checks at runtime that the SDK's host origin matches one of your workspace's approved domains.
+
+## Verification Flow
+
+```
+User receives a link with userplane-action=verify
+        │
+        ▼
+SDK detects action='verify' in URL params
+        │
+        ▼
+VerificationFrameManager mounts the verification iframe
+  src: {verificationBaseUrl}/verify?userplane-token={token}&...
+        │
+        ▼
+Bridge connects (VerificationBridgeConnection)
+        │
+        ▼
+Verification iframe calls host.requestVerification(token, workspaceIds)
+        │
+        ▼
+SDK makes API call FROM THE PARENT WINDOW:
+  POST {verificationBaseUrl}/v1/domains/verify
+  body: { token, workspaceIds, origin: window.location.origin }
+        │
+        ├── Success ──► VerificationResult { success: true, data: {...} }
+        │                  └── domain added to workspace
+        │
+        └── Failure ──► VerificationResult { success: false, error: {...} }
+                           └── error displayed to user
+        │
+        ▼
+Verification iframe calls host.requestClose()
+SDK unmounts verification iframe
+```
+
+## Why the API Call Is Made from the Parent
+
+The verification API call is made from **the parent window** (the SDK's host context), not from inside the iframe. This is intentional:
+
+- The API call uses `window.location.origin` as the domain being verified
+- If the call were made from the iframe, it would verify the iframe's origin (Userplane's domain), not yours
+- By making the call from the parent, the SDK proves that your domain's JavaScript is making the request
+
+## `VerificationResult` Type
+
+```typescript
+interface VerificationResult {
+  success: boolean;
+  data?: VerificationData;
+  error?: VerificationError;
+}
+
+interface VerificationData {
+  domainStatus: string;
+  workspaceId: string;
+  domainId: string;
+  domainUrl: string;
+}
+
+interface VerificationError {
+  code: string;
+  message: string;
+}
+```
+
+## Triggering Verification
+
+Domain verification is triggered automatically when the SDK detects `userplane-action=verify` in the URL. This happens when a workspace admin shares a "verify domain" link from the Userplane dashboard.
+
+You can also trigger it programmatically:
+
+```typescript
+import { open } from '@workspace/sdk';
+
+// Open the verification flow with a verification token
+open('vtok_abc123');
+// The SDK determines the action from the token type
+```
+
+## Bridge Schema
+
+The verification flow uses a dedicated host schema:
+
+```typescript
+interface VerificationHostSchema {
+  requestVerification: (token: string, workspaceIds: string[]) => Promise<VerificationResult>;
+  requestClose: () => void;
+}
+```
+
+- `requestVerification` — called by the verification iframe to initiate the API call
+- `requestClose` — called by the verification iframe when it's done (success or failure)
+
+## Verification Base URL
+
+By default, verification API calls go to `https://api.userplane.com`. Override for staging or self-hosted:
+
+```typescript
+initialize({
+  verificationBaseUrl: 'https://api.staging.yourcompany.com',
+});
+```

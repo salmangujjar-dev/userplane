@@ -1,0 +1,123 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Lifecycle/Overview" />
+
+# Lifecycle Overview
+
+A complete walkthrough of everything that happens from `initialize()` to recorder unmount.
+
+## Full Lifecycle Flowchart
+
+```
+1. initialize(options?)
+        │
+        ├── Guard: already initialized? → no-op
+        ├── Generate / restore tabRef (window.name)
+        ├── Read workspaceIds (options + meta tag)
+        ├── Create FrameManagerFactory
+        │
+        ├── captureEnabled? → Mount CaptureFrameManager (hidden iframe)
+        │       └── Establish CaptureBridgeConnection
+        │
+        └── Parse URL params (or use openImmediately token)
+                │
+                ├── No token found AND openImmediately !== string
+                │   └── Stay idle; wait for open() call
+                │
+                └── Token + action found
+                        │
+                        ▼
+2. Open recorder (open(token) or auto-open)
+        │
+        ├── action = 'recording' → RecordingFrameManager
+        ├── action = 'verify'    → VerificationFrameManager
+        └── action = 'capture'   → CaptureFrameManager
+                │
+                ▼
+3. Mount iframe
+        │
+        ├── Create overlay <div> (full-screen backdrop)
+        ├── Create <iframe> with sandbox + allow attributes
+        ├── Inject both into document.body
+        └── Set iframe.src → recorder URL
+                │
+                ▼
+4. Bridge connects
+        │
+        ├── Recorder iframe loads
+        ├── PostBridge handshake completes
+        └── Host ↔ Guest RPC channel established
+                │
+                ▼
+5. Session management (recording action)
+        │
+        ├── Recorder calls host.initSession(info, title)
+        │       └── state: 'inactive' → 'active'
+        │           Unload protection: ON
+        │           URL cleaned (params stripped)
+        │
+        ├── Recorder calls host.recordingActive()
+        │       └── state: 'active' (confirmed)
+        │
+        ├── User records...
+        │
+        ├── Recorder calls host.recordingRetained()
+        │       └── state: 'active' → 'retained'
+        │           Unload protection: still ON
+        │
+        └── User closes recorder
+                │
+                ▼
+6. Session finish
+        │
+        ├── Recorder calls host.finishSession()
+        │       └── state: → 'inactive'
+        │           Unload protection: OFF
+        │
+        └── Recorder calls close (requestClose or bridge disconnect)
+                │
+                ▼
+7. Unmount iframe
+        │
+        ├── Bridge disconnects
+        ├── overlay + iframe removed from document.body
+        ├── URL params cleaned (if not already)
+        └── CaptureFrameManager state updated
+```
+
+## Phase Details
+
+### Phase 1 — Initialize
+
+`initialize()` is the entry point. It:
+- Sets up the `FrameManagerFactory` (strategy pattern for frame creation)
+- Restores or creates the `tabRef` from `window.name`
+- Optionally mounts the hidden capture iframe
+- Checks for URL parameters
+
+### Phase 2 — Open
+
+`open(token?)` can be called:
+- Automatically by `initialize()` when a URL token is found
+- Manually by your code
+- Never, if `openImmediately: false` and no manual call is made
+
+### Phase 3 — Mount
+
+The chosen frame manager creates DOM elements and appends them to `document.body`. The iframe URL is set, triggering a browser navigation to the recorder app.
+
+### Phase 4 — Bridge Connects
+
+The iframe emits a `load` event. The PostBridge connection is established through the `postMessage` handshake. At this point, both sides can call methods on each other via RPC.
+
+### Phase 5 — Session Management
+
+The recorder drives the session state. It calls host methods (`initSession`, `recordingActive`, `recordingRetained`) to update the SDK's state machine.
+
+### Phase 6 — Session Finish
+
+When the user ends the session, the recorder calls `finishSession()`. The SDK updates state to `'inactive'` and disables unload protection.
+
+### Phase 7 — Unmount
+
+The iframe and overlay are removed from the DOM. The bridge connection is torn down. If `captureEnabled`, the capture iframe remains mounted and updates its tracking state.

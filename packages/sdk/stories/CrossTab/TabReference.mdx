@@ -1,0 +1,125 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Cross-Tab/Tab Reference" />
+
+# Tab Reference
+
+The tab reference (`tabRef`) is a stable, per-tab identifier that survives page reloads but doesn't cross tab boundaries.
+
+## The Problem It Solves
+
+The SDK needs to identify which browser tab is associated with a recording session. This enables:
+
+1. **Cross-tab state tracking** — the capture iframe in one tab can tell which other tab is recording
+2. **Bridge connection naming** — each bridge connection is named with the tab reference, avoiding conflicts when the same app is open in multiple tabs
+3. **Session attribution** — recordings are attributed to the correct tab
+
+## How It Works Internally
+
+```typescript
+// Simplified implementation of getOrCreateTabRef()
+
+const STORAGE_KEY = 'userplane_tab_';
+
+function getOrCreateTabRef(): string {
+  // 1. Check if window.name already holds our identifier
+  if (window.name?.startsWith(STORAGE_KEY)) {
+    return window.name; // Survived the page reload
+  }
+
+  // 2. Generate a new identifier
+  const tabRef = `userplane_tab_${nanoid(21)}`;
+
+  // 3. Store in window.name (persists across reloads)
+  window.name = tabRef;
+
+  return tabRef;
+}
+```
+
+The ID format is: `userplane_tab_` + 21 random URL-safe characters from nanoid.
+
+Example: `userplane_tab_V1StGXR8_Z5jdHi6B-myT`
+
+## `window.name` Properties
+
+| Property | Behavior |
+|----------|----------|
+| Persists across page reloads | ✓ Yes |
+| Shared across tabs | ✗ No — each tab has its own |
+| Shared across origins | ✗ No — reset when navigating cross-origin |
+| Shared via `window.open()` | Depends — target="_blank" starts with empty name |
+| Storage limit | Large (browser-dependent, usually no practical limit) |
+| Cleared by clearing site data | ✓ Yes |
+
+## Persistence Scenarios
+
+```
+Tab A opened                 → tabRef: userplane_tab_AAA
+  │
+  ├── Page reload            → tabRef: userplane_tab_AAA (persists)
+  │
+  ├── Navigate to /about     → tabRef: userplane_tab_AAA (persists)
+  │
+  ├── Navigate to new domain → tabRef: RESET (cross-origin navigation)
+  │
+  └── Ctrl+T (new tab)       → New tab gets its own tabRef: userplane_tab_BBB
+```
+
+## Connection ID Format
+
+The tab reference is used to name bridge connections, preventing interference between tabs:
+
+```typescript
+// Generates: 'rec_userplane_tab_V1StGXR8_Z5jdHi6B-myT'
+const connectionId = `${CONNECTION_PREFIXES.RECORDER}_${tabRef}`;
+
+// Prefixes:
+// 'rec_' → RecordingBridgeConnection
+// 'vrd_' → VerificationBridgeConnection
+// 'cap_' → CaptureBridgeConnection
+```
+
+This means if the same app is open in two tabs simultaneously, their PostBridge connections don't interfere — each has a unique channel name.
+
+## Public API
+
+```typescript
+import { getTabRef, clearTabRef } from '@workspace/sdk';
+
+// Get the tab reference (null if SDK not initialized)
+const tabRef = getTabRef();
+// Returns: 'userplane_tab_V1StGXR8_Z5jdHi6B-myT' or null
+
+// Clear the tab reference from window.name
+clearTabRef();
+```
+
+### `getTabRef()`
+
+Returns the current tab reference, or `null` if:
+- The SDK has not been initialized
+- `clearTabRef()` was called
+- `window.name` was manually cleared
+
+### `clearTabRef()`
+
+Removes the tab reference from `window.name`. The next call to `initialize()` will generate a new one.
+
+**Use case:** Test environments, or forcing a "fresh" tab identity without closing and reopening the tab.
+
+## Cross-Tab Scenario
+
+```
+Tab A (has recorder)           Tab B (background tab)
+────────────────────           ──────────────────────
+tabRef: up_tab_AAA             tabRef: up_tab_BBB
+RecordingFrameManager          CaptureFrameManager
+  └── state: 'active'            └── updateRecorderState({
+                                       recorderTabId: 'up_tab_AAA',
+                                       recorderState: 'active',
+                                       lastStateUpdate: 1234567890
+                                     })
+```
+
+Tab B's capture iframe uses the tab reference to track that `up_tab_AAA` is currently recording. If Tab B's user closes Tab A, the capture manager in Tab B detects the state change.

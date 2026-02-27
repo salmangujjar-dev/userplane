@@ -1,0 +1,89 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Privacy/Sandbox & Permissions" />
+
+# Sandbox & Permissions
+
+The recorder iframe uses HTML sandbox restrictions and feature policy permissions. These are pre-configured with sensible defaults that enable the recorder while maintaining security boundaries.
+
+## Default `sandbox` Attribute
+
+```
+sandbox="allow-same-origin allow-scripts allow-popups"
+```
+
+| Token | What It Enables | Why It's Needed |
+|-------|----------------|-----------------|
+| `allow-same-origin` | Treat the iframe as same-origin for storage APIs | Required for `localStorage`, `IndexedDB`, cookies inside the recorder |
+| `allow-scripts` | Execute JavaScript | Required for the recorder application to run |
+| `allow-popups` | `window.open()`, `target="_blank"` | Required for OAuth popups and external links in the recorder UI |
+
+### What's Intentionally Excluded
+
+| Missing Token | What It Prevents |
+|--------------|-----------------|
+| `allow-forms` | Form submissions within the iframe |
+| `allow-top-navigation` | Iframe navigating the parent page |
+| `allow-pointer-lock` | Mouse pointer lock (not needed for recording) |
+| `allow-downloads` | Direct file downloads from the iframe |
+
+## Default `allow` Feature Policy
+
+```
+allow="microphone; camera; display-capture; screen-wake-lock"
+```
+
+| Feature | Purpose |
+|---------|---------|
+| `microphone` | Audio recording from the user's microphone |
+| `camera` | Webcam recording (if enabled by workspace) |
+| `display-capture` | Screen / tab / window capture |
+| `screen-wake-lock` | Prevent the screen from dimming during a long recording |
+
+### Why These Are Pre-configured
+
+The feature policy must be set on the **parent window** — the iframe itself cannot request permissions it wasn't granted by the parent. Because the SDK embeds the recorder as an iframe in your page, it must declare these permissions in the `allow` attribute.
+
+## Security Implications
+
+### `allow-same-origin` + `allow-scripts`
+
+The combination of `allow-same-origin` and `allow-scripts` is typically considered a security risk because it allows the iframe to read cookies, localStorage, and the DOM of same-origin pages. However:
+
+- The recorder iframe is served from a **different origin** (`recorder.userplane.com`), not your origin
+- `allow-same-origin` applies to the iframe's own origin — it means the recorder can use its own storage APIs
+- The recorder **cannot** access your page's cookies, localStorage, or DOM, because it's a different origin
+
+This is a common misconception: `allow-same-origin` doesn't mean "treat as same origin as the parent" — it means "treat the iframe as same-origin relative to its own loaded URL."
+
+### `allow-scripts` Without `allow-same-origin`
+
+Without `allow-same-origin`, the iframe would run in a unique origin sandbox that blocks storage access — breaking the recorder application. The combination is intentional and necessary.
+
+## Customizing Frame Configuration
+
+The `FrameConfig` type allows customizing sandbox and allow attributes:
+
+```typescript
+interface FrameConfig {
+  url: string;
+  zIndex: string;
+  overlayBackgroundColor: string;
+  backdropBlur: boolean;
+  sandbox: string;
+  allow: string;
+  allowFullscreen: boolean;
+  onLoad?: () => void;
+  onError?: () => void;
+}
+```
+
+The SDK uses a `FrameConfigBuilder` to construct the config with defaults. If you need to modify permissions, this is the extension point — though for standard use cases the defaults are correct.
+
+## `allowfullscreen`
+
+The recorder iframe has `allowfullscreen` set, enabling the recorder to enter full-screen mode. This is used for full-screen recording workflows.
+
+## Hidden Capture Iframe
+
+The capture iframe (1×1 px, `display:none`) uses the same sandbox and feature policy as the recording iframe. It needs microphone/camera/display-capture permissions even when hidden, because it may need to coordinate blur state with any active recording session.

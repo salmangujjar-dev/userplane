@@ -1,0 +1,159 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Architecture/Bridge Integration" />
+
+# Bridge Integration
+
+The SDK uses `@workspace/postbridge` for all communication with its iframes. Each connection type has a typed schema defining the RPC contract.
+
+## Overview
+
+```
+SDK (parent window)                    Iframe (child window)
+═══════════════════                    ══════════════════════
+
+RecorderBridgeConnection               Recorder App
+  host: RecorderHostSchema     ←────── calls host methods
+  guest: RecorderGuestSchema   ──────► calls guest methods
+
+VerificationBridgeConnection           Verification App
+  host: VerificationHostSchema ←────── calls host methods
+  (no guest calls from SDK)
+
+CaptureBridgeConnection                Capture App
+  host: CaptureHostSchema      ←────── calls host methods
+  guest: CaptureGuestSchema    ──────► calls guest methods
+```
+
+The SDK is always the **host** (parent window). Iframes are always **guests**.
+
+## Recorder Bridge
+
+### Host Schema (SDK exposes to recorder)
+
+```typescript
+interface RecorderHostSchema {
+  // Tab & page context
+  getTabRef: () => string;
+  getPageUrl: () => string;
+
+  // Metadata
+  getCustomMetadata: () => SerializableObject | null;
+
+  // Session lifecycle callbacks
+  initSession: (info: RecordingSessionInfo, title: string) => void;
+  finishSession: () => void;
+
+  // Recording state notifications
+  recordingActive: () => void;
+  recordingRetained: () => void;
+  recordingInactive: () => void;
+}
+```
+
+### Guest Schema (SDK calls on recorder)
+
+```typescript
+interface RecorderGuestSchema {
+  getRecordingState: () => RecordingState;
+  getSessionInfo: () => RecordingSessionInfo | null;
+  getTabRef: () => string | null;
+}
+```
+
+### Connection Lifecycle
+
+```typescript
+class RecorderBridgeConnection {
+  connect(iframe: HTMLIFrameElement, tabRef: string): void;
+  disconnect(): void;
+  isConnected(): boolean;
+
+  // Callbacks set by RecordingFrameManager
+  onSessionReady: ((info: RecordingSessionInfo) => void) | null;
+  onRecordingStateChange: ((state: RecordingState) => void) | null;
+  onRequestClose: (() => void) | null;
+}
+```
+
+The connection is established when the iframe fires the `load` event. PostBridge handles the handshake automatically.
+
+## Verification Bridge
+
+### Host Schema (SDK exposes to verification iframe)
+
+```typescript
+interface VerificationHostSchema {
+  requestVerification: (
+    token: string,
+    workspaceIds: string[]
+  ) => Promise<VerificationResult>;
+
+  requestClose: () => void;
+}
+```
+
+The verification iframe calls `requestVerification()` with the token and workspace IDs. The SDK makes the API call from the parent window (to verify the host origin) and returns the result.
+
+## Capture Bridge
+
+### Host Schema (SDK exposes to capture iframe)
+
+```typescript
+interface CaptureHostSchema {
+  getTabRef: () => string;
+  getPageUrl: () => string;
+  getPageTitle: () => string;
+  extractMetadata: () => SerializableObject | null;
+
+  // Blur management
+  startBlurr: () => void;
+  stopBlurr: () => void;
+  getBlurrState: () => BlurrState;
+}
+```
+
+### Guest Schema (SDK calls on capture iframe)
+
+```typescript
+interface CaptureGuestSchema {
+  getRecorderState: () => CaptureRecorderState;
+  extractMetadata: () => TabMetadata;
+  ping: () => boolean;
+
+  // Blur management
+  startBlurr: () => void;
+  stopBlurr: () => void;
+  getBlurrState: () => BlurrState;
+}
+```
+
+## Connection Naming
+
+Each bridge connection is named with a prefix + tab reference to avoid channel collisions:
+
+```typescript
+const CONNECTION_PREFIXES = {
+  RECORDER: 'rec',       // → 'rec_userplane_tab_AAA'
+  VERIFICATION: 'vrd',   // → 'vrd_userplane_tab_AAA'
+  CAPTURE: 'cap',        // → 'cap_userplane_tab_AAA'
+};
+```
+
+If the same app is open in two tabs:
+- Tab A's recorder bridge: `rec_userplane_tab_AAA`
+- Tab B's recorder bridge: `rec_userplane_tab_BBB`
+
+These are different channels — they don't interfere even though both postMessage to the same receiver origin.
+
+## Error Handling
+
+PostBridge connections handle errors at the RPC layer. If a call to a guest method fails:
+- The rejection is caught and logged
+- The bridge connection state remains unchanged
+- The SDK does not crash
+
+If the iframe becomes unresponsive (navigated away, crashed):
+- The bridge detects the disconnect via the `disconnect` event
+- The `CaptureBridgeConnection.onDisconnected` callback fires
+- The frame manager reacts (e.g., attempting to remount the capture iframe)

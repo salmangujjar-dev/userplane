@@ -1,0 +1,179 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/State & Session" />
+
+# State & Session
+
+Functions for inspecting the SDK's initialization state and the current recording session.
+
+---
+
+## `isInitialized()`
+
+Check if the SDK has been initialized.
+
+### Signature
+
+```typescript
+function isInitialized(): boolean
+```
+
+### Return Value
+
+`true` after `initialize()` has been called successfully. `false` before `initialize()` is called.
+
+```typescript
+import { isInitialized } from '@workspace/sdk';
+
+isInitialized(); // false
+
+initialize();
+isInitialized(); // true
+```
+
+---
+
+## `getRecordingState()`
+
+Get the current recording state.
+
+### Signature
+
+```typescript
+function getRecordingState(): RecordingState
+
+type RecordingState = 'inactive' | 'active' | 'retained';
+```
+
+### Return Value
+
+| Value | Meaning |
+|-------|---------|
+| `'inactive'` | No active session. SDK is idle. |
+| `'active'` | Recording is in progress. |
+| `'retained'` | Recording submitted but recorder UI still open (review state). |
+
+Returns `'inactive'` if the SDK is not initialized.
+
+```typescript
+import { getRecordingState } from '@workspace/sdk';
+
+console.log(getRecordingState()); // 'inactive'
+
+// During an active recording:
+console.log(getRecordingState()); // 'active'
+```
+
+---
+
+## `getRecordingContext()`
+
+Get the full recording context, including session info and unload state.
+
+### Signature
+
+```typescript
+function getRecordingContext(): RecordingContext | null
+```
+
+### Return Value
+
+```typescript
+interface RecordingContext {
+  state: RecordingState;
+  sessionInfo: RecordingSessionInfo | null;
+  tabUnloadEnabled: boolean;
+}
+
+interface RecordingSessionInfo {
+  workspaceId: string;
+  sessionId: string;
+  linkId?: string;
+}
+```
+
+Returns `null` if the SDK is not initialized.
+
+`sessionInfo` is `null` when `state === 'inactive'`.
+
+```typescript
+import { getRecordingContext } from '@workspace/sdk';
+
+const ctx = getRecordingContext();
+if (ctx === null) {
+  console.log('SDK not initialized');
+} else {
+  console.log('State:', ctx.state);
+  console.log('Session ID:', ctx.sessionInfo?.sessionId ?? 'none');
+  console.log('Unload protection:', ctx.tabUnloadEnabled);
+}
+```
+
+---
+
+## `getSessionId()`
+
+Get the current session ID.
+
+### Signature
+
+```typescript
+function getSessionId(): string | null
+```
+
+### Return Value
+
+The session ID (e.g., `'sess_abc123'`) or `null` if no session is active.
+
+```typescript
+import { getSessionId } from '@workspace/sdk';
+
+const sessionId = getSessionId();
+if (sessionId) {
+  console.log('Recording session:', sessionId);
+  // Use to link recordings to your own data model
+  myAnalytics.track('recording_started', { sessionId });
+}
+```
+
+---
+
+## `getLinkId()`
+
+Get the link ID for the current session.
+
+### Signature
+
+```typescript
+function getLinkId(): string | null
+```
+
+### Return Value
+
+The link ID (e.g., `'lnk_xyz789'`) or `null` if no session is active.
+
+The link ID identifies which Userplane sharing link triggered this session. Multiple sessions can originate from the same link.
+
+```typescript
+import { getLinkId } from '@workspace/sdk';
+
+const linkId = getLinkId();
+// 'lnk_xyz789' or null
+```
+
+---
+
+## Null vs. Undefined
+
+All state functions return `null` (not `undefined`) when no value is available. This makes null checks predictable:
+
+```typescript
+const sessionId = getSessionId();
+const linkId = getLinkId();
+const context = getRecordingContext();
+
+// Safe patterns:
+if (sessionId) { ... }
+if (context?.state === 'active') { ... }
+const state = getRecordingState(); // always returns a string, never null
+```

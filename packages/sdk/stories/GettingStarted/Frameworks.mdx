@@ -1,0 +1,189 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Getting Started/Framework Guides" />
+
+# Framework Guides
+
+Framework-specific instructions for integrating the Userplane SDK.
+
+## Next.js
+
+### The SSR Problem
+
+Next.js renders pages on the server where `window`, `document`, and `navigator` don't exist. The SDK must only run in the browser.
+
+### App Router (Next.js 13+)
+
+Create a client component for the SDK:
+
+```typescript
+// components/UserplaneProvider.tsx
+'use client';
+
+import { useEffect } from 'react';
+import { initialize } from '@workspace/sdk';
+
+export function UserplaneProvider() {
+  useEffect(() => {
+    // useEffect only runs in the browser — safe to initialize here
+    initialize({
+      workspaceId: process.env.NEXT_PUBLIC_USERPLANE_WORKSPACE_ID,
+    });
+  }, []);
+
+  return null;
+}
+```
+
+Add it to your root layout:
+
+```typescript
+// app/layout.tsx
+import { UserplaneProvider } from '@/components/UserplaneProvider';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <meta name="userplane:workspace" content={process.env.NEXT_PUBLIC_USERPLANE_WORKSPACE_ID} />
+      </head>
+      <body>
+        <UserplaneProvider />
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+### Pages Router (Next.js 12 and below)
+
+Use `dynamic` import with `ssr: false`, or guard with `typeof window`:
+
+```typescript
+// pages/_app.tsx
+import { useEffect } from 'react';
+import type { AppProps } from 'next/app';
+
+export default function App({ Component, pageProps }: AppProps) {
+  useEffect(() => {
+    // This runs only in the browser
+    import('@workspace/sdk').then(({ initialize }) => {
+      initialize({ workspaceId: process.env.NEXT_PUBLIC_USERPLANE_WORKSPACE_ID });
+    });
+  }, []);
+
+  return <Component {...pageProps} />;
+}
+```
+
+### React StrictMode
+
+React 18 StrictMode double-invokes effects in development. Because `initialize()` is a no-op when called more than once, this is safe:
+
+```typescript
+useEffect(() => {
+  initialize(); // Called twice in dev — second call is a no-op
+}, []);
+```
+
+---
+
+## Vue 3
+
+Initialize in your app entry point, guarded with `typeof window`:
+
+```typescript
+// main.ts
+import { createApp } from 'vue';
+import App from './App.vue';
+
+const app = createApp(App);
+app.mount('#app');
+
+// Initialize SDK after mount (browser-only)
+if (typeof window !== 'undefined') {
+  import('@workspace/sdk').then(({ initialize }) => {
+    initialize({ workspaceId: import.meta.env.VITE_USERPLANE_WORKSPACE_ID });
+  });
+}
+```
+
+Or as a Vue plugin:
+
+```typescript
+// plugins/userplane.ts
+import type { App } from 'vue';
+import { initialize } from '@workspace/sdk';
+
+export const userplanePlugin = {
+  install(_app: App) {
+    initialize({ workspaceId: import.meta.env.VITE_USERPLANE_WORKSPACE_ID });
+  },
+};
+
+// main.ts
+import { userplanePlugin } from './plugins/userplane';
+app.use(userplanePlugin);
+```
+
+---
+
+## SvelteKit
+
+SvelteKit has SSR by default. Use the `browser` store or `onMount` to guard initialization:
+
+```typescript
+// src/routes/+layout.svelte
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
+
+  onMount(async () => {
+    if (browser) {
+      const { initialize } = await import('@workspace/sdk');
+      initialize({
+        workspaceId: import.meta.env.VITE_USERPLANE_WORKSPACE_ID,
+      });
+    }
+  });
+</script>
+
+<slot />
+```
+
+Or in a layout load function (client-only):
+
+```typescript
+// src/routes/+layout.ts
+import { browser } from '$app/environment';
+
+export async function load() {
+  if (browser) {
+    const { initialize } = await import('@workspace/sdk');
+    initialize();
+  }
+}
+```
+
+---
+
+## General SSR Pattern
+
+For any SSR framework, the guard is the same:
+
+```typescript
+// Safe pattern for any SSR context
+if (typeof window !== 'undefined') {
+  initialize({ workspaceId: 'ws_...' });
+}
+
+// Or with dynamic import
+async function initSDK() {
+  if (typeof window === 'undefined') return;
+  const { initialize } = await import('@workspace/sdk');
+  initialize();
+}
+```
+
+The SDK itself will not throw if imported on the server — it only requires `window` when `initialize()` is called.
