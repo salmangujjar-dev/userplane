@@ -109,6 +109,9 @@ export const tokenEnvSchema = z.object({
   ),
   RECORDER_TOKEN_SECRET: stringWithDefault(DEV_SECRETS.RECORDER),
   RECORDER_TOKEN_EXPIRES_IN: integerWithDefault(TOKEN_EXPIRY.RECORDING),
+  SHARE_TOKEN_SECRET: stringWithDefault(DEV_SECRETS.SHARE),
+  SHARE_TOKEN_EXPIRES_IN: integerWithDefault(TOKEN_EXPIRY.SHARE),
+  SHARE_TOKEN_MAX_EXPIRES_IN: integerWithDefault(TOKEN_EXPIRY.SHARE_MAX),
 });
 
 /** Session env vars schema */
@@ -319,6 +322,9 @@ export const tokenConfigSchema = z.object({
   workspaceCreateInviteExpiresIn: z.number(),
   recordingSecret: z.string(),
   recordingTokenExpiresIn: z.number(),
+  shareSecret: z.string(),
+  shareExpiresIn: z.number(),
+  shareMaxExpiresIn: z.number(),
 });
 
 /** Session configuration schema */

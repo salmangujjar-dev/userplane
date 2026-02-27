@@ -15,6 +15,7 @@ import type {
   IntercomOAuthStatePayload,
   InviteTokenPayload,
   SessionTokenPayload,
+  ShareTokenPayload,
   UploadTokenPayload,
   WorkspaceCreateInviteTokenPayload,
 } from '@/api/types';
@@ -37,6 +38,9 @@ export class TokenService {
   private sessionExpiresIn: number;
   private uploadSecret: string;
   private uploadExpiresIn: number;
+  private shareSecret: string;
+  private shareExpiresIn: number;
+  private shareMaxExpiresIn: number;
 
   constructor(config: {
     jwtSecret: string;
@@ -53,6 +57,9 @@ export class TokenService {
     sessionExpiresIn: number;
     uploadSecret: string;
     uploadExpiresIn: number;
+    shareSecret: string;
+    shareExpiresIn: number;
+    shareMaxExpiresIn: number;
   }) {
     this.jwtSecret = config.jwtSecret;
     this.dashboardUrl = config.dashboardUrl;
@@ -68,6 +75,9 @@ export class TokenService {
     this.sessionExpiresIn = config.sessionExpiresIn;
     this.uploadSecret = config.uploadSecret;
     this.uploadExpiresIn = config.uploadExpiresIn;
+    this.shareSecret = config.shareSecret;
+    this.shareExpiresIn = config.shareExpiresIn;
+    this.shareMaxExpiresIn = config.shareMaxExpiresIn;
   }
 
   /**
@@ -395,6 +405,56 @@ export class TokenService {
       return null;
     }
   }
+  // ---------------------------------------------------------------------------
+  // Share tokens
+  // Used to generate short-lived public share links for recordings
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Sign a share token for a publicly shareable recording link
+   * Token expires based on shareExpiresIn config (default 24h), clamped to shareMaxExpiresIn (14d)
+   * @param payload - rid (recordingId), wid (workspaceId), wmid (workspaceMemberId who shared)
+   * @param expiresIn - Optional custom expiry in seconds, clamped to shareMaxExpiresIn
+   * @returns Object with signed JWT token and expiration date
+   */
+  signShareToken(
+    payload: { rid: string; wid: string; wmid: string },
+    expiresIn?: number
+  ): { token: string; expiresAt: Date } {
+    const effectiveExpiresIn = Math.min(expiresIn ?? this.shareExpiresIn, this.shareMaxExpiresIn);
+    const now = Math.floor(Date.now() / 1000);
+    const fullPayload: ShareTokenPayload = {
+      iss: this.jwtIssuer,
+      ...payload,
+      iat: now,
+      exp: now + effectiveExpiresIn,
+    };
+    const token = jwt.sign(fullPayload, this.shareSecret, { algorithm: 'HS256' });
+    const expiresAt = new Date((now + effectiveExpiresIn) * 1000);
+    return { token, expiresAt };
+  }
+
+  /**
+   * Verify and decode a share token
+   * Returns payload if valid, null if invalid
+   * Distinguishes between expired and invalid tokens via the error property
+   */
+  verifyShareToken(token: string): { payload: ShareTokenPayload | null; expired: boolean } {
+    try {
+      const payload = jwt.verify(token, this.shareSecret, {
+        algorithms: ['HS256'],
+      }) as ShareTokenPayload;
+      if (payload.iss !== this.jwtIssuer) {
+        return { payload: null, expired: false };
+      }
+      return { payload, expired: false };
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        return { payload: null, expired: true };
+      }
+      return { payload: null, expired: false };
+    }
+  }
 }
 
 export const tokenService = new TokenService({
@@ -412,4 +472,7 @@ export const tokenService = new TokenService({
   sessionExpiresIn: env.session.tokenExpiry,
   uploadSecret: env.session.uploadTokenSecret,
   uploadExpiresIn: env.session.uploadTokenExpiry,
+  shareSecret: env.token.shareSecret,
+  shareExpiresIn: env.token.shareExpiresIn,
+  shareMaxExpiresIn: env.token.shareMaxExpiresIn,
 });

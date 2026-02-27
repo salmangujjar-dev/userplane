@@ -52,6 +52,7 @@ export const DEV_SECRETS = {
   UPLOAD: 'dev-upload-secret-change-in-production',
   RECORDER: 'dev-recorder-secret-change-in-production',
   DOMAIN_VERIFICATION: 'dev-domain-verification-secret-change-in-production',
+  SHARE: 'dev-share-secret-change-in-production',
 } as const;
 
 // =============================================================================
@@ -90,6 +91,10 @@ export const TOKEN_EXPIRY = {
   WORKSPACE_CREATE_INVITE: 90 * TIME.DAY,
   /** Recording token: 180 days */
   RECORDING: 180 * TIME.DAY,
+  /** Share token: 24 hours */
+  SHARE: 1 * TIME.DAY,
+  /** Share token max: 14 days */
+  SHARE_MAX: 14 * TIME.DAY,
 } as const;
 
 // =============================================================================
@@ -239,5 +244,6 @@ export function getDevSecretNames(): Record<string, string> {
     [DEV_SECRETS.UPLOAD]: 'UPLOAD_TOKEN_SECRET',
     [DEV_SECRETS.RECORDER]: 'RECORDER_TOKEN_SECRET',
     [DEV_SECRETS.DOMAIN_VERIFICATION]: 'DOMAIN_VERIFICATION_TOKEN_SECRET',
+    [DEV_SECRETS.SHARE]: 'SHARE_TOKEN_SECRET',
   };
 }
