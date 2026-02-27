@@ -1,0 +1,110 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Build System/CDN Build" />
+
+# CDN Build
+
+Running `bun run build:cdn` (which sets `OPTIMIZE_MODE=cdn`) activates the CDN build profile in Vite. This produces two output files optimized for CDN delivery.
+
+## What OPTIMIZE_MODE=cdn Does
+
+### Dual Entry Points
+
+The CDN build compiles both entry points from `src/`:
+
+```
+src/script.ts  →  dist/script.js   (bootstrap loader)
+src/index.ts   →  dist/main.js     (full SDK bundle)
+```
+
+In contrast, the NPM build uses only `src/index.ts`.
+
+### ES Module Only
+
+The CDN build produces ES module output (`type: 'module'`). No CommonJS build is needed for CDN delivery — modern browsers all support ES modules, and the bootstrap injects the bundle as `<script type="module">`.
+
+### No Source Maps
+
+Source maps are disabled in CDN builds to keep the bundle size minimal and avoid exposing source to end users. For debugging CDN issues, use a development CDN build with source maps enabled.
+
+### __DEV__ set to false
+
+The `__DEV__` flag is set to `false` in CDN builds:
+
+```typescript
+define: {
+  __DEV__: 'false',
+}
+```
+
+This causes Vite to tree-shake all `if (__DEV__)` branches, removing debug logging and development-only code paths from the final bundle.
+
+## Terser Configuration
+
+The CDN build applies aggressive minification via Terser:
+
+```typescript
+minify: 'terser',
+terserOptions: {
+  compress: {
+    passes: 3,           // Multiple compression passes
+    unsafe: true,        // Unsafe transforms for smaller output
+    drop_console: true,  // Remove console.* calls
+    drop_debugger: true, // Remove debugger statements
+  },
+  mangle: {
+    properties: {
+      regex: /^_/,       // Mangle properties starting with underscore
+    },
+  },
+},
+```
+
+The 3-pass compression and unsafe transforms produce a significantly smaller bundle than default minification. The property mangling (`_*` prefix) mangles internal properties that are not part of the public API.
+
+## Output Files in `dist/`
+
+After `bun run build:cdn`:
+
+```
+dist/
+├── script.js    # Bootstrap loader (~1KB minified)
+└── main.js      # Full SDK bundle (minified, no hash)
+```
+
+**Important:** `main.js` does not have a hash in its filename yet. The hash (`main.a1b2c3d4.js`) is added during the upload step when the upload script computes `SHA-256(main.js)`. This design keeps the build reproducible and independent of deployment infrastructure.
+
+## __CDN_BASE_URL__ Substitution
+
+The bootstrap loader references the CDN base URL at runtime. During the CDN build, this constant is substituted:
+
+```typescript
+// Before substitution (in source)
+const baseUrl = __CDN_BASE_URL__;
+
+// After substitution (in dist/script.js)
+const baseUrl = "https://cdn.example.com/embed";
+```
+
+The URL is computed from env vars at build time:
+
+```
+CDN_DOMAIN=cdn.example.com
+R2_CDN_PREFIX=embed
+→ __CDN_BASE_URL__ = "https://cdn.example.com/embed"
+```
+
+## Running the CDN Build
+
+```bash
+# Using the package script directly
+bun run build:cdn
+
+# Using Makefile (dev environment)
+make embed:build:cdn
+
+# Using Makefile (production environment)
+make embed:build:cdn:production
+```
+
+The Makefile targets load the appropriate `.env.{environment}` file before running the build, ensuring the correct CDN domain is baked in.

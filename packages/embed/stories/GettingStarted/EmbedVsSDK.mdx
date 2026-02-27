@@ -1,0 +1,74 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Getting Started/Embed vs SDK" />
+
+# Embed vs SDK
+
+`@workspace/embed` and `@workspace/sdk` both provide the Userplane recorder. This page explains when to use each.
+
+## Side-by-Side Comparison
+
+| | `@workspace/embed` | `@workspace/sdk` |
+|---|---|---|
+| **Delivery** | CDN `<script>` tag | npm package |
+| **Initialization** | Automatic on script load | Manual `initialize()` call |
+| **SSR-safe** | No — runs in browser only | Yes — safe to import in Next.js, Nuxt, SvelteKit |
+| **TypeScript types** | Via `window` augmentation | Direct named imports |
+| **Tree-shaking** | Not applicable (full bundle) | Yes — unused exports dropped |
+| **`window.userplane` global** | Yes — always set | No — opt-in via your own code |
+| **Control over options** | Limited — via `initialize()` after load | Full — pass options to `initialize()` |
+| **Bundle size impact** | Zero — external script | Adds to your bundle |
+| **Caching** | Long-term via content hash | Bundled with your app |
+| **Updates** | Instant — new manifest on deploy | Requires app re-deploy |
+
+## When to Use `@workspace/embed`
+
+Use the embed script when:
+
+- **No build tool** — plain HTML files, CMS pages, landing pages, or marketing sites
+- **Third-party integration** — adding the recorder to a site you don't control the build for
+- **Fast integration** — two lines of HTML, no npm install
+- **Automatic updates** — you want recorder updates to propagate without re-deploying your app
+- **Script tag environments** — Google Tag Manager, tag management systems, A/B testing platforms
+
+```html
+<!-- That's all you need -->
+<meta name="userplane:workspace" content="ws_abc" />
+<script src="https://cdn.example.com/embed/script.js" defer></script>
+```
+
+## When to Use `@workspace/sdk`
+
+Use the npm SDK when:
+
+- **React / Next.js / Nuxt / SvelteKit** — framework apps with a build step
+- **SSR** — you need safe imports on the server side
+- **Custom initialization** — you need to pass options like `workspaceId`, `openImmediately`, custom URL parsers
+- **TypeScript** — you want typed imports without window augmentation
+- **Tree-shaking** — you want to minimize bundle size by importing only what you use
+- **Controlled updates** — you want recorder updates tied to your app's release cycle
+
+```typescript
+import { initialize } from '@workspace/sdk';
+
+initialize({
+  workspaceId: 'ws_abc',
+  openImmediately: false,
+  metadata: { plan: 'pro' },
+});
+```
+
+## Can I Use Both?
+
+No — use one or the other. Using both will result in duplicate initialization. If your app uses a bundler, use the SDK. If you're adding a `<script>` tag to an HTML page, use embed.
+
+## Migration
+
+Moving from embed to SDK:
+
+1. Remove the `<script src="...script.js">` tag
+2. `npm install @workspace/sdk`
+3. Call `initialize()` in your app entry point
+4. Remove `window.userplane` usages — use named imports instead
+
+Moving from SDK to embed is the reverse: remove the npm package, add the two HTML lines, and replace named imports with `window.userplane.*` calls.

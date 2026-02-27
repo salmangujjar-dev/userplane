@@ -1,0 +1,88 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="CDN Loading/How It Works" />
+
+# How It Works
+
+The embed package uses a two-stage loading strategy to solve a fundamental CDN caching problem: long-term caching is great for performance, but it prevents instant updates.
+
+## The Problem with Simple Versioned URLs
+
+A naive approach would be:
+
+```html
+<script src="https://cdn.example.com/embed/v1.2.3/sdk.js"></script>
+```
+
+This forces users to update their HTML on every release. It also doesn't cache well because the URL changes with every version.
+
+An alternative — a stable URL like `/embed/latest/sdk.js` — is worse: it can't be cached at all, or it serves stale content to users who cached it.
+
+## The Two-Stage Solution
+
+```
+Browser                        CDN
+   │                            │
+   │  GET /embed/script.js      │
+   │──────────────────────────►│  (cache: 5 min, ~1 KB)
+   │◄──────────────────────────│
+   │  bootstrap loader          │
+   │                            │
+   │  GET /embed/manifest.json  │
+   │    ?t=1700000000000        │
+   │──────────────────────────►│  (cache: 5 min, cache-busted by ?t=)
+   │◄──────────────────────────│
+   │  { "main": "main.a1b2.js" }│
+   │                            │
+   │  <script type="module"     │
+   │    src="/embed/main.a1b2.js">
+   │──────────────────────────►│  (cache: 1 year, immutable)
+   │◄──────────────────────────│
+   │  full SDK bundle           │
+   │                            │
+   │  window.userplane = sdk    │
+   │  initialize() runs         │
+```
+
+### Stage 1: Bootstrap (`script.js`)
+
+`script.js` is a tiny (~1KB) loader. Its job is to:
+
+1. Wait for DOM ready
+2. Fetch `manifest.json` with a cache-busting timestamp
+3. Read the `main` key from the manifest
+4. Inject a `<script type="module">` tag pointing to the hashed bundle
+
+The bootstrap file itself has a stable URL — it never changes its filename. It is cached for 5 minutes.
+
+### Stage 2: Main Bundle (`main.{hash}.js`)
+
+The main bundle contains the full SDK. Its filename includes a content hash (first 16 hex chars of SHA-256 of the file). Because the hash changes whenever the file changes, the CDN can serve it with a 1-year immutable cache.
+
+When you deploy a new version:
+1. A new `main.{newhash}.js` is uploaded
+2. `manifest.json` is updated to point to the new filename
+3. Within 5 minutes, all users fetch the new manifest and load the new bundle
+
+## Cache Strategy Per File
+
+| File | Cache-Control | TTL | Why |
+|------|--------------|-----|-----|
+| `script.js` | `public, max-age=300` | 5 min | Stable URL, short cache so bootstrap updates propagate |
+| `manifest.json` | `public, max-age=300` | 5 min | Pointer to latest bundle; `?t=` param bypasses HTTP cache on load |
+| `main.{hash}.js` | `public, max-age=31536000, immutable` | 1 year | Content-addressed — hash changes = new file |
+
+## Why Not `/v1.2.3/script.js`?
+
+Versioned script URLs require users to update their HTML on every release. With two-stage loading, users paste the embed snippet once and always get the latest version — no HTML changes needed, updates propagate within 5 minutes.
+
+## What Happens on Deploy
+
+1. Build runs: new `main.js` is produced
+2. Upload script hashes `main.js` → `main.{hash}.js`
+3. All three files are uploaded to R2: `script.js`, `manifest.json`, `main.{hash}.js`
+4. CDN edge nodes pick up updated `manifest.json` within 5 minutes
+5. Next page load: users fetch new manifest → load new bundle
+6. Old `main.{oldhash}.js` continues to be served from cache for up to 1 year for users who loaded it before the deploy (but this is fine — it's valid code)
+
+See **[Deployment → CDN Deployment](../?path=/docs/deployment-cdn-deployment--docs)** for the exact upload commands.
