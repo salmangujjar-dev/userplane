@@ -1,0 +1,123 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="CDN Loading/Bootstrap Loader" />
+
+# Bootstrap Loader
+
+The bootstrap loader is the entry point of the embed package: `src/script.ts`. It is compiled into a single tiny `script.js` file (~1KB) that lives at a stable CDN URL.
+
+## Responsibilities
+
+1. Wait for DOM ready (if needed)
+2. Fetch `manifest.json` with a cache-busting timestamp
+3. Parse the manifest to find the current bundle filename
+4. Inject a `<script type="module">` tag with the bundle URL
+5. Pass through any CSP nonce from the bootstrap tag to the injected tag
+
+## Source Walkthrough
+
+### DOM-Ready Wait
+
+The script checks `document.readyState` before proceeding. If the DOM is still loading, it waits for `DOMContentLoaded`:
+
+```typescript
+function bootstrap() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+}
+```
+
+This is safe to include with or without `defer` on the `<script>` tag, though `defer` is recommended.
+
+### CDN Base URL
+
+The CDN base URL is baked in at build time via Vite's `define` block:
+
+```typescript
+const baseUrl = __CDN_BASE_URL__;
+// Resolved at build time to: "https://cdn.example.com/embed"
+```
+
+`__CDN_BASE_URL__` is constructed from `CDN_DOMAIN` + `R2_CDN_PREFIX` environment variables during the CDN build. See **[Build System → CDN Build](../?path=/docs/build-system-cdn-build--docs)** for details.
+
+### Manifest Fetch with Cache-Busting
+
+```typescript
+const manifestUrl = `${baseUrl}/manifest.json?t=${Date.now()}`;
+const response = await fetch(manifestUrl);
+const manifest = await response.json();
+```
+
+The `?t={Date.now()}` query parameter makes every manifest request unique, so browsers never serve a cached manifest. The HTTP cache on the CDN side still applies (`max-age=300`) — the `?t=` param bypasses the **browser** cache only.
+
+This ensures:
+- New manifests are always fetched fresh by the browser
+- The CDN can still cache manifest responses for 5 minutes (reducing origin load)
+
+### Script Injection
+
+```typescript
+const script = document.createElement('script');
+script.type = 'module';
+script.src = `${baseUrl}/${manifest.main}`;
+document.head.appendChild(script);
+```
+
+The `type="module"` attribute is required for modern ES module bundles. Module scripts are always deferred by the browser.
+
+### CSP Nonce Passthrough
+
+If the page uses a Content Security Policy with a nonce, the bootstrap tag's nonce is passed through to the injected script tag:
+
+```typescript
+const bootstrapScript = document.currentScript;
+const nonce = bootstrapScript?.nonce || bootstrapScript?.getAttribute('nonce');
+
+if (nonce) {
+  script.nonce = nonce;
+}
+```
+
+Usage in HTML:
+
+```html
+<script
+  src="https://cdn.example.com/embed/script.js"
+  nonce="abc123"
+  defer
+></script>
+```
+
+The injected `main.{hash}.js` script tag will also carry `nonce="abc123"`, satisfying the CSP `script-src 'nonce-abc123'` directive.
+
+## Error Handling
+
+If the manifest fetch fails (network error, 404, or invalid JSON), the bootstrap logs a warning and the SDK does not load:
+
+```typescript
+try {
+  const response = await fetch(manifestUrl);
+  if (!response.ok) {
+    console.warn('[userplane] Failed to load manifest:', response.status);
+    return;
+  }
+  const manifest = await response.json();
+  // ... inject script
+} catch (err) {
+  console.warn('[userplane] Bootstrap error:', err);
+}
+```
+
+This is a graceful failure — the host page continues to function normally, the recorder simply doesn't load.
+
+## What the Bootstrap Does NOT Do
+
+- It does not initialize the SDK (that happens inside `main.{hash}.js`)
+- It does not set `window.userplane` (set inside `main.{hash}.js`)
+- It does not parse URL parameters
+- It does not access any Userplane APIs
+
+The bootstrap is intentionally minimal. All SDK logic lives in the main bundle.

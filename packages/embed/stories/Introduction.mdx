@@ -1,0 +1,70 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# Userplane Embed
+
+`@workspace/embed` is the CDN distribution layer for the Userplane SDK. It wraps `@workspace/sdk` with two unique additions designed for no-bundler environments:
+
+1. **Two-stage bootstrap loader** — a tiny `script.js` fetches a `manifest.json` and dynamically injects the content-hashed `main.{hash}.js`, enabling long-term caching with instant updates on deploy.
+2. **Auto-initialization** — the full SDK initializes automatically on script load and is exposed as `window.userplane`.
+
+## Two-Package Model
+
+| | `@workspace/embed` | `@workspace/sdk` |
+|---|---|---|
+| **Delivery** | CDN `<script>` tag | npm package |
+| **Initialization** | Automatic on load | Manual `initialize()` call |
+| **Global** | `window.userplane` | No global |
+| **Target** | Plain HTML, no bundler | React, Next.js, Vite, etc. |
+| **SSR-safe** | No (script tag) | Yes |
+| **TypeScript types** | Via window augmentation | Direct imports |
+
+## How Loading Works
+
+```
+<script src="https://cdn.example.com/embed/script.js">
+        │
+        ▼  (instant: ~1KB, cached 5 min)
+  Fetch manifest.json?t={timestamp}
+        │
+        ▼  (fast: 5 min cache, cache-busted on deploy)
+  {
+    "main": "main.a1b2c3d4e5f6.js",
+    "version": "1.0.0",
+    "timestamp": 1700000000000
+  }
+        │
+        ▼  (inject <script type="module"> tag)
+  Load main.a1b2c3d4e5f6.js
+        │       (heavy: 1-year immutable cache)
+        ▼
+  window.userplane = sdk
+  initialize() runs automatically
+```
+
+## Simplest Possible Setup
+
+```html
+<!-- 1. Your workspace ID -->
+<meta name="userplane:workspace" content="ws_your_workspace_id" />
+
+<!-- 2. The embed script — that's it -->
+<script src="https://cdn.example.com/embed/script.js" defer></script>
+```
+
+After the script loads, `window.userplane` is available and the SDK is initialized. When a user visits a recording link (`?userplane-action=open&userplane-token=...`), the recorder opens automatically.
+
+## Documentation Guide
+
+| Section | What You'll Find |
+|---------|-----------------|
+| **Getting Started** | Step-by-step setup, embed vs SDK comparison |
+| **CDN Loading** | Two-stage bootstrap, manifest caching, cache strategy |
+| **Auto-Initialization** | How auto-init works, URL parameters, `window.userplane` global |
+| **Build System** | Dual-mode build (CDN vs NPM), build commands, env vars |
+| **Deployment** | R2 upload script, environment setup, deploy commands |
+| **API Reference** | Complete `window.userplane` function reference |
+| **Troubleshooting** | Common issues, symptoms, and fixes |
+
+Start with **Getting Started → Quick Start** for a working example, or jump to **API Reference → window.userplane API** for function signatures.

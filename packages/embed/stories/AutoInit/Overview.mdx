@@ -1,0 +1,104 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Auto-Initialization/Overview" />
+
+# Auto-Initialization Overview
+
+One of the key differences between `@workspace/embed` and `@workspace/sdk` is that the embed package initializes automatically — you never need to call `initialize()` yourself.
+
+## How Auto-Init Works
+
+The entry point of the main bundle is `src/index.ts`. After importing the SDK, it immediately calls `initialize()`:
+
+```typescript
+import * as sdk from '@workspace/sdk';
+
+// Auto-initialize when running in a browser
+if (typeof window !== 'undefined') {
+  sdk.initialize();
+}
+
+// Expose the global
+window.userplane = sdk;
+```
+
+The `typeof window !== 'undefined'` guard ensures the module is safe to import in SSR contexts (though the embed package is not intended for SSR — this is a safety net).
+
+## Initialization Sequence
+
+```
+1. User visits page
+        │
+2. Browser parses HTML, finds:
+   <script src="cdn/script.js" defer>
+        │
+3. DOM content loaded
+        │
+4. script.js executes (bootstrap loader)
+        │
+5. Fetch manifest.json?t={timestamp}
+        │
+6. Inject <script type="module" src="cdn/main.{hash}.js">
+        │
+7. main.{hash}.js executes
+        │
+8. SDK modules initialize
+        │
+9. initialize() runs automatically
+   ├── Reads <meta name="userplane:workspace"> from DOM
+   ├── Checks URL for userplane-action / userplane-token
+   └── If recording link: opens recorder iframe
+        │
+10. window.userplane = sdk
+    window.__userplaneTabRef = { ... }
+```
+
+## Contrast with SDK
+
+With `@workspace/sdk`, you control when initialization happens:
+
+```typescript
+// SDK: manual, full control
+import { initialize } from '@workspace/sdk';
+
+initialize({
+  workspaceId: 'ws_abc',
+  openImmediately: false,
+  metadata: { userId: '123' },
+});
+```
+
+With embed, initialization happens at step 9 above — before your own scripts may have run. If you need to set metadata or custom options, you need a different approach.
+
+## When to Call `initialize()` Manually
+
+Even with auto-init, you can call `window.userplane.initialize()` again to customize options:
+
+```javascript
+// Wait for the embed script to load
+document.querySelector('script[src*="script.js"]')
+  .addEventListener('load', () => {
+    // wait for the async main bundle load
+    window.userplane.initialize({
+      openImmediately: false,
+      metadata: { plan: 'enterprise' },
+    });
+  });
+```
+
+Note: `initialize()` is idempotent — calling it multiple times is safe. The second call re-applies options but does not re-mount the recorder.
+
+## What Auto-Init Reads from the DOM
+
+Auto-init reads configuration from `<meta>` tags:
+
+```html
+<meta name="userplane:workspace" content="ws_your_id" />
+```
+
+This is the same mechanism as the SDK. The workspace ID is required — without it, initialization logs a warning and the recorder will not open.
+
+## Next Steps
+
+- **[URL Parameters](../?path=/docs/auto-initialization-url-parameters--docs)** — how recording links are detected and consumed
+- **[window.userplane](../?path=/docs/auto-initialization-window-userplane--docs)** — the global object and its timing

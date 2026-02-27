@@ -1,0 +1,161 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Auto-Initialization/window.userplane" />
+
+# window.userplane
+
+The `window.userplane` global is the public API surface of the embed package. It is set in `src/index.ts` after the SDK initializes.
+
+## How It Is Set
+
+```typescript
+// src/index.ts
+import * as sdk from '@workspace/sdk';
+
+if (typeof window !== 'undefined') {
+  sdk.initialize();
+}
+
+// Expose the entire SDK namespace as the global
+(window as any).userplane = sdk;
+```
+
+The global is the entire SDK module namespace — every exported function from `@workspace/sdk` is available on `window.userplane`.
+
+## Timing
+
+`window.userplane` is available **only after `main.{hash}.js` has executed**. This is asynchronous:
+
+```
+<script src="script.js" defer>
+    │
+    └── [async] bootstrap → manifest → main.{hash}.js
+                                              │
+                                              └── window.userplane is set HERE
+```
+
+This means `window.userplane` is **not** available synchronously after your page's `<script>` tags run.
+
+### Safe Access Pattern
+
+To access `window.userplane` reliably, listen for the script's load event or use a polling approach:
+
+```javascript
+// Option 1: Listen for the main bundle's load
+// The main bundle is injected as a <script type="module"> by the bootstrap
+// Modules fire load events — but the injected script is dynamic, making this tricky.
+
+// Option 2: Simple ready check
+function onUserplaneReady(callback) {
+  if (window.userplane && window.userplane.isInitialized()) {
+    callback(window.userplane);
+    return;
+  }
+  setTimeout(() => onUserplaneReady(callback), 50);
+}
+
+onUserplaneReady((up) => {
+  console.log('Userplane ready:', up.getSessionId());
+});
+```
+
+```javascript
+// Option 3: Use a Promise
+const userplaneReady = new Promise((resolve) => {
+  const check = () => {
+    if (window.userplane?.isInitialized()) {
+      resolve(window.userplane);
+    } else {
+      setTimeout(check, 50);
+    }
+  };
+  check();
+});
+
+userplaneReady.then((up) => {
+  up.set('userId', '123');
+});
+```
+
+## TypeScript Augmentation
+
+For typed access to `window.userplane` in TypeScript projects, augment the `Window` interface:
+
+```typescript
+// userplane.d.ts (add to your project)
+import type * as UserplaneSDK from '@workspace/sdk';
+
+declare global {
+  interface Window {
+    userplane: typeof UserplaneSDK;
+    __userplaneTabRef?: {
+      tabId: string;
+      sessionId?: string;
+    };
+  }
+}
+```
+
+Then use with full type safety:
+
+```typescript
+// TypeScript knows the type of each method
+window.userplane.set('key', 'value');
+const state = window.userplane.getRecordingState();
+```
+
+## window.__userplaneTabRef
+
+In addition to `window.userplane`, the embed package sets `window.__userplaneTabRef`:
+
+```typescript
+window.__userplaneTabRef = sdk.getTabRef();
+```
+
+This is a lightweight identifier for the current tab used by the capture iframe for cross-tab coordination. It is set alongside `window.userplane`.
+
+## Available Functions
+
+Functions are grouped by purpose:
+
+### Initialization
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `initialize` | `(options?: InitializeOptions) => void` | Initialize or re-initialize the SDK |
+| `isInitialized` | `() => boolean` | Returns true if `initialize()` has been called |
+
+### Recorder Control
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `open` | `(token?: string) => Promise<void>` | Open the recorder (optionally with a session token) |
+| `unmount` | `() => void` | Close and remove the recorder iframe |
+| `isRecorderMounted` | `() => boolean` | True if the recorder iframe is in the DOM |
+| `isBridgeConnected` | `() => boolean` | True if the PostBridge RPC connection is established |
+
+### State
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `getRecordingState` | `() => RecordingState` | Current state of the recording session |
+| `getRecordingContext` | `() => RecordingContext \| null` | Full context object for the active session |
+| `getSessionId` | `() => string \| null` | Active session ID, or null if not recording |
+| `getLinkId` | `() => string \| null` | Link ID from the recording URL token |
+
+### Metadata
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `set` | `(key: string, value: unknown) => void` | Set a metadata key-value pair |
+| `metadata` | `() => Record<string, unknown>` | Get all current metadata |
+| `clearMetadata` | `() => void` | Clear all metadata |
+
+### Tab Identity
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `getTabRef` | `() => TabRef` | Get the current tab's reference object |
+| `clearTabRef` | `() => void` | Clear the tab reference (rarely needed) |
+
+See **[API Reference → window.userplane API](../?path=/docs/api-reference-window-userplane-api--docs)** for complete signatures and examples.

@@ -1,0 +1,108 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Deployment/Environment Setup" />
+
+# Environment Setup
+
+The CDN build and deploy pipeline requires six environment variables. These control which R2 bucket to upload to and what CDN domain to bake into the bootstrap loader.
+
+## Required Variables
+
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `R2_CDN_ACCOUNT_ID` | `abc123def456` | Cloudflare account ID |
+| `R2_CDN_ACCESS_KEY_ID` | `AKIAXXXXXXXX` | R2 API access key ID |
+| `R2_CDN_SECRET_ACCESS_KEY` | `xxxxxxxxxxxxx` | R2 API secret key |
+| `R2_CDN_BUCKET_NAME` | `my-cdn-bucket` | R2 bucket name |
+| `CDN_DOMAIN` | `cdn.example.com` | CDN domain (no `https://`) |
+| `R2_CDN_PREFIX` | `embed` | Path prefix inside the bucket |
+
+## Where Env Files Are Loaded
+
+The upload script loads environment variables in this order:
+
+1. `.env.{env}` in `packages/embed/` (package-local overrides)
+2. `apps/api/.env.{env}` (fallback, shared with the API)
+
+Where `{env}` is the `--env` flag value passed to the script:
+
+```bash
+bun run deploy:cdn --env=production
+# loads: packages/embed/.env.production
+# then:  apps/api/.env.production (if first not found)
+```
+
+## Supported Environments
+
+| Environment | `.env` File | Use Case |
+|-------------|-----------|---------|
+| `development` | `.env.development` | Local dev, staging CDN |
+| `production` | `.env.production` | Live production CDN |
+
+## Example `.env.production`
+
+```bash
+# Cloudflare R2 credentials
+R2_CDN_ACCOUNT_ID=abc123def456789
+R2_CDN_ACCESS_KEY_ID=your_access_key_id
+R2_CDN_SECRET_ACCESS_KEY=your_secret_access_key
+
+# R2 bucket
+R2_CDN_BUCKET_NAME=my-userplane-cdn
+
+# CDN configuration
+CDN_DOMAIN=cdn.example.com
+R2_CDN_PREFIX=embed
+```
+
+Store this file in `packages/embed/.env.production` and add it to `.gitignore`. Never commit credentials to version control.
+
+## R2 Endpoint Construction
+
+The AWS S3-compatible endpoint for R2 is constructed from the account ID:
+
+```
+https://{R2_CDN_ACCOUNT_ID}.r2.cloudflarestorage.com
+```
+
+The upload script uses `@aws-sdk/client-s3` with this endpoint and your credentials.
+
+## CDN URL Construction
+
+The embed snippet URL is constructed from `CDN_DOMAIN` and `R2_CDN_PREFIX`:
+
+```
+https://{CDN_DOMAIN}/{R2_CDN_PREFIX}/script.js
+→ https://cdn.example.com/embed/script.js
+```
+
+The same values are baked into `script.js` as `__CDN_BASE_URL__` at build time. Changing these values requires a rebuild and redeploy.
+
+## Setting Up R2 Access Keys
+
+1. Go to **Cloudflare Dashboard → R2 → Manage R2 API Tokens**
+2. Create a token with **Object Read & Write** permissions
+3. Scope the token to your specific bucket (`R2_CDN_BUCKET_NAME`)
+4. Copy the **Access Key ID** and **Secret Access Key** to your `.env.production`
+
+The account ID is found on the **Cloudflare Dashboard** right sidebar under **Account ID**.
+
+## Testing Your Setup
+
+Use `--dry-run` to verify credentials and configuration without uploading:
+
+```bash
+bun run upload:cdn --env=production --dry-run
+```
+
+Or upload only the manifest (a low-risk test that does not affect the bootstrap or bundle):
+
+```bash
+bun run upload:cdn --env=production --manifest-only
+```
+
+A successful dry-run confirms that:
+- All environment variables are set
+- R2 credentials are valid
+- The bucket exists and is accessible
+- The CDN domain resolves correctly

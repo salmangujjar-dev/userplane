@@ -1,0 +1,89 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Getting Started/Quick Start" />
+
+# Quick Start
+
+Get the Userplane recorder running on any web page in two steps.
+
+## Step 1: Add Your Workspace ID
+
+Add a `<meta>` tag to your `<head>` with your workspace ID:
+
+```html
+<meta name="userplane:workspace" content="ws_your_workspace_id" />
+```
+
+The SDK reads this at initialization time. Without it, initialization will fail silently.
+
+## Step 2: Add the Script Tag
+
+```html
+<script src="https://cdn.example.com/embed/script.js" defer></script>
+```
+
+Use `defer` so the script runs after the DOM is parsed without blocking rendering.
+
+## Complete Minimal HTML
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="userplane:workspace" content="ws_your_workspace_id" />
+    <title>My App</title>
+  </head>
+  <body>
+    <h1>Hello World</h1>
+
+    <script src="https://cdn.example.com/embed/script.js" defer></script>
+  </body>
+</html>
+```
+
+## Verifying the Setup
+
+### DevTools Console
+
+After the page loads, open DevTools and check:
+
+```javascript
+// Should return true once the script has fully loaded
+window.userplane.isInitialized()
+
+// Inspect the full global
+console.log(window.userplane)
+```
+
+### Network Tab
+
+You should see two requests after the page loads:
+
+1. `script.js` — the bootstrap loader (~1KB)
+2. `manifest.json?t=1700000000000` — the asset manifest (cache-busted)
+3. `main.a1b2c3d4.js` — the full SDK bundle (loaded by bootstrap)
+
+### DOM
+
+After a recording link is opened, look for:
+
+- An `<iframe>` injected by the SDK (the recorder UI)
+- A backdrop overlay element
+
+## Opening a Recording
+
+Once set up, visit your page with a recording URL:
+
+```
+https://yoursite.com/page?userplane-action=open&userplane-token=tok_abc123
+```
+
+The recorder will open automatically. The URL parameters are consumed and cleaned from the address bar via `history.replaceState`.
+
+## Next Steps
+
+- **[Embed vs SDK](../?path=/docs/getting-started-embed-vs-sdk--docs)** — decide which package fits your project
+- **[CDN Loading → How It Works](../?path=/docs/cdn-loading-how-it-works--docs)** — understand the two-stage loading mechanism
+- **[Auto-Initialization → Overview](../?path=/docs/auto-initialization-overview--docs)** — learn what happens after the script loads

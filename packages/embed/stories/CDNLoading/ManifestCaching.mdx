@@ -1,0 +1,118 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="CDN Loading/Manifest & Caching" />
+
+# Manifest & Caching
+
+The manifest is the link between the stable bootstrap URL and the content-hashed bundle. Understanding it helps you reason about deployment timing and cache behavior.
+
+## Manifest Structure
+
+```json
+{
+  "main": "main.a1b2c3d4e5f67890.js",
+  "version": "1.0.0",
+  "timestamp": 1700000000000,
+  "contentHash": "a1b2c3d4e5f67890abcdef1234567890"
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `main` | Filename of the current bundle (relative to CDN prefix) |
+| `version` | Package version from `package.json` |
+| `timestamp` | Unix ms timestamp of the build |
+| `contentHash` | SHA-256 of `main.js`, first 16 hex chars |
+
+### Content Hash
+
+The content hash is derived from the bundle contents:
+
+```typescript
+import { createHash } from 'crypto';
+
+const hash = createHash('sha256')
+  .update(mainFileContents)
+  .digest('hex')
+  .slice(0, 16);
+
+const hashedFilename = `main.${hash}.js`;
+```
+
+This means:
+- Same code → same hash → CDN returns cached file (no re-download)
+- Any code change → new hash → new filename → browser fetches fresh (bypasses all caches)
+
+## Cache-Control Headers
+
+Each file is uploaded with specific cache headers:
+
+```
+script.js
+  Cache-Control: public, max-age=300
+  Content-Type: application/javascript
+
+manifest.json
+  Cache-Control: public, max-age=300
+  Content-Type: application/json
+
+main.a1b2c3d4e5f67890.js
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: application/javascript
+```
+
+## Browser Cache Timeline
+
+```
+First visit (t=0):
+  Browser ──► CDN: GET script.js        → cache MISS  → store 5 min
+  Browser ──► CDN: GET manifest.json?t= → cache MISS  → store 5 min
+  Browser ──► CDN: GET main.{hash}.js   → cache MISS  → store 1 year
+
+Same session (t=1 min):
+  All files served from browser cache — zero network requests
+
+Same day (t=3 min):
+  Script.js   → browser cache HIT (still fresh, <5 min)
+  Manifest    → browser cache MISS (cache-busted by ?t=) → CDN cache HIT
+  Main bundle → browser cache HIT (still fresh, <1 year)
+
+After deploy (t=6 min, new manifest on CDN):
+  Script.js   → browser cache HIT (script.js unchanged)
+  Manifest    → always re-fetched (?t= bypasses browser cache)
+              → CDN cache MISS (manifest updated 6 min ago, CDN cache expired)
+              → New manifest: { "main": "main.{newhash}.js" }
+  Main bundle → NEW filename → browser cache MISS → CDN cache MISS
+              → Downloads new bundle, stores for 1 year
+```
+
+## Deployment Update Propagation
+
+Worst-case timeline for updates to reach all users after a deploy:
+
+| Scenario | Wait Time |
+|----------|-----------|
+| User has no cached files | Immediate (next page load) |
+| User has manifest cached | Up to 5 minutes |
+| User has `script.js` cached | Up to 5 minutes |
+| User has old `main.{hash}.js` cached | Irrelevant — new bundle has new filename |
+
+**Maximum propagation time: 5 minutes.**
+
+This is because the manifest `max-age=300` (5 min) is the longest TTL that can delay seeing a new version. Once the manifest cache expires, the next load fetches the new manifest and new bundle.
+
+## Hard Refresh Behavior
+
+A hard refresh (`Ctrl+Shift+R` / `Cmd+Shift+R`) bypasses the browser cache. Users who want immediate updates without waiting 5 minutes can use a hard refresh.
+
+## Old Bundles in Cache
+
+Users who loaded `main.{oldhash}.js` before a deploy continue using it until:
+1. Their 1-year browser cache for that file expires, OR
+2. They hard-refresh the page (cache cleared), OR
+3. They visit on a different device/browser
+
+This is acceptable because:
+- Old bundles are still valid, working code
+- The next page load after the 5-min manifest TTL expires will load the new bundle
+- Users on the new bundle get it immediately on next load

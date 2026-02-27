@@ -1,0 +1,98 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Build System/NPM Build" />
+
+# NPM Build
+
+Running `bun run build` (without `OPTIMIZE_MODE=cdn`) activates the standard npm build profile. This produces the package output consumed by projects that install `@workspace/embed` from npm.
+
+## Output Files
+
+```
+dist/
+├── index.es.js    # ES module build
+├── index.cjs.js   # CommonJS build
+└── index.d.ts     # TypeScript declarations
+```
+
+## Entry Point
+
+The NPM build uses a single entry point:
+
+```
+src/index.ts  →  dist/index.es.js + dist/index.cjs.js + dist/index.d.ts
+```
+
+`src/index.ts` is the same file that becomes `main.{hash}.js` in the CDN build. The difference is in the build output format and what gets baked in.
+
+## ESM + CJS Dual Output
+
+The NPM build produces both ES module and CommonJS formats:
+
+```typescript
+// ESM: dist/index.es.js
+export const userplane = sdk;
+export * from '@workspace/sdk';
+
+// CJS: dist/index.cjs.js
+module.exports = { ...sdk };
+```
+
+This ensures compatibility with both bundlers (Vite, webpack, Rollup) that use ESM and older toolchains or Node.js scripts that use `require()`.
+
+## __DEV__ in NPM Build
+
+In the NPM build, `__DEV__` is set to `true`:
+
+```typescript
+define: {
+  __DEV__: 'true',
+}
+```
+
+Development builds retain debug logging and helpful error messages. When a user bundles your app for production, their bundler (Vite, webpack) will set `NODE_ENV=production`, and the bundler's own dead-code elimination will strip `if (__DEV__)` branches.
+
+## exports Map
+
+The `package.json` exports map determines which file is loaded for each use case:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
+    }
+  }
+}
+```
+
+## When to Use @workspace/embed vs @workspace/sdk
+
+`@workspace/embed` and `@workspace/sdk` both work as npm packages, but they differ in one important way:
+
+**`@workspace/embed`** has a **side effect on import** — `initialize()` runs when the module is loaded:
+
+```typescript
+import '@workspace/embed'; // initialize() runs immediately
+```
+
+**`@workspace/sdk`** has **no side effects on import**:
+
+```typescript
+import { initialize } from '@workspace/sdk'; // nothing runs
+initialize(); // you control when it happens
+```
+
+Use `@workspace/embed` as an npm package only if you want the auto-init behavior in a bundled context. For most framework apps, use `@workspace/sdk` directly for full control.
+
+## Building
+
+```bash
+bun run build
+# or
+make embed:build
+```
+
+The build step runs `tsc` first (type-checking and declaration generation) then `vite build` (bundling).

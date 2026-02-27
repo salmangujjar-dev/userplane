@@ -1,0 +1,264 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/window.userplane API" />
+
+# window.userplane API
+
+Complete reference for all functions available on the `window.userplane` global, set by `@workspace/embed` after auto-initialization.
+
+`window.userplane` is the entire `@workspace/sdk` module namespace. Each function below is available directly on the global object.
+
+---
+
+## Initialization
+
+### `initialize(options?)`
+
+```typescript
+initialize(options?: InitializeOptions): void
+```
+
+Initialize or re-initialize the SDK. Called automatically by the embed package on load. Safe to call again to apply custom options.
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `workspaceId` | `string` | Override workspace ID (default: reads `<meta name="userplane:workspace">`) |
+| `openImmediately` | `boolean` | If `false`, recorder does not open on URL parameter detection |
+| `metadata` | `Record<string, unknown>` | Initial metadata key-value pairs |
+| `parseUserplaneData` | `(url: URL) => UserplaneData` | Custom URL parameter parser |
+| `applyUserplaneData` | `(data: UserplaneData) => void` | Custom data application logic |
+
+```javascript
+// Re-initialize with custom options after auto-init
+window.userplane.initialize({
+  openImmediately: false,
+  metadata: { plan: 'enterprise', userId: '123' },
+});
+```
+
+---
+
+### `isInitialized()`
+
+```typescript
+isInitialized(): boolean
+```
+
+Returns `true` if `initialize()` has been called at least once.
+
+```javascript
+if (window.userplane.isInitialized()) {
+  console.log('SDK ready');
+}
+```
+
+---
+
+## Recorder Control
+
+### `open(token?)`
+
+```typescript
+open(token?: string): Promise<void>
+```
+
+Open the recorder. Optionally accepts a session token. Use this to programmatically open the recorder without a URL parameter.
+
+```javascript
+// Open without a token (useful for testing)
+await window.userplane.open();
+
+// Open with a specific token
+await window.userplane.open('tok_abc123');
+```
+
+---
+
+### `unmount()`
+
+```typescript
+unmount(): void
+```
+
+Close the recorder and remove its iframe from the DOM. The recorder can be re-opened with `open()` afterwards.
+
+```javascript
+window.userplane.unmount();
+```
+
+---
+
+### `isRecorderMounted()`
+
+```typescript
+isRecorderMounted(): boolean
+```
+
+Returns `true` if the recorder iframe is currently in the DOM.
+
+```javascript
+if (window.userplane.isRecorderMounted()) {
+  console.log('Recorder is visible');
+}
+```
+
+---
+
+### `isBridgeConnected()`
+
+```typescript
+isBridgeConnected(): boolean
+```
+
+Returns `true` if the PostBridge RPC connection between the SDK host and the recorder iframe is established. The bridge connects shortly after the recorder iframe loads.
+
+```javascript
+// Check connection status
+console.log('Bridge connected:', window.userplane.isBridgeConnected());
+```
+
+---
+
+## State & Session
+
+### `getRecordingState()`
+
+```typescript
+getRecordingState(): RecordingState
+```
+
+Returns the current state of the recording session. Possible values: `'idle'`, `'connecting'`, `'recording'`, `'paused'`, `'stopped'`, `'error'`.
+
+```javascript
+const state = window.userplane.getRecordingState();
+console.log('Recording state:', state);
+```
+
+---
+
+### `getRecordingContext()`
+
+```typescript
+getRecordingContext(): RecordingContext | null
+```
+
+Returns the full context object for the active recording session, or `null` if no session is active. The context includes session ID, link ID, workspace ID, and recorder state.
+
+```javascript
+const ctx = window.userplane.getRecordingContext();
+if (ctx) {
+  console.log('Session ID:', ctx.sessionId);
+}
+```
+
+---
+
+### `getSessionId()`
+
+```typescript
+getSessionId(): string | null
+```
+
+Returns the active session ID, or `null` if no recording is in progress.
+
+```javascript
+const sessionId = window.userplane.getSessionId();
+```
+
+---
+
+### `getLinkId()`
+
+```typescript
+getLinkId(): string | null
+```
+
+Returns the link ID from the recording URL token, or `null` if no token was provided. The link ID is the identifier from the recording link used to open the recorder.
+
+```javascript
+const linkId = window.userplane.getLinkId();
+```
+
+---
+
+## Metadata
+
+### `set(key, value)`
+
+```typescript
+set(key: string, value: unknown): void
+```
+
+Set a metadata key-value pair on the current session. Metadata is attached to the recording and visible in the Userplane dashboard.
+
+```javascript
+window.userplane.set('userId', 'user_123');
+window.userplane.set('plan', 'enterprise');
+window.userplane.set('featureFlags', { darkMode: true });
+```
+
+---
+
+### `metadata()`
+
+```typescript
+metadata(): Record<string, unknown>
+```
+
+Returns all currently set metadata key-value pairs.
+
+```javascript
+const meta = window.userplane.metadata();
+console.log('Current metadata:', meta);
+```
+
+---
+
+### `clearMetadata()`
+
+```typescript
+clearMetadata(): void
+```
+
+Remove all metadata. Call this if you want to reset metadata between sessions (e.g., after a user logs out).
+
+```javascript
+window.userplane.clearMetadata();
+```
+
+---
+
+## Tab Identity
+
+### `getTabRef()`
+
+```typescript
+getTabRef(): TabRef
+```
+
+Returns the current tab's reference object. The tab ref is a stable identifier used for cross-tab coordination with the capture iframe.
+
+```javascript
+const ref = window.userplane.getTabRef();
+console.log('Tab ref:', ref.tabId);
+```
+
+---
+
+### `clearTabRef()`
+
+```typescript
+clearTabRef(): void
+```
+
+Clear the tab reference. This is rarely needed — use only if you need to reset cross-tab state.
+
+```javascript
+window.userplane.clearTabRef();
+```
+
+---
+
+## Full SDK Documentation
+
+The `window.userplane` API mirrors `@workspace/sdk` exactly. For in-depth documentation on concepts, configuration options, and advanced usage, refer to the [SDK Storybook](../?path=/docs/introduction--docs) (port 6008).
