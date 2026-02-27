@@ -61,6 +61,11 @@ export type LinkClient = UserplaneClient['link'];
 export type RecordingClient = UserplaneClient['recording'];
 
 /**
+ * Share API types
+ */
+export type ShareClient = UserplaneClient['share'];
+
+/**
  * Session API types
  */
 export type SessionClient = UserplaneClient['session'];
@@ -78,6 +83,7 @@ export type {
   ProvisionerContract,
   RecordingContract,
   SessionContract,
+  ShareContract,
   StatusContract,
   WorkspaceContract,
 } from '@workspace/contract';

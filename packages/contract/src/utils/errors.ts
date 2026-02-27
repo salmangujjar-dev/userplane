@@ -16,6 +16,7 @@ import { ProjectErrors } from '../schemas/project.errors';
 import { ProvisionerErrors } from '../schemas/provisioner.errors';
 import { RecordingErrors } from '../schemas/recording.errors';
 import { SessionErrors } from '../schemas/session.errors';
+import { ShareErrors } from '../schemas/share.errors';
 import { WorkspaceErrors } from '../schemas/workspace.errors';
 
 /**
@@ -92,4 +93,5 @@ export const projectError = createErrors(ProjectErrors);
 export const provisionerError = createErrors(ProvisionerErrors);
 export const recordingError = createErrors(RecordingErrors);
 export const sessionError = createErrors(SessionErrors);
+export const shareError = createErrors(ShareErrors);
 export const workspaceError = createErrors(WorkspaceErrors);

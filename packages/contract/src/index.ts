@@ -17,6 +17,7 @@ export {
   provisionerContract,
   recordingContract,
   sessionContract,
+  shareContract,
   statusContract,
   workspaceContract,
 } from './contract';
@@ -33,6 +34,7 @@ export type {
   ProvisionerContract,
   RecordingContract,
   SessionContract,
+  ShareContract,
   StatusContract,
   WorkspaceContract,
 } from './contract';

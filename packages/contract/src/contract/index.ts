@@ -16,6 +16,7 @@ import * as project from './project';
 import * as provisioner from './provisioner';
 import * as recording from './recording';
 import * as session from './session';
+import * as share from './share';
 import * as status from './status';
 import * as workspace from './workspace';
 
@@ -263,6 +264,15 @@ export const recordingContract = {
 };
 
 /**
+ * Share contract
+ * Public shareable recording links
+ */
+export const shareContract = {
+  generateToken: share.generateShareToken,
+  view: share.viewSharedRecording,
+};
+
+/**
  * Session contract
  * Recording session and upload management
  */
@@ -305,6 +315,7 @@ export const contract = {
   project: projectContract,
   link: linkContract,
   recording: recordingContract,
+  share: shareContract,
   session: sessionContract,
 };
 
@@ -323,5 +334,6 @@ export type DomainContract = typeof domainContract;
 export type ProjectContract = typeof projectContract;
 export type LinkContract = typeof linkContract;
 export type RecordingContract = typeof recordingContract;
+export type ShareContract = typeof shareContract;
 export type SessionContract = typeof sessionContract;
 export type Contract = typeof contract;
