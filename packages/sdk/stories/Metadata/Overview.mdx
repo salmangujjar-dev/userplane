@@ -1,0 +1,107 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Metadata/Overview" />
+
+# Metadata Overview
+
+Metadata is a set of key-value pairs attached to each recording session. It lets you correlate recordings with user identities, feature contexts, and application state.
+
+## What Metadata Is
+
+When the recorder starts a session, it calls `getCustomMetadata()` on the SDK via the bridge. The SDK collects and merges all registered metadata, then returns it to the recorder. The recorder attaches it to the session in Userplane.
+
+```
+Recorder iframe                    SDK (host)
+───────────────                    ──────────────────────────────────
+                                   set('userId', 'user_123')
+                                   metadata(() => ({ plan: 'pro' }))
+
+initSession() called ──────────────────────────────────────────────►
+                      ◄─── getCustomMetadata() ─────────────────────
+                                   ↓
+                            collect static keys
+                            call all dynamic fns
+                            merge results
+                      ──── { userId: 'user_123', plan: 'pro' } ────►
+                      recording saved with metadata attached
+```
+
+## Built-in System Keys
+
+The SDK automatically includes these keys in every session's metadata:
+
+| Key | Value | Source |
+|-----|-------|--------|
+| `_pageUrl` | `window.location.href` at session start | Automatic |
+| `_pageTitle` | `document.title` at session start | Automatic |
+
+These use an underscore prefix to distinguish them from your custom keys.
+
+## Custom Keys
+
+You define custom metadata using two methods:
+
+| Method | Description |
+|--------|-------------|
+| `set(key, value)` | Set a static key-value pair — value is captured once when you call `set()` |
+| `metadata(fn)` | Register a function — called on demand when the recorder requests metadata |
+
+The key difference: **static** values are set at a point in time; **dynamic** values are computed fresh each time metadata is requested.
+
+## Merging Rules
+
+When the recorder calls `getCustomMetadata()`, the SDK:
+
+1. Collects all static key-value pairs (set via `set()`)
+2. Calls all registered dynamic functions (registered via `metadata()`)
+3. Merges the results — **dynamic functions override static keys** of the same name
+
+```typescript
+set('plan', 'free');                   // static
+metadata(() => ({ plan: 'pro' }));     // dynamic — overrides static
+
+// Result: { plan: 'pro' }
+```
+
+If two dynamic functions return the same key, the **last registered** function wins.
+
+## Serializable Values
+
+All metadata values must be JSON-serializable:
+
+```typescript
+type Serializable = string | number | boolean | null | SerializableObject | Serializable[];
+type SerializableObject = { [key: string]: Serializable };
+```
+
+Non-serializable values (functions, `undefined`, class instances, `Date` objects, `Symbol`) will be stripped or cause serialization errors. Use `.toISOString()` for dates.
+
+## Example: User Context
+
+```typescript
+import { set, metadata } from '@workspace/sdk';
+
+// After user logs in:
+function onUserLogin(user: User) {
+  set('userId', user.id);
+  set('userEmail', user.email);
+  set('plan', user.plan);
+}
+
+// Dynamic context that changes as the user navigates:
+metadata(() => ({
+  currentRoute: window.location.pathname,
+  activeFeature: getActiveFeature(),
+}));
+```
+
+## Clearing Metadata
+
+```typescript
+import { clearMetadata } from '@workspace/sdk';
+
+clearMetadata('userId');    // remove a specific static key
+clearMetadata();            // remove all static keys and dynamic functions
+```
+
+See [Static Metadata](?path=/docs/metadata-static-metadata--docs) and [Dynamic Metadata](?path=/docs/metadata-dynamic-metadata--docs) for full API details.

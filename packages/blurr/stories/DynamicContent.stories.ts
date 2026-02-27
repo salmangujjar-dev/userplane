@@ -1,8 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 
 import { BlurManager } from '../src';
+import { trackManager } from './story-cleanup';
 
-const meta: Meta = {
+type BlurDemoArgs = {
+  autoStart: boolean;
+};
+
+const meta: Meta<BlurDemoArgs> = {
   title: 'Blurr/Dynamic Content',
   parameters: {
     docs: {
@@ -11,15 +16,25 @@ const meta: Meta = {
       },
     },
   },
+  argTypes: {
+    autoStart: {
+      control: 'boolean',
+      description: 'Automatically start blurring on load',
+      defaultValue: true,
+    },
+  },
 };
 
 export default meta;
 
-type Story = StoryObj;
+type Story = StoryObj<BlurDemoArgs>;
 
 export const DynamicElements: Story = {
   name: 'Dynamic Element Addition',
-  render: () => {
+  args: {
+    autoStart: true,
+  },
+  render: (args) => {
     const container = document.createElement('div');
     container.innerHTML = `
       <div style="font-family: system-ui, sans-serif; padding: 20px; max-width: 600px;">
@@ -50,7 +65,7 @@ export const DynamicElements: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const contentArea = container.querySelector('#content-area') as HTMLElement;
     const statusEl = container.querySelector('#status') as HTMLElement;
     const addBtn = container.querySelector('#add-content') as HTMLButtonElement;
@@ -105,7 +120,9 @@ export const DynamicElements: Story = {
       updateStatus();
     });
 
-    blurManager.start();
+    if (args.autoStart) {
+      blurManager.start();
+    }
     updateStatus();
 
     return container;
@@ -114,7 +131,10 @@ export const DynamicElements: Story = {
 
 export const CustomSelectors: Story = {
   name: 'Dynamic Custom Selectors',
-  render: () => {
+  args: {
+    autoStart: true,
+  },
+  render: (args) => {
     const container = document.createElement('div');
     container.innerHTML = `
       <div style="font-family: system-ui, sans-serif; padding: 20px; max-width: 600px;">
@@ -159,7 +179,7 @@ export const CustomSelectors: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const activeSelectorsEl = container.querySelector('#active-selectors') as HTMLElement;
 
     const updateSelectors = () => {
@@ -182,7 +202,9 @@ export const CustomSelectors: Story = {
       updateSelectors();
     });
 
-    blurManager.start();
+    if (args.autoStart) {
+      blurManager.start();
+    }
     updateSelectors();
 
     return container;
@@ -191,7 +213,10 @@ export const CustomSelectors: Story = {
 
 export const Events: Story = {
   name: 'Blur Events',
-  render: () => {
+  args: {
+    autoStart: true,
+  },
+  render: (args) => {
     const container = document.createElement('div');
     container.innerHTML = `
       <div style="font-family: system-ui, sans-serif; padding: 20px; max-width: 600px;">
@@ -227,7 +252,7 @@ export const Events: Story = {
       </div>
     `;
 
-    const blurManager = new BlurManager();
+    const blurManager = trackManager(new BlurManager());
     const eventLog = container.querySelector('#event-log') as HTMLElement;
     const toggleBtn = container.querySelector('#toggle-blur') as HTMLButtonElement;
     const clearBtn = container.querySelector('#clear-log') as HTMLButtonElement;
@@ -260,7 +285,9 @@ export const Events: Story = {
 
     eventLog.innerHTML = '';
     log('BlurManager initialized');
-    blurManager.start();
+    if (args.autoStart) {
+      blurManager.start();
+    }
 
     return container;
   },

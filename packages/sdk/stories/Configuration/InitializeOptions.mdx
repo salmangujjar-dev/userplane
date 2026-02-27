@@ -1,0 +1,182 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Configuration/Initialize Options" />
+
+# Initialize Options
+
+`initialize()` accepts an optional configuration object. All options have sensible defaults — for most apps, calling `initialize()` with no arguments (or just a `workspaceId`) is sufficient.
+
+## Full Type Signature
+
+```typescript
+function initialize(options?: InitializeOptions): void
+
+interface InitializeOptions {
+  workspaceId?: string | string[];
+  recorderBaseUrl?: string;
+  verificationBaseUrl?: string;
+  openImmediately?: boolean | string;
+  captureEnabled?: boolean;
+  parseUserplaneData?: (href: string) => SerializableUserplaneData | null;
+  applyUserplaneData?: (data: SerializableUserplaneData) => string;
+}
+```
+
+## Option Reference
+
+### `workspaceId`
+
+| | |
+|---|---|
+| **Type** | `string \| string[]` |
+| **Default** | Read from `<meta name="userplane:workspace">` |
+
+Your Userplane workspace ID(s). Can be a single ID, a comma-separated string, or an array.
+
+```typescript
+// Single workspace
+initialize({ workspaceId: 'ws_abc123' });
+
+// Multiple workspaces
+initialize({ workspaceId: ['ws_aaa', 'ws_bbb'] });
+initialize({ workspaceId: 'ws_aaa,ws_bbb' });
+```
+
+If omitted, the SDK reads from `<meta name="userplane:workspace" content="...">`.
+
+---
+
+### `recorderBaseUrl`
+
+| | |
+|---|---|
+| **Type** | `string` |
+| **Default** | `'https://recorder.userplane.com'` |
+
+Base URL for the recorder application. Override for self-hosted or staging environments:
+
+```typescript
+initialize({
+  recorderBaseUrl: 'https://recorder.staging.yourcompany.com',
+});
+```
+
+---
+
+### `verificationBaseUrl`
+
+| | |
+|---|---|
+| **Type** | `string` |
+| **Default** | `'https://api.userplane.com'` |
+
+Base URL for the domain verification API endpoint. Override for self-hosted setups:
+
+```typescript
+initialize({
+  verificationBaseUrl: 'https://api.staging.yourcompany.com',
+});
+```
+
+---
+
+### `openImmediately`
+
+| | |
+|---|---|
+| **Type** | `boolean \| string` |
+| **Default** | `true` |
+
+Controls when the recorder opens after initialization. See [Open Modes](?path=/docs/configuration-open-modes--docs) for the full decision tree.
+
+```typescript
+// true (default): open as soon as a token is detected in the URL
+initialize({ openImmediately: true });
+
+// false: don't auto-open; you call open() manually
+initialize({ openImmediately: false });
+
+// string: use this specific token, open immediately
+initialize({ openImmediately: 'tok_abc123' });
+```
+
+---
+
+### `captureEnabled`
+
+| | |
+|---|---|
+| **Type** | `boolean` |
+| **Default** | `true` |
+
+Whether to mount the hidden capture iframe. The capture iframe enables cross-tab recorder state tracking and metadata extraction. Disable if you don't need cross-tab features:
+
+```typescript
+initialize({ captureEnabled: false });
+```
+
+---
+
+### `parseUserplaneData`
+
+| | |
+|---|---|
+| **Type** | `(href: string) => SerializableUserplaneData \| null` |
+| **Default** | Built-in URL parameter parser |
+
+Custom function for extracting `token` and `action` from a URL. Override if your app uses a non-standard URL scheme or encodes the token differently:
+
+```typescript
+initialize({
+  parseUserplaneData: (href) => {
+    const url = new URL(href);
+    const encoded = url.searchParams.get('up_data');
+    if (!encoded) return null;
+    return JSON.parse(atob(encoded)); // { token, action }
+  },
+});
+```
+
+The function receives the full `window.location.href` and must return `{ token: string | null, action: ActionType | null }` or `null`.
+
+---
+
+### `applyUserplaneData`
+
+| | |
+|---|---|
+| **Type** | `(data: SerializableUserplaneData) => string` |
+| **Default** | Built-in URL cleaner |
+
+Custom function for modifying the URL after the SDK consumes the userplane parameters. By default, the SDK strips `userplane-token` and `userplane-action` from the URL using `history.replaceState`. Override to customize this behavior:
+
+```typescript
+initialize({
+  applyUserplaneData: (data) => {
+    // Return the cleaned URL string (will be applied via history.replaceState)
+    const url = new URL(window.location.href);
+    url.searchParams.delete('userplane-token');
+    url.searchParams.delete('userplane-action');
+    return url.toString();
+  },
+});
+```
+
+## Minimal vs Full Configuration
+
+```typescript
+// Minimal — workspace from meta tag, all defaults
+initialize();
+
+// Explicit workspace ID
+initialize({ workspaceId: 'ws_abc123' });
+
+// Full override (e.g., for a staging environment)
+initialize({
+  workspaceId: 'ws_abc123',
+  recorderBaseUrl: 'https://recorder.staging.example.com',
+  verificationBaseUrl: 'https://api.staging.example.com',
+  openImmediately: false,
+  captureEnabled: true,
+});
+```

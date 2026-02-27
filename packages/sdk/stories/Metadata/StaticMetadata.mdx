@@ -1,0 +1,132 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Metadata/Static Metadata" />
+
+# Static Metadata
+
+Static metadata is a set of key-value pairs that you set once. The value is captured at the time you call `set()`, not when the recording starts.
+
+## `set(key, value)`
+
+```typescript
+import { set } from '@workspace/sdk';
+
+set(key: string, value: Serializable): void
+```
+
+Sets a static metadata entry. Calling `set()` with the same key overwrites the previous value.
+
+```typescript
+set('userId', 'user_abc123');
+set('plan', 'professional');
+set('orgId', 'org_xyz456');
+set('isAdmin', false);
+set('featureFlags', ['flag_a', 'flag_b']);
+```
+
+**Values must be JSON-serializable.** Accepted types:
+
+```typescript
+type Serializable = string | number | boolean | null | SerializableObject | Serializable[];
+```
+
+## When to Call `set()`
+
+Call `set()` before the recording session starts — specifically, before the recorder calls `getCustomMetadata()`. In practice, this means any time after `initialize()`:
+
+```typescript
+// App startup
+initialize();
+set('appVersion', '2.1.4');
+set('environment', 'production');
+
+// After user authentication
+function onUserLogin(user: User) {
+  set('userId', user.id);
+  set('email', user.email);
+  set('plan', user.subscription.tier);
+  set('companyId', user.company?.id ?? null);
+}
+
+// Before opening the recorder
+function startSession(token: string) {
+  set('currentPage', window.location.pathname);
+  set('timestamp', new Date().toISOString());
+  open(token);
+}
+```
+
+## Overwriting Values
+
+Calling `set()` with an existing key replaces the value:
+
+```typescript
+set('plan', 'free');
+set('plan', 'pro'); // overwrites 'free'
+// Metadata: { plan: 'pro' }
+```
+
+## `clearMetadata(key)`
+
+Remove a single static key:
+
+```typescript
+import { clearMetadata } from '@workspace/sdk';
+
+clearMetadata('userId'); // removes the 'userId' entry
+```
+
+## `clearMetadata()`
+
+Remove all static keys (and all dynamic functions — see [Dynamic Metadata](?path=/docs/metadata-dynamic-metadata--docs)):
+
+```typescript
+clearMetadata(); // wipes all static + dynamic metadata
+```
+
+## Common Use Cases
+
+### User Identity
+
+```typescript
+// After login
+set('userId', currentUser.id);
+set('userEmail', currentUser.email);
+set('userName', currentUser.name);
+
+// After logout
+clearMetadata('userId');
+clearMetadata('userEmail');
+clearMetadata('userName');
+```
+
+### Subscription and Feature Context
+
+```typescript
+set('plan', user.subscription.plan);         // 'free' | 'pro' | 'enterprise'
+set('trialDaysRemaining', user.trialDays);
+set('featureEnabled', user.features.newDashboard);
+```
+
+### App and Environment Info
+
+```typescript
+// Set once at startup
+set('appVersion', process.env.APP_VERSION);
+set('environment', process.env.NODE_ENV);
+set('deployedAt', process.env.DEPLOY_TIMESTAMP);
+```
+
+### Organization / Tenant
+
+```typescript
+set('organizationId', org.id);
+set('organizationName', org.name);
+set('organizationPlan', org.plan);
+```
+
+## Limitations
+
+- Keys with `undefined` values are ignored (JSON does not support `undefined`)
+- Values that are not JSON-serializable (functions, class instances, circular references) will cause errors during serialization
+- There is no maximum key count enforced by the SDK, but Userplane may have limits on metadata size

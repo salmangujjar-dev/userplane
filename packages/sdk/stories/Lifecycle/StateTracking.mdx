@@ -1,0 +1,141 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Lifecycle/State Tracking" />
+
+# State Tracking
+
+The SDK exposes several functions to inspect the current state of the recorder and session at any point in time.
+
+## `getRecordingState()`
+
+Returns the current recording state:
+
+```typescript
+import { getRecordingState } from '@workspace/sdk';
+
+type RecordingState = 'inactive' | 'active' | 'retained';
+
+const state = getRecordingState();
+```
+
+| Value | Meaning |
+|-------|---------|
+| `'inactive'` | No active session. Recorder is closed or not yet opened. |
+| `'active'` | A recording is in progress. |
+| `'retained'` | Recording submitted, but recorder UI still visible (review state). |
+
+## `getRecordingContext()`
+
+Returns the full recording context, including session info and unload protection status:
+
+```typescript
+import { getRecordingContext } from '@workspace/sdk';
+
+const ctx = getRecordingContext();
+```
+
+Returns `RecordingContext | null`:
+
+```typescript
+interface RecordingContext {
+  state: RecordingState;
+  sessionInfo: RecordingSessionInfo | null;
+  tabUnloadEnabled: boolean;
+}
+
+interface RecordingSessionInfo {
+  workspaceId: string;
+  sessionId: string;
+  linkId?: string;
+}
+```
+
+Returns `null` if the SDK is not initialized.
+
+**Example usage:**
+
+```typescript
+const ctx = getRecordingContext();
+if (ctx?.state === 'active') {
+  console.log('Recording session:', ctx.sessionInfo?.sessionId);
+  console.log('Unload protection active:', ctx.tabUnloadEnabled);
+}
+```
+
+## `getSessionId()` and `getLinkId()`
+
+Shortcuts to the session identifiers:
+
+```typescript
+import { getSessionId, getLinkId } from '@workspace/sdk';
+
+const sessionId = getSessionId(); // 'sess_abc123' or null
+const linkId = getLinkId();       // 'lnk_xyz789' or null
+```
+
+Both return `null` when:
+- No session is active
+- SDK is not initialized
+- The session hasn't started yet (bridge connecting)
+
+## Initialization Checks
+
+```typescript
+import { isInitialized, isRecorderMounted, isBridgeConnected } from '@workspace/sdk';
+
+isInitialized()     // true after initialize() has been called
+isRecorderMounted() // true when the recorder iframe is in the DOM
+isBridgeConnected() // true when PostBridge RPC is established
+```
+
+These are ordered by phase:
+
+```
+isInitialized()   → true after step 1 (initialize)
+isRecorderMounted() → true after step 3 (iframe injected)
+isBridgeConnected() → true after step 4 (bridge handshake)
+```
+
+## Polling vs Event-Driven
+
+The SDK does not expose a built-in event emitter for state changes. The simplest approach is to poll with `setInterval`:
+
+```typescript
+const interval = setInterval(() => {
+  const state = getRecordingState();
+  if (state === 'inactive') {
+    clearInterval(interval);
+    handleRecordingComplete();
+  }
+}, 500);
+```
+
+For React apps, use a state variable updated in an effect:
+
+```typescript
+const [recordingState, setRecordingState] = useState<RecordingState>('inactive');
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setRecordingState(getRecordingState());
+  }, 500);
+  return () => clearInterval(interval);
+}, []);
+```
+
+## State Timeline
+
+```
+Time ──────────────────────────────────────────────────────────►
+
+isInitialized()     │  false  │ true  │ true  │ true  │ true  │
+                    │         │       │       │       │       │
+isRecorderMounted() │  false  │ false │ true  │ true  │ false │
+                    │         │       │       │       │       │
+isBridgeConnected() │  false  │ false │ false │ true  │ false │
+                    │         │       │       │       │       │
+getRecordingState() │inactive │inact. │inact. │active │inact. │
+                         ▲         ▲       ▲       ▲       ▲
+                    init()    open() iframe  bridge  finish
+                                    load    connect session
+```

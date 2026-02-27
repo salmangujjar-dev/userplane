@@ -1,0 +1,126 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Architecture/Overview" />
+
+# Architecture Overview
+
+The SDK is structured as a set of layered modules, each with a well-defined responsibility.
+
+## Component Diagram
+
+```
+packages/sdk/src/
+│
+├── index.ts          ← Public API exports
+├── sdk.ts            ← Core state machine + public function implementations
+│
+├── frame/            ← Frame manager layer
+│   ├── factory.ts    ← FrameManagerFactory (strategy pattern)
+│   ├── base-manager.ts        ← BaseFrameManager (abstract)
+│   ├── recording-manager.ts   ← RecordingFrameManager
+│   ├── verification-manager.ts← VerificationFrameManager
+│   ├── capture-manager.ts     ← CaptureFrameManager
+│   └── dom.ts        ← DOM utilities (createOverlay, createIframe)
+│
+├── bridge/           ← Bridge connection layer
+│   ├── recorder-connection.ts   ← RecorderBridgeConnection
+│   ├── verification-connection.ts ← VerificationBridgeConnection
+│   └── capture-connection.ts    ← CaptureBridgeConnection
+│
+├── config/           ← Frame configuration
+│   ├── builder.ts    ← FrameConfigBuilder (fluent builder)
+│   └── defaults.ts   ← DEFAULT_FRAME_CONFIG
+│
+├── types/            ← TypeScript type definitions
+│   └── index.ts      ← InitializeOptions, RecordingContext, etc.
+│
+├── utils/            ← Utilities
+│   ├── tab.ts        ← Tab reference (window.name)
+│   ├── meta.ts       ← Workspace ID from meta tags
+│   └── url.ts        ← URL parameter parsing
+│
+├── constants.ts      ← URL params, action names, connection prefixes
+└── logger.ts         ← SDK-specific logger
+```
+
+## Module Responsibilities
+
+| Module | Responsibility |
+|--------|---------------|
+| `sdk.ts` | Public function implementations, state management, orchestration |
+| `frame/factory.ts` | Creates the correct frame manager for a given action type |
+| `frame/base-manager.ts` | Abstract lifecycle: mount, unmount, bridge connect/disconnect |
+| `frame/recording-manager.ts` | Recording-specific: session state, unload protection |
+| `frame/verification-manager.ts` | Verification-specific: API verification flow |
+| `frame/capture-manager.ts` | Capture-specific: hidden iframe, cross-tab state |
+| `bridge/*-connection.ts` | Typed RPC wrappers over `@workspace/postbridge` |
+| `config/builder.ts` | Fluent API for constructing `FrameConfig` objects |
+| `utils/tab.ts` | `window.name`-based tab identity |
+| `utils/meta.ts` | CSS selector reads of workspace meta tags |
+| `utils/url.ts` | URL parameter extraction and validation |
+
+## Data Flow
+
+```
+User calls initialize(options)
+        │
+        ▼
+sdk.ts reads options + meta tag → workspaceIds
+sdk.ts calls getOrCreateTabRef() → tabRef
+sdk.ts creates FrameManagerFactory(workspaceIds, tabRef, options)
+        │
+        ▼
+captureEnabled? → factory.createCaptureManager() → CaptureFrameManager
+                        └── CaptureFrameManager.tryMount(params)
+                                └── dom.createIframe() → <iframe>
+                                └── CaptureBridgeConnection.connect()
+        │
+        ▼
+URL token found? → factory.create('recording') → RecordingFrameManager
+                        └── RecordingFrameManager.tryMount(params)
+                                └── dom.createOverlay() → <div>
+                                └── dom.createIframe() → <iframe>
+                                └── RecorderBridgeConnection.connect()
+        │
+        ▼
+Bridge events → session state updates → public API reflects current state
+```
+
+## Dependency Diagram
+
+```
+sdk.ts
+  ├── @workspace/metadata   (metadata storage)
+  ├── @workspace/postbridge  (RPC communication)
+  ├── @workspace/console-logger (logging)
+  ├── nanoid                 (tab reference generation)
+  │
+  ├── frame/factory.ts
+  │     ├── frame/recording-manager.ts
+  │     │     └── bridge/recorder-connection.ts
+  │     ├── frame/verification-manager.ts
+  │     │     └── bridge/verification-connection.ts
+  │     └── frame/capture-manager.ts
+  │           └── bridge/capture-connection.ts
+  │                 └── @workspace/blurr (privacy blur)
+  │
+  ├── config/builder.ts
+  ├── utils/tab.ts
+  ├── utils/meta.ts
+  └── utils/url.ts
+```
+
+## State Stored in `sdk.ts`
+
+```typescript
+let factory: FrameManagerFactory | null = null;
+let currentManager: IFrameManager | null = null;  // recording/verification frame
+let captureManager: ICaptureFrameManager | null = null; // hidden capture frame
+let initialized: boolean = false;
+let pendingParams: RecorderParams | null = null;
+let tabRef: string | null = null;
+let initOptions: InitializeOptions = {};
+let captureEnabled: boolean = true;
+```
+
+This module-level state is the SDK's single source of truth. All public functions read and write through these variables.

@@ -1,0 +1,102 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Concepts/Iframe Architecture" />
+
+# Iframe Architecture
+
+The Userplane recorder runs in a fully isolated `<iframe>`. This page explains why, and how the SDK communicates with it.
+
+## Why an Iframe?
+
+The recorder is a complete application — it manages media streams (microphone, screen capture), WebSocket connections, large binary uploads, and its own UI. Running it in an iframe provides:
+
+| Benefit | Explanation |
+|---------|-------------|
+| **Origin isolation** | Recorder scripts cannot access the host page's DOM, cookies, or localStorage |
+| **CSS isolation** | Recorder UI styles cannot leak into (or be broken by) the host page's CSS |
+| **JS sandboxing** | Recorder JS errors don't propagate to the host page |
+| **Permission isolation** | Camera/microphone permissions are granted to the recorder origin, not the host |
+| **Independent lifecycle** | The recorder can reload or crash without affecting the host page |
+
+## DOM Structure
+
+When the recorder is open, the SDK injects two elements into `document.body`:
+
+```html
+<body>
+  <!-- Your app's existing content -->
+  <div id="userplane-overlay" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 2147483647;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+  ">
+    <iframe
+      src="https://recorder.userplane.com/r?userplane-token=tok_...&..."
+      sandbox="allow-same-origin allow-scripts allow-popups"
+      allow="microphone; camera; display-capture; screen-wake-lock"
+      allowfullscreen
+      style="width:100%; height:100%; border:none;"
+    ></iframe>
+  </div>
+</body>
+```
+
+The overlay provides the backdrop. The iframe holds the recorder application.
+
+## Communication: PostBridge RPC
+
+The SDK and the recorder communicate via `window.postMessage` — the only cross-origin communication channel available between a parent window and a cross-origin iframe. The SDK uses `@workspace/postbridge` to wrap this in a typed RPC layer.
+
+```
+Host Page (SDK)                     Recorder Iframe
+─────────────────                   ───────────────────────────
+RecorderBridgeConnection            RecorderGuestSchema
+  • exposes: HostSchema               • getRecordingState()
+    - getTabRef()                     • getSessionInfo()
+    - getCustomMetadata()             • getTabRef()
+    - initSession()
+    - finishSession()
+    - recordingActive()
+    - recordingRetained()
+    - recordingInactive()
+
+          │                                    │
+          └──────── postMessage ───────────────┘
+                   (structured RPC)
+```
+
+**SDK is the "host"** — it exposes methods the recorder can call (like `initSession`, `getCustomMetadata`).
+
+**Recorder is the "guest"** — it exposes methods the SDK can call (like `getRecordingState`).
+
+## Sandbox and Permissions
+
+The iframe uses a `sandbox` attribute and a `allow` feature policy:
+
+```
+sandbox="allow-same-origin allow-scripts allow-popups"
+allow="microphone; camera; display-capture; screen-wake-lock"
+```
+
+| Attribute | Value | Purpose |
+|-----------|-------|---------|
+| `sandbox` | `allow-same-origin` | Enables `localStorage`, `IndexedDB` inside the iframe |
+| `sandbox` | `allow-scripts` | Allows JavaScript to run |
+| `sandbox` | `allow-popups` | Allows `window.open()` (used for OAuth flows) |
+| `allow` | `microphone` | Grants microphone access |
+| `allow` | `camera` | Grants camera access (optional) |
+| `allow` | `display-capture` | Grants screen/tab capture access |
+| `allow` | `screen-wake-lock` | Prevents screen dimming during recording |
+
+See [Sandbox & Permissions](?path=/docs/privacy-sandbox-permissions--docs) for a complete reference.
+
+## Z-Index Strategy
+
+The overlay uses `z-index: 2147483647` — the maximum safe 32-bit integer. This ensures the recorder sits above virtually any other UI element on the page, including modals, tooltips, and sticky headers.
+
+## Hidden Capture Iframe
+
+In addition to the visible recorder iframe, the SDK mounts a second, hidden iframe (1×1 px, `display:none`) called the **capture iframe**. This is used for cross-tab coordination and metadata extraction. See [Capture Iframe](?path=/docs/cross-tab-capture-iframe--docs) for details.

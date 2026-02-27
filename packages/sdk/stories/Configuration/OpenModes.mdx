@@ -1,0 +1,104 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Configuration/Open Modes" />
+
+# Open Modes
+
+The `openImmediately` option controls how and when the recorder opens after `initialize()` is called.
+
+## Decision Tree
+
+```
+initialize() called
+        │
+        ├─── openImmediately: 'tok_abc'  ──► Open immediately with that token
+        │                                    No URL param check needed
+        │
+        ├─── openImmediately: true        ──► Check URL for userplane-token param
+        │    (default)                        ┌── found ──► Open with URL token
+        │                                     └── not found ──► Stay closed
+        │
+        └─── openImmediately: false       ──► Stay closed
+                                              You call open(token) manually
+```
+
+## Mode: `true` (Default)
+
+The recorder opens automatically if the URL contains a `userplane-token` query parameter. This is the standard flow when a user clicks a Userplane recording link.
+
+```typescript
+// Default behavior
+initialize();
+// Equivalent to:
+initialize({ openImmediately: true });
+```
+
+**When to use:** Most apps. Recording links from your Userplane dashboard contain the token in the URL — users just click the link and the recorder opens.
+
+**URL example:** `https://yourapp.com/dashboard?userplane-token=tok_abc123&userplane-action=recording`
+
+---
+
+## Mode: `false` (Deferred)
+
+The recorder does **not** open on initialization. You control when it opens by calling `open()` manually.
+
+```typescript
+initialize({ openImmediately: false });
+
+// Later — when you want to open:
+import { open } from '@workspace/sdk';
+open('tok_abc123');
+```
+
+**When to use:**
+- You have a custom UI to trigger recording (e.g., a button that fetches a token from your server)
+- You need to verify conditions before opening (user is authenticated, feature is enabled, etc.)
+- You're building a custom recording trigger flow
+
+---
+
+## Mode: `string` (Pre-specified Token)
+
+Pass a token string directly to `openImmediately`. The recorder opens immediately with that token — no URL parameter check is performed.
+
+```typescript
+// Open immediately with a specific token
+initialize({ openImmediately: 'tok_abc123' });
+```
+
+**When to use:**
+- Server-side rendered pages where the token is injected into the page at render time
+- Single-page flows where you already have the token before mounting the SDK
+- Testing environments where you want to open with a known token
+
+---
+
+## Calling `open()` After Initialization
+
+Regardless of `openImmediately`, you can always call `open()` later:
+
+```typescript
+import { open, isInitialized } from '@workspace/sdk';
+
+function handleRecordButton(token: string) {
+  if (!isInitialized()) {
+    console.warn('SDK not initialized');
+    return;
+  }
+  const opened = open(token);
+  if (!opened) {
+    console.warn('Recorder could not be opened');
+  }
+}
+```
+
+`open()` returns `true` if the recorder was successfully opened, `false` if it couldn't be opened (e.g., already mounted, SDK not initialized).
+
+## Summary Table
+
+| `openImmediately` | Opens on init? | Requires URL param? | Manual `open()` needed? |
+|------------------|----------------|--------------------|-----------------------|
+| `true` (default) | Only if URL has token | Yes | No |
+| `false` | Never | No | Yes |
+| `'tok_...'` | Yes, immediately | No | No |

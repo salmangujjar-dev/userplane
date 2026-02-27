@@ -1,0 +1,174 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/Metadata API" />
+
+# Metadata API
+
+Functions for managing metadata attached to recordings, and tab identity functions.
+
+---
+
+## `set(key, value)`
+
+Set a static metadata key-value pair.
+
+### Signature
+
+```typescript
+function set(key: string, value: Serializable): void
+
+type Serializable = string | number | boolean | null | SerializableObject | Serializable[];
+type SerializableObject = { [key: string]: Serializable };
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `key` | `string` | Metadata key. Convention: camelCase, no leading underscore (reserved for system keys). |
+| `value` | `Serializable` | JSON-serializable value. |
+
+### Example
+
+```typescript
+import { set } from '@workspace/sdk';
+
+set('userId', 'user_abc123');
+set('plan', 'professional');
+set('isAdmin', false);
+set('features', ['recording', 'sharing']);
+set('lastLogin', new Date().toISOString()); // use ISO string for dates
+```
+
+---
+
+## `metadata(fn)`
+
+Register a dynamic metadata function, called on demand when the recorder requests metadata.
+
+### Signature
+
+```typescript
+type MetadataFunction = () => SerializableObject | Promise<SerializableObject>;
+
+function metadata(fn: MetadataFunction): void
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `fn` | `MetadataFunction` | A sync or async function returning a plain object of metadata. |
+
+### Example
+
+```typescript
+import { metadata } from '@workspace/sdk';
+
+// Synchronous
+metadata(() => ({
+  currentRoute: window.location.pathname,
+  viewportWidth: window.innerWidth,
+}));
+
+// Async
+metadata(async () => {
+  const user = await getCurrentUser(); // uses cached data
+  return {
+    userId: user.id,
+    plan: user.subscription.tier,
+  };
+});
+```
+
+---
+
+## `clearMetadata(keyOrType?)`
+
+Clear metadata — specific key, all dynamic functions, or everything.
+
+### Signature
+
+```typescript
+function clearMetadata(keyOrType?: string): void
+```
+
+### Behaviors
+
+| Call | Effect |
+|------|--------|
+| `clearMetadata()` | Clears all static keys AND all dynamic functions |
+| `clearMetadata('userId')` | Removes the static key `'userId'` only |
+| `clearMetadata('function')` | Removes all dynamic functions registered with `metadata()` |
+
+### Example
+
+```typescript
+import { clearMetadata } from '@workspace/sdk';
+
+// Remove a specific static key
+clearMetadata('userId');
+
+// Remove all dynamic functions
+clearMetadata('function');
+
+// Remove everything (e.g., on user logout)
+clearMetadata();
+```
+
+---
+
+## `getTabRef()`
+
+Get the current tab's reference identifier.
+
+### Signature
+
+```typescript
+function getTabRef(): string | null
+```
+
+### Return Value
+
+The tab reference string (e.g., `'userplane_tab_V1StGXR8_Z5jdHi6B-myT'`) or `null` if the SDK is not initialized.
+
+```typescript
+import { getTabRef } from '@workspace/sdk';
+
+const tabRef = getTabRef();
+// 'userplane_tab_V1StGXR8_Z5jdHi6B-myT' or null
+```
+
+---
+
+## `clearTabRef()`
+
+Remove the tab reference from `window.name`.
+
+### Signature
+
+```typescript
+function clearTabRef(): void
+```
+
+After calling `clearTabRef()`, the next `initialize()` will generate a new tab reference.
+
+```typescript
+import { clearTabRef } from '@workspace/sdk';
+
+clearTabRef(); // removes from window.name
+```
+
+---
+
+## `getCustomMetadata()` (Internal)
+
+> **Note:** This is an internal function used by the bridge, not part of the public API surface. It's documented here for completeness.
+
+Called by the recorder via the bridge to retrieve the current metadata:
+
+```typescript
+function getCustomMetadata(): SerializableObject | null
+```
+
+Collects all static keys and calls all dynamic functions, merges the results, and returns the combined object. Returns `null` if no metadata is registered.

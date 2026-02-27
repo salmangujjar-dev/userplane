@@ -1,0 +1,119 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Privacy/Privacy Blur" />
+
+# Privacy Blur
+
+The Userplane SDK integrates with `@workspace/blurr` to allow specific DOM elements to be blurred (visually obscured) in the recording. This protects sensitive information like passwords, payment fields, and personal data.
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Host Page                                 │
+│                                                             │
+│  <input type="password" class="up-blur" />                  │
+│  <div data-userplane-blur="true">sensitive data</div>        │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │           Recorder Iframe                             │   │
+│  │                                                      │   │
+│  │  CaptureFrameManager                                  │   │
+│  │    └── CaptureBridgeConnection                        │   │
+│  │           └── BlurManager                            │   │
+│  │                 ├── startBlurr()                      │   │
+│  │                 ├── stopBlurr()                       │   │
+│  │                 └── getBlurrState()                   │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+Blur is managed through the capture bridge. The `BlurManager` inside `CaptureBridgeConnection` orchestrates the `@workspace/blurr` package, which physically modifies the DOM to apply blur effects before the screen capture happens.
+
+## Marking Elements for Blur
+
+Use data attributes or CSS classes to mark elements that should be blurred:
+
+```html
+<!-- Using data attribute -->
+<input type="password" data-userplane-blur="true" placeholder="Password" />
+
+<!-- Using CSS class -->
+<div class="up-sensitive">Credit card number: **** **** **** 1234</div>
+
+<!-- Entire section -->
+<section data-userplane-blur="true">
+  <p>Personal Information</p>
+  <p>SSN: 123-45-6789</p>
+</section>
+```
+
+The specific selector used depends on your Userplane workspace's privacy configuration. Contact your workspace admin to configure blur selectors.
+
+## Bridge Methods (Internal)
+
+The SDK manages blur state through these bridge methods on the capture connection:
+
+| Method | Direction | Description |
+|--------|-----------|-------------|
+| `startBlurr()` | Host → Guest | Activate blur on marked elements |
+| `stopBlurr()` | Host → Guest | Deactivate blur |
+| `getBlurrState()` | Host → Guest | Get current blur state |
+
+These are internal bridge methods — they're not exposed in the public SDK API. The SDK orchestrates them automatically based on recording state.
+
+## `BlurrState`
+
+```typescript
+type BlurrState = 'enabled' | 'disabled';
+```
+
+Blur is `'enabled'` when active (elements are obscured in the recording), `'disabled'` when not.
+
+## Best Practices
+
+### Mark Sensitive Fields Proactively
+
+Add blur attributes to sensitive elements as part of your initial HTML, not dynamically:
+
+```html
+<!-- Good: static attribute on the element -->
+<input name="ssn" data-userplane-blur="true" />
+
+<!-- Less reliable: dynamically added (may miss elements present before JS loads) -->
+<script>
+  document.querySelector('[name="ssn"]')?.setAttribute('data-userplane-blur', 'true');
+</script>
+```
+
+### Common Sensitive Fields to Blur
+
+- Password fields (`<input type="password">`)
+- Social security / national ID numbers
+- Credit card / payment information
+- Authentication tokens / API keys
+- Health information
+- Private messages / emails
+- Financial account numbers
+
+### CSS-Based Blur Selectors
+
+Your workspace can be configured with CSS selectors that automatically match sensitive elements. Common patterns:
+
+```css
+/* All password inputs */
+input[type="password"]
+
+/* Elements with specific classes */
+.sensitive, .private, .pii
+
+/* Data attributes */
+[data-private], [data-userplane-blur]
+
+/* Specific field names */
+input[name="ssn"], input[name="dob"], input[autocomplete="cc-number"]
+```
+
+## Integration with `@workspace/blurr`
+
+The blur functionality is provided by `@workspace/blurr`, a standalone package that applies CSS-based blurring to DOM elements. The SDK integrates it transparently through the capture bridge — you don't need to install or configure `@workspace/blurr` directly.

@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp build build\:web build\:home build\:api build\:share lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp build build\:web build\:home build\:api build\:share lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -96,6 +96,12 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)storybook:recorder:build$(WHITE)      ║$(RESET) Build Storybook for recorder app                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:postbridge$(WHITE)          ║$(RESET) Run Storybook for postbridge package                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:postbridge:build$(WHITE)    ║$(RESET) Build Storybook for postbridge package                            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:blurr$(WHITE)               ║$(RESET) Run Storybook for blurr package                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:blurr:build$(WHITE)         ║$(RESET) Build Storybook for blurr package                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:sdk$(WHITE)                 ║$(RESET) Run Storybook for SDK package                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:sdk:build$(WHITE)           ║$(RESET) Build Storybook for SDK package                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:embed$(WHITE)               ║$(RESET) Run Storybook for embed package                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:embed:build$(WHITE)         ║$(RESET) Build Storybook for embed package                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)ASSETS (CDN)$(WHITE)                                                                                     ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -320,6 +326,33 @@ storybook\:postbridge: ## Run Storybook for postbridge package
 storybook\:postbridge\:build: ## Build Storybook for postbridge package
 	@echo "$(BLUE)Building Storybook for postbridge...$(RESET)"
 	@cd packages/postbridge && bun run build-storybook
+	@echo "$(GREEN)Storybook build complete!$(RESET)"
+
+storybook\:blurr: ## Run Storybook for blurr package
+	@echo "$(MAGENTA)Starting Storybook for blurr...$(RESET)"
+	@cd packages/blurr && bun run storybook
+
+storybook\:blurr\:build: ## Build Storybook for blurr package
+	@echo "$(BLUE)Building Storybook for blurr...$(RESET)"
+	@cd packages/blurr && bun run build-storybook
+	@echo "$(GREEN)Storybook build complete!$(RESET)"
+
+storybook\:sdk: ## Run Storybook for SDK package
+	@echo "$(MAGENTA)Starting Storybook for SDK...$(RESET)"
+	@cd packages/sdk && bun run storybook
+
+storybook\:sdk\:build: ## Build Storybook for SDK package
+	@echo "$(BLUE)Building Storybook for SDK...$(RESET)"
+	@cd packages/sdk && bun run build-storybook
+	@echo "$(GREEN)Storybook build complete!$(RESET)"
+
+storybook\:embed: ## Run Storybook for embed package
+	@echo "$(MAGENTA)Starting Storybook for embed...$(RESET)"
+	@cd packages/embed && bun run storybook
+
+storybook\:embed\:build: ## Build Storybook for embed package
+	@echo "$(BLUE)Building Storybook for embed...$(RESET)"
+	@cd packages/embed && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
 
 # Assets commands

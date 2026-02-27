@@ -1,0 +1,137 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Cross-Tab/Capture Iframe" />
+
+# Capture Iframe
+
+The capture iframe is a hidden, 1×1 pixel iframe injected into the page when `captureEnabled: true` (the default). It provides cross-tab recorder state tracking and metadata extraction.
+
+## What It Is
+
+```html
+<!-- Injected by CaptureFrameManager -->
+<iframe
+  src="https://recorder.userplane.com/capture?userplane-token=...&..."
+  style="width:1px; height:1px; display:none; border:none;"
+  sandbox="allow-same-origin allow-scripts allow-popups"
+  allow="microphone; camera; display-capture; screen-wake-lock"
+></iframe>
+```
+
+It's invisible to the user — 1×1 px with `display:none`. Despite its hidden nature, it's a fully functional application running the capture endpoint of the Userplane recorder.
+
+## Why It Exists
+
+The capture iframe enables scenarios where:
+
+1. **The recorder is open in one tab** — the capture iframe in other tabs can detect this
+2. **Metadata needs to be extracted from background tabs** — the capture iframe exposes `extractMetadata()` for scatter-gather metadata collection
+3. **Blur state needs to be coordinated** — the capture iframe can receive `startBlurr`/`stopBlurr` commands
+
+## When It's Mounted
+
+```
+initialize() called with captureEnabled: true (default)
+        │
+        ▼
+CaptureFrameManager created
+        │
+        ▼
+Hidden 1x1 iframe injected into document.body
+        │
+        ▼
+CaptureBridgeConnection established
+        │
+        ├── Recording iframe opens in same tab
+        │       └── CaptureFrameManager.updateRecorderState({
+        │               recorderTabId: tabRef,
+        │               recorderState: 'active',
+        │               lastStateUpdate: Date.now()
+        │             })
+        │
+        ├── Recording iframe closes
+        │       └── updateRecorderState({ recorderState: 'inactive' })
+        │
+        └── Stays mounted until unmount() or page unload
+```
+
+## `CaptureRecorderState`
+
+The capture iframe tracks the recording state of the current tab:
+
+```typescript
+interface CaptureRecorderState {
+  recorderTabId: string | null;     // tabRef of the recording tab (null if none)
+  recorderState: RecordingState;    // 'inactive' | 'active' | 'retained'
+  lastStateUpdate: number;          // Unix timestamp of last state change
+}
+```
+
+## Bridge Methods
+
+The `CaptureBridgeConnection` exposes these RPC methods:
+
+### Host → Guest (SDK calls these on the capture iframe)
+
+| Method | Parameters | Description |
+|--------|------------|-------------|
+| `ping()` | none | Health check — returns `true` if capture is alive |
+| `extractMetadata()` | none | Request current tab's metadata |
+| `updateRecorderState(state)` | `CaptureRecorderState` | Push recorder state updates |
+| `startBlurr()` | none | Activate blur on marked elements |
+| `stopBlurr()` | none | Deactivate blur |
+| `getBlurrState()` | none | Query current blur state |
+
+### Guest → Host (Capture iframe calls these on the SDK)
+
+| Method | Description |
+|--------|-------------|
+| `getTabRef()` | Get this tab's reference |
+| `getPageUrl()` | Get current page URL |
+| `getPageTitle()` | Get current page title |
+| `extractMetadata()` | Get custom metadata for this tab |
+
+## `TabMetadata`
+
+When `extractMetadata()` is called, the capture iframe returns:
+
+```typescript
+interface TabMetadata {
+  _pageUrl: string;     // window.location.href
+  _pageTitle: string;   // document.title
+  [key: string]: unknown; // custom metadata from set() and metadata()
+}
+```
+
+## Lifecycle Relative to Recording Sessions
+
+```
+Page load
+    │
+    └── captureEnabled: true
+            │
+            ▼
+    Capture iframe mounts ──────────────────────────────── stays mounted ──────►
+            │                                                                    │
+            ▼                                                    ▼               │
+    Recording opens                                     Recording closes         │
+    updateRecorderState({                               updateRecorderState({     │
+      recorderTabId: tabRef,                             recorderTabId: tabRef,  │
+      recorderState: 'active'                            recorderState: 'inactive'│
+    })                                                 })                        │
+                                                                                 │
+                                                                           unmount() called
+                                                                           or page unloads
+                                                                                 │
+                                                                           Capture iframe removed
+```
+
+The capture iframe outlives individual recording sessions. It's mounted once on `initialize()` and stays alive as long as the page is open.
+
+## Disabling the Capture Iframe
+
+```typescript
+initialize({ captureEnabled: false });
+```
+
+Disabling removes cross-tab coordination and metadata extraction capabilities. The recording iframe still works normally — only the background capture functionality is disabled.

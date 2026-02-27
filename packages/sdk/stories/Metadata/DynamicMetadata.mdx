@@ -1,0 +1,160 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Metadata/Dynamic Metadata" />
+
+# Dynamic Metadata
+
+Dynamic metadata functions are called **on demand** — at the moment the recorder requests metadata. This lets you capture the current application state at recording time, rather than at registration time.
+
+## `metadata(fn)`
+
+```typescript
+import { metadata } from '@workspace/sdk';
+
+type MetadataFunction = () => SerializableObject | Promise<SerializableObject>;
+
+metadata(fn: MetadataFunction): void
+```
+
+Register a function that returns a metadata object. Multiple functions can be registered — they are all called when the recorder requests metadata, and their results are merged.
+
+## Synchronous Functions
+
+```typescript
+metadata(() => ({
+  currentRoute: window.location.pathname,
+  queryString: window.location.search,
+  pageTitle: document.title,
+  viewportWidth: window.innerWidth,
+  viewportHeight: window.innerHeight,
+}));
+```
+
+The function is called fresh every time the recorder requests metadata. This means the values are captured at recording time, not at the time you called `metadata()`.
+
+## Async Functions
+
+Dynamic metadata functions can be async. The SDK awaits them before returning metadata to the recorder:
+
+```typescript
+metadata(async () => {
+  const user = await fetchCurrentUser();
+  return {
+    userId: user.id,
+    plan: user.subscription.tier,
+    accountAge: user.daysSinceSignup,
+  };
+});
+```
+
+**Caveat:** Async functions add latency to session start. Keep async calls fast — use cached data where possible:
+
+```typescript
+// Better: cache the data, read from cache in the metadata fn
+let cachedUser: User | null = null;
+
+async function refreshUser() {
+  cachedUser = await fetchCurrentUser();
+}
+
+metadata(() => ({
+  userId: cachedUser?.id ?? null,
+  plan: cachedUser?.subscription?.tier ?? null,
+}));
+```
+
+## Multiple Functions
+
+You can call `metadata()` multiple times. All registered functions are called and their results are merged:
+
+```typescript
+// Function 1: user context
+metadata(() => ({
+  userId: store.user.id,
+  plan: store.user.plan,
+}));
+
+// Function 2: navigation context
+metadata(() => ({
+  route: router.currentRoute.path,
+  params: JSON.stringify(router.currentRoute.params),
+}));
+
+// Function 3: feature flags
+metadata(() => ({
+  flags: store.featureFlags.enabled.join(','),
+}));
+
+// All three are merged:
+// {
+//   userId: ..., plan: ...,
+//   route: ..., params: ...,
+//   flags: ...,
+// }
+```
+
+**Merge order:** Later registrations win on key conflicts.
+
+## Error Handling in Functions
+
+If a dynamic metadata function throws or rejects, the SDK catches the error and excludes that function's result from the merged output. Other functions still contribute:
+
+```typescript
+metadata(async () => {
+  // If this throws, it's caught silently and this function is skipped
+  const data = await riskyApiCall();
+  return { apiData: data };
+});
+```
+
+For reliability, handle errors inside your function:
+
+```typescript
+metadata(async () => {
+  try {
+    const data = await riskyApiCall();
+    return { apiData: data };
+  } catch {
+    return { apiData: null };
+  }
+});
+```
+
+## `clearMetadata('function')`
+
+Remove all registered dynamic functions:
+
+```typescript
+import { clearMetadata } from '@workspace/sdk';
+
+clearMetadata('function'); // removes all dynamic functions
+```
+
+Note: There is no way to remove a single registered function — all functions are cleared together. If you need conditional metadata, use conditionals inside your function:
+
+```typescript
+metadata(() => {
+  if (!isUserLoggedIn()) return {};
+  return { userId: getCurrentUserId() };
+});
+```
+
+## `clearMetadata()` (No Arguments)
+
+Clears both static metadata (from `set()`) and all dynamic functions:
+
+```typescript
+clearMetadata(); // clears everything
+```
+
+## Static vs Dynamic — When to Use Which
+
+| Use Case | Static `set()` | Dynamic `metadata()` |
+|----------|----------------|---------------------|
+| User ID set at login | ✓ | |
+| Current page URL | | ✓ (changes on navigation) |
+| App version | ✓ | |
+| Active experiment | | ✓ (may change during session) |
+| Async API data | | ✓ |
+| Data that never changes | ✓ | |
+| Data that changes frequently | | ✓ |
