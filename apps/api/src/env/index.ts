@@ -153,6 +153,9 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       workspaceCreateInviteExpiresIn: raw.WORKSPACE_CREATE_INVITE_TOKEN_EXPIRES_IN,
       recordingSecret: raw.RECORDER_TOKEN_SECRET,
       recordingTokenExpiresIn: raw.RECORDER_TOKEN_EXPIRES_IN,
+      shareSecret: raw.SHARE_TOKEN_SECRET,
+      shareExpiresIn: raw.SHARE_TOKEN_EXPIRES_IN,
+      shareMaxExpiresIn: raw.SHARE_TOKEN_MAX_EXPIRES_IN,
     },
     session: {
       tokenSecret: raw.SESSION_TOKEN_SECRET,
@@ -317,6 +320,11 @@ function validateSecrets(config: EnvConfig): void {
       devValue: DEV_SECRETS.RECORDER,
       envVar: 'RECORDER_TOKEN_SECRET',
     },
+    {
+      value: config.token.shareSecret,
+      devValue: DEV_SECRETS.SHARE,
+      envVar: 'SHARE_TOKEN_SECRET',
+    },
   ];
 
   for (const check of secretChecks) {
@@ -414,6 +422,7 @@ function getConfigStatus(): {
   if (env.auth.secret === DEV_SECRETS.AUTH) usingDefaults.push('Auth secret');
   if (env.token.inviteSecret === DEV_SECRETS.INVITE) usingDefaults.push('Invite secret');
   if (env.session.tokenSecret === DEV_SECRETS.SESSION) usingDefaults.push('Session secret');
+  if (env.token.shareSecret === DEV_SECRETS.SHARE) usingDefaults.push('Share secret');
 
   return { configured, notConfigured, usingDefaults };
 }
@@ -454,6 +463,8 @@ export function logConfig(): void {
         accessRequest: formatDuration(env.token.accessRequestExpiresIn),
         workspaceCreateInvite: formatDuration(env.token.workspaceCreateInviteExpiresIn),
         recording: formatDuration(env.token.recordingTokenExpiresIn),
+        share: formatDuration(env.token.shareExpiresIn),
+        shareMax: formatDuration(env.token.shareMaxExpiresIn),
       },
       sessionExpiry: {
         token: formatDuration(env.session.tokenExpiry),

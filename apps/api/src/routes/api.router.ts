@@ -61,6 +61,7 @@ import { createProvisionerProcedures } from './provisioner/provisioner.impl';
 import { createRecordingProcedures } from './recording/recording.impl';
 // Implementations
 import { createSessionProcedures } from './session/session.impl';
+import { createShareProcedures } from './share/share.impl';
 import { createStatusProcedures } from './status/status.impl';
 import { createWorkspaceProcedures } from './workspace/workspace.impl';
 
@@ -143,6 +144,14 @@ const billingProcedures = createBillingProcedures(
   getDodoClient(),
   env.dashboard.baseUrl
 );
+const shareProcedures = createShareProcedures(
+  recordingService,
+  workspaceMemberService,
+  workspaceMemberRepo,
+  workspaceService,
+  tokenService,
+  env.dashboard.baseUrl
+);
 const diagnosticsProcedures = createDiagnosticsProcedures(
   cacheService,
   workspaceMemberService,
@@ -163,6 +172,7 @@ const diagnosticsProcedures = createDiagnosticsProcedures(
  * - workspace: Workspace management, members, domains, settings
  * - project: Project management
  * - recording: Recording management and resources
+ * - share: Public shareable recording links
  * - link: Recording link management
  * - domain: Public domain verification
  * - invite: Public invite validation and acceptance
@@ -180,6 +190,7 @@ export const apiRouter = {
   workspace: workspaceProcedures,
   project: projectProcedures,
   recording: recordingProcedures,
+  share: shareProcedures,
   link: linkProcedures,
   domain: domainProcedures,
   invite: inviteProcedures,

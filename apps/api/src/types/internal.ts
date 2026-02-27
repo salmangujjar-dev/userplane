@@ -22,6 +22,7 @@ import {
   RecordingResourceSchema,
   SessionPreferencesSchema,
   SessionTokenPayloadSchema,
+  ShareTokenPayloadSchema,
   UploadTokenPayloadSchema,
   VideoSourceSchema,
   WorkspaceCreateInviteTokenPayloadSchema,
@@ -74,6 +75,7 @@ export type AccessRequestTokenPayload = z.infer<typeof AccessRequestTokenPayload
 export type WorkspaceCreateInviteTokenPayload = z.infer<
   typeof WorkspaceCreateInviteTokenPayloadSchema
 >;
+export type ShareTokenPayload = z.infer<typeof ShareTokenPayloadSchema>;
 export type PresignedUrlInfo = z.infer<typeof PresignedUrlInfoSchema>;
 
 /**

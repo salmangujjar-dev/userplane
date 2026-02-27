@@ -110,6 +110,9 @@ if (rateLimiter.isAvailable()) {
   // Domain verification (public)
   app.use('/api/v1/domains/*', rateLimitMiddlewares.public(rateLimiter));
 
+  // Share recording (public)
+  app.use('/api/v1/share/*', rateLimitMiddlewares.public(rateLimiter));
+
   // Session initialization (stricter limit for recording init)
   app.use('/api/v1/session', rateLimitMiddlewares.session(rateLimiter));
   app.use('/api/v1/session/*', rateLimitMiddlewares.session(rateLimiter));
