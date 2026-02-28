@@ -8,15 +8,17 @@ import {
   DropdownMenuTrigger,
 } from '@workspace/ui/components/dropdown-menu';
 import { SearchInput } from '@workspace/ui/components/search-input';
+import type { LucideIcon } from 'lucide-react';
 import { AlertCircle, AlertTriangle, Bug, Filter, Info, Skull } from 'lucide-react';
 import { useState } from 'react';
 
 import { BackendLogEntry } from './backend-log-entry';
-import { createMockBackendLog, LogLevel, StructuredLog } from './backend-log-types';
+import type { BackendLogLevel, RecordingBackendLog } from './backend-log-types';
+import { createMockBackendLog } from './backend-log-types';
 
 const baseTime = Date.now() - 60000;
 
-const mockLogs: StructuredLog[] = [
+const mockLogs: RecordingBackendLog[] = [
   createMockBackendLog('1', baseTime, 'info', 'Server started successfully', {
     service: 'api',
     metadata: {
@@ -266,13 +268,26 @@ const mockLogs: StructuredLog[] = [
   }),
 ];
 
+const BACKEND_FILTERS: {
+  value: BackendLogLevel;
+  label: string;
+  icon: LucideIcon;
+  iconClass: string;
+}[] = [
+  { value: 'fatal', label: 'Fatal', icon: Skull, iconClass: 'text-red-700 dark:text-red-400' },
+  { value: 'error', label: 'Error', icon: AlertCircle, iconClass: 'text-red-500' },
+  { value: 'warn', label: 'Warning', icon: AlertTriangle, iconClass: 'text-yellow-500' },
+  { value: 'info', label: 'Info', icon: Info, iconClass: 'text-blue-500' },
+  { value: 'debug', label: 'Debug', icon: Bug, iconClass: 'text-purple-500' },
+];
+
 export function BackendPanel() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilters, setActiveFilters] = useState<Set<LogLevel>>(
+  const [activeFilters, setActiveFilters] = useState<Set<BackendLogLevel>>(
     new Set(['error', 'fatal', 'warn', 'info', 'debug'])
   );
 
-  const toggleFilter = (level: LogLevel) => {
+  const toggleFilter = (level: BackendLogLevel) => {
     const newFilters = new Set(activeFilters);
     if (newFilters.has(level)) {
       newFilters.delete(level);
@@ -296,7 +311,7 @@ export function BackendPanel() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b p-3">
+      <div className="border-b p-3 space-y-3">
         <div className="flex items-center gap-2">
           <SearchInput
             placeholder="Filter"
@@ -312,53 +327,42 @@ export function BackendPanel() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuCheckboxItem
-                checked={activeFilters.has('fatal')}
-                onCheckedChange={() => toggleFilter('fatal')}
-              >
-                <div className="flex items-center gap-2">
-                  <Skull className="h-4 w-4 text-red-700 dark:text-red-400" />
-                  <span>Fatal</span>
-                </div>
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={activeFilters.has('error')}
-                onCheckedChange={() => toggleFilter('error')}
-              >
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-red-500" />
-                  <span>Error</span>
-                </div>
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={activeFilters.has('warn')}
-                onCheckedChange={() => toggleFilter('warn')}
-              >
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                  <span>Warning</span>
-                </div>
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={activeFilters.has('info')}
-                onCheckedChange={() => toggleFilter('info')}
-              >
-                <div className="flex items-center gap-2">
-                  <Info className="h-4 w-4 text-blue-500" />
-                  <span>Info</span>
-                </div>
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={activeFilters.has('debug')}
-                onCheckedChange={() => toggleFilter('debug')}
-              >
-                <div className="flex items-center gap-2">
-                  <Bug className="h-4 w-4 text-purple-500" />
-                  <span>Debug</span>
-                </div>
-              </DropdownMenuCheckboxItem>
+              {BACKEND_FILTERS.map((filter) => {
+                const Icon = filter.icon;
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={filter.value}
+                    checked={activeFilters.has(filter.value)}
+                    onCheckedChange={() => toggleFilter(filter.value)}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className={`h-4 w-4 ${filter.iconClass}`} />
+                      <span>{filter.label}</span>
+                    </div>
+                  </DropdownMenuCheckboxItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        <div className="flex items-center gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {BACKEND_FILTERS.map((filter) => {
+            const Icon = filter.icon;
+            return (
+              <Button
+                key={filter.value}
+                variant={activeFilters.has(filter.value) ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => toggleFilter(filter.value)}
+                className="h-7 text-xs px-2 gap-1.5 shrink-0"
+              >
+                <Icon className={`h-3.5 w-3.5 ${filter.iconClass}`} />
+                {filter.label}
+              </Button>
+            );
+          })}
         </div>
       </div>
 

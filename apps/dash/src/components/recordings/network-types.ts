@@ -1,21 +1,6 @@
-export type ResourceType =
-  | 'Document'
-  | 'Stylesheet'
-  | 'Image'
-  | 'Media'
-  | 'Font'
-  | 'Script'
-  | 'TextTrack'
-  | 'XHR'
-  | 'Fetch'
-  | 'EventSource'
-  | 'WebSocket'
-  | 'Manifest'
-  | 'SignedExchange'
-  | 'Ping'
-  | 'CSPViolationReport'
-  | 'Preflight'
-  | 'Other';
+import type { ParsedBody, RecordingNetworkLog } from '@workspace/contract';
+
+export type { ParsedBody, RecordingNetworkLog } from '@workspace/contract';
 
 export type NetworkFilterType =
   | 'all'
@@ -28,138 +13,39 @@ export type NetworkFilterType =
   | 'doc'
   | 'other';
 
-export interface Request {
-  url: string;
-  method: string;
-  headers: Record<string, string>;
-  postData?: string;
-  hasPostData?: boolean;
-  mixedContentType?: string;
-  initialPriority: string;
-  referrerPolicy: string;
-  isLinkPreload?: boolean;
+export function getFilterTypeFromMimeAndInitiator(
+  type: string,
+  mimeType: string
+): Exclude<NetworkFilterType, 'all'> {
+  // type is the initiatorType or resource type string from the logger
+  const t = type.toLowerCase();
+  if (t === 'fetch' || t === 'xhr' || t === 'xmlhttprequest') return 'fetch';
+  if (t === 'websocket') return 'ws';
+
+  // Fall back to mimeType
+  const m = mimeType.toLowerCase();
+  if (m.includes('javascript') || m.includes('ecmascript')) return 'js';
+  if (m.includes('css')) return 'css';
+  if (m.includes('image') || m.includes('video') || m.includes('audio')) return 'media';
+  if (m.includes('font') || m.includes('woff') || m.includes('ttf') || m.includes('otf'))
+    return 'font';
+  if (m.includes('html')) return 'doc';
+
+  // Check type field for resource types
+  if (t === 'script') return 'js';
+  if (t === 'link' || t === 'css') return 'css';
+  if (t === 'img' || t === 'video' || t === 'audio') return 'media';
+
+  return 'other';
 }
 
-export interface Response {
-  url: string;
-  status: number;
-  statusText: string;
-  headers: Record<string, string>;
-  mimeType: string;
-  connectionReused: boolean;
-  connectionId: number;
-  remoteIPAddress?: string;
-  remotePort?: number;
-  fromDiskCache?: boolean;
-  fromServiceWorker?: boolean;
-  fromPrefetchCache?: boolean;
-  encodedDataLength: number;
-  timing?: ResourceTiming;
-  protocol?: string;
-}
-
-export interface ResourceTiming {
-  requestTime: number;
-  proxyStart: number;
-  proxyEnd: number;
-  dnsStart: number;
-  dnsEnd: number;
-  connectStart: number;
-  connectEnd: number;
-  sslStart: number;
-  sslEnd: number;
-  workerStart: number;
-  workerReady: number;
-  workerFetchStart: number;
-  workerRespondWithSettled: number;
-  sendStart: number;
-  sendEnd: number;
-  pushStart: number;
-  pushEnd: number;
-  receiveHeadersEnd: number;
-}
-
-export interface RequestWillBeSentEvent {
-  requestId: string;
-  loaderId: string;
-  documentURL: string;
-  request: Request;
-  timestamp: number;
-  wallTime: number;
-  initiator: {
-    type: string;
-    stack?: unknown;
-    url?: string;
-    lineNumber?: number;
-    columnNumber?: number;
-  };
-  redirectResponse?: Response;
-  type?: ResourceType;
-  frameId?: string;
-  hasUserGesture?: boolean;
-}
-
-export interface ResponseReceivedEvent {
-  requestId: string;
-  loaderId: string;
-  timestamp: number;
-  type: ResourceType;
-  response: Response;
-  frameId?: string;
-}
-
-export interface NetworkRequest {
-  id: string;
-  requestId: string;
-  url: string;
-  method: string;
-  status?: number;
-  statusText?: string;
-  type: ResourceType;
-  size: number;
-  time: number;
-  timestamp: number;
-  request: Request;
-  response?: Response;
-  responseBody?: string;
-}
-
-export function getFilterTypeFromResourceType(resourceType: ResourceType): NetworkFilterType {
-  switch (resourceType) {
-    case 'XHR':
-    case 'Fetch':
-      return 'fetch';
-    case 'WebSocket':
-      return 'ws';
-    case 'Script':
-      return 'js';
-    case 'Stylesheet':
-      return 'css';
-    case 'Image':
-    case 'Media':
-      return 'media';
-    case 'Font':
-      return 'font';
-    case 'Document':
-      return 'doc';
-    default:
-      return 'other';
+export function formatTime(ms: number | string): string {
+  const msNum = typeof ms === 'string' ? parseFloat(ms) : ms;
+  if (isNaN(msNum)) return String(ms);
+  if (msNum < 1000) {
+    return `${Math.round(msNum)} ms`;
   }
-}
-
-export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
-}
-
-export function formatTime(ms: number): string {
-  if (ms < 1000) {
-    return `${Math.round(ms)} ms`;
-  }
-  return `${(ms / 1000).toFixed(2)} s`;
+  return `${(msNum / 1000).toFixed(2)} s`;
 }
 
 export function getStatusColor(status: number): string {
@@ -170,50 +56,48 @@ export function getStatusColor(status: number): string {
   return 'text-muted-foreground';
 }
 
-export function createMockNetworkRequest(
+export function createMockNetworkLog(
   id: string,
   url: string,
   method: string,
-  type: ResourceType,
+  type: string,
+  mimeType: string,
   status: number,
   statusText: string,
-  size: number,
-  time: number,
-  timestamp: number
-): NetworkRequest {
+  duration: number,
+  timestamp: number,
+  options?: {
+    requestHeaders?: Record<string, string>;
+    requestBody?: ParsedBody | null;
+    responseHeaders?: Record<string, string>;
+    responseBody?: unknown;
+    isContentAllowed?: boolean;
+    protocol?: string;
+  }
+): RecordingNetworkLog {
   return {
     id,
+    log_type: 'network',
     requestId: id,
+    startedDateTime: timestamp,
+    timestamp,
     url,
     method,
+    requestHeaders: options?.requestHeaders ?? {
+      'User-Agent': 'Mozilla/5.0',
+      Accept: '*/*',
+    },
+    requestBody: options?.requestBody ?? null,
     status,
     statusText,
+    responseHeaders: options?.responseHeaders ?? {
+      'Content-Type': mimeType,
+    },
+    mimeType,
+    responseBody: options?.responseBody ?? null,
+    isContentAllowed: options?.isContentAllowed ?? true,
+    duration,
     type,
-    size,
-    time,
-    timestamp,
-    request: {
-      url,
-      method,
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        Accept: '*/*',
-      },
-      initialPriority: 'High',
-      referrerPolicy: 'strict-origin-when-cross-origin',
-    },
-    response: {
-      url,
-      status,
-      statusText,
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': size.toString(),
-      },
-      mimeType: 'application/json',
-      connectionReused: true,
-      connectionId: 123,
-      encodedDataLength: size,
-    },
+    protocol: options?.protocol ?? 'h2',
   };
 }

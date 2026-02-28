@@ -1,23 +1,6 @@
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+import type { BackendLogLevel, RecordingBackendLog } from '@workspace/contract';
 
-export interface StructuredLog {
-  id: string;
-  timestamp: number;
-  level: LogLevel;
-  message: string;
-  service?: string;
-  metadata?: Record<string, unknown>;
-  trace?: {
-    traceId?: string;
-    spanId?: string;
-    parentSpanId?: string;
-  };
-  error?: {
-    type?: string;
-    message?: string;
-    stack?: string;
-  };
-}
+export type { BackendLogLevel, RecordingBackendLog } from '@workspace/contract';
 
 export function formatTimestamp(timestamp: number): string {
   const date = new Date(timestamp);
@@ -27,15 +10,23 @@ export function formatTimestamp(timestamp: number): string {
 export function createMockBackendLog(
   id: string,
   timestamp: number,
-  level: LogLevel,
+  level: BackendLogLevel,
   message: string,
   options?: {
     service?: string;
     metadata?: Record<string, unknown>;
-    trace?: StructuredLog['trace'];
-    error?: StructuredLog['error'];
+    trace?: {
+      traceId?: string;
+      spanId?: string;
+      parentSpanId?: string;
+    };
+    error?: {
+      type?: string;
+      message?: string;
+      stack?: string;
+    };
   }
-): StructuredLog {
+): RecordingBackendLog {
   return {
     id,
     timestamp,
