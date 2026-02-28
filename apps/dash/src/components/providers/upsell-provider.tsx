@@ -2,6 +2,7 @@
 
 import type { PlanId } from '@workspace/pricing';
 import { useQueryState } from 'nuqs';
+import React from 'react';
 
 import { PlanChangePreviewModal } from '@/components/modals/plan-change-preview-modal';
 import { PlanSelectionModal } from '@/components/modals/plan-selection-modal';
@@ -39,14 +40,13 @@ export function UpsellProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {children}
-
+      <React.Fragment key="content">{children}</React.Fragment>
       <PlanSelectionModal
+        key="plan-selection"
         onPlanSelect={handlePlanSelect}
         currentPlanName={subscriptionData?.contractDetail.planName ?? null}
       />
-
-      <PlanChangePreviewModal onComplete={handlePlanChangeComplete} />
+      <PlanChangePreviewModal key="plan-change" onComplete={handlePlanChangeComplete} />
     </>
   );
 }

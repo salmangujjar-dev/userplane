@@ -260,7 +260,7 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
             )}
           </div>
 
-          <DialogFooter className="mt-6 !flex-col sm:!flex-row sm:items-center gap-3 sm:gap-2">
+          <DialogFooter className="mt-6 flex-col! sm:flex-row! sm:items-center gap-3 sm:gap-2">
             {currentMode === 'choose' && selectedMode === 'external' && (
               <div className="flex items-center gap-2 sm:mr-auto">
                 <label
