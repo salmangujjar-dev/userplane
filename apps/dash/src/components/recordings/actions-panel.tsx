@@ -1,276 +1,235 @@
 'use client';
 
+import { Button } from '@workspace/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@workspace/ui/components/dropdown-menu';
 import { SearchInput } from '@workspace/ui/components/search-input';
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Filter,
+  Globe,
+  LogIn,
+  LogOut,
+  MousePointer2,
+  Pause,
+  Play,
+} from 'lucide-react';
 import { useState } from 'react';
 
 import { ActionEntry } from './action-entry';
-import { ClickEvent, createMockClickEvent } from './action-types';
+import type { RecordingActionLog, UserActionType } from './action-types';
+import { createMockActionLog } from './action-types';
 
 const baseTime = Date.now() - 60000;
 
-const mockClicks: ClickEvent[] = [
-  createMockClickEvent(
-    '1',
-    baseTime,
-    'div.container > button.submit',
-    'BUTTON',
-    { x: 245, y: 150 },
-    {
-      className: 'submit',
-      textContent: 'Submit',
-    }
-  ),
-  createMockClickEvent(
-    '2',
-    baseTime + 2500,
-    'nav > a.link',
-    'A',
-    { x: 120, y: 45 },
-    {
-      className: 'link',
-      textContent: 'Dashboard',
-    }
-  ),
-  createMockClickEvent(
-    '3',
-    baseTime + 5000,
-    'div.card > button.action',
-    'BUTTON',
-    { x: 380, y: 280 },
-    {
-      className: 'action',
-      id: 'delete-btn',
-      textContent: 'Delete',
-    }
-  ),
-  createMockClickEvent(
-    '4',
-    baseTime + 8000,
-    'input[type="checkbox"]',
-    'INPUT',
-    { x: 150, y: 200 },
-    {
-      className: 'checkbox',
-      id: 'agree-terms',
-    }
-  ),
-  createMockClickEvent(
-    '5',
-    baseTime + 12000,
-    'div.modal > button.close',
-    'BUTTON',
-    { x: 500, y: 100 },
-    {
-      className: 'close',
-      textContent: '×',
-    }
-  ),
-  createMockClickEvent(
-    '6',
-    baseTime + 15000,
-    'a.nav-item',
-    'A',
-    { x: 80, y: 60 },
-    {
-      className: 'nav-item',
-      textContent: 'Settings',
-    }
-  ),
-  createMockClickEvent(
-    '7',
-    baseTime + 18000,
-    'button.primary',
-    'BUTTON',
-    { x: 300, y: 400 },
-    {
-      className: 'primary',
-      id: 'save-btn',
-      textContent: 'Save Changes',
-    }
-  ),
-  createMockClickEvent(
-    '8',
-    baseTime + 20000,
-    'div.dropdown > button',
-    'BUTTON',
-    { x: 200, y: 80 },
-    {
-      className: 'dropdown-toggle',
-      textContent: 'Options',
-    }
-  ),
-  createMockClickEvent(
-    '9',
-    baseTime + 22000,
-    'ul.menu > li > a',
-    'A',
-    { x: 220, y: 120 },
-    {
-      className: 'menu-item',
-      textContent: 'Export Data',
-    }
-  ),
-  createMockClickEvent(
-    '10',
-    baseTime + 25000,
-    'input[type="text"]',
-    'INPUT',
-    { x: 350, y: 180 },
-    {
-      className: 'search-input',
-      id: 'search',
-    }
-  ),
-  createMockClickEvent(
-    '11',
-    baseTime + 27000,
-    'button.icon-btn',
-    'BUTTON',
-    { x: 450, y: 60 },
-    {
-      className: 'icon-btn',
-      id: 'notifications',
-    }
-  ),
-  createMockClickEvent(
-    '12',
-    baseTime + 30000,
-    'div.card > a.link',
-    'A',
-    { x: 280, y: 320 },
-    {
-      className: 'link',
-      textContent: 'View Details',
-    }
-  ),
-  createMockClickEvent(
-    '13',
-    baseTime + 32000,
-    'button.secondary',
-    'BUTTON',
-    { x: 180, y: 450 },
-    {
-      className: 'secondary',
-      textContent: 'Cancel',
-    }
-  ),
-  createMockClickEvent(
-    '14',
-    baseTime + 35000,
-    'div.tabs > button',
-    'BUTTON',
-    { x: 160, y: 90 },
-    {
-      className: 'tab-button',
-      textContent: 'Profile',
-    }
-  ),
-  createMockClickEvent(
-    '15',
-    baseTime + 38000,
-    'form > button[type="submit"]',
-    'BUTTON',
-    { x: 320, y: 480 },
-    {
-      className: 'submit-btn',
-      textContent: 'Submit Form',
-    }
-  ),
-  createMockClickEvent(
-    '16',
-    baseTime + 40000,
-    'div.pagination > button',
-    'BUTTON',
-    { x: 400, y: 520 },
-    {
-      className: 'page-next',
-      textContent: 'Next',
-    }
-  ),
-  createMockClickEvent(
-    '17',
-    baseTime + 43000,
-    'input[type="radio"]',
-    'INPUT',
-    { x: 170, y: 240 },
-    {
-      className: 'radio-option',
-      id: 'option-2',
-    }
-  ),
-  createMockClickEvent(
-    '18',
-    baseTime + 45000,
-    'button.danger',
-    'BUTTON',
-    { x: 280, y: 380 },
-    {
-      className: 'danger',
-      id: 'confirm-delete',
-      textContent: 'Confirm Delete',
-    }
-  ),
-  createMockClickEvent(
-    '19',
-    baseTime + 48000,
-    'div.sidebar > a',
-    'A',
-    { x: 60, y: 140 },
-    {
-      className: 'sidebar-link',
-      textContent: 'Analytics',
-    }
-  ),
-  createMockClickEvent(
-    '20',
-    baseTime + 50000,
-    'button.toggle',
-    'BUTTON',
-    { x: 420, y: 100 },
-    {
-      className: 'toggle',
-      id: 'theme-toggle',
-    }
-  ),
+const mockActions: RecordingActionLog[] = [
+  createMockActionLog('1', baseTime, {
+    action: 'init_page',
+    url: 'https://app.example.com/dashboard',
+    title: 'Dashboard',
+  }),
+  createMockActionLog('2', baseTime + 2500, {
+    action: 'click',
+    url: 'https://app.example.com/dashboard',
+    info: { tagName: 'BUTTON', id: 'submit-btn', classList: ['submit', 'primary'] },
+  }),
+  createMockActionLog('3', baseTime + 5000, {
+    action: 'click',
+    url: 'https://app.example.com/dashboard',
+    info: { tagName: 'A', id: '', classList: ['nav-link'] },
+  }),
+  createMockActionLog('4', baseTime + 7000, {
+    action: 'spa_route',
+    from: '/dashboard',
+    to: '/settings',
+    triggeredBy: 'pushState',
+  }),
+  createMockActionLog('5', baseTime + 9000, {
+    action: 'click',
+    url: 'https://app.example.com/settings',
+    info: { tagName: 'INPUT', id: 'agree-terms', classList: ['checkbox'] },
+  }),
+  createMockActionLog('6', baseTime + 11000, {
+    action: 'click',
+    url: 'https://app.example.com/settings',
+    info: { tagName: 'BUTTON', id: 'save-btn', classList: ['primary'] },
+  }),
+  createMockActionLog('7', baseTime + 14000, {
+    action: 'tab_deactivated',
+    tabId: 'tab-1',
+  }),
+  createMockActionLog('8', baseTime + 16000, {
+    action: 'tab_activated',
+    tabId: 'tab-1',
+  }),
+  createMockActionLog('9', baseTime + 18000, {
+    action: 'navigate',
+    from: 'https://app.example.com/settings',
+    to: 'https://app.example.com/profile',
+    method: 'pushState',
+  }),
+  createMockActionLog('10', baseTime + 20000, {
+    action: 'click',
+    url: 'https://app.example.com/profile',
+    info: { tagName: 'BUTTON', id: 'delete-btn', classList: ['danger'] },
+  }),
+  createMockActionLog('11', baseTime + 23000, {
+    action: 'click',
+    url: 'https://app.example.com/profile',
+    info: { tagName: 'BUTTON', id: 'confirm-delete', classList: ['danger', 'confirm'] },
+  }),
+  createMockActionLog('12', baseTime + 25000, {
+    action: 'spa_route',
+    from: '/profile',
+    to: '/dashboard',
+    triggeredBy: 'popState',
+  }),
+  createMockActionLog('13', baseTime + 28000, {
+    action: 'tab_switch',
+    from: 'tab-1',
+    to: 'tab-2',
+  }),
+  createMockActionLog('14', baseTime + 32000, {
+    action: 'click',
+    url: 'https://app.example.com/dashboard',
+    info: { tagName: 'BUTTON', id: 'theme-toggle', classList: ['toggle'] },
+  }),
+  createMockActionLog('15', baseTime + 35000, {
+    action: 'page_unload',
+    url: 'https://app.example.com/dashboard',
+  }),
 ];
+
+const ACTION_FILTERS: {
+  value: UserActionType;
+  label: string;
+  icon: LucideIcon;
+  iconClass: string;
+}[] = [
+  { value: 'click', label: 'Clicks', icon: MousePointer2, iconClass: 'text-blue-500' },
+  { value: 'navigate', label: 'Navigation', icon: Globe, iconClass: 'text-green-500' },
+  { value: 'spa_route', label: 'SPA Route', icon: ArrowRight, iconClass: 'text-purple-500' },
+  { value: 'tab_activated', label: 'Tab Active', icon: Eye, iconClass: 'text-cyan-500' },
+  { value: 'tab_deactivated', label: 'Tab Inactive', icon: EyeOff, iconClass: 'text-gray-500' },
+  { value: 'tab_switch', label: 'Tab Switch', icon: ArrowRight, iconClass: 'text-orange-500' },
+  { value: 'init_page', label: 'Page Init', icon: LogIn, iconClass: 'text-green-500' },
+  { value: 'page_unload', label: 'Unload', icon: LogOut, iconClass: 'text-red-500' },
+  { value: 'recorder-pause', label: 'Pause', icon: Pause, iconClass: 'text-yellow-500' },
+  { value: 'recorder-resume', label: 'Resume', icon: Play, iconClass: 'text-green-500' },
+];
+
+const ALL_ACTION_TYPES = new Set<UserActionType>(ACTION_FILTERS.map((f) => f.value));
 
 export function ActionsPanel() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilters, setActiveFilters] = useState<Set<UserActionType>>(
+    new Set(ALL_ACTION_TYPES)
+  );
 
-  const filteredClicks = mockClicks.filter((click) => {
+  const toggleFilter = (action: UserActionType) => {
+    const next = new Set(activeFilters);
+    if (next.has(action)) {
+      next.delete(action);
+    } else {
+      next.add(action);
+    }
+    setActiveFilters(next);
+  };
+
+  const filteredActions = mockActions.filter((action) => {
+    if (activeFilters.size === 0) return false;
+    const matchesFilter = activeFilters.has(action.data.action);
+
     const searchText = [
-      click.target.selector,
-      click.target.tagName,
-      click.target.className,
-      click.target.id,
-      click.target.textContent,
+      action.data.action,
+      action.data.url,
+      action.data.from,
+      action.data.to,
+      action.data.info?.tagName,
+      action.data.info?.id,
+      action.data.info?.classList?.join(' '),
     ]
       .filter(Boolean)
       .join(' ')
       .toLowerCase();
 
-    return searchText.includes(searchQuery.toLowerCase());
+    const matchesSearch = searchText.includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
   });
 
-  const recordingStartTime = mockClicks.length > 0 ? mockClicks[0]?.timestamp : undefined;
+  const recordingStartTime = mockActions.length > 0 ? mockActions[0]?.timestamp : undefined;
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b p-3">
-        <SearchInput
-          placeholder="Filter by element, class, id, or text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      <div className="border-b p-3 space-y-3">
+        <div className="flex items-center gap-2">
+          <SearchInput
+            placeholder="Filter by action, element, or URL"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {ACTION_FILTERS.map((filter) => {
+                const Icon = filter.icon;
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={filter.value}
+                    checked={activeFilters.has(filter.value)}
+                    onCheckedChange={() => toggleFilter(filter.value)}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className={`h-4 w-4 ${filter.iconClass}`} />
+                      <span>{filter.label}</span>
+                    </div>
+                  </DropdownMenuCheckboxItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="flex items-center gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {ACTION_FILTERS.map((filter) => {
+            const Icon = filter.icon;
+            return (
+              <Button
+                key={filter.value}
+                variant={activeFilters.has(filter.value) ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => toggleFilter(filter.value)}
+                className="h-7 text-xs px-2 gap-1.5 shrink-0"
+              >
+                <Icon className={`h-3.5 w-3.5 ${filter.iconClass}`} />
+                {filter.label}
+              </Button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto font-mono">
-        {filteredClicks.map((click) => (
-          <ActionEntry key={click.id} click={click} recordingStartTime={recordingStartTime} />
+        {filteredActions.map((action) => (
+          <ActionEntry key={action.id} action={action} recordingStartTime={recordingStartTime} />
         ))}
-        {filteredClicks.length === 0 && (
+        {filteredActions.length === 0 && (
           <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-            No clicks match the current filter
+            No actions match the current filter
           </div>
         )}
       </div>

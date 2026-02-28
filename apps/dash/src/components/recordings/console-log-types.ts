@@ -1,209 +1,60 @@
-export type ConsoleAPIType =
-  | 'log'
-  | 'debug'
-  | 'info'
-  | 'error'
-  | 'warning'
-  | 'dir'
-  | 'dirxml'
-  | 'table'
-  | 'trace'
-  | 'clear'
-  | 'startGroup'
-  | 'startGroupCollapsed'
-  | 'endGroup'
-  | 'assert'
-  | 'profile'
-  | 'profileEnd'
-  | 'count'
-  | 'timeEnd'
-  | 'timeStamp';
+import type { RecordingConsoleLog, SerializedValue } from '@workspace/contract';
 
-export type RemoteObjectType =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'undefined'
-  | 'object'
-  | 'function'
-  | 'symbol'
-  | 'bigint';
-
-export type RemoteObjectSubtype =
-  | 'array'
-  | 'null'
-  | 'node'
-  | 'regexp'
-  | 'date'
-  | 'map'
-  | 'set'
-  | 'weakmap'
-  | 'weakset'
-  | 'iterator'
-  | 'generator'
-  | 'error'
-  | 'proxy'
-  | 'promise'
-  | 'typedarray'
-  | 'arraybuffer'
-  | 'dataview'
-  | 'webassemblymemory'
-  | 'wasmvalue';
-
-export interface ObjectPreview {
-  type: RemoteObjectType;
-  subtype?: RemoteObjectSubtype;
-  description?: string;
-  overflow: boolean;
-  properties: PropertyPreview[];
-  entries?: EntryPreview[];
-}
-
-export interface PropertyPreview {
-  name: string;
-  type: RemoteObjectType;
-  value?: string;
-  valuePreview?: ObjectPreview;
-  subtype?: RemoteObjectSubtype;
-}
-
-export interface EntryPreview {
-  key?: ObjectPreview;
-  value: ObjectPreview;
-}
-
-export interface RemoteObject {
-  type: RemoteObjectType;
-  subtype?: RemoteObjectSubtype;
-  className?: string;
-  value?: unknown;
-  unserializableValue?: string;
-  description?: string;
-  objectId?: string;
-  preview?: ObjectPreview;
-  customPreview?: {
-    header: string;
-    bodyGetterId?: string;
-  };
-}
-
-export interface CallFrame {
-  functionName: string;
-  scriptId: string;
-  url: string;
-  lineNumber: number;
-  columnNumber: number;
-}
-
-export interface StackTrace {
-  description?: string;
-  callFrames: CallFrame[];
-  parent?: StackTrace;
-  parentId?: {
-    id: string;
-    debuggerId?: string;
-  };
-}
-
-export interface ConsoleAPICalledEvent {
-  type: ConsoleAPIType;
-  args: RemoteObject[];
-  executionContextId: number;
-  timestamp: number;
-  stackTrace?: StackTrace;
-  context?: string;
-}
-
-export interface ConsoleLogEvent {
-  id: string;
-  timestamp: string;
-  event: ConsoleAPICalledEvent;
-  count?: number;
-  groupId?: string;
-}
+export type { RecordingConsoleLog, SerializedValue } from '@workspace/contract';
 
 export type LogLevel = 'log' | 'error' | 'warning' | 'info' | 'debug';
 
-export function formatRemoteObject(obj: RemoteObject): string {
-  if (obj.value !== undefined) {
-    return String(obj.value);
+export function formatSerializedValue(value: unknown): string {
+  if (value === null) return 'null';
+  if (value === undefined) return 'undefined';
+
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+
+    if (obj.type === 'element') {
+      const tag = (obj.tag as string) || 'element';
+      const id = obj.id ? ` id="${obj.id}"` : '';
+      const cls = obj.class ? ` class="${obj.class}"` : '';
+      return `<${tag}${id}${cls}>`;
+    }
+
+    if (obj.type === 'function') {
+      return `ƒ ${obj.name || '(anonymous)'}`;
+    }
+
+    if (obj.type === 'error') {
+      return `${obj.name}: ${obj.message}`;
+    }
+
+    if (Array.isArray(value)) {
+      return `Array(${value.length})`;
+    }
+
+    return JSON.stringify(value);
   }
 
-  if (obj.unserializableValue) {
-    return obj.unserializableValue;
-  }
-
-  if (obj.description) {
-    return obj.description;
-  }
-
-  if (obj.subtype === 'null') {
-    return 'null';
-  }
-
-  if (obj.type === 'undefined') {
-    return 'undefined';
-  }
-
-  if (obj.type === 'function') {
-    return obj.className || 'ƒ ()';
-  }
-
-  if (obj.type === 'symbol') {
-    return obj.className || 'Symbol()';
-  }
-
-  if (obj.subtype === 'array' && obj.preview) {
-    const length = obj.preview.properties.find((p) => p.name === 'length')?.value || '0';
-    return `Array(${length})`;
-  }
-
-  if (obj.type === 'object') {
-    return obj.className || 'Object';
-  }
-
-  return String(obj.value);
+  return String(value);
 }
 
-export function createMockLogEvent(
+export function createMockConsoleLog(
   id: string,
-  timestampMs: number,
-  type: ConsoleAPIType,
-  message: string,
-  source?: { url: string; lineNumber: number; columnNumber?: number }
-): ConsoleLogEvent {
-  const callFrames: CallFrame[] = source
-    ? [
-        {
-          functionName: '',
-          scriptId: '0',
-          url: source.url,
-          lineNumber: source.lineNumber,
-          columnNumber: source.columnNumber || 0,
-        },
-      ]
-    : [];
-
+  timestamp: number,
+  type: string,
+  args: unknown[],
+  url: string,
+  trace?: string[]
+): RecordingConsoleLog {
   return {
     id,
-    timestamp: new Date(timestampMs).toISOString(),
-    event: {
-      type,
-      args: [
-        {
-          type: 'string',
-          value: message,
-        },
-      ],
-      executionContextId: 1,
-      timestamp: timestampMs,
-      stackTrace:
-        callFrames.length > 0
-          ? {
-              callFrames,
-            }
-          : undefined,
-    },
+    log_type: 'console',
+    type,
+    args: args as SerializedValue[],
+    trace,
+    timestamp,
+    url,
   };
 }
 

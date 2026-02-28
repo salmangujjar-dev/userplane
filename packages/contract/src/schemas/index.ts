@@ -29,6 +29,7 @@ export * from './provisioner';
 export * from './provisioner.errors';
 export * from './recording';
 export * from './recording.errors';
+export * from './recording-log';
 export * from './session';
 export * from './session.errors';
 export * from './share';

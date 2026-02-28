@@ -1,26 +1,58 @@
-import { AlertCircle, AlertTriangle, Bug, ChevronRight, Info, MessageSquare } from 'lucide-react';
+import { Table, TableBody, TableCell, TableRow } from '@workspace/ui/components/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import {
+  AlertCircle,
+  AlertTriangle,
+  Bug,
+  ChevronRight,
+  Info,
+  MessageSquare,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 
-import {
-  ConsoleAPIType,
-  ConsoleLogEvent,
-  formatRemoteObject,
-  RemoteObject,
-} from './console-log-types';
+import type { RecordingConsoleLog, SerializedValue } from './console-log-types';
+import { formatSerializedValue } from './console-log-types';
 
-function hasExpandableContent(obj: RemoteObject): boolean {
-  return obj.type === 'object' && !!obj.preview && obj.preview.properties.length > 0;
+function isExpandableValue(value: SerializedValue): boolean {
+  if (value === null || typeof value !== 'object') return false;
+  if (
+    'type' in value &&
+    (value.type === 'element' || value.type === 'function' || value.type === 'error')
+  )
+    return false;
+  return true;
+}
+
+function formatDetailValue(value: SerializedValue): string {
+  if (value === null) return 'null';
+  if (value === undefined) return 'undefined';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    if (obj.type === 'element') return formatSerializedValue(value);
+    if (obj.type === 'function') return formatSerializedValue(value);
+    if (obj.type === 'error') {
+      const parts = [`${obj.name}: ${obj.message}`];
+      if (obj.stack) parts.push(String(obj.stack));
+      return parts.join('\n');
+    }
+    return JSON.stringify(value, null, 2);
+  }
+  return String(value);
 }
 
 interface LogValueDisplayProps {
-  obj: RemoteObject;
+  value: SerializedValue;
   isObjectExpanded: boolean;
   onToggleExpand: () => void;
 }
 
-function LogValueDisplay({ obj, isObjectExpanded, onToggleExpand }: LogValueDisplayProps) {
-  const canExpand = hasExpandableContent(obj);
+function LogValueDisplay({ value, isObjectExpanded, onToggleExpand }: LogValueDisplayProps) {
+  const canExpand = isExpandableValue(value);
   const color = 'text-foreground';
+  const formatted = formatSerializedValue(value);
 
   if (canExpand) {
     return (
@@ -45,42 +77,20 @@ function LogValueDisplay({ obj, isObjectExpanded, onToggleExpand }: LogValueDisp
             className={`h-3 w-3 transition-transform inline-block ${isObjectExpanded ? 'rotate-90' : ''}`}
           />
         </span>
-        <span className={color}>{formatRemoteObject(obj)}</span>
+        <span className={color}>{formatted}</span>
       </span>
     );
   }
 
-  if (obj.type === 'string') {
-    return <span className={color}>&quot;{formatRemoteObject(obj)}&quot;</span>;
+  if (typeof value === 'string') {
+    return <span className={color}>&quot;{formatted}&quot;</span>;
   }
 
-  return <span className={color}>{formatRemoteObject(obj)}</span>;
-}
-
-interface ExpandedPropertiesDisplayProps {
-  isObjectExpanded: boolean;
-  firstArg: RemoteObject | undefined;
-}
-
-function ExpandedPropertiesDisplay({ isObjectExpanded, firstArg }: ExpandedPropertiesDisplayProps) {
-  if (!isObjectExpanded) return null;
-  if (!firstArg?.preview?.properties) return null;
-
-  return (
-    <div className="ml-8 mt-1 space-y-0.5">
-      {firstArg.preview.properties.map((prop) => (
-        <div key={prop.name} className="text-xs">
-          <span>{prop.name}</span>
-          <span className="text-muted-foreground">: </span>
-          <span>{prop.type === 'string' ? `"${prop.value}"` : prop.value}</span>
-        </div>
-      ))}
-    </div>
-  );
+  return <span className={color}>{formatted}</span>;
 }
 
 interface LevelIconProps {
-  type: ConsoleAPIType;
+  type: string;
 }
 
 function LevelIcon({ type }: LevelIconProps) {
@@ -109,90 +119,139 @@ function getRecordingTime(eventTimestamp: number, recordingStartTime?: number): 
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
+const tabTriggerClass =
+  'rounded-none border-0 bg-transparent px-0 pb-2 shadow-none data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none text-muted-foreground relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-foreground';
+
+interface ConsoleDetailPanelProps {
+  log: RecordingConsoleLog;
+  hasTrace: boolean;
+  onClose: () => void;
+}
+
+function ConsoleDetailPanel({ log, hasTrace, onClose }: ConsoleDetailPanelProps) {
+  return (
+    <div className="border-b border-border bg-background p-4">
+      <Tabs defaultValue="output" className="w-full">
+        <div className="flex items-center justify-between border-b">
+          <TabsList className="justify-start bg-transparent p-0 h-auto gap-6 border-0">
+            <TabsTrigger value="output" className={tabTriggerClass}>
+              Output
+            </TabsTrigger>
+            <TabsTrigger value="source" className={tabTriggerClass}>
+              Source
+            </TabsTrigger>
+            {hasTrace && (
+              <TabsTrigger value="trace" className={tabTriggerClass}>
+                Stack Trace
+              </TabsTrigger>
+            )}
+          </TabsList>
+          <button onClick={onClose} className="hover:bg-muted rounded p-1 mb-2">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <TabsContent value="output" className="mt-4">
+          <pre className="text-xs font-mono bg-muted p-3 rounded overflow-auto max-h-64 space-y-0.5">
+            {log.args.map((arg, pos) => (
+              <div key={`detail-arg-${pos}`}>{formatDetailValue(arg)}</div>
+            ))}
+          </pre>
+        </TabsContent>
+
+        <TabsContent value="source" className="mt-4">
+          <Table className="text-xs">
+            <TableBody>
+              <TableRow>
+                <TableCell className="text-muted-foreground w-[140px]">Level</TableCell>
+                <TableCell>{log.type}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="text-muted-foreground">Timestamp</TableCell>
+                <TableCell>{new Date(log.timestamp).toISOString()}</TableCell>
+              </TableRow>
+              {log.url && (
+                <TableRow>
+                  <TableCell className="text-muted-foreground">Source</TableCell>
+                  <TableCell className="break-all whitespace-normal">{log.url}</TableCell>
+                </TableRow>
+              )}
+              {log.isInitialConsoleLog && (
+                <TableRow>
+                  <TableCell className="text-muted-foreground">Origin</TableCell>
+                  <TableCell>Initial page load</TableCell>
+                </TableRow>
+              )}
+              <TableRow>
+                <TableCell className="text-muted-foreground">Arguments</TableCell>
+                <TableCell>{log.args.length}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TabsContent>
+
+        {hasTrace && (
+          <TabsContent value="trace" className="mt-4">
+            <pre className="text-xs font-mono bg-muted p-3 rounded overflow-auto max-h-64 space-y-0.5">
+              {log.trace!.map((frame, i) => (
+                <div key={i} className="text-muted-foreground hover:text-foreground">
+                  {frame}
+                </div>
+              ))}
+            </pre>
+          </TabsContent>
+        )}
+      </Tabs>
+    </div>
+  );
+}
+
 interface ConsoleLogEntryProps {
-  log: ConsoleLogEvent;
+  log: RecordingConsoleLog;
   recordingStartTime?: number;
 }
 
 export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [isObjectExpanded, setIsObjectExpanded] = useState(false);
 
-  const sourceLocation = log.event.stackTrace?.callFrames[0];
-  const recordingTime = getRecordingTime(log.event.timestamp, recordingStartTime);
+  const recordingTime = getRecordingTime(log.timestamp, recordingStartTime);
+  const hasTrace = !!(log.trace && log.trace.length > 0);
 
   return (
     <div className="border-b border-border/50">
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-start gap-2 px-3 py-1.5 text-xs hover:bg-muted/50 text-left"
+        onClick={() => setShowDetails(!showDetails)}
+        className={`w-full flex items-start gap-2 px-3 py-1.5 text-xs hover:bg-muted/50 text-left ${showDetails ? 'bg-muted/30' : ''}`}
       >
         <ChevronRight
-          className={`h-3 w-3 shrink-0 mt-0.5 transition-transform text-muted-foreground ${isExpanded ? 'rotate-90' : ''}`}
+          className={`h-3 w-3 shrink-0 mt-0.5 transition-transform text-muted-foreground ${showDetails ? 'rotate-90' : ''}`}
         />
         <span className="text-muted-foreground shrink-0 mt-0.5 tabular-nums w-12">
           {recordingTime}
         </span>
         <div className="shrink-0 mt-0.5">
-          <LevelIcon type={log.event.type} />
+          <LevelIcon type={log.type} />
         </div>
 
         <div className="flex-1">
           <div className="flex items-start gap-1 flex-wrap">
-            {log.event.args.map((arg, pos) => (
-              <span key={`arg-${arg.type}-${pos}`}>
+            {log.args.map((arg, pos) => (
+              <span key={`arg-${pos}`}>
                 <LogValueDisplay
-                  obj={arg}
+                  value={arg}
                   isObjectExpanded={isObjectExpanded}
                   onToggleExpand={() => setIsObjectExpanded(!isObjectExpanded)}
                 />
-                {pos < log.event.args.length - 1 && (
-                  <span className="text-muted-foreground"> </span>
-                )}
+                {pos < log.args.length - 1 && <span className="text-muted-foreground"> </span>}
               </span>
             ))}
-            {log.count !== undefined && log.count > 1 && (
-              <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-medium bg-muted rounded ml-1">
-                {log.count}
-              </span>
-            )}
           </div>
         </div>
       </button>
 
-      {isExpanded && (
-        <div className="px-3 pb-2 ml-12 space-y-1">
-          <div className="text-[10px] text-muted-foreground">
-            <div>Timestamp: {log.timestamp}</div>
-            {sourceLocation && (
-              <div>
-                Source: {sourceLocation.url}:{sourceLocation.lineNumber}:
-                {sourceLocation.columnNumber}
-              </div>
-            )}
-            {log.event.executionContextId && <div>Context ID: {log.event.executionContextId}</div>}
-          </div>
-
-          <ExpandedPropertiesDisplay
-            isObjectExpanded={isObjectExpanded}
-            firstArg={log.event.args[0]}
-          />
-
-          {log.event.stackTrace && log.event.stackTrace.callFrames.length > 0 && (
-            <div className="text-[10px] text-muted-foreground space-y-0.5 pt-1">
-              <div className="font-medium">Stack trace:</div>
-              {log.event.stackTrace.callFrames.map((frame) => (
-                <div
-                  key={`${frame.url}-${frame.lineNumber}-${frame.columnNumber}`}
-                  className="pl-2"
-                >
-                  at {frame.functionName || '(anonymous)'} ({frame.url}:{frame.lineNumber}:
-                  {frame.columnNumber})
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {showDetails && (
+        <ConsoleDetailPanel log={log} hasTrace={hasTrace} onClose={() => setShowDetails(false)} />
       )}
     </div>
   );
