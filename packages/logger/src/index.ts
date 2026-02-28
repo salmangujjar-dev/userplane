@@ -99,7 +99,7 @@ export type {
   ProcessedConsoleEntry,
   ProcessedLogEntry,
   ProcessedNetworkEntry,
-  ProcessedUserStepEntry,
+  ProcessedUserActionEntry,
   RepeatEntry,
   ResourceErrorLogEvent,
   ResourceLogEvent,
@@ -110,9 +110,9 @@ export type {
   SerializedFunction,
   SerializedValue,
   TabInfo,
-  TrackingStepData,
-  TrackingStepLogEvent,
   TruncationMeta,
+  UserActionData,
+  UserActionLogEvent,
   XHRTrackingData,
 } from './types';
 export { TabState } from './types';

@@ -1,6 +1,6 @@
 import { LOGGER_NAME } from '../constants';
 import { dispatch } from '../event-bridge';
-import type { LastNavigation, TrackingStepLogEvent } from '../types';
+import type { LastNavigation, UserActionLogEvent } from '../types';
 import { shouldLogNavigation } from '../utils/throttle';
 
 let lastHref = window.location.href;
@@ -140,7 +140,7 @@ export function patchNavigation(_tabId: string | undefined): {
         source: LOGGER_NAME,
         has_focus: __userplane_has_focus,
         tabId,
-        type: 'tracking_steps',
+        type: 'user-action',
         data: {
           action: 'spa_route',
           from: fromUrl,
@@ -148,7 +148,7 @@ export function patchNavigation(_tabId: string | undefined): {
           triggeredBy: method,
           ...extra,
         },
-      } as TrackingStepLogEvent);
+      } as UserActionLogEvent);
 
       lastHref = toUrl;
       lastNav = { from: fromUrl, to: toUrl, method: triggeredBy };
