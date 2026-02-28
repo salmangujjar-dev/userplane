@@ -1,6 +1,6 @@
 import { LOGGER_NAME } from '../constants';
 import { dispatch } from '../event-bridge';
-import type { TrackingStepLogEvent } from '../types';
+import type { UserActionLogEvent } from '../types';
 
 /**
  * Creates and registers focus/blur/visibilitychange handlers.
@@ -20,13 +20,13 @@ export function patchFocus(tabId: string | undefined): (e: Event) => void {
         source: LOGGER_NAME,
         has_focus: __userplane_has_focus,
         tabId,
-        type: 'tracking_steps',
+        type: 'user-action',
         data: {
           action,
           url: window.location.href,
           title: document.title,
         },
-      } as TrackingStepLogEvent);
+      } as UserActionLogEvent);
     }
   };
 
@@ -48,12 +48,12 @@ export function initFocusState(tabId: string | undefined): void {
       source: LOGGER_NAME,
       has_focus: __userplane_has_focus,
       tabId,
-      type: 'tracking_steps',
+      type: 'user-action',
       data: {
         action: 'init_page',
         url: window.location.href,
         title: document.title,
       },
-    } as TrackingStepLogEvent);
+    } as UserActionLogEvent);
   }
 }

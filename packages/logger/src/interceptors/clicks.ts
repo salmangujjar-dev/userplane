@@ -1,6 +1,6 @@
 import { EXTENSION_TAG, LOGGER_NAME } from '../constants';
 import { dispatch } from '../event-bridge';
-import type { TrackingStepLogEvent } from '../types';
+import type { UserActionLogEvent } from '../types';
 
 let lastClickTime = 0;
 let lastClickTarget: EventTarget | null = null;
@@ -42,7 +42,7 @@ export function patchClicks(tabId: string | undefined): (e: Event) => void {
       source: LOGGER_NAME,
       has_focus: __userplane_has_focus,
       tabId,
-      type: 'tracking_steps',
+      type: 'user-action',
       data: {
         action: 'click',
         info: {
@@ -52,7 +52,7 @@ export function patchClicks(tabId: string | undefined): (e: Event) => void {
         },
         url: window.location.href,
       },
-    } as TrackingStepLogEvent);
+    } as UserActionLogEvent);
   };
 
   const options: AddEventListenerOptions = { capture: true, passive: true };

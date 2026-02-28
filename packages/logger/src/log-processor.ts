@@ -31,14 +31,15 @@ import type {
   DispatchStrategy,
   FlushFunction,
   LogEvent,
+  LogEventType,
   ProcessedConsoleEntry,
   ProcessedLogEntry,
   ProcessedNetworkEntry,
-  ProcessedUserStepEntry,
+  ProcessedUserActionEntry,
   SaveFunction,
   TabInfo,
-  TrackingStepData,
-  TrackingStepLogEvent,
+  UserActionData,
+  UserActionLogEvent,
 } from './types';
 
 declare const __DEV__: boolean;
@@ -72,7 +73,7 @@ export class LogProcessor {
   private _workspaceId: string;
   private _captureConsole: boolean = true;
   private _captureNetwork: boolean = true;
-  private _captureActivity: boolean = true;
+  private _captureAction: boolean = true;
   private _maskResponseBody: boolean = false;
   private _scriptUrl: string;
   private _initialLogCaptured: boolean = false;
@@ -121,7 +122,7 @@ export class LogProcessor {
     if (options?.capture) {
       this._captureConsole = options.capture.console !== false;
       this._captureNetwork = options.capture.network !== false;
-      this._captureActivity = options.capture.activity !== false;
+      this._captureAction = options.capture.action !== false;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias -- ctx getters need stable `self` reference
@@ -163,7 +164,7 @@ export class LogProcessor {
   setCaptureOptions(options: CaptureOptions): void {
     if (options.console !== undefined) this._captureConsole = options.console;
     if (options.network !== undefined) this._captureNetwork = options.network;
-    if (options.activity !== undefined) this._captureActivity = options.activity;
+    if (options.action !== undefined) this._captureAction = options.action;
   }
 
   setMaskResponseBody(mask: boolean): void {
@@ -306,11 +307,11 @@ export class LogProcessor {
 
     // Log resume event
     if (isResume) {
-      this._addUserStep(this._tabId, {
+      this._addUserAction(this._tabId, {
         action: 'recorder-resume',
         tabId: this._tabId,
         paused_for: pausedFor,
-      } as TrackingStepData);
+      } as UserActionData);
     }
   }
 
@@ -346,10 +347,10 @@ export class LogProcessor {
     if (isPause) {
       // Pause: stop interval + flush, but keep unload listeners
       this._dispatcher.pause();
-      this._addUserStep(this._tabId, {
+      this._addUserAction(this._tabId, {
         action: 'recorder-pause',
         tabId: this._tabId,
-      } as TrackingStepData);
+      } as UserActionData);
     } else {
       // Full stop: interval + flush + remove listeners
       this._dispatcher.stop();
@@ -490,23 +491,18 @@ export class LogProcessor {
     const { isInitialLog, timestamp } = this._resolveEventMeta(event);
 
     // Early-exit for disabled capture categories
-    switch (event.type) {
-      case 'console':
-        if (!this._captureConsole) return;
-        break;
-      case 'network':
-      case 'fetch-error':
-      case 'network-error':
-      case 'resource':
-      case 'resource-error':
-        if (!this._captureNetwork) return;
-        break;
-      case 'tracking_steps':
-        if (!this._captureActivity) return;
-        break;
-    }
+    const captureGate: Record<LogEventType, boolean> = {
+      console: this._captureConsole,
+      network: this._captureNetwork,
+      'fetch-error': this._captureNetwork,
+      'network-error': this._captureNetwork,
+      resource: this._captureNetwork,
+      'resource-error': this._captureNetwork,
+      'user-action': this._captureAction,
+    };
+    if (!captureGate[event.type]) return;
 
-    if (!event.has_focus && event.type !== 'tracking_steps' && !isInitialLog) return;
+    if (!event.has_focus && event.type !== 'user-action' && !isInitialLog) return;
 
     switch (event.type) {
       case 'network':
@@ -525,8 +521,8 @@ export class LogProcessor {
       case 'console':
         this._handleConsoleEvent(event, timestamp, isInitialLog);
         break;
-      case 'tracking_steps':
-        this._handleTrackingStepEvent(event);
+      case 'user-action':
+        this._handleUserActionEvent(event);
         break;
     }
   }
@@ -706,40 +702,40 @@ export class LogProcessor {
     this.emitEntry(entry);
   }
 
-  private _handleTrackingStepEvent(event: TrackingStepLogEvent): void {
+  private _handleUserActionEvent(event: UserActionLogEvent): void {
     event.data.tabId = this._tabId;
     event.tabId = this._tabId;
-    this._handleRawStep(event);
+    this._handleRawAction(event);
   }
 
-  // ─── Tab/Navigation Step Tracking ───────────────────────────────
+  // ─── Tab/Navigation Action Tracking ────────────────────────────
 
   private _logTabSwitch(tabId: string, url?: string, title?: string): void {
-    this._addUserStep(tabId, {
+    this._addUserAction(tabId, {
       action: 'tab_switch',
       url,
       title,
       tabId,
-    } as TrackingStepData);
+    } as UserActionData);
   }
 
   private _logNavigation(tabId: string, url?: string, title?: string): void {
-    this._addUserStep(tabId, {
+    this._addUserAction(tabId, {
       action: 'navigate',
       url,
       title,
       tabId,
-    } as TrackingStepData);
+    } as UserActionData);
   }
 
-  private _logClick(tabId: string, data: TrackingStepData): void {
-    this._addUserStep(tabId, data);
+  private _logClick(tabId: string, data: UserActionData): void {
+    this._addUserAction(tabId, data);
   }
 
-  private _handleRawStep(event: TrackingStepLogEvent): void {
-    if (event.type !== 'tracking_steps') return;
+  private _handleRawAction(event: UserActionLogEvent): void {
+    if (event.type !== 'user-action') return;
 
-    const data: TrackingStepData = event.data;
+    const data: UserActionData = event.data;
     const action = data.action;
     const url = data.url;
     const title = data.title;
@@ -797,12 +793,12 @@ export class LogProcessor {
     this.tabs.set(tabId, tab);
   }
 
-  private _addUserStep(tabId: string, data: TrackingStepData): void {
+  private _addUserAction(tabId: string, data: UserActionData): void {
     if (!this._isSending) return;
 
-    const entry: ProcessedUserStepEntry = {
-      log_type: 'console',
-      type: 'userStep',
+    const entry: ProcessedUserActionEntry = {
+      log_type: 'action',
+      type: 'action',
       timestamp: (data.timestamp as number | undefined) || this.serverNow(),
       data,
     };

@@ -4,7 +4,7 @@ import type { RecordingDetail } from '@/types';
 
 import { ActionsPanel } from './actions-panel';
 import { BackendPanel } from './backend-panel';
-import { ComingSoonOverlay } from './coming-soon-overlay';
+// import { ComingSoonOverlay } from './coming-soon-overlay';
 import { ConsolePanel } from './console-panel';
 import { InfoPanel } from './info-panel';
 import { NetworkPanel } from './network-panel';
@@ -58,36 +58,36 @@ export function RecordingLogReplayPanel({ recording }: RecordingLogReplayPanelPr
             <InfoPanel recording={recording} />
           </TabsContent>
           <TabsContent value="console" className="h-full mt-0 p-0">
-            <ComingSoonOverlay
+            {/* <ComingSoonOverlay
               title="Console Logs"
               subtitle="View browser console logs, errors, and debug messages captured during the session."
-            >
-              <ConsolePanel />
-            </ComingSoonOverlay>
+            > */}
+            <ConsolePanel />
+            {/* </ComingSoonOverlay> */}
           </TabsContent>
           <TabsContent value="network" className="h-full mt-0 p-0">
-            <ComingSoonOverlay
+            {/* <ComingSoonOverlay
               title="Network Activity"
               subtitle="Inspect HTTP requests, responses, and API calls made during the recording."
-            >
-              <NetworkPanel />
-            </ComingSoonOverlay>
+            > */}
+            <NetworkPanel />
+            {/* </ComingSoonOverlay> */}
           </TabsContent>
           <TabsContent value="actions" className="h-full mt-0 p-0">
-            <ComingSoonOverlay
+            {/* <ComingSoonOverlay
               title="User Actions"
               subtitle="Track clicks, inputs, and interactions to understand user behavior."
-            >
-              <ActionsPanel />
-            </ComingSoonOverlay>
+            > */}
+            <ActionsPanel />
+            {/* </ComingSoonOverlay> */}
           </TabsContent>
           <TabsContent value="backend" className="h-full mt-0 p-0">
-            <ComingSoonOverlay
+            {/* <ComingSoonOverlay
               title="Backend Logs"
               subtitle="Correlate frontend sessions with server-side logs and traces."
-            >
-              <BackendPanel />
-            </ComingSoonOverlay>
+            > */}
+            <BackendPanel />
+            {/* </ComingSoonOverlay> */}
           </TabsContent>
         </div>
       </Tabs>

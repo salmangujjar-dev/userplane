@@ -152,14 +152,16 @@ export interface ParsedStack {
 
 // ─── Log Event (dispatched via CustomEvent) ─────────────────────────────────
 
-export type LogEventType =
-  | 'console'
+export type ConsoleLogEventType = 'console';
+export type NetworkLogEventType =
   | 'network'
-  | 'network-error'
   | 'fetch-error'
+  | 'network-error'
   | 'resource'
-  | 'resource-error'
-  | 'tracking_steps';
+  | 'resource-error';
+export type ActionLogEventType = 'user-action';
+
+export type LogEventType = ConsoleLogEventType | NetworkLogEventType | ActionLogEventType;
 
 export interface BaseLogEvent extends Record<string, unknown> {
   source: 'userplane-logger';
@@ -285,7 +287,7 @@ export interface ResourceErrorLogEvent extends BaseLogEvent {
   performance?: PerformanceData;
 }
 
-export interface TrackingStepData {
+export interface UserActionData {
   action:
     | 'click'
     | 'spa_route'
@@ -312,9 +314,9 @@ export interface TrackingStepData {
   [key: string]: unknown;
 }
 
-export interface TrackingStepLogEvent extends BaseLogEvent {
-  type: 'tracking_steps';
-  data: TrackingStepData;
+export interface UserActionLogEvent extends BaseLogEvent {
+  type: 'user-action';
+  data: UserActionData;
 }
 
 export type LogEvent =
@@ -324,7 +326,7 @@ export type LogEvent =
   | FetchErrorLogEvent
   | ResourceLogEvent
   | ResourceErrorLogEvent
-  | TrackingStepLogEvent;
+  | UserActionLogEvent;
 
 // ─── Repeat Tracker Entry ───────────────────────────────────────────────────
 
@@ -382,7 +384,7 @@ export interface SavePayload {
 export interface CaptureOptions {
   console?: boolean;
   network?: boolean;
-  activity?: boolean;
+  action?: boolean;
 }
 
 export type DispatchMode = 'immediate' | 'batched';
@@ -407,7 +409,7 @@ export type SaveFunction = (payload: SavePayload | BatchSavePayload) => void;
 export type FlushFunction = (payload: BatchSavePayload) => void;
 
 export interface ProcessedLogEntry {
-  log_type: 'console' | 'network' | 'userStep';
+  log_type: 'console' | 'network' | 'action';
   [key: string]: unknown;
 }
 
@@ -442,11 +444,11 @@ export interface ProcessedConsoleEntry extends ProcessedLogEntry {
   isInitialConsoleLog?: boolean;
 }
 
-export interface ProcessedUserStepEntry extends ProcessedLogEntry {
-  log_type: 'console';
-  type: 'userStep';
+export interface ProcessedUserActionEntry extends ProcessedLogEntry {
+  log_type: 'action';
+  type: 'action';
   timestamp: number;
-  data: TrackingStepData;
+  data: UserActionData;
 }
 
 // ─── Dispatch Strategy ─────────────────────────────────────────────────────

@@ -22,7 +22,7 @@ export class ImmediateDispatcher implements DispatchStrategy {
 
   emit(entry: ProcessedLogEntry): void {
     let eventType: 'log_console' | 'log_network' = 'log_console';
-    if (entry.log_type !== 'userStep' && entry.log_type !== 'console') {
+    if (entry.log_type !== 'action' && entry.log_type !== 'console') {
       eventType = 'log_network';
     }
 
