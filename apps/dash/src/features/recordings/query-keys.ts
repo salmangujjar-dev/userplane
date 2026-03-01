@@ -33,6 +33,18 @@ export const recordingKeys = {
     [...recordingKeys.resources(workspaceId, recordingId), 'console-log'] as const,
   networkLog: (workspaceId: string, recordingId: string) =>
     [...recordingKeys.resources(workspaceId, recordingId), 'network-log'] as const,
+  action: (workspaceId: string, recordingId: string) =>
+    [...recordingKeys.resources(workspaceId, recordingId), 'action'] as const,
+
+  // Log data: fetched from presigned URLs
+  logData: (workspaceId: string, recordingId: string) =>
+    [...recordingKeys.all, 'log-data', workspaceId, recordingId] as const,
+  consoleLogData: (workspaceId: string, recordingId: string) =>
+    [...recordingKeys.logData(workspaceId, recordingId), 'console'] as const,
+  networkLogData: (workspaceId: string, recordingId: string) =>
+    [...recordingKeys.logData(workspaceId, recordingId), 'network'] as const,
+  actionLogData: (workspaceId: string, recordingId: string) =>
+    [...recordingKeys.logData(workspaceId, recordingId), 'action'] as const,
 
   lists: () => [...recordingKeys.all, 'list'] as const,
   list: (

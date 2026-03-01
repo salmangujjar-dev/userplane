@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { ActionsPanelEmptyState } from '../shared/empty-state';
 import { ActionEntry } from './action-entry';
 import type { RecordingActionLog, UserActionType } from './action-types';
 import { createMockActionLog } from './action-types';
@@ -127,7 +128,13 @@ const ACTION_FILTERS: {
 
 const ALL_ACTION_TYPES = new Set<UserActionType>(ACTION_FILTERS.map((f) => f.value));
 
-export function ActionsPanel() {
+export function ActionsPanel({
+  data,
+  isLoading,
+}: {
+  data?: RecordingActionLog[];
+  isLoading?: boolean;
+}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<Set<UserActionType>>(
     new Set(ALL_ACTION_TYPES)
@@ -143,7 +150,10 @@ export function ActionsPanel() {
     setActiveFilters(next);
   };
 
-  const filteredActions = mockActions.filter((action) => {
+  const isEmpty = data && data.length === 0;
+  const actions = data ?? mockActions;
+
+  const filteredActions = actions.filter((action) => {
     if (activeFilters.size === 0) return false;
     const matchesFilter = activeFilters.has(action.data.action);
 
@@ -164,7 +174,7 @@ export function ActionsPanel() {
     return matchesFilter && matchesSearch;
   });
 
-  const recordingStartTime = mockActions.length > 0 ? mockActions[0]?.timestamp : undefined;
+  const recordingStartTime = actions.length > 0 ? actions[0]?.timestamp : undefined;
 
   return (
     <div className="h-full flex flex-col">
@@ -224,13 +234,24 @@ export function ActionsPanel() {
       </div>
 
       <div className="flex-1 overflow-y-auto font-mono">
-        {filteredActions.map((action) => (
-          <ActionEntry key={action.id} action={action} recordingStartTime={recordingStartTime} />
-        ))}
-        {filteredActions.length === 0 && (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
+            Loading user actions...
+          </div>
+        ) : isEmpty ? (
+          <ActionsPanelEmptyState />
+        ) : filteredActions.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
             No actions match the current filter
           </div>
+        ) : (
+          filteredActions.map((action, index) => (
+            <ActionEntry
+              key={`${action.id}-${index}`}
+              action={action}
+              recordingStartTime={recordingStartTime}
+            />
+          ))
         )}
       </div>
     </div>

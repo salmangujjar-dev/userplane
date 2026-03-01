@@ -9,12 +9,14 @@ import {
   FileVideo,
   Globe,
   Image,
+  Play,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
 
 import type { RecordingNetworkLog } from './network-types';
 import { formatTime, getStatusColor } from './network-types';
+import { useRecordingPlayerSeek } from './recording-player-context';
 
 const tabTriggerClass =
   'rounded-none border-0 bg-transparent px-0 pb-2 shadow-none data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none text-muted-foreground relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-foreground';
@@ -90,6 +92,7 @@ interface NetworkDetailPanelProps {
   request: RecordingNetworkLog;
   statusColor: string;
   isStaticAsset: boolean;
+  seekSeconds?: number;
   onClose: () => void;
 }
 
@@ -97,8 +100,10 @@ function NetworkDetailPanel({
   request,
   statusColor,
   isStaticAsset,
+  seekSeconds,
   onClose,
 }: NetworkDetailPanelProps) {
+  const playerContext = useRecordingPlayerSeek();
   const requestBodyStr = formatRequestBody(request.requestBody);
   const responseBodyStr = formatResponseBody(request.responseBody);
 
@@ -117,9 +122,20 @@ function NetworkDetailPanel({
               Response
             </TabsTrigger>
           </TabsList>
-          <button onClick={onClose} className="hover:bg-muted rounded p-1 mb-2">
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {playerContext && seekSeconds !== undefined && (
+              <button
+                onClick={() => playerContext.seekTo(seekSeconds)}
+                title="Jump to this point in recording"
+                className="hover:bg-muted rounded p-1 mb-2"
+              >
+                <Play className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <button onClick={onClose} className="hover:bg-muted rounded p-1 mb-2">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <TabsContent value="headers" className="mt-4 space-y-4">
@@ -244,6 +260,10 @@ export function NetworkEntry({ request, recordingStartTime }: NetworkEntryProps)
 
   const isStaticAsset = !request.isContentAllowed;
   const recordingTime = getRecordingTime(request.timestamp, recordingStartTime);
+  const seekSeconds =
+    recordingStartTime != null
+      ? Math.max(0, (request.timestamp - recordingStartTime) / 1000)
+      : undefined;
   const fileName = getFileName(request.url);
   const domain = getDomain(request.url);
   const statusColor = getStatusColor(request.status);
@@ -279,6 +299,7 @@ export function NetworkEntry({ request, recordingStartTime }: NetworkEntryProps)
           request={request}
           statusColor={statusColor}
           isStaticAsset={isStaticAsset}
+          seekSeconds={seekSeconds}
           onClose={() => setShowDetails(false)}
         />
       )}

@@ -17,6 +17,7 @@ import { useState } from 'react';
 
 import type { RecordingActionLog, UserActionData } from './action-types';
 import { formatActionLabel, formatActionTarget } from './action-types';
+import { useRecordingPlayerSeek } from './recording-player-context';
 
 const tabTriggerClass =
   'rounded-none border-0 bg-transparent px-0 pb-2 shadow-none data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none text-muted-foreground relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-foreground';
@@ -110,10 +111,18 @@ interface ActionDetailPanelProps {
   action: RecordingActionLog;
   targetHTML: string;
   extraFields: Record<string, unknown>;
+  seekSeconds?: number;
   onClose: () => void;
 }
 
-function ActionDetailPanel({ action, targetHTML, extraFields, onClose }: ActionDetailPanelProps) {
+function ActionDetailPanel({
+  action,
+  targetHTML,
+  extraFields,
+  seekSeconds,
+  onClose,
+}: ActionDetailPanelProps) {
+  const playerContext = useRecordingPlayerSeek();
   const hasElement = !!action.data.info;
   const hasNavigation = !!(action.data.from || action.data.to);
   const hasExtra = Object.keys(extraFields).length > 0;
@@ -142,9 +151,20 @@ function ActionDetailPanel({ action, targetHTML, extraFields, onClose }: ActionD
               </TabsTrigger>
             )}
           </TabsList>
-          <button onClick={onClose} className="hover:bg-muted rounded p-1 mb-2">
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {playerContext && seekSeconds !== undefined && (
+              <button
+                onClick={() => playerContext.seekTo(seekSeconds)}
+                title="Jump to this point in recording"
+                className="hover:bg-muted rounded p-1 mb-2"
+              >
+                <Play className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <button onClick={onClose} className="hover:bg-muted rounded p-1 mb-2">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <TabsContent value="details" className="mt-4">
@@ -269,6 +289,10 @@ export function ActionEntry({ action, recordingStartTime }: ActionEntryProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   const recordingTime = getRecordingTime(action.timestamp, recordingStartTime);
+  const seekSeconds =
+    recordingStartTime != null
+      ? Math.max(0, (action.timestamp - recordingStartTime) / 1000)
+      : undefined;
   const label = formatActionLabel(action.data.action);
   const targetHTML = action.data.info ? formatActionTarget(action.data) : '';
   const extraFields = getExtraFields(action.data);
@@ -299,6 +323,7 @@ export function ActionEntry({ action, recordingStartTime }: ActionEntryProps) {
           action={action}
           targetHTML={targetHTML}
           extraFields={extraFields}
+          seekSeconds={seekSeconds}
           onClose={() => setShowDetails(false)}
         />
       )}

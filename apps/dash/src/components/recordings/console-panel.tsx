@@ -12,6 +12,7 @@ import type { LucideIcon } from 'lucide-react';
 import { AlertCircle, AlertTriangle, Bug, Filter, Info, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 
+import { ConsolePanelEmptyState } from '../shared/empty-state';
 import { ConsoleLogEntry } from './console-log-entry';
 import type { RecordingConsoleLog } from './console-log-types';
 import { createMockConsoleLog, LogLevel } from './console-log-types';
@@ -170,7 +171,13 @@ const CONSOLE_FILTERS: { value: LogLevel; label: string; icon: LucideIcon; iconC
   { value: 'debug', label: 'Debug', icon: Bug, iconClass: 'text-purple-500' },
 ];
 
-export function ConsolePanel() {
+export function ConsolePanel({
+  data,
+  isLoading,
+}: {
+  data?: RecordingConsoleLog[];
+  isLoading?: boolean;
+}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<Set<LogLevel>>(
     new Set(['error', 'warning', 'info', 'log', 'debug'])
@@ -186,7 +193,10 @@ export function ConsolePanel() {
     setActiveFilters(newFilters);
   };
 
-  const filteredLogs = mockLogs.filter((log) => {
+  const isEmpty = data && data.length === 0;
+  const logs = data ?? mockLogs;
+
+  const filteredLogs = logs.filter((log) => {
     const level = log.type as LogLevel;
     const matchesFilter = activeFilters.has(level);
     const logText = log.args.map((arg) => formatSerializedValue(arg)).join(' ');
@@ -194,7 +204,7 @@ export function ConsolePanel() {
     return matchesFilter && matchesSearch;
   });
 
-  const recordingStartTime = mockLogs.length > 0 ? mockLogs[0]?.timestamp : undefined;
+  const recordingStartTime = logs.length > 0 ? logs[0]?.timestamp : undefined;
 
   return (
     <div className="h-full flex flex-col">
@@ -254,13 +264,24 @@ export function ConsolePanel() {
       </div>
 
       <div className="flex-1 overflow-y-auto font-mono">
-        {filteredLogs.map((log) => (
-          <ConsoleLogEntry key={log.id} log={log} recordingStartTime={recordingStartTime} />
-        ))}
-        {filteredLogs.length === 0 && (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
+            Loading console logs...
+          </div>
+        ) : isEmpty ? (
+          <ConsolePanelEmptyState />
+        ) : filteredLogs.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
             No logs match the current filters
           </div>
+        ) : (
+          filteredLogs.map((log, index) => (
+            <ConsoleLogEntry
+              key={`${log.id}-${index}`}
+              log={log}
+              recordingStartTime={recordingStartTime}
+            />
+          ))
         )}
       </div>
     </div>

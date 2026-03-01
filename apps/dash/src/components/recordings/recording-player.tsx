@@ -7,6 +7,8 @@ import React, { useEffect, useState } from 'react';
 
 import type { VideoMarker } from '@/components/player/types';
 
+import { useRecordingPlayerSeek } from './recording-player-context';
+
 const EMPTY_MARKERS: VideoMarker[] = [];
 
 const StreamPlayer = dynamic(() => import('@/components/player'), {
@@ -31,6 +33,7 @@ export function RecordingPlayer({
   durationMs,
   markers = EMPTY_MARKERS,
 }: RecordingPlayerProps) {
+  const playerContext = useRecordingPlayerSeek();
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = React.useCallback(() => {
@@ -115,6 +118,7 @@ export function RecordingPlayer({
           markers={markers}
           poster={poster}
           durationMs={durationMs}
+          onPlayerReady={playerContext?.registerPlayer}
           onFullscreen={toggleFullscreen}
         />
       </div>
