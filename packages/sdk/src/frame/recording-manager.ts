@@ -68,6 +68,7 @@ export class RecordingFrameManager extends BaseFrameManager implements IRecordin
 
     this.bridge.connect(this.frame.iframe).catch((error) => {
       this.logger.error({ err: error }, 'Bridge connection failed');
+      this.handleCloseRequest();
     });
   }
 

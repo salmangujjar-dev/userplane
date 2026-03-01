@@ -35,7 +35,7 @@ import {
 
 import type { RecordingSessionInfo } from './bridge';
 import { FrameManagerFactory } from './frame/factory';
-import type { IFrameManager, IRecordingFrameManager } from './frame/types';
+import type { ICaptureFrameManager, IFrameManager, IRecordingFrameManager } from './frame/types';
 import { logger } from './logger';
 import type {
   ActionType,
@@ -58,7 +58,7 @@ declare const __VERIFICATION_BASE_URL__: string;
 // Internal state
 let factory: FrameManagerFactory | null = null;
 let currentManager: IFrameManager | null = null;
-let captureManager: IFrameManager | null = null;
+let captureManager: ICaptureFrameManager | null = null;
 let recorderBaseUrl =
   typeof __RECORDER_BASE_URL__ !== 'undefined'
     ? __RECORDER_BASE_URL__
@@ -140,7 +140,7 @@ function mountCaptureIfNeeded(): void {
   };
 
   logger.info('Mounting capture iframe');
-  captureManager = factory.create('capture');
+  captureManager = factory.createCaptureManager();
   captureManager.tryMount(params);
 }
 

@@ -379,7 +379,7 @@ export class CaptureBridgeConnection {
   private async handleGetLogEntries(): Promise<LogEntries> {
     const remote = this.getRemote();
     if (!remote) {
-      return { network: [], console: [], activity: [] };
+      return { network: [], console: [], action: [] };
     }
     return remote.getLogEntries();
   }

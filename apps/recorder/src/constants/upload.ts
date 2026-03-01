@@ -68,6 +68,23 @@ export const THUMBNAIL_UPLOAD_CONFIG: UploadConfig = {
   totalTimeout: THUMBNAIL_UPLOAD_TOTAL_TIMEOUT_MS,
 };
 
+/** Log upload timeout in milliseconds (3 minutes) */
+export const LOG_UPLOAD_TIMEOUT_MS = 180000;
+
+/** Maximum retry attempts for log upload */
+export const LOG_UPLOAD_MAX_RETRIES = 3;
+
+/** Total timeout for log upload across all retries (10 minutes) */
+export const LOG_UPLOAD_TOTAL_TIMEOUT_MS = 600000;
+
+/** Unified log upload configuration */
+export const LOG_UPLOAD_CONFIG: UploadConfig = {
+  timeout: LOG_UPLOAD_TIMEOUT_MS,
+  maxRetries: LOG_UPLOAD_MAX_RETRIES,
+  retryDelay: RETRY_BASE_DELAY_MS,
+  totalTimeout: LOG_UPLOAD_TOTAL_TIMEOUT_MS,
+};
+
 // ===========================================
 // Progress
 // ===========================================

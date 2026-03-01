@@ -87,7 +87,7 @@ export interface LogCapturePreferences {
 export interface LogEntries {
   network: ProcessedLogEntry[];
   console: ProcessedLogEntry[];
-  activity: ProcessedLogEntry[];
+  action: ProcessedLogEntry[];
 }
 
 /**

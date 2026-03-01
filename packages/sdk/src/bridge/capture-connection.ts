@@ -196,7 +196,9 @@ export class CaptureBridgeConnection {
     }
 
     this.logger.debug('Disconnecting from capture iframe');
-    this.logCaptureManager?.destroy().catch(() => {});
+    this.logCaptureManager?.destroy().catch((err) => {
+      this.logger.warn({ err }, 'LogCaptureManager destroy failed during disconnect');
+    });
     this.connection.close();
     this.connection = null;
     this.callbacks.onDisconnected?.();
@@ -427,7 +429,7 @@ export class CaptureBridgeConnection {
    */
   public async getLogEntries(): Promise<LogEntries> {
     if (!this.logCaptureManager) {
-      return { network: [], console: [], activity: [] };
+      return { network: [], console: [], action: [] };
     }
     return this.logCaptureManager.getAllLogs();
   }

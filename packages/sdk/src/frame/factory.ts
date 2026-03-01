@@ -109,20 +109,4 @@ export class FrameManagerFactory {
     };
     return new CaptureFrameManager(config);
   }
-
-  /**
-   * Update the tab reference
-   * Call this if the tab ref changes after factory creation
-   */
-  public updateTabRef(tabRef: string): void {
-    this.config.tabRef = tabRef;
-  }
-
-  /**
-   * Update the verification base URL
-   * Call this if the URL changes after factory creation
-   */
-  public updateVerificationBaseUrl(url: string): void {
-    this.config.verificationBaseUrl = url;
-  }
 }

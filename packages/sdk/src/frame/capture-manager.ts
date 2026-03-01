@@ -25,6 +25,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
   private bridge: CaptureBridgeConnection | null = null;
   private config: CaptureFrameManagerConfig;
   private logger = createSdkLogger('CaptureFrameManager');
+  private pendingMountListener: (() => void) | null = null;
 
   constructor(config: CaptureFrameManagerConfig) {
     this.config = config;
@@ -68,6 +69,12 @@ export class CaptureFrameManager implements ICaptureFrameManager {
    * Unmount and cleanup the capture iframe
    */
   public unmount(): void {
+    // Clean up pending readystatechange listener if mount was deferred
+    if (this.pendingMountListener) {
+      document.removeEventListener('readystatechange', this.pendingMountListener);
+      this.pendingMountListener = null;
+    }
+
     this.disconnectBridge();
 
     if (!this.frame) {
@@ -180,7 +187,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
    * Get all captured log entries
    */
   public async getLogEntries(): Promise<LogEntries> {
-    return this.bridge?.getLogEntries() ?? { network: [], console: [], activity: [] };
+    return this.bridge?.getLogEntries() ?? { network: [], console: [], action: [] };
   }
 
   /**
@@ -291,10 +298,12 @@ export class CaptureFrameManager implements ICaptureFrameManager {
         // Append iframe directly to body (no overlay needed)
         document.body.appendChild(frame.iframe);
         document.removeEventListener('readystatechange', mountFn);
+        this.pendingMountListener = null;
         this.logger.debug('Frame mounted to DOM (hidden)');
       }
     };
 
+    this.pendingMountListener = mountFn;
     document.addEventListener('readystatechange', mountFn);
     mountFn();
   }
@@ -321,6 +330,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
 
     this.bridge.connect(this.frame.iframe).catch((error) => {
       this.logger.error({ err: error }, 'Bridge connection failed');
+      this.unmount();
     });
   }
 

@@ -2,14 +2,17 @@
  * LogStore
  * IndexedDB wrapper for persisting processed log entries.
  * One database per session-tab pair with three fixed object stores:
- * 'network', 'console', and 'activity'.
+ * 'network', 'console', and 'action'.
  */
 
 import type { ProcessedLogEntry } from './types';
 
-export type LogStoreType = 'network' | 'console' | 'activity';
+/**
+ * IndexedDB object store names for each log category.
+ */
+export type LogStoreType = 'network' | 'console' | 'action';
 
-const STORE_NAMES: LogStoreType[] = ['network', 'console', 'activity'];
+const STORE_NAMES: LogStoreType[] = ['network', 'console', 'action'];
 const DB_VERSION = 1;
 
 export const LOG_DB_PREFIX = 'userplane_logs_';
@@ -105,14 +108,14 @@ export class LogStore {
   async getAllLogs(): Promise<{
     network: ProcessedLogEntry[];
     console: ProcessedLogEntry[];
-    activity: ProcessedLogEntry[];
+    action: ProcessedLogEntry[];
   }> {
-    const [network, console, activity] = await Promise.all([
+    const [network, console, action] = await Promise.all([
       this.getAll('network'),
       this.getAll('console'),
-      this.getAll('activity'),
+      this.getAll('action'),
     ]);
-    return { network, console, activity };
+    return { network, console, action };
   }
 
   async clear(): Promise<void> {
