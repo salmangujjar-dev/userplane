@@ -1,0 +1,77 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish'
+        required: true
+        type: choice
+        options:
+          - sdk
+          - metadata
+      version:
+        description: 'Version (e.g. 0.1.0, 1.0.0-beta.1)'
+        required: true
+        type: string
+      tag:
+        description: 'npm dist-tag'
+        required: true
+        type: choice
+        options:
+          - latest
+          - beta
+          - next
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.1.0'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Set version
+        run: |
+          cd packages/${{ inputs.package }}
+          npm version ${{ inputs.version }} --no-git-tag-version
+
+      - name: Build metadata
+        if: inputs.package == 'sdk'
+        run: |
+          cd packages/metadata
+          bun run build:npm
+
+      - name: Build package
+        run: |
+          cd packages/${{ inputs.package }}
+          bun run build:npm
+
+      - name: Publish
+        run: |
+          cd packages/${{ inputs.package }}
+          npm publish --access public --tag ${{ inputs.tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "@userplane/${{ inputs.package }}@${{ inputs.version }}"
+          git push origin "@userplane/${{ inputs.package }}@${{ inputs.version }}"
