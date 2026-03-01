@@ -2,6 +2,6 @@ import { createClientLogger, type Logger } from '@workspace/common-logger/browse
 
 export function createLogger(context: string): Logger {
   return createClientLogger(context, {
-    level: import.meta.env.DEV ? 'debug' : 'warn',
+    level: process.env.NODE_ENV !== 'production' ? 'debug' : 'warn',
   });
 }

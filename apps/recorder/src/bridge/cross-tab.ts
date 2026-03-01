@@ -14,9 +14,14 @@ import { createLogger } from '@/lib/logger';
 
 import { generateRequestId, isCaptureTab } from './constants';
 import type {
+  AggregatedLogs,
   AggregatedMetadata,
   CaptureRecorderState,
   CustomMetadata,
+  LogCapturePreferences,
+  LogEntries,
+  LogsRequest,
+  LogsResponse,
   MetadataRequest,
   MetadataResponse,
   RecordingState,
@@ -40,6 +45,19 @@ interface PendingScatterGather {
 }
 
 /**
+ * Pending scatter-gather request for logs
+ */
+interface PendingLogScatterGather {
+  requestId: string;
+  requesterTabId: string;
+  requestedAt: number;
+  expectedTabs: string[];
+  responses: Map<string, LogsResponse>;
+  resolve: (result: AggregatedLogs) => void;
+  timeoutId: ReturnType<typeof setTimeout>;
+}
+
+/**
  * Shared state schema for cross-tab coordination
  * Note: Postbridge automatically appends `remote` as last arg when executing functions
  */
@@ -52,6 +70,16 @@ interface CrossTabSchema {
   lastRecorderStateUpdate: number;
   /** Whether blur is currently enabled (persistent state for new tabs) */
   blurrEnabled: boolean;
+  /** Whether log capture is currently enabled (persistent state for new tabs) */
+  logCaptureEnabled: boolean;
+  /** Current log capture preferences */
+  logCapturePreferences: LogCapturePreferences | null;
+  /** Session ID for log capture (needed to init log capture on new tabs) */
+  logCaptureSessionId: string | null;
+  /** Workspace ID for log capture */
+  logCaptureWorkspaceId: string | null;
+  /** Internal endpoints to exclude from network log capture */
+  logCaptureInternalEndpoints: string[] | null;
   /**
    * Broadcast function to sync state changes across tabs
    * Args: tabId and state are serialized and sent via postMessage
@@ -96,6 +124,36 @@ interface CrossTabSchema {
    * Called by capture iframes in response to requestMetadata
    */
   respondMetadata: (response: MetadataResponse, remote: CrossTabSchema) => void;
+
+  // ---------------------------------------------------------------------------
+  // Log Capture Control Methods
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Broadcast start log capture command to all capture iframes
+   */
+  broadcastStartLogCapture: (
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    workspaceId: string,
+    internalEndpoints: string[] | null,
+    remote: CrossTabSchema
+  ) => void;
+
+  /**
+   * Broadcast stop log capture command to all capture iframes
+   */
+  broadcastStopLogCapture: (remote: CrossTabSchema) => void;
+
+  /**
+   * Request logs from all capture iframes (scatter)
+   */
+  requestLogs: (request: LogsRequest, remote: CrossTabSchema) => void;
+
+  /**
+   * Respond with logs (gather)
+   */
+  respondLogs: (response: LogsResponse, remote: CrossTabSchema) => void;
 }
 
 /**
@@ -131,6 +189,15 @@ export interface CrossTabCoordinatorCallbacks {
   onBlurrStart?: () => void;
   /** Called when this tab (capture) receives stop blur command */
   onBlurrStop?: () => void;
+  /** Called when this tab (capture) receives start log capture command */
+  onLogCaptureStart?: (
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ) => void;
+  /** Called when this tab (capture) receives stop log capture command */
+  onLogCaptureStop?: () => void;
 }
 
 /**
@@ -184,6 +251,12 @@ export class CrossTabCoordinator {
   // Callback for when this capture receives a metadata request
   private metadataExtractor: (() => TabMetadata | null) | null = null;
 
+  // Callback for when this capture receives a log request
+  private logExtractor: (() => Promise<LogEntries>) | null = null;
+
+  // Pending scatter-gather requests for logs (by requestId)
+  private pendingLogScatterGathers: Map<string, PendingLogScatterGather> = new Map();
+
   // Health check interval for capture iframes
   private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
   private readonly HEALTH_CHECK_INTERVAL_MS = 5000; // Check every 5 seconds
@@ -205,6 +278,14 @@ export class CrossTabCoordinator {
    */
   public setMetadataExtractor(extractor: () => TabMetadata | null): void {
     this.metadataExtractor = extractor;
+  }
+
+  /**
+   * Register a log extractor function
+   * Called by capture iframes to provide their log extraction logic
+   */
+  public setLogExtractor(extractor: () => Promise<LogEntries>): void {
+    this.logExtractor = extractor;
   }
 
   /**
@@ -278,12 +359,19 @@ export class CrossTabCoordinator {
       recorderState: 'inactive',
       lastRecorderStateUpdate: 0,
       blurrEnabled: false,
-      syncRecorderState(tabId: string | null, state: RecordingState, remote: CrossTabSchema) {
-        // This function runs in ALL tabs when any tab broadcasts
-        // `remote` is the proxy object for accessing/setting shared state
-        remote.recorderTabId = tabId;
-        remote.recorderState = state;
-        remote.lastRecorderStateUpdate = Date.now();
+      logCaptureEnabled: false,
+      logCapturePreferences: null,
+      logCaptureSessionId: null,
+      logCaptureWorkspaceId: null,
+      logCaptureInternalEndpoints: null,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      syncRecorderState(tabId: string | null, state: RecordingState, _remote: CrossTabSchema) {
+        // This function runs in ALL tabs when any tab broadcasts.
+        // IMPORTANT: Do NOT write to _remote here (e.g. _remote.recorderState = state).
+        // The caller already updated shared state via CAS, and writing via the proxy setter
+        // would bump the version again, causing subsequent CAS operations to fail with
+        // stale versions (the local cache lags behind the worker's actual version).
+        // This function is purely for NOTIFICATION — trigger callbacks so other tabs react.
 
         // Notify callbacks if this update came from another tab
         if (self.localTabId && tabId !== self.localTabId) {
@@ -404,6 +492,113 @@ export class CrossTabCoordinator {
         }
         logger.debug({ localTabId: self.localTabId }, 'blur stop received');
         self.config.callbacks.onBlurrStop?.();
+      },
+
+      // Log capture: start log capture (runs in capture iframes)
+      broadcastStartLogCapture(
+        preferences: LogCapturePreferences,
+        sessionId: string,
+        workspaceId: string,
+        internalEndpoints: string[] | null,
+        remote: CrossTabSchema
+      ) {
+        // Update persistent log capture state
+        remote.logCaptureEnabled = true;
+        remote.logCapturePreferences = preferences;
+        remote.logCaptureSessionId = sessionId;
+        remote.logCaptureWorkspaceId = workspaceId;
+        remote.logCaptureInternalEndpoints = internalEndpoints;
+
+        // Only capture iframes should handle log capture commands
+        if (!self.localTabId || !isCaptureTab(self.localTabId)) {
+          return;
+        }
+        logger.debug({ localTabId: self.localTabId }, 'log capture start received');
+        self.config.callbacks.onLogCaptureStart?.(
+          preferences,
+          sessionId,
+          workspaceId,
+          internalEndpoints ?? undefined
+        );
+      },
+
+      // Log capture: stop log capture (runs in capture iframes)
+      broadcastStopLogCapture(remote: CrossTabSchema) {
+        // Update persistent log capture state
+        remote.logCaptureEnabled = false;
+
+        // Only capture iframes should handle log capture commands
+        if (!self.localTabId || !isCaptureTab(self.localTabId)) {
+          return;
+        }
+        logger.debug({ localTabId: self.localTabId }, 'log capture stop received');
+        self.config.callbacks.onLogCaptureStop?.();
+      },
+
+      // Log scatter-gather: handle log request (runs in capture iframes)
+      // postbridge automatically appends _remote as the last parameter
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      requestLogs(request: LogsRequest, _remote: CrossTabSchema) {
+        // Only capture iframes should respond
+        if (!self.localTabId || !isCaptureTab(self.localTabId)) {
+          return;
+        }
+
+        // Don't respond to our own requests
+        if (request.requesterTabId === self.localTabId) {
+          return;
+        }
+
+        logger.debug(
+          { requestId: request.requestId, from: request.requesterTabId },
+          'log request received'
+        );
+
+        // Extract logs and respond
+        if (self.logExtractor) {
+          self
+            .logExtractor()
+            .then((logs) => {
+              const response: LogsResponse = {
+                requestId: request.requestId,
+                responderTabId: self.localTabId!,
+                logs,
+                respondedAt: Date.now(),
+              };
+              self.sendLogsResponse(response);
+            })
+            .catch((err) => {
+              logger.error({ err }, 'log extraction failed');
+            });
+        }
+      },
+
+      // Log scatter-gather: handle log response (runs in recorder)
+      // postbridge automatically appends _remote as the last parameter
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      respondLogs(response: LogsResponse, _remote: CrossTabSchema) {
+        // Only process if we have a pending request for this
+        const pending = self.pendingLogScatterGathers.get(response.requestId);
+        if (!pending) {
+          return;
+        }
+
+        logger.debug(
+          {
+            responderTabId: response.responderTabId,
+            received: pending.responses.size + 1,
+            expected: pending.expectedTabs.length,
+          },
+          'log scatter-gather response received'
+        );
+
+        // Store response
+        pending.responses.set(response.responderTabId, response);
+
+        // Check if all expected responses received
+        if (pending.responses.size >= pending.expectedTabs.length) {
+          self.completeLogScatterGather(response.requestId);
+        }
       },
     };
 
@@ -549,10 +744,11 @@ export class CrossTabCoordinator {
    * Also stops blur if it was enabled (prevents stuck blur when recorder crashes)
    */
   private transitionToIdleIfNeeded(): void {
-    // Check if blur is currently enabled before transitioning
+    // Check if blur/log capture is currently enabled before transitioning
     const wasBlurrEnabled = this.isBlurrEnabled();
+    const wasLogCaptureEnabled = this.isLogCaptureEnabled();
 
-    logger.debug({ wasBlurrEnabled }, 'transitioning to idle');
+    logger.debug({ wasBlurrEnabled, wasLogCaptureEnabled }, 'transitioning to idle');
 
     const captureState: CaptureRecorderState = {
       recorderTabId: null,
@@ -568,6 +764,11 @@ export class CrossTabCoordinator {
     // This prevents stuck blur when recorder crashes mid-recording
     if (wasBlurrEnabled) {
       this.config.callbacks.onBlurrStop?.();
+    }
+
+    // If log capture was enabled, stop it locally
+    if (wasLogCaptureEnabled) {
+      this.config.callbacks.onLogCaptureStop?.();
     }
   }
 
@@ -715,10 +916,11 @@ export class CrossTabCoordinator {
       );
 
       if (!stateResult.success) {
-        // State changed, but we have the lock - that's ok, we can update state separately
+        // Retry once with the worker's actual version
+        await this.connection.compareAndSwap('recorderState', stateResult.version, 'inactive');
       }
 
-      // Broadcast the change to other tabs
+      // Broadcast the change to other tabs (notification only — no state writes)
       await this.broadcastStateChange(this.localTabId, 'inactive');
 
       this.isOwner = true;
@@ -750,11 +952,11 @@ export class CrossTabCoordinator {
 
     logger.debug({ tabId: this.localTabId }, 'releasing lock');
 
+    let version = this.connection.getVersionedState<string | null>('recorderTabId').version;
+
     let retries = 0;
     while (retries < this.config.maxRetries) {
-      const { value: currentTabId, version } = this.connection.getVersionedState<string | null>(
-        'recorderTabId'
-      );
+      const currentTabId = this.connection.getVersionedState<string | null>('recorderTabId').value;
 
       // Verify we still own it
       if (currentTabId !== this.localTabId) {
@@ -770,12 +972,21 @@ export class CrossTabCoordinator {
       const result = await this.connection.compareAndSwap('recorderTabId', version, null);
 
       if (result.success) {
-        // Also reset state
-        const { version: stateVersion } =
-          this.connection.getVersionedState<RecordingState>('recorderState');
-        await this.connection.compareAndSwap('recorderState', stateVersion, 'inactive');
+        // Also reset state — use authoritative version from CAS result for state key
+        let stateVersion =
+          this.connection.getVersionedState<RecordingState>('recorderState').version;
+        const stateResult = await this.connection.compareAndSwap(
+          'recorderState',
+          stateVersion,
+          'inactive'
+        );
+        if (!stateResult.success) {
+          // Retry once with the worker's actual version
+          stateVersion = stateResult.version;
+          await this.connection.compareAndSwap('recorderState', stateVersion, 'inactive');
+        }
 
-        // Broadcast the release
+        // Broadcast the release (notification only — no state writes)
         await this.broadcastStateChange(null, 'inactive');
 
         this.isOwner = false;
@@ -783,7 +994,10 @@ export class CrossTabCoordinator {
         return true;
       }
 
+      // Use authoritative version from worker for next attempt
+      version = result.version;
       retries++;
+      logger.debug({ attempt: retries, workerVersion: version }, 'release CAS conflict, retrying');
     }
 
     logger.error('lock release failed - max retries');
@@ -808,14 +1022,16 @@ export class CrossTabCoordinator {
     const currentState = this.getRecorderState();
     logger.debug({ from: currentState, to: newState }, 'updating state');
 
+    // Start with the local cache version; on CAS failure, use the version
+    // returned by the worker (authoritative) to avoid stale-cache retries.
+    let version = this.connection.getVersionedState<RecordingState>('recorderState').version;
+
     let retries = 0;
     while (retries < this.config.maxRetries) {
-      const { version } = this.connection.getVersionedState<RecordingState>('recorderState');
-
       const result = await this.connection.compareAndSwap('recorderState', version, newState);
 
       if (result.success) {
-        // Broadcast the change to all tabs
+        // Broadcast the change to all tabs (notification only — no state writes)
         await this.broadcastStateChange(this.localTabId, newState);
 
         // Also broadcast capture recorder state to capture iframes
@@ -830,7 +1046,10 @@ export class CrossTabCoordinator {
         return true;
       }
 
+      // Use the authoritative version from the worker for the next attempt
+      version = result.version;
       retries++;
+      logger.debug({ attempt: retries, workerVersion: version }, 'state CAS conflict, retrying');
     }
 
     logger.error('state update failed - max retries');
@@ -891,6 +1110,222 @@ export class CrossTabCoordinator {
     } catch (error) {
       logger.error({ err: error }, 'blur broadcast failed');
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Log Capture Control Methods
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Broadcast start log capture command to all capture iframes
+   */
+  public async broadcastStartLogCapture(
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ): Promise<void> {
+    if (!this.connection) {
+      logger.warn('cannot broadcast log capture - not connected');
+      return;
+    }
+
+    logger.debug('broadcasting start log capture');
+    try {
+      const remote = this.connection.remote as unknown as {
+        broadcastStartLogCapture: (
+          preferences: LogCapturePreferences,
+          sessionId: string,
+          workspaceId: string,
+          internalEndpoints: string[] | null
+        ) => Promise<void>;
+      };
+      await remote.broadcastStartLogCapture(
+        preferences,
+        sessionId,
+        workspaceId,
+        internalEndpoints ?? null
+      );
+    } catch (error) {
+      logger.error({ err: error }, 'log capture broadcast failed');
+    }
+  }
+
+  /**
+   * Broadcast stop log capture command to all capture iframes
+   */
+  public async broadcastStopLogCapture(): Promise<void> {
+    if (!this.connection) {
+      logger.warn('cannot broadcast log capture stop - not connected');
+      return;
+    }
+
+    logger.debug('broadcasting stop log capture');
+    try {
+      const remote = this.connection.remote as unknown as {
+        broadcastStopLogCapture: () => Promise<void>;
+      };
+      await remote.broadcastStopLogCapture();
+    } catch (error) {
+      logger.error({ err: error }, 'log capture stop broadcast failed');
+    }
+  }
+
+  /**
+   * Check if log capture is currently enabled
+   */
+  public isLogCaptureEnabled(): boolean {
+    if (!this.connection) return false;
+    return this.connection.getVersionedState<boolean>('logCaptureEnabled').value ?? false;
+  }
+
+  /**
+   * Get current log capture preferences from shared state
+   */
+  public getLogCapturePreferences(): LogCapturePreferences | null {
+    if (!this.connection) return null;
+    return (
+      this.connection.getVersionedState<LogCapturePreferences | null>('logCapturePreferences')
+        .value ?? null
+    );
+  }
+
+  /**
+   * Get the session ID stored for log capture
+   */
+  public getLogCaptureSessionId(): string | null {
+    if (!this.connection) return null;
+    return this.connection.getVersionedState<string | null>('logCaptureSessionId').value ?? null;
+  }
+
+  /**
+   * Get the workspace ID stored for log capture
+   */
+  public getLogCaptureWorkspaceId(): string | null {
+    if (!this.connection) return null;
+    return this.connection.getVersionedState<string | null>('logCaptureWorkspaceId').value ?? null;
+  }
+
+  /**
+   * Get the internal endpoints stored for log capture
+   */
+  public getLogCaptureInternalEndpoints(): string[] | null {
+    if (!this.connection) return null;
+    return (
+      this.connection.getVersionedState<string[] | null>('logCaptureInternalEndpoints').value ??
+      null
+    );
+  }
+
+  /**
+   * Scatter-gather logs from all capture iframes
+   */
+  public async scatterGatherLogs(timeoutMs?: number): Promise<AggregatedLogs> {
+    if (!this.connection || !this.localTabId) {
+      throw new Error('Not connected to cross-tab coordinator');
+    }
+
+    const requestId = generateRequestId();
+    const requestedAt = Date.now();
+    const timeout = timeoutMs ?? this.config.scatterTimeout;
+
+    const allTabs = await this.connection.getConnectedTabs();
+    const captureTabs = allTabs.filter(isCaptureTab);
+
+    logger.debug({ captureTabs: captureTabs.length, timeout }, 'log scatter-gather started');
+
+    if (captureTabs.length === 0) {
+      return {
+        perTab: {},
+        respondedTabs: [],
+        timedOutTabs: [],
+        totalTabs: 0,
+        requestedAt,
+        completedAt: Date.now(),
+      };
+    }
+
+    return new Promise<AggregatedLogs>((resolve) => {
+      const timeoutId = setTimeout(() => {
+        this.completeLogScatterGather(requestId);
+      }, timeout);
+
+      const pending: PendingLogScatterGather = {
+        requestId,
+        requesterTabId: this.localTabId!,
+        requestedAt,
+        expectedTabs: captureTabs,
+        responses: new Map(),
+        resolve,
+        timeoutId,
+      };
+
+      this.pendingLogScatterGathers.set(requestId, pending);
+
+      const request: LogsRequest = {
+        requestId,
+        requesterTabId: this.localTabId!,
+        requestedAt,
+      };
+
+      this.broadcastLogsRequest(request);
+    });
+  }
+
+  private async broadcastLogsRequest(request: LogsRequest): Promise<void> {
+    if (!this.connection) return;
+
+    try {
+      const remote = this.connection.remote as unknown as {
+        requestLogs: (request: LogsRequest) => Promise<void>;
+      };
+      await remote.requestLogs(request);
+    } catch (error) {
+      logger.error({ err: error }, 'logs request broadcast failed');
+    }
+  }
+
+  private async sendLogsResponse(response: LogsResponse): Promise<void> {
+    if (!this.connection) return;
+
+    try {
+      const remote = this.connection.remote as unknown as {
+        respondLogs: (response: LogsResponse) => Promise<void>;
+      };
+      await remote.respondLogs(response);
+    } catch (error) {
+      logger.error({ err: error }, 'logs response send failed');
+    }
+  }
+
+  private completeLogScatterGather(requestId: string): void {
+    const pending = this.pendingLogScatterGathers.get(requestId);
+    if (!pending) return;
+
+    clearTimeout(pending.timeoutId);
+    this.pendingLogScatterGathers.delete(requestId);
+
+    const respondedTabs = Array.from(pending.responses.keys());
+    const timedOutTabs = pending.expectedTabs.filter((tab) => !pending.responses.has(tab));
+
+    logger.debug(
+      { responded: respondedTabs.length, timedOut: timedOutTabs.length },
+      'log scatter-gather completed'
+    );
+
+    const perTab: Record<string, LogEntries> = {};
+    for (const [tabId, response] of pending.responses) {
+      perTab[tabId] = response.logs;
+    }
+
+    pending.resolve({
+      perTab,
+      respondedTabs,
+      timedOutTabs,
+      totalTabs: respondedTabs.length + timedOutTabs.length,
+      requestedAt: pending.requestedAt,
+      completedAt: Date.now(),
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -1127,6 +1562,7 @@ export class CrossTabCoordinator {
     recorderTabId: string | null;
     recorderState: RecordingState;
     blurrEnabled: boolean;
+    logCaptureEnabled: boolean;
   } {
     return {
       isConnected: this.isConnected(),
@@ -1136,6 +1572,7 @@ export class CrossTabCoordinator {
       recorderTabId: this.getRecorderTabId(),
       recorderState: this.getRecorderState(),
       blurrEnabled: this.isBlurrEnabled(),
+      logCaptureEnabled: this.isLogCaptureEnabled(),
     };
   }
 }

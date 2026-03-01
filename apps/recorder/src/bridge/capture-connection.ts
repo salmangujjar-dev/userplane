@@ -20,6 +20,9 @@ import type {
   CaptureHostSchema,
   CaptureRecorderState,
   CustomMetadata,
+  LogCapturePreferences,
+  LogCaptureState,
+  LogEntries,
   RecordingState,
   TabMetadata,
 } from './types';
@@ -78,6 +81,11 @@ export class CaptureBridgeConnection {
       startBlurr: this.handleStartBlurr.bind(this),
       stopBlurr: this.handleStopBlurr.bind(this),
       getBlurrState: this.handleGetBlurrState.bind(this),
+      startLogCapture: this.handleStartLogCapture.bind(this),
+      stopLogCapture: this.handleStopLogCapture.bind(this),
+      getLogCaptureState: this.handleGetLogCaptureState.bind(this),
+      getLogEntries: this.handleGetLogEntries.bind(this),
+      clearLogStore: this.handleClearLogStore.bind(this),
     };
 
     try {
@@ -312,6 +320,108 @@ export class CaptureBridgeConnection {
    */
   public getBlurrState(): BlurrState {
     return this.handleGetBlurrState();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Log Capture Handlers (relay to parent SDK)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Handle start log capture request - relay to parent SDK
+   */
+  private async handleStartLogCapture(
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    tabId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ): Promise<void> {
+    const remote = this.getRemote();
+    if (!remote) {
+      logger.warn('not connected, cannot relay start log capture to SDK parent');
+      return;
+    }
+    logger.debug(
+      { preferences, sessionId, tabId, workspaceId },
+      'relaying startLogCapture to SDK parent'
+    );
+    await remote.startLogCapture(preferences, sessionId, tabId, workspaceId, internalEndpoints);
+    logger.debug('startLogCapture relay complete');
+  }
+
+  /**
+   * Handle stop log capture request - relay to parent SDK
+   */
+  private handleStopLogCapture(): void {
+    const remote = this.getRemote();
+    if (!remote) {
+      logger.warn('not connected, cannot stop log capture');
+      return;
+    }
+    logger.debug('relaying stop log capture');
+    remote.stopLogCapture();
+  }
+
+  /**
+   * Handle get log capture state request - relay to parent SDK
+   */
+  private handleGetLogCaptureState(): LogCaptureState {
+    const remote = this.getRemote();
+    if (!remote) {
+      return 'disabled';
+    }
+    return remote.getLogCaptureState();
+  }
+
+  /**
+   * Handle get log entries request - relay to parent SDK
+   */
+  private async handleGetLogEntries(): Promise<LogEntries> {
+    const remote = this.getRemote();
+    if (!remote) {
+      return { network: [], console: [], activity: [] };
+    }
+    return remote.getLogEntries();
+  }
+
+  /**
+   * Handle clear log store request - relay to parent SDK
+   */
+  private async handleClearLogStore(): Promise<void> {
+    const remote = this.getRemote();
+    if (!remote) return;
+    await remote.clearLogStore();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public Log Capture Control Methods (for recorder to call)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Start log capture on the parent page
+   */
+  public async startLogCapture(
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    tabId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ): Promise<void> {
+    await this.handleStartLogCapture(preferences, sessionId, tabId, workspaceId, internalEndpoints);
+  }
+
+  /**
+   * Stop log capture on the parent page
+   */
+  public stopLogCapture(): void {
+    this.handleStopLogCapture();
+  }
+
+  /**
+   * Get all captured log entries from the parent
+   */
+  public async getLogEntries(): Promise<LogEntries> {
+    return this.handleGetLogEntries();
   }
 }
 

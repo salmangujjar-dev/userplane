@@ -3,6 +3,7 @@
  * Shows countdown timer before recording starts
  */
 
+import Image from 'next/image';
 import { type ReactNode, useEffect, useRef } from 'react';
 
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
@@ -92,9 +93,11 @@ export default function PreRecordingCountdownScreen({
             >
               {countdownSeconds}
             </div>
-            <img
+            <Image
               src={mediaClient.getIconMediaUrl('icons/video.svg')}
               alt="Recording"
+              width={64}
+              height={64}
               className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 text-gray-800"
             />
           </div>

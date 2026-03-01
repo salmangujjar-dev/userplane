@@ -4,6 +4,7 @@
  * Handles auto-close after delay
  */
 
+import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 
 import { DEFAULT_COMPANY_NAME, SUCCESS_AUTO_CLOSE_DELAY_MS } from '@/constants';
@@ -33,9 +34,9 @@ function extractHostname(url: string): string {
     // Fallback: if URL parsing fails, return the input cleaned up
     return url
       .replace(/^https?:\/\//, '')
-      .split('/')[0]
-      .split('?')[0]
-      .split('#')[0];
+      .split('/')[0]!
+      .split('?')[0]!
+      .split('#')[0]!;
   }
 }
 
@@ -74,9 +75,11 @@ export default function VerifiedScreen({
     >
       <div className="flex flex-col items-center justify-center text-center w-full">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
-          <img
+          <Image
             src={mediaClient.getIconMediaUrl('icons/checkmark.svg')}
             alt="Success"
+            width={32}
+            height={32}
             className="w-8 h-8 sm:w-10 sm:h-10"
           />
         </div>

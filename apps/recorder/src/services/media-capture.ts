@@ -106,25 +106,30 @@ export class MediaCapture {
           // Mix system audio + mic via Web Audio API
           try {
             const destination = this.mixAudioStreams(displayStream, micStream);
-            combinedStream.addTrack(destination.stream.getAudioTracks()[0]);
+            const mixedTrack = destination.stream.getAudioTracks()[0];
+            if (mixedTrack) combinedStream.addTrack(mixedTrack);
             // Source streams' tracks aren't in combinedStream — store for cleanup
             this.sourceStreams = [displayStream, micStream];
           } catch (mixError) {
             logger.warn({ err: mixError }, 'audio mixing failed, falling back to mic only');
-            combinedStream.addTrack(micStream.getAudioTracks()[0]);
+            const micTrack = micStream.getAudioTracks()[0];
+            if (micTrack) combinedStream.addTrack(micTrack);
           }
         } else if (micStream) {
           // Mic only (no system audio or non-Chromium)
-          combinedStream.addTrack(micStream.getAudioTracks()[0]);
+          const micTrack = micStream.getAudioTracks()[0];
+          if (micTrack) combinedStream.addTrack(micTrack);
         } else if (hasSystemAudio) {
           // System audio only (mic failed)
-          combinedStream.addTrack(displayStream.getAudioTracks()[0]);
+          const sysTrack = displayStream.getAudioTracks()[0];
+          if (sysTrack) combinedStream.addTrack(sysTrack);
         }
         // else: neither — video only
       } else {
         // screen-only mode: include system audio if available
         if (hasSystemAudio) {
-          combinedStream.addTrack(displayStream.getAudioTracks()[0]);
+          const sysTrack = displayStream.getAudioTracks()[0];
+          if (sysTrack) combinedStream.addTrack(sysTrack);
         }
       }
 
@@ -189,7 +194,7 @@ export class MediaCapture {
 
       // When user clicks "Stop sharing" in browser, MediaRecorder will automatically
       // stop and fire the onstop event above
-      combinedStream.getVideoTracks()[0].addEventListener('ended', () => {
+      combinedStream.getVideoTracks()[0]?.addEventListener('ended', () => {
         // No need to do anything here - onstop handler will fire automatically
       });
     } catch (error) {

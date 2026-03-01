@@ -2,8 +2,6 @@
  * Environment configuration Zod schemas for recorder
  * Defines the shape and validation rules for all environment variables
  * Types are inferred from schemas to ensure consistency
- *
- * Note: This app uses Astro with import.meta.env (PUBLIC_ prefix)
  */
 import { z } from 'zod';
 
@@ -45,33 +43,34 @@ const booleanWithDefault = (defaultValue: boolean) =>
     });
 
 // =============================================================================
-// Raw Environment Variable Schemas (for parsing import.meta.env)
+// Raw Environment Variable Schemas (for parsing process.env)
 // =============================================================================
 
 /** App env vars schema */
 export const appEnvSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  // Astro uses MODE from --mode flag
-  MODE: z.enum(['development', 'production']).default('development'),
+  APP_ENV: z.enum(['development', 'production']).default('development'),
 });
 
 /** API env vars schema */
 export const apiEnvSchema = z.object({
-  PUBLIC_API_URL: urlWithDefault(DEV_URLS.API),
+  NEXT_PUBLIC_API_URL: urlWithDefault(DEV_URLS.API),
 });
 
 /** Storage env vars schema */
 export const storageEnvSchema = z.object({
-  PUBLIC_CDN_DOMAIN: urlWithDefault(DEV_URLS.CDN),
-  PUBLIC_ASSETS_DOMAIN: urlWithDefault(DEV_URLS.ASSETS),
-  PUBLIC_CLOUDFLARE_IMAGE_ZONE: stringWithDefault(STORAGE.IMAGE_ZONE),
-  PUBLIC_SKIP_IMAGE_TRANSFORM: booleanWithDefault(false),
+  NEXT_PUBLIC_CDN_DOMAIN: urlWithDefault(DEV_URLS.CDN),
+  NEXT_PUBLIC_ASSETS_DOMAIN: urlWithDefault(DEV_URLS.ASSETS),
+  NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE: stringWithDefault(STORAGE.IMAGE_ZONE),
+  NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM: booleanWithDefault(false),
 });
 
 /** PostHog env vars schema */
 export const posthogEnvSchema = z.object({
-  PUBLIC_POSTHOG_KEY: z.string().optional(),
-  PUBLIC_POSTHOG_HOST: urlWithDefault(POSTHOG.HOST),
+  NEXT_PUBLIC_POSTHOG_KEY: z
+    .string()
+    .optional()
+    .transform((val): string | undefined => val || undefined),
+  NEXT_PUBLIC_POSTHOG_HOST: stringWithDefault(POSTHOG.HOST),
 });
 
 /** Combined raw environment variables schema */
@@ -103,12 +102,11 @@ export const storageConfigSchema = z.object({
 /** PostHog configuration schema */
 export const posthogConfigSchema = z.object({
   apiKey: z.string().optional(),
-  host: z.string().url(),
+  host: z.string(),
 });
 
 /** Complete environment configuration schema */
 export const envConfigSchema = z.object({
-  nodeEnv: z.enum(['development', 'production', 'test']),
   appEnv: z.enum(['development', 'production']),
   api: apiConfigSchema,
   storage: storageConfigSchema,

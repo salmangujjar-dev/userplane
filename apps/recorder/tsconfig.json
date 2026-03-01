@@ -1,12 +1,17 @@
 {
-  "extends": ["astro/tsconfigs/strict", "@workspace/typescript-config/astro.json"],
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "storybook-static"],
+  "extends": "@workspace/typescript-config/nextjs.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@stories/*": ["./.storybook/*"]
-    }
-  }
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "storybook-static"]
 }

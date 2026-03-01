@@ -25,12 +25,18 @@ export {
   resetCrossTabCoordinator,
 } from './cross-tab';
 export {
+  type AggregatedLogs,
   type AggregatedMetadata,
   type CaptureGuestSchema,
   type CaptureHostSchema,
   type CaptureRecorderState,
   type CustomMetadata,
   type GuestSchema,
+  type LogCapturePreferences,
+  type LogCaptureState,
+  type LogEntries,
+  type LogsRequest,
+  type LogsResponse,
   type MetadataRequest,
   type MetadataResponse,
   type RecorderHostSchema,

@@ -4,6 +4,7 @@
  */
 
 import { Button } from '@workspace/ui/components/button';
+import Image from 'next/image';
 import { type ReactNode, useState } from 'react';
 
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR, PRE_RECORDING_COPY } from '@/constants';
@@ -77,9 +78,11 @@ export default function PreRecordingScreen({
               backgroundColor: selectedMode === 'screen-voice' ? selectedBgColor : 'transparent',
             }}
           >
-            <img
+            <Image
               src={mediaClient.getIconMediaUrl('icons/desktop.svg')}
               alt="Screen + Voice"
+              width={48}
+              height={48}
               className="w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4"
             />
             <span className="text-sm sm:text-base font-semibold text-gray-900">
@@ -95,9 +98,11 @@ export default function PreRecordingScreen({
               backgroundColor: selectedMode === 'screen-only' ? selectedBgColor : 'transparent',
             }}
           >
-            <img
+            <Image
               src={mediaClient.getIconMediaUrl('icons/monitor.svg')}
               alt="Screen only"
+              width={48}
+              height={48}
               className="w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4"
             />
             <span className="text-sm sm:text-base font-semibold text-gray-900">

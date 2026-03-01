@@ -3,6 +3,8 @@
  * Type definitions for postbridge communication between recorder (guest) and SDK (host)
  */
 
+import type { ProcessedLogEntry } from '@workspace/logger';
+
 /**
  * Recording state as exposed to the parent
  */
@@ -171,6 +173,37 @@ export interface CaptureHostSchema {
    * Returns 'enabled' if blur is active, 'disabled' otherwise
    */
   getBlurrState: () => BlurrState;
+
+  /**
+   * Start log capture on the parent page
+   */
+  startLogCapture: (
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    tabId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ) => Promise<void>;
+
+  /**
+   * Stop log capture on the parent page
+   */
+  stopLogCapture: () => void;
+
+  /**
+   * Get the current log capture state
+   */
+  getLogCaptureState: () => LogCaptureState;
+
+  /**
+   * Get all captured log entries from IndexedDB
+   */
+  getLogEntries: () => Promise<LogEntries>;
+
+  /**
+   * Clear all stored log entries
+   */
+  clearLogStore: () => Promise<void>;
 }
 
 /**
@@ -219,6 +252,39 @@ export interface CaptureGuestSchema {
    * Returns 'enabled' if blur is active, 'disabled' otherwise
    */
   getBlurrState: () => BlurrState;
+
+  /**
+   * Start log capture on the parent page
+   * Relays to parent SDK's startLogCapture
+   */
+  startLogCapture: (
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    tabId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ) => Promise<void>;
+
+  /**
+   * Stop log capture on the parent page
+   * Relays to parent SDK's stopLogCapture
+   */
+  stopLogCapture: () => void;
+
+  /**
+   * Get the current log capture state from the parent
+   */
+  getLogCaptureState: () => LogCaptureState;
+
+  /**
+   * Get all captured log entries from the parent
+   */
+  getLogEntries: () => Promise<LogEntries>;
+
+  /**
+   * Clear all stored log entries on the parent
+   */
+  clearLogStore: () => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -307,4 +373,64 @@ export interface MetadataResponse {
   metadata: TabMetadata;
   /** Timestamp of response */
   respondedAt: number;
+}
+
+// ---------------------------------------------------------------------------
+// Log Capture Types
+// ---------------------------------------------------------------------------
+
+/**
+ * Preferences for what types of logs to capture
+ */
+export interface LogCapturePreferences {
+  captureConsole: boolean;
+  captureNetwork: boolean;
+  captureAction: boolean;
+}
+
+/**
+ * Log capture state
+ */
+export type LogCaptureState = 'enabled' | 'disabled';
+
+/**
+ * Aggregated log entries from a tab
+ */
+export interface LogEntries {
+  network: ProcessedLogEntry[];
+  console: ProcessedLogEntry[];
+  activity: ProcessedLogEntry[];
+}
+
+/**
+ * Scatter-gather request for logs
+ * Broadcast by recorder to all capture iframes
+ */
+export interface LogsRequest {
+  requestId: string;
+  requesterTabId: string;
+  requestedAt: number;
+}
+
+/**
+ * Scatter-gather response for logs
+ * Sent by each capture iframe back to the recorder
+ */
+export interface LogsResponse {
+  requestId: string;
+  responderTabId: string;
+  logs: LogEntries;
+  respondedAt: number;
+}
+
+/**
+ * Aggregated logs from all tabs
+ */
+export interface AggregatedLogs {
+  perTab: Record<string, LogEntries>;
+  respondedTabs: string[];
+  timedOutTabs: string[];
+  totalTabs: number;
+  requestedAt: number;
+  completedAt: number;
 }

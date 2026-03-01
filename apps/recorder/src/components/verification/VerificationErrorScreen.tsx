@@ -5,6 +5,7 @@
  */
 
 import { Button } from '@workspace/ui/components/button';
+import Image from 'next/image';
 
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
 import { mediaClient } from '@/lib/media';
@@ -53,9 +54,11 @@ export default function VerificationErrorScreen({
         <p className="text-gray-600 mb-8 max-w-md">{subtitle}</p>
 
         <div className="mb-8">
-          <img
+          <Image
             src={mediaClient.getIconMediaUrl('icons/dino.svg')}
             alt="Error"
+            width={128}
+            height={128}
             className="w-32 h-32 opacity-80"
           />
         </div>

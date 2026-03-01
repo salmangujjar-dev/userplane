@@ -4,7 +4,7 @@ import { AppModeProvider } from '@/contexts/AppModeContext';
 
 import VerifiedScreen from './VerifiedScreen';
 
-const meta = {
+const meta: Meta<typeof VerifiedScreen> = {
   title: 'Verification/VerifiedScreen',
   component: VerifiedScreen,
   parameters: {

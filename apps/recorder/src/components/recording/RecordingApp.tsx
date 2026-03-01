@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Recording App
  * Main application component that orchestrates the recording flow
@@ -35,7 +37,7 @@ interface RecordingAppProps {}
 // eslint-disable-next-line no-empty-pattern
 export default function RecordingApp({}: RecordingAppProps = {}) {
   return (
-    <AppModeProvider actionType="recording">
+    <AppModeProvider actionType="recording" crossTabWorkerURL="/bridge-worker.js">
       <RecordingAppContent />
     </AppModeProvider>
   );
@@ -76,21 +78,32 @@ function RecordingAppContent() {
     logger.debug({ mode, isEmbedded, lockStatus: crossTabLock.status }, 'app initialized');
   }, [mode, isEmbedded, crossTabLock.status]);
 
-  // Bridge sync: state reporting, blur control, session init, metadata gathering
-  const { gatherAndMergeMetadata } = useEmbeddedBridgeSync({
+  // Bridge sync: state reporting, blur control, log capture, session init, metadata gathering
+  const { gatherAndMergeMetadata, gatherLogs } = useEmbeddedBridgeSync({
     isEmbedded,
     flowState: state.state,
     recordingBlob: state.recordingBlob,
     effectiveBlurEnabled,
     sessionInfo,
+    preferences: state.preferences,
   });
 
   const handleSubmitRecording = useCallback(
     async (notes?: string) => {
+      logger.debug('gathering metadata and logs before submit');
       const customMetadata = await gatherAndMergeMetadata();
-      await actions.submitRecording(customMetadata, notes);
+      const aggregatedLogs = await gatherLogs();
+      logger.debug(
+        {
+          hasMetadata: !!customMetadata,
+          hasLogs: !!aggregatedLogs,
+          respondedTabs: aggregatedLogs?.respondedTabs?.length ?? 0,
+        },
+        'submit data gathered'
+      );
+      await actions.submitRecording(customMetadata, notes, aggregatedLogs);
     },
-    [gatherAndMergeMetadata, actions]
+    [gatherAndMergeMetadata, gatherLogs, actions]
   );
 
   // === ALL HOOKS ABOVE THIS LINE ===
