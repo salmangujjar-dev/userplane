@@ -337,12 +337,19 @@ export class RecordingService {
   /**
    * Get console log resource for an available recording
    * Only works with recordings that have uploadStatus = 'available'
+   * Returns captureEnabled to indicate current domain preference
    */
   async getConsoleLogResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
     const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+    const captureEnabled = prefs?.captureClientLog ?? false;
 
     if (!recording.recordingConsoleLogRef) {
-      return { url: null, message: 'Console logs not available for this recording' };
+      return {
+        url: null,
+        message: 'Console logs not available for this recording',
+        captureEnabled,
+      };
     }
 
     try {
@@ -355,11 +362,13 @@ export class RecordingService {
       return {
         url,
         message: 'Console log URL generated successfully',
+        captureEnabled,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate console log URL',
+        captureEnabled,
       };
     }
   }
@@ -367,12 +376,19 @@ export class RecordingService {
   /**
    * Get network log resource for an available recording
    * Only works with recordings that have uploadStatus = 'available'
+   * Returns captureEnabled to indicate current domain preference
    */
   async getNetworkLogResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
     const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+    const captureEnabled = prefs?.captureNetworkLog ?? false;
 
     if (!recording.recordingNetworkLogsRef) {
-      return { url: null, message: 'Network logs not available for this recording' };
+      return {
+        url: null,
+        message: 'Network logs not available for this recording',
+        captureEnabled,
+      };
     }
 
     try {
@@ -383,11 +399,13 @@ export class RecordingService {
       return {
         url,
         message: 'Network log URL generated successfully',
+        captureEnabled,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate network log URL',
+        captureEnabled,
       };
     }
   }
@@ -395,12 +413,19 @@ export class RecordingService {
   /**
    * Get client action resource for an available recording
    * Only works with recordings that have uploadStatus = 'available'
+   * Returns captureEnabled to indicate current domain preference
    */
   async getActionResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
     const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+    const captureEnabled = prefs?.captureClientAction ?? false;
 
     if (!recording.recordingActionRef) {
-      return { url: null, message: 'Client actions not available for this recording' };
+      return {
+        url: null,
+        message: 'Client actions not available for this recording',
+        captureEnabled,
+      };
     }
 
     try {
@@ -411,11 +436,13 @@ export class RecordingService {
       return {
         url,
         message: 'Client action URL generated successfully',
+        captureEnabled,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate client action URL',
+        captureEnabled,
       };
     }
   }

@@ -40,6 +40,8 @@
     "prism-react-renderer": "^2.4.1"
   },
   "overrides": {
-    "@smithy/types": "4.12.0"
+    "@smithy/types": "4.12.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   }
 }

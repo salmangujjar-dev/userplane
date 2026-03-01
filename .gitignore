@@ -31,6 +31,10 @@ dist/
 .astro/
 .trigger/
 
+# Copied build artifacts
+apps/recorder/public/bridge-worker.js
+packages/postbridge/src/bridge-worker.js
+
 # TypeScript compiled files in dist directories
 **/dist/**/*.js
 **/dist/**/*.d.ts
