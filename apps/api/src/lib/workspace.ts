@@ -3,7 +3,7 @@
  * Helper functions for workspace name derivation and formatting
  */
 
-import { getEmailDomain, isDisposableEmail } from '@workspace/shared';
+import { getEmailDomain, isDisposableEmail } from '@userplane/shared';
 
 /**
  * Check if a string is an IP address (IPv4 or IPv6)

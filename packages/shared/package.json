@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/shared",
+  "name": "@userplane/shared",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -26,8 +26,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "eslint": "^9.32.0",
     "typescript": "^5.5.4"
   }

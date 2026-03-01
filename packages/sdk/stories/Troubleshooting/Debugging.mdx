@@ -15,7 +15,7 @@ In DevTools console:
 window.__userplane?.isInitialized?.() // works if window.userplane is set
 
 // Or import in your code and check:
-import { isInitialized } from '@workspace/sdk';
+import { isInitialized } from '@userplane/sdk';
 console.log('Initialized:', isInitialized());
 ```
 
@@ -77,7 +77,7 @@ If the iframe is in the DOM but invisible, check:
 ## Step 5 — Check Bridge Connection
 
 ```javascript
-import { isBridgeConnected, isRecorderMounted } from '@workspace/sdk';
+import { isBridgeConnected, isRecorderMounted } from '@userplane/sdk';
 
 console.log('Recorder mounted:', isRecorderMounted());
 console.log('Bridge connected:', isBridgeConnected());
@@ -93,7 +93,7 @@ If `isRecorderMounted()` is `true` but `isBridgeConnected()` is `false`:
 ## Step 6 — Check Recording State
 
 ```javascript
-import { getRecordingState, getRecordingContext } from '@workspace/sdk';
+import { getRecordingState, getRecordingContext } from '@userplane/sdk';
 
 console.log('State:', getRecordingState());
 console.log('Context:', JSON.stringify(getRecordingContext(), null, 2));
@@ -145,7 +145,7 @@ In DevTools Network tab, filter by `userplane`:
 
 ## Step 9 — Verbose Logging
 
-The SDK uses `@workspace/console-logger` with a `__DEV__` guard. In development builds, verbose logs are automatically enabled. Look for messages prefixed with `[sdk]` in the console.
+The SDK uses `@userplane/console-logger` with a `__DEV__` guard. In development builds, verbose logs are automatically enabled. Look for messages prefixed with `[sdk]` in the console.
 
 If you're on a production build and need verbose logging, you can temporarily set the debug flag before loading the SDK:
 

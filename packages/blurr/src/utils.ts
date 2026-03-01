@@ -2,7 +2,7 @@
  * Utility functions
  */
 
-import { createLogger as createConsoleLogger, type Logger } from '@workspace/console-logger';
+import { createLogger as createConsoleLogger, type Logger } from '@userplane/console-logger';
 
 declare const __DEV__: boolean;
 

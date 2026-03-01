@@ -24,7 +24,7 @@ PostBridge eliminates the complexity of `postMessage` by providing a natural, Pr
 ## Installation
 
 ```bash
-npm i @workspace/postbridge
+npm i @userplane/postbridge
 ```
 
 ## Communication Patterns
@@ -85,7 +85,7 @@ Send messages to specific tabs for peer-to-peer communication.
 **Host (parent page)**
 
 ```js
-import { host } from '@workspace/postbridge';
+import { host } from '@userplane/postbridge';
 
 const iframe = document.getElementById('myIframe');
 const api = { getData: () => ({ value: 42 }) };
@@ -98,7 +98,7 @@ connection.close();
 **Guest (iframe/worker)**
 
 ```js
-import { guest } from '@workspace/postbridge';
+import { guest } from '@userplane/postbridge';
 
 const api = { someMethod: () => 'hello' };
 const connection = await guest.connect(api);
@@ -110,7 +110,7 @@ connection.close();
 **Bridge (cross-tab)**
 
 ```js
-import { bridge } from '@workspace/postbridge';
+import { bridge } from '@userplane/postbridge';
 
 const schema = {
   updateCount: (count) => {

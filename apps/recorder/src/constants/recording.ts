@@ -7,7 +7,7 @@ import {
   FILE_SIZE_LIMITS,
   RECORDING_DURATION_LIMITS,
   VIDEO_MIME_TYPES as CONTRACT_VIDEO_MIME_TYPES,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 // ===========================================
 // Duration Limits (from contract)

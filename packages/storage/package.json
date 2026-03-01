@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/storage",
+  "name": "@userplane/storage",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -43,9 +43,9 @@
   },
   "devDependencies": {
     "eslint": "^9.32.0",
-    "@workspace/eslint-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
     "@types/bun": "latest",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "typescript": "^5.5.4"
   }
 }

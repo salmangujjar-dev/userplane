@@ -1,6 +1,6 @@
 /**
  * Workspace-related Zod validation schemas
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
-export { WorkspaceNameSchema } from '@workspace/contract';
+export { WorkspaceNameSchema } from '@userplane/contract';

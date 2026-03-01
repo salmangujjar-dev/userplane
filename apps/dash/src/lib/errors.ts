@@ -1,10 +1,10 @@
 // See also: @/lib/toasts for pattern-based toast helpers (clipboard, CRUD, settings, validation)
-import { isDefinedError } from '@workspace/client';
-import { toast } from '@workspace/ui/components/sonner';
+import { isDefinedError } from '@userplane/client';
+import { toast } from '@userplane/ui/components/sonner';
 import posthog from 'posthog-js';
 
 /**
- * Re-export isDefinedError from @workspace/client for convenience
+ * Re-export isDefinedError from @userplane/client for convenience
  */
 export { isDefinedError };
 

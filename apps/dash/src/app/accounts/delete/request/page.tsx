@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Button } from '@userplane/ui/components/button';
+import Logo from '@userplane/ui/components/logo';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';

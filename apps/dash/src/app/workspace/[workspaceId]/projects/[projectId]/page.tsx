@@ -1,6 +1,6 @@
 'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@userplane/ui/components/tabs';
 import { Globe, Link as LinkIcon, Link2, Users, Video } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useQueryState } from 'nuqs';

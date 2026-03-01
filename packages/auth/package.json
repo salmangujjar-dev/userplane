@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/auth",
+  "name": "@userplane/auth",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -27,14 +27,14 @@
   },
   "dependencies": {
     "better-auth": "^1.4.17",
-    "@workspace/contract": "workspace:*",
-    "@workspace/db": "workspace:*",
-    "@workspace/payments": "workspace:*",
-    "@workspace/shared": "workspace:*"
+    "@userplane/contract": "workspace:*",
+    "@userplane/db": "workspace:*",
+    "@userplane/payments": "workspace:*",
+    "@userplane/shared": "workspace:*"
   },
   "devDependencies": {
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "eslint": "^9.32.0",
     "typescript": "^5.5.4"
   }

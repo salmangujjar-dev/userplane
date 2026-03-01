@@ -11,7 +11,7 @@
  */
 
 import { ORPCError } from '@orpc/server';
-import type { RateLimiter, RateLimitTier } from '@workspace/cache';
+import type { RateLimiter, RateLimitTier } from '@userplane/cache';
 
 import { rateLimiter } from '@/api/clients/redis';
 

@@ -3,9 +3,9 @@
  * Handles all database operations for domain entities
  */
 
-import type { DbClient } from '@workspace/db';
-import { and, asc, count, desc, eq, ilike, ne } from '@workspace/db';
-import { domains } from '@workspace/db';
+import type { DbClient } from '@userplane/db';
+import { and, asc, count, desc, eq, ilike, ne } from '@userplane/db';
+import { domains } from '@userplane/db';
 
 import type { CreateDomainInput, Transaction } from '@/api/types';
 

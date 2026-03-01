@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
-import { SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { Button } from '@userplane/ui/components/button';
+import { SidebarTrigger } from '@userplane/ui/components/sidebar';
 import { Plus } from 'lucide-react';
 import type React from 'react';
 

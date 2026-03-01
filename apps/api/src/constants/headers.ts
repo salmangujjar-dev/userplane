@@ -1,6 +1,6 @@
 /**
  * HTTP header constants
- * Re-exports from @workspace/contract for backwards compatibility
+ * Re-exports from @userplane/contract for backwards compatibility
  */
 
-export { REQUEST_HEADERS, RESPONSE_HEADERS } from '@workspace/contract';
+export { REQUEST_HEADERS, RESPONSE_HEADERS } from '@userplane/contract';

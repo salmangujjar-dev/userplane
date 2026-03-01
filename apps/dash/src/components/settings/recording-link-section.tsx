@@ -1,10 +1,10 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
-import { Switch } from '@workspace/ui/components/switch';
-import { cn } from '@workspace/ui/lib/utils';
+import { Button } from '@userplane/ui/components/button';
+import { Input } from '@userplane/ui/components/input';
+import { Label } from '@userplane/ui/components/label';
+import { Switch } from '@userplane/ui/components/switch';
+import { cn } from '@userplane/ui/lib/utils';
 import { Loader2, Upload } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';

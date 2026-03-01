@@ -5,9 +5,9 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { JsonViewer } from '@workspace/ui/components/json-viewer';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import { JsonViewer } from '@userplane/ui/components/json-viewer';
+import Logo from '@userplane/ui/components/logo';
 import { format } from 'date-fns';
 import type { LucideIcon } from 'lucide-react';
 import {

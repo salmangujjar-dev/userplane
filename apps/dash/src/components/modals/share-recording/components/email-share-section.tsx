@@ -1,5 +1,5 @@
-import { MAX_EMAIL_RECIPIENTS } from '@workspace/contract';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+import { MAX_EMAIL_RECIPIENTS } from '@userplane/contract';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import type { KeyboardEvent } from 'react';
 import type { FieldArrayWithId, FieldErrors } from 'react-hook-form';
 

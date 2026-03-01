@@ -1,8 +1,8 @@
 'use client';
 
-import { SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
-import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
+import { SUPPORT_EMAIL_MAILTO } from '@userplane/shared';
+import { Button } from '@userplane/ui/components/button';
+import Logo from '@userplane/ui/components/logo';
 import { Loader2 } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { Suspense } from 'react';

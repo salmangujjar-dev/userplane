@@ -13,7 +13,7 @@ import {
   type StorageConfig,
   type ThumbnailsStorageClient,
   type VideoStorageClient,
-} from '@workspace/storage';
+} from '@userplane/storage';
 
 import { env } from '@/api/env';
 

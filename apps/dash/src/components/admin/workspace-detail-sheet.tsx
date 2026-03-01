@@ -1,23 +1,23 @@
 'use client';
 
-import { Badge } from '@workspace/ui/components/badge';
-import { Button } from '@workspace/ui/components/button';
+import { Badge } from '@userplane/ui/components/badge';
+import { Button } from '@userplane/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
+} from '@userplane/ui/components/dropdown-menu';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@workspace/ui/components/sheet';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
-import { VisuallyHidden } from '@workspace/ui/components/visually-hidden';
+} from '@userplane/ui/components/sheet';
+import { Skeleton } from '@userplane/ui/components/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
+import { VisuallyHidden } from '@userplane/ui/components/visually-hidden';
 import {
   AlertCircle,
   Ban,

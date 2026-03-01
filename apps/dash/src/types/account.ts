@@ -1,9 +1,9 @@
 /**
  * Account-related types
- * Re-exports from @workspace/contract for type consistency
+ * Re-exports from @userplane/contract for type consistency
  */
 
-import type { AccountDataSchema, AccountUpdateDataSchema } from '@workspace/contract';
+import type { AccountDataSchema, AccountUpdateDataSchema } from '@userplane/contract';
 import type { z } from 'zod';
 
 /**

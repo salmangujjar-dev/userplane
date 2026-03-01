@@ -1,5 +1,5 @@
 /**
- * @workspace/payments - DodoPayments integration for Userplane
+ * @userplane/payments - DodoPayments integration for Userplane
  *
  * This package provides:
  * - DodoPayments client configuration (server-only)
@@ -10,9 +10,9 @@
  * - Types only (no runtime code with process.env)
  *
  * SERVER-ONLY IMPORTS:
- * - '@workspace/payments/products' - Product configuration (uses process.env)
- * - '@workspace/payments/client' - DodoPayments client
- * - '@workspace/payments/webhooks' - Webhook handlers
+ * - '@userplane/payments/products' - Product configuration (uses process.env)
+ * - '@userplane/payments/client' - DodoPayments client
+ * - '@userplane/payments/webhooks' - Webhook handlers
  */
 
 // Client (server-only but safe to import for types)

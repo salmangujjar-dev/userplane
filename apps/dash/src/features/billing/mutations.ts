@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { PlanId } from '@workspace/pricing';
+import type { PlanId } from '@userplane/pricing';
 
 import { apiClient } from '@/client';
 import { handleSafeResult, handleUnknownError } from '@/lib/errors';

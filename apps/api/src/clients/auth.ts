@@ -1,6 +1,6 @@
-import { APIError, createAuth } from '@workspace/auth';
-import { eq } from '@workspace/db';
-import * as schema from '@workspace/db/schema';
+import { APIError, createAuth } from '@userplane/auth';
+import { eq } from '@userplane/db';
+import * as schema from '@userplane/db/schema';
 
 import { db } from '@/api/clients/db';
 import { getDodoClient } from '@/api/clients/dodo';

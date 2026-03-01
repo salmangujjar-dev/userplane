@@ -1,4 +1,4 @@
-import { createClientLogger } from '@workspace/common-logger/browser';
+import { createClientLogger } from '@userplane/common-logger/browser';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 

@@ -7,16 +7,16 @@ import {
   MAX_EMAIL_RECIPIENTS,
   SHARE_DEFAULT_DURATION_SECONDS,
   SHARE_DURATION_OPTIONS,
-} from '@workspace/contract';
-import { Button } from '@workspace/ui/components/button';
+} from '@userplane/contract';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import Logo from '@userplane/ui/components/logo';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { type KeyboardEvent, useState } from 'react';

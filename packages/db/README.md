@@ -1,4 +1,4 @@
-# @workspace/db
+# @userplane/db
 
 Database schema, migrations, and client for the application. Built on Drizzle ORM with PostgreSQL.
 

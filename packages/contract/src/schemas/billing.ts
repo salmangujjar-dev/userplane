@@ -2,8 +2,8 @@
  * Billing schemas for API contracts
  */
 
-import { SUBSCRIPTION_STATUSES } from '@workspace/payments/types';
-import { BILLING_CADENCES, FEATURE_GATE_KEYS, PLAN_IDS } from '@workspace/pricing';
+import { SUBSCRIPTION_STATUSES } from '@userplane/payments/types';
+import { BILLING_CADENCES, FEATURE_GATE_KEYS, PLAN_IDS } from '@userplane/pricing';
 import { z } from 'zod';
 
 import { ApiResponseSchema } from './common';

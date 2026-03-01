@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import { Bell, Check } from 'lucide-react';
 import { useState } from 'react';
 

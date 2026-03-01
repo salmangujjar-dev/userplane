@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import { AlertTriangle, X } from 'lucide-react';
 
 import { useSession } from '@/features/auth';

@@ -1,22 +1,22 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { deduplicateEmail, EmailTagsFieldSchema, MAX_EMAIL_RECIPIENTS } from '@workspace/contract';
-import { Button } from '@workspace/ui/components/button';
+import { deduplicateEmail, EmailTagsFieldSchema, MAX_EMAIL_RECIPIENTS } from '@userplane/contract';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import Logo from '@userplane/ui/components/logo';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@workspace/ui/components/tooltip';
+} from '@userplane/ui/components/tooltip';
 import { AlertCircle, ChevronDown, ChevronUp, HelpCircle, Link, X } from 'lucide-react';
 import { KeyboardEvent, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';

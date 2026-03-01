@@ -3,7 +3,7 @@
  * Lets user review recording before submitting
  */
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import { type ReactNode, useState } from 'react';
 
 import {

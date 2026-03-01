@@ -3,7 +3,7 @@
  * Creates the configured email client based on environment settings
  */
 
-import { createEmailClient, type EmailClient } from '@workspace/email';
+import { createEmailClient, type EmailClient } from '@userplane/email';
 
 import { env } from '@/api/env';
 
@@ -13,4 +13,4 @@ export const emailClient: EmailClient = createEmailClient({
   workingDirectory: process.cwd(),
 });
 
-export type { EmailClient } from '@workspace/email';
+export type { EmailClient } from '@userplane/email';

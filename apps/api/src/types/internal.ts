@@ -10,7 +10,7 @@ import type {
   WorkspaceInvitePolicy,
   WorkspaceNotificationPreferences,
   WorkspaceRole,
-} from '@workspace/contract';
+} from '@userplane/contract';
 import {
   AccessRequestTokenPayloadSchema,
   DomainVerificationTokenPayloadSchema,
@@ -26,8 +26,8 @@ import {
   UploadTokenPayloadSchema,
   VideoSourceSchema,
   WorkspaceCreateInviteTokenPayloadSchema,
-} from '@workspace/contract';
-import type { Link } from '@workspace/db';
+} from '@userplane/contract';
+import type { Link } from '@userplane/db';
 import type {
   AccessRequestEmailProps,
   AccountDeletionVerificationEmailProps,
@@ -50,13 +50,13 @@ import type {
   WelcomeEmailRequesterProps,
   WelcomeEmailSubscriptionProps,
   WorkspaceInviteEmailProps,
-} from '@workspace/email';
+} from '@userplane/email';
 import type { z } from 'zod';
 
 import type { RecordingStatusGroup } from '../schema/recording.schema';
 
 // Re-export types from contract for convenience
-export type { DomainStatus, UploadFileType, WorkspaceRole } from '@workspace/contract';
+export type { DomainStatus, UploadFileType, WorkspaceRole } from '@userplane/contract';
 
 /**
  * Types inferred from contract schemas
@@ -195,7 +195,7 @@ export interface CreateDomainInput {
 }
 
 /**
- * Email parameters extend the email props from @workspace/email and add recipient
+ * Email parameters extend the email props from @userplane/email and add recipient
  * This ensures single source of truth - email template parameters stay in sync
  * Additional fields may be added for logging or routing purposes
  */

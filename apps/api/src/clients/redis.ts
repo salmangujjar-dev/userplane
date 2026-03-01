@@ -5,7 +5,7 @@
  * Gracefully handles missing configuration by returning null/disabled instances.
  */
 
-import { CacheService, createRedisClient, RateLimiter, type RedisConfig } from '@workspace/cache';
+import { CacheService, createRedisClient, RateLimiter, type RedisConfig } from '@userplane/cache';
 
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';

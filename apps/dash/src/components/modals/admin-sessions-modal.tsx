@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge } from '@workspace/ui/components/badge';
-import { Button } from '@workspace/ui/components/button';
+import { Badge } from '@userplane/ui/components/badge';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+} from '@userplane/ui/components/dialog';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import {
   AlertCircle,
   ChevronLeft,

@@ -1,4 +1,4 @@
-import type { WorkspaceInvitePolicy } from '@workspace/contract';
+import type { WorkspaceInvitePolicy } from '@userplane/contract';
 import { relations, sql } from 'drizzle-orm';
 import {
   boolean,

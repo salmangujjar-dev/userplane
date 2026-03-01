@@ -1,16 +1,16 @@
 /**
  * Database enum constants
  *
- * API-contract constants are imported from @workspace/contract (single source of truth)
+ * API-contract constants are imported from @userplane/contract (single source of truth)
  * Database-specific constants are defined here
  *
- * NOTE: The enum values below are defined in @workspace/contract/src/schemas/common.ts
+ * NOTE: The enum values below are defined in @userplane/contract/src/schemas/common.ts
  * They are re-exported here for backward compatibility and used to create PostgreSQL enum types
  */
 
 /**
  * Re-export contract enums for backward compatibility
- * Source of truth: @workspace/contract/src/schemas/common.ts
+ * Source of truth: @userplane/contract/src/schemas/common.ts
  */
 export {
   DOMAIN_STATUS_VALUES,
@@ -27,7 +27,7 @@ export {
   WORKSPACE_ROLE_VALUES,
   type WorkspaceInvitePolicy,
   type WorkspaceRole,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 /**
  * Stream providers for hot storage
@@ -49,7 +49,7 @@ export type StreamingStatus = (typeof STREAMING_STATUS_VALUES)[number];
 
 /**
  * Re-export pricing-related constants for database schema
- * Source of truth: @workspace/pricing
+ * Source of truth: @userplane/pricing
  * These are used to create PostgreSQL enum types and maintain consistency
  */
-export { RESOURCE_TYPE_VALUES, type ResourceType } from '@workspace/pricing';
+export { RESOURCE_TYPE_VALUES, type ResourceType } from '@userplane/pricing';

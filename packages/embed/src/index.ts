@@ -20,7 +20,7 @@ export type {
   RecordingContext,
   RecordingState,
   SerializableUserplaneData,
-} from '@workspace/sdk';
+} from '@userplane/sdk';
 export {
   clearMetadata,
   clearTabRef,
@@ -36,20 +36,20 @@ export {
   metadata,
   open,
   unmount,
-} from '@workspace/sdk';
+} from '@userplane/sdk';
 
 // Re-export metadata types
-export type { Serializable, SerializableObject } from '@workspace/metadata';
+export type { Serializable, SerializableObject } from '@userplane/metadata';
 
 // Auto-initialize on import
-import { initialize } from '@workspace/sdk';
+import { initialize } from '@userplane/sdk';
 
 if (typeof window !== 'undefined') {
   initialize();
 }
 
 // Expose to window for script tag usage
-import * as sdk from '@workspace/sdk';
+import * as sdk from '@userplane/sdk';
 
 declare global {
   interface Window {

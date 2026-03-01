@@ -1,13 +1,13 @@
 'use client';
 
-import type { RetentionDays } from '@workspace/contract';
-import { Button } from '@workspace/ui/components/button';
+import type { RetentionDays } from '@userplane/contract';
+import { Button } from '@userplane/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
+} from '@userplane/ui/components/dropdown-menu';
 import {
   Pagination,
   PaginationContent,
@@ -16,14 +16,14 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@workspace/ui/components/pagination';
+} from '@userplane/ui/components/pagination';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
+} from '@userplane/ui/components/select';
 import {
   ArrowUpDown,
   ChevronRight,

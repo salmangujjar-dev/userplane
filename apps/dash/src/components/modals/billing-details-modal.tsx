@@ -1,16 +1,16 @@
 'use client';
 
-import type { PlanId, PlanName } from '@workspace/pricing';
-import { UNLIMITED_QUOTED_LIMIT } from '@workspace/pricing';
-import { Badge } from '@workspace/ui/components/badge';
+import type { PlanId, PlanName } from '@userplane/pricing';
+import { UNLIMITED_QUOTED_LIMIT } from '@userplane/pricing';
+import { Badge } from '@userplane/ui/components/badge';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import Logo from '@workspace/ui/components/logo';
-import { Progress } from '@workspace/ui/components/progress';
+} from '@userplane/ui/components/dialog';
+import Logo from '@userplane/ui/components/logo';
+import { Progress } from '@userplane/ui/components/progress';
 import { format } from 'date-fns';
 import { AlertCircle, CheckCircle, Clock, Loader2, MoveUpRight, XCircle } from 'lucide-react';
 

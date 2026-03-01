@@ -1,13 +1,13 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
+} from '@userplane/ui/components/dialog';
 import { HelpCircle } from 'lucide-react';
 
 import { DomainCodeSnippet } from '@/components/domains/domain-code-snippet';

@@ -1,4 +1,4 @@
-import { createLogger } from '@workspace/console-logger';
+import { createLogger } from '@userplane/console-logger';
 
 export const logger = createLogger('Payments');
 

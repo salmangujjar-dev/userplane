@@ -2,7 +2,7 @@
  * JWT Utilities
  * Client-side JWT decoding (not verification)
  *
- * Uses types from @workspace/contract for type safety
+ * Uses types from @userplane/contract for type safety
  */
 
 import { posthog } from '@/posthog/client';

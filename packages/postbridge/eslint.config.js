@@ -1,4 +1,4 @@
-import { config as baseConfig } from '@workspace/eslint-config/base';
+import { config as baseConfig } from '@userplane/eslint-config/base';
 import storybookPlugin from 'eslint-plugin-storybook';
 
 /** @type {import("eslint").Linter.Config} */

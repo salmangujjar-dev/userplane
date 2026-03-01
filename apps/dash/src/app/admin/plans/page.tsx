@@ -1,6 +1,6 @@
 'use client';
 
-import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import { redirect, RedirectType } from 'next/navigation';
 import { Suspense, useState } from 'react';
 

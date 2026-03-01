@@ -5,17 +5,17 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@workspace/ui/components/accordion';
-import { Button } from '@workspace/ui/components/button';
-import { Label } from '@workspace/ui/components/label';
+} from '@userplane/ui/components/accordion';
+import { Button } from '@userplane/ui/components/button';
+import { Label } from '@userplane/ui/components/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+} from '@userplane/ui/components/select';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import { Globe, Lock, Plus, RefreshCw, Shield, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

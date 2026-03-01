@@ -1,5 +1,5 @@
-import type { UploadStatus } from '@workspace/contract';
-import { RECORDING_DURATION_LIMITS } from '@workspace/contract';
+import type { UploadStatus } from '@userplane/contract';
+import { RECORDING_DURATION_LIMITS } from '@userplane/contract';
 import { relations, sql } from 'drizzle-orm';
 import {
   boolean,

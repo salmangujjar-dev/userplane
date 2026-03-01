@@ -1,9 +1,9 @@
 /**
  * Notification-related types
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
 export type {
   NotificationFieldMetadata,
   WorkspaceNotificationPreferences,
-} from '@workspace/contract';
+} from '@userplane/contract';

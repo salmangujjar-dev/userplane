@@ -4,7 +4,7 @@ import type {
   ProcessedConsoleEntry,
   ProcessedNetworkEntry,
   ProcessedUserActionEntry,
-} from '@workspace/logger';
+} from '@userplane/logger';
 
 export type {
   ParsedBody,
@@ -17,7 +17,7 @@ export type {
   SerializedValue,
   UserActionData,
   UserActionType,
-} from '@workspace/logger';
+} from '@userplane/logger';
 
 // Backward-compatible aliases used by dash/API
 export type RecordingConsoleLog = ProcessedConsoleEntry;

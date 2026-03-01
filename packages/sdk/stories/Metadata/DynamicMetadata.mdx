@@ -9,7 +9,7 @@ Dynamic metadata functions are called **on demand** — at the moment the record
 ## `metadata(fn)`
 
 ```typescript
-import { metadata } from '@workspace/sdk';
+import { metadata } from '@userplane/sdk';
 
 type MetadataFunction = () => SerializableObject | Promise<SerializableObject>;
 
@@ -125,7 +125,7 @@ metadata(async () => {
 Remove all registered dynamic functions:
 
 ```typescript
-import { clearMetadata } from '@workspace/sdk';
+import { clearMetadata } from '@userplane/sdk';
 
 clearMetadata('function'); // removes all dynamic functions
 ```

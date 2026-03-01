@@ -17,8 +17,8 @@ import {
   Section,
   Text,
 } from '@react-email/components';
-import { SUPPORT_EMAIL, SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
-import { ASSET_MANIFEST, DEFAULT_CDN_DOMAIN } from '@workspace/storage/media';
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_MAILTO } from '@userplane/shared';
+import { ASSET_MANIFEST, DEFAULT_CDN_DOMAIN } from '@userplane/storage/media';
 import * as React from 'react';
 
 import * as styles from './styles';

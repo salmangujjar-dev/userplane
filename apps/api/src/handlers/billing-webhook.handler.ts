@@ -15,8 +15,8 @@
  * - Refund events → RefundProcessorService
  */
 
-import type { WebhookPayload } from '@workspace/payments/types';
-import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@workspace/payments/webhooks';
+import type { WebhookPayload } from '@userplane/payments/types';
+import { isDisputeEvent, isRefundEvent, isSubscriptionEvent } from '@userplane/payments/webhooks';
 
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';

@@ -1,15 +1,15 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
-import { Checkbox } from '@workspace/ui/components/checkbox';
+import { Button } from '@userplane/ui/components/button';
+import { Checkbox } from '@userplane/ui/components/checkbox';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import Logo from '@userplane/ui/components/logo';
 import { useState } from 'react';
 
 import type { CacheType } from '@/types';

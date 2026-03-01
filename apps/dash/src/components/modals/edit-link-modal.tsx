@@ -1,31 +1,31 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LINK_PROVIDER_TYPE_OPTIONS, type LinkProviderType } from '@workspace/contract';
-import { Button } from '@workspace/ui/components/button';
+import { LINK_PROVIDER_TYPE_OPTIONS, type LinkProviderType } from '@userplane/contract';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
+} from '@userplane/ui/components/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
-import { Switch } from '@workspace/ui/components/switch';
+} from '@userplane/ui/components/dropdown-menu';
+import { Input } from '@userplane/ui/components/input';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
+import { Switch } from '@userplane/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@workspace/ui/components/tooltip';
+} from '@userplane/ui/components/tooltip';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';

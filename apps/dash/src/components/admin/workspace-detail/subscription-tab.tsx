@@ -6,25 +6,25 @@ import type {
   PlanId,
   ResourceLimits,
   ResourceType,
-} from '@workspace/pricing';
-import { FEATURE_GATE_LABELS, PLAN_NAMES, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
+} from '@userplane/pricing';
+import { FEATURE_GATE_LABELS, PLAN_NAMES, RESOURCE_TYPE_VALUES } from '@userplane/pricing';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@workspace/ui/components/accordion';
-import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
+} from '@userplane/ui/components/accordion';
+import { Button } from '@userplane/ui/components/button';
+import { Input } from '@userplane/ui/components/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import { Switch } from '@workspace/ui/components/switch';
+} from '@userplane/ui/components/select';
+import { Skeleton } from '@userplane/ui/components/skeleton';
+import { Switch } from '@userplane/ui/components/switch';
 import {
   Table,
   TableBody,
@@ -32,7 +32,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@workspace/ui/components/table';
+} from '@userplane/ui/components/table';
 import { useCallback, useMemo, useState } from 'react';
 
 import {

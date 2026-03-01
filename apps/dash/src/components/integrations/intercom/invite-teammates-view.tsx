@@ -1,12 +1,12 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@workspace/ui/components/button';
-import { Checkbox } from '@workspace/ui/components/checkbox';
-import { Input } from '@workspace/ui/components/input';
-import Logo from '@workspace/ui/components/logo';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
-import { cn } from '@workspace/ui/lib/utils';
+import { Button } from '@userplane/ui/components/button';
+import { Checkbox } from '@userplane/ui/components/checkbox';
+import { Input } from '@userplane/ui/components/input';
+import Logo from '@userplane/ui/components/logo';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@userplane/ui/components/tabs';
+import { cn } from '@userplane/ui/lib/utils';
 import { Loader2, Plus } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';

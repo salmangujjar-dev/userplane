@@ -3,10 +3,10 @@
  * Handles all database operations for workspace member entities
  */
 
-import type { WorkspaceNotificationPreferences } from '@workspace/contract';
-import type { DbClient, WorkspaceRole } from '@workspace/db';
-import { and, asc, count, eq, gte, ilike, inArray, sql } from '@workspace/db';
-import { user, workspaceMembers } from '@workspace/db';
+import type { WorkspaceNotificationPreferences } from '@userplane/contract';
+import type { DbClient, WorkspaceRole } from '@userplane/db';
+import { and, asc, count, eq, gte, ilike, inArray, sql } from '@userplane/db';
+import { user, workspaceMembers } from '@userplane/db';
 
 import type { CreateWorkspaceMemberInput, Transaction } from '@/api/types';
 

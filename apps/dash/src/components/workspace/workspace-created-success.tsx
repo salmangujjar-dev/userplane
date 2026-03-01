@@ -1,5 +1,5 @@
-import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
+import { Button } from '@userplane/ui/components/button';
+import Logo from '@userplane/ui/components/logo';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { WorkspaceCard } from '@/components/workspace/workspace-card';

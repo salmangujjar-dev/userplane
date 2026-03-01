@@ -4,7 +4,7 @@
  */
 
 import { implement } from '@orpc/server';
-import { contract, domainError } from '@workspace/contract';
+import { contract, domainError } from '@userplane/contract';
 
 import { createLogger } from '@/api/lib/logger';
 import type { DomainService } from '@/api/services/domain.service';

@@ -1,4 +1,4 @@
-import type { DomainStatus } from '@workspace/contract';
+import type { DomainStatus } from '@userplane/contract';
 import { relations, sql } from 'drizzle-orm';
 import { boolean, check, index, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core';
 

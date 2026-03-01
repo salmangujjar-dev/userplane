@@ -5,8 +5,8 @@
  * Verifies webhook signature using the SDK and routes to the billing webhook handler.
  */
 
-import type { DodoPayments } from '@workspace/payments/client';
-import type { WebhookPayload } from '@workspace/payments/types';
+import type { DodoPayments } from '@userplane/payments/client';
+import type { WebhookPayload } from '@userplane/payments/types';
 import type { Context } from 'hono';
 
 import type { WebhookHeaders } from '@/api/handlers/billing-webhook.handler';

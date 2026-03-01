@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
+} from '@userplane/ui/components/select';
 import { Globe, Lock, Plus, Shield, X } from 'lucide-react';
 import { useState } from 'react';
 

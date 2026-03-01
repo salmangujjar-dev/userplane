@@ -3,11 +3,11 @@
  * Handles all database operations for OAuth connections
  */
 
-import type { IntegrationProvider, ProviderMetaFor, ProviderTokenFor } from '@workspace/contract';
-import { extractAccessToken, parseProviderMeta, parseProviderToken } from '@workspace/contract';
-import type { DbClient } from '@workspace/db';
-import { and, eq, sql } from '@workspace/db';
-import { integrations } from '@workspace/db';
+import type { IntegrationProvider, ProviderMetaFor, ProviderTokenFor } from '@userplane/contract';
+import { extractAccessToken, parseProviderMeta, parseProviderToken } from '@userplane/contract';
+import type { DbClient } from '@userplane/db';
+import { and, eq, sql } from '@userplane/db';
+import { integrations } from '@userplane/db';
 
 import type { Transaction } from '@/api/types';
 

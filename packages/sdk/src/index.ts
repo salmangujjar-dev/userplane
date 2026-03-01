@@ -53,9 +53,9 @@ export type {
   MetadataFunction as MetadataFn,
   Serializable,
   SerializableObject,
-} from '@workspace/metadata';
+} from '@userplane/metadata';
 export {
   clearMetadata as clearMetadataFn,
   getCustomMetadata,
   metadata as setMetadata,
-} from '@workspace/metadata';
+} from '@userplane/metadata';

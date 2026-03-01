@@ -15,7 +15,7 @@ import type {
   SubscriptionStatusData,
   UsageSummary,
   WorkspaceRecordingPrefs,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 import { createCacheLogger } from '../logger';
 import {
@@ -40,7 +40,7 @@ export type {
   LinkCore,
   UsageSummary,
   WorkspaceRecordingPrefs,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 export interface CacheServiceConfig {
   redis: Redis | null;

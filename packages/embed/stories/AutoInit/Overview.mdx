@@ -4,14 +4,14 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Auto-Initialization Overview
 
-One of the key differences between `@workspace/embed` and `@workspace/sdk` is that the embed package initializes automatically — you never need to call `initialize()` yourself.
+One of the key differences between `@userplane/embed` and `@userplane/sdk` is that the embed package initializes automatically — you never need to call `initialize()` yourself.
 
 ## How Auto-Init Works
 
 The entry point of the main bundle is `src/index.ts`. After importing the SDK, it immediately calls `initialize()`:
 
 ```typescript
-import * as sdk from '@workspace/sdk';
+import * as sdk from '@userplane/sdk';
 
 // Auto-initialize when running in a browser
 if (typeof window !== 'undefined') {
@@ -55,11 +55,11 @@ The `typeof window !== 'undefined'` guard ensures the module is safe to import i
 
 ## Contrast with SDK
 
-With `@workspace/sdk`, you control when initialization happens:
+With `@userplane/sdk`, you control when initialization happens:
 
 ```typescript
 // SDK: manual, full control
-import { initialize } from '@workspace/sdk';
+import { initialize } from '@userplane/sdk';
 
 initialize({
   workspaceId: 'ws_abc',

@@ -4,7 +4,7 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from '@workspace/ui/components/resizable';
+} from '@userplane/ui/components/resizable';
 import { useParams, useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { useQueryState } from 'nuqs';

@@ -5,7 +5,7 @@ import {
   rolePermissionsMap,
   type SessionResource,
   type UserResource,
-} from '@workspace/auth/permissions-client';
+} from '@userplane/auth/permissions-client';
 
 import { useSession } from '@/features/auth';
 

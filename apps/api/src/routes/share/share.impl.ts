@@ -4,7 +4,7 @@
  */
 
 import { implement } from '@orpc/server';
-import { contract, shareError } from '@workspace/contract';
+import { contract, shareError } from '@userplane/contract';
 
 import { createLogger } from '@/api/lib/logger';
 import type { InitialContext } from '@/api/middleware/auth.orpc';

@@ -4,7 +4,7 @@
  * Focused on domain verification - handles verification API requests from the iframe
  */
 
-import { type Connection, host } from '@workspace/postbridge';
+import { type Connection, host } from '@userplane/postbridge';
 
 import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
 import { createSdkLogger } from '../logger';

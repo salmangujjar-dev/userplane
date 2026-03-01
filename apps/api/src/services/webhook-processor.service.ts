@@ -13,20 +13,20 @@
  * Addon parsing/mapping is delegated to AddonMapper.
  */
 
-import type { CacheService } from '@workspace/cache';
-import type { AddonItems } from '@workspace/contract';
-import { type DbClient, eq, subscriptions, workspaces } from '@workspace/db';
-import type { getDodoPaymentsClient } from '@workspace/payments/client';
-import { getPlanIdFromProductId } from '@workspace/payments/products';
-import { validateTransition } from '@workspace/payments/state-machine';
+import type { CacheService } from '@userplane/cache';
+import type { AddonItems } from '@userplane/contract';
+import { type DbClient, eq, subscriptions, workspaces } from '@userplane/db';
+import type { getDodoPaymentsClient } from '@userplane/payments/client';
+import { getPlanIdFromProductId } from '@userplane/payments/products';
+import { validateTransition } from '@userplane/payments/state-machine';
 import type {
   DodoSubscription,
   ProductPlanMetadata,
   SubscriptionStatus,
   WebhookPayload,
-} from '@workspace/payments/types';
-import { isSubscriptionEvent, parseSubscriptionDates } from '@workspace/payments/webhooks';
-import type { BillingCadence, PlanId } from '@workspace/pricing';
+} from '@userplane/payments/types';
+import { isSubscriptionEvent, parseSubscriptionDates } from '@userplane/payments/webhooks';
+import type { BillingCadence, PlanId } from '@userplane/pricing';
 
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';

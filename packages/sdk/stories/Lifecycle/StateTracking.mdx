@@ -11,7 +11,7 @@ The SDK exposes several functions to inspect the current state of the recorder a
 Returns the current recording state:
 
 ```typescript
-import { getRecordingState } from '@workspace/sdk';
+import { getRecordingState } from '@userplane/sdk';
 
 type RecordingState = 'inactive' | 'active' | 'retained';
 
@@ -29,7 +29,7 @@ const state = getRecordingState();
 Returns the full recording context, including session info and unload protection status:
 
 ```typescript
-import { getRecordingContext } from '@workspace/sdk';
+import { getRecordingContext } from '@userplane/sdk';
 
 const ctx = getRecordingContext();
 ```
@@ -67,7 +67,7 @@ if (ctx?.state === 'active') {
 Shortcuts to the session identifiers:
 
 ```typescript
-import { getSessionId, getLinkId } from '@workspace/sdk';
+import { getSessionId, getLinkId } from '@userplane/sdk';
 
 const sessionId = getSessionId(); // 'sess_abc123' or null
 const linkId = getLinkId();       // 'lnk_xyz789' or null
@@ -81,7 +81,7 @@ Both return `null` when:
 ## Initialization Checks
 
 ```typescript
-import { isInitialized, isRecorderMounted, isBridgeConnected } from '@workspace/sdk';
+import { isInitialized, isRecorderMounted, isBridgeConnected } from '@userplane/sdk';
 
 isInitialized()     // true after initialize() has been called
 isRecorderMounted() // true when the recorder iframe is in the DOM

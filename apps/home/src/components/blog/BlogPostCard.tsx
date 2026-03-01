@@ -1,4 +1,4 @@
-import { Badge } from '@workspace/ui/components/badge';
+import { Badge } from '@userplane/ui/components/badge';
 
 import { getBlogPostUrl } from '@/constants/navigation';
 

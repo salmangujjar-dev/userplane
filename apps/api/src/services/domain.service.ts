@@ -3,10 +3,10 @@
  * Contains business logic for domain management
  */
 
-import type { CacheService } from '@workspace/cache';
-import type { DomainStatus } from '@workspace/contract';
-import { domainError, workspaceError } from '@workspace/contract';
-import type { FeatureGate } from '@workspace/pricing';
+import type { CacheService } from '@userplane/cache';
+import type { DomainStatus } from '@userplane/contract';
+import { domainError, workspaceError } from '@userplane/contract';
+import type { FeatureGate } from '@userplane/pricing';
 
 import { generateDomainId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';

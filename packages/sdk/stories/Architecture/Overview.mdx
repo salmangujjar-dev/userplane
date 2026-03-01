@@ -53,7 +53,7 @@ packages/sdk/src/
 | `frame/recording-manager.ts` | Recording-specific: session state, unload protection |
 | `frame/verification-manager.ts` | Verification-specific: API verification flow |
 | `frame/capture-manager.ts` | Capture-specific: hidden iframe, cross-tab state |
-| `bridge/*-connection.ts` | Typed RPC wrappers over `@workspace/postbridge` |
+| `bridge/*-connection.ts` | Typed RPC wrappers over `@userplane/postbridge` |
 | `config/builder.ts` | Fluent API for constructing `FrameConfig` objects |
 | `utils/tab.ts` | `window.name`-based tab identity |
 | `utils/meta.ts` | CSS selector reads of workspace meta tags |
@@ -90,9 +90,9 @@ Bridge events → session state updates → public API reflects current state
 
 ```
 sdk.ts
-  ├── @workspace/metadata   (metadata storage)
-  ├── @workspace/postbridge  (RPC communication)
-  ├── @workspace/console-logger (logging)
+  ├── @userplane/metadata   (metadata storage)
+  ├── @userplane/postbridge  (RPC communication)
+  ├── @userplane/console-logger (logging)
   ├── nanoid                 (tab reference generation)
   │
   ├── frame/factory.ts
@@ -102,7 +102,7 @@ sdk.ts
   │     │     └── bridge/verification-connection.ts
   │     └── frame/capture-manager.ts
   │           └── bridge/capture-connection.ts
-  │                 └── @workspace/blurr (privacy blur)
+  │                 └── @userplane/blurr (privacy blur)
   │
   ├── config/builder.ts
   ├── utils/tab.ts

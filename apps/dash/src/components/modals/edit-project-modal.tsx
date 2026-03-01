@@ -1,32 +1,32 @@
 'use client';
 
-import { RETENTION_DAYS_VALUES, type RetentionDays } from '@workspace/contract';
-import { Button } from '@workspace/ui/components/button';
+import { RETENTION_DAYS_VALUES, type RetentionDays } from '@userplane/contract';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import { Input } from '@userplane/ui/components/input';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
-import { Switch } from '@workspace/ui/components/switch';
+} from '@userplane/ui/components/select';
+import { Switch } from '@userplane/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@workspace/ui/components/tooltip';
-import { cn } from '@workspace/ui/lib/utils';
+} from '@userplane/ui/components/tooltip';
+import { cn } from '@userplane/ui/lib/utils';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

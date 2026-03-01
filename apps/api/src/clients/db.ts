@@ -1,4 +1,4 @@
-import { createDb, type DbClient } from '@workspace/db';
+import { createDb, type DbClient } from '@userplane/db';
 
 import { env } from '@/api/env';
 

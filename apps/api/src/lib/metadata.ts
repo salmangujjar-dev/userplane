@@ -1,4 +1,4 @@
-import { RECORDING_METADATA_LIMITS } from '@workspace/contract';
+import { RECORDING_METADATA_LIMITS } from '@userplane/contract';
 
 /**
  * Sanitize recording notes: trim whitespace and truncate to max length.

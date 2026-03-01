@@ -1,7 +1,7 @@
 import { createAuthClient } from 'better-auth/client';
 import { adminClient, magicLinkClient } from 'better-auth/client/plugins';
 
-// Note: Permission constants and types should be imported from '@workspace/auth/permissions-client'
+// Note: Permission constants and types should be imported from '@userplane/auth/permissions-client'
 // to avoid bundling server-only code in the client
 
 export interface AuthClientConfig {

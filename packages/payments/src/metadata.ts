@@ -12,8 +12,8 @@ import type {
   PlanFeatureGates,
   ResourceLimits,
   ResourceType,
-} from '@workspace/pricing';
-import { FEATURE_GATE_KEYS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
+} from '@userplane/pricing';
+import { FEATURE_GATE_KEYS, RESOURCE_TYPE_VALUES } from '@userplane/pricing';
 import type DodoPayments from 'dodopayments';
 
 /**

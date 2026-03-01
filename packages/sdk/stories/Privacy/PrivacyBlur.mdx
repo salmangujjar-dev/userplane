@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Privacy Blur
 
-The Userplane SDK integrates with `@workspace/blurr` to allow specific DOM elements to be blurred (visually obscured) in the recording. This protects sensitive information like passwords, payment fields, and personal data.
+The Userplane SDK integrates with `@userplane/blurr` to allow specific DOM elements to be blurred (visually obscured) in the recording. This protects sensitive information like passwords, payment fields, and personal data.
 
 ## How It Works
 
@@ -28,7 +28,7 @@ The Userplane SDK integrates with `@workspace/blurr` to allow specific DOM eleme
 └─────────────────────────────────────────────────────────────┘
 ```
 
-Blur is managed through the capture bridge. The `BlurManager` inside `CaptureBridgeConnection` orchestrates the `@workspace/blurr` package, which physically modifies the DOM to apply blur effects before the screen capture happens.
+Blur is managed through the capture bridge. The `BlurManager` inside `CaptureBridgeConnection` orchestrates the `@userplane/blurr` package, which physically modifies the DOM to apply blur effects before the screen capture happens.
 
 ## Marking Elements for Blur
 
@@ -114,6 +114,6 @@ input[type="password"]
 input[name="ssn"], input[name="dob"], input[autocomplete="cc-number"]
 ```
 
-## Integration with `@workspace/blurr`
+## Integration with `@userplane/blurr`
 
-The blur functionality is provided by `@workspace/blurr`, a standalone package that applies CSS-based blurring to DOM elements. The SDK integrates it transparently through the capture bridge — you don't need to install or configure `@workspace/blurr` directly.
+The blur functionality is provided by `@userplane/blurr`, a standalone package that applies CSS-based blurring to DOM elements. The SDK integrates it transparently through the capture bridge — you don't need to install or configure `@userplane/blurr` directly.

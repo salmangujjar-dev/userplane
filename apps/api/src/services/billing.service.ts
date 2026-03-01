@@ -6,8 +6,8 @@
  * BillingService continue to work with zero changes.
  */
 
-import type { SubscriptionAccessStatus } from '@workspace/contract';
-import type { PlanFeatureGates, PlanId } from '@workspace/pricing';
+import type { SubscriptionAccessStatus } from '@userplane/contract';
+import type { PlanFeatureGates, PlanId } from '@userplane/pricing';
 
 import type { BillingMutationService } from './billing-mutation.service';
 import type { BillingQueryService } from './billing-query.service';

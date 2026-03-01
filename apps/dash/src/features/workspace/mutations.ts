@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { FILE_SIZE_LIMITS } from '@workspace/contract';
+import { FILE_SIZE_LIMITS } from '@userplane/contract';
 
 import { apiClient } from '@/client';
 import {

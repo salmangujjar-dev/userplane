@@ -1,5 +1,5 @@
 /**
- * @workspace/client
+ * @userplane/client
  *
  * Type-safe client for the Userplane API
  * Provides full type safety based on oRPC contracts
@@ -9,7 +9,7 @@ import { createORPCClient, onError } from '@orpc/client';
 import type { ContractRouterClient } from '@orpc/contract';
 import { ResponseValidationPlugin } from '@orpc/contract/plugins';
 import { OpenAPILink } from '@orpc/openapi-client/fetch';
-import { contract } from '@workspace/contract';
+import { contract } from '@userplane/contract';
 
 /**
  * Client context for passing additional data to API calls
@@ -135,8 +135,8 @@ export function createClient(
 /**
  * Re-export contract for convenience
  */
-export type { Contract } from '@workspace/contract';
-export { contract } from '@workspace/contract';
+export type { Contract } from '@userplane/contract';
+export { contract } from '@userplane/contract';
 
 /**
  * Re-export useful oRPC client type utilities

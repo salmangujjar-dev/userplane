@@ -1,14 +1,14 @@
 'use client';
 
-import { Badge } from '@workspace/ui/components/badge';
+import { Badge } from '@userplane/ui/components/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dropdown-menu';
+import Logo from '@userplane/ui/components/logo';
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +21,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   useSidebar,
-} from '@workspace/ui/components/sidebar';
+} from '@userplane/ui/components/sidebar';
 import {
   Building2,
   Check,

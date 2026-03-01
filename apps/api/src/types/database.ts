@@ -3,7 +3,7 @@
  * Transaction types for database operations
  */
 
-import type { DbClient } from '@workspace/db';
+import type { DbClient } from '@userplane/db';
 
 /**
  * Database transaction type

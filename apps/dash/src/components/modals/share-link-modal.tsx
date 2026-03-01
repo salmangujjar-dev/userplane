@@ -1,20 +1,20 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import Logo from '@userplane/ui/components/logo';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@workspace/ui/components/tooltip';
+} from '@userplane/ui/components/tooltip';
 import { Copy, HelpCircle } from 'lucide-react';
 import { useEffect } from 'react';
 

@@ -1,4 +1,4 @@
-# @workspace/client
+# @userplane/client
 
 Type-safe API client for the Userplane API using oRPC and OpenAPI Link.
 
@@ -9,7 +9,7 @@ This package provides a fully type-safe client for interacting with the Userplan
 ## Features
 
 - **Full Type Safety**: All requests and responses are type-checked at compile time
-- **Contract-Based**: Generated from `@workspace/contract` for perfect API alignment
+- **Contract-Based**: Generated from `@userplane/contract` for perfect API alignment
 - **Dynamic Configuration**: Support for dynamic headers and authentication
 - **Error Handling**: Global and per-request error handling
 - **Browser & Node.js**: Works in any JavaScript environment
@@ -22,7 +22,7 @@ Add to your app's `package.json`:
 ```json
 {
   "dependencies": {
-    "@workspace/client": "workspace:*"
+    "@userplane/client": "workspace:*"
   }
 }
 ```
@@ -38,7 +38,7 @@ bun install
 ### Basic Usage
 
 ```typescript
-import { createClient } from '@workspace/client';
+import { createClient } from '@userplane/client';
 
 const client = createClient({
   url: 'http://localhost:3000/api/v1',
@@ -206,7 +206,7 @@ import type {
   InferClientErrors,
   SessionClient,
   WorkspaceClient,
-} from '@workspace/client';
+} from '@userplane/client';
 
 type Inputs = InferClientInputs<UserplaneClient>;
 type SessionInput = Inputs['session']['init'];
@@ -233,8 +233,8 @@ type SessionOutput = Outputs['session']['init'];
 
 ## Related Packages
 
-- `@workspace/contract` - API contract definitions
-- `@workspace/auth` - Authentication utilities
+- `@userplane/contract` - API contract definitions
+- `@userplane/auth` - Authentication utilities
 
 ## Build Commands
 

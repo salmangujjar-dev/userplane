@@ -1,6 +1,6 @@
 /**
  * Billing contract implementation using oRPC
- * Implements the billing contract defined in @workspace/contract
+ * Implements the billing contract defined in @userplane/contract
  *
  * Architecture:
  * - Product configuration (planId → slug mapping) stays server-side
@@ -13,11 +13,11 @@
  * See: https://docs.dodopayments.com/features/customer-portal
  */
 
-import { billingError } from '@workspace/contract';
-import type { DodoPayments } from '@workspace/payments/client';
-import { buildFlatMetadata, parseFlatMetadata } from '@workspace/payments/metadata';
-import { getProductByPlanId, getProductByProductId } from '@workspace/payments/products';
-import type { PlanId } from '@workspace/pricing';
+import { billingError } from '@userplane/contract';
+import type { DodoPayments } from '@userplane/payments/client';
+import { buildFlatMetadata, parseFlatMetadata } from '@userplane/payments/metadata';
+import { getProductByPlanId, getProductByProductId } from '@userplane/payments/products';
+import type { PlanId } from '@userplane/pricing';
 
 import { env } from '@/api/env';
 import { authorized } from '@/api/middleware/auth.orpc';

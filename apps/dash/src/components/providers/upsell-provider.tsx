@@ -1,6 +1,6 @@
 'use client';
 
-import type { PlanId } from '@workspace/pricing';
+import type { PlanId } from '@userplane/pricing';
 import { useQueryState } from 'nuqs';
 import React from 'react';
 

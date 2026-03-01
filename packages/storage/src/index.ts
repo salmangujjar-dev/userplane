@@ -1,5 +1,5 @@
 /**
- * @workspace/storage
+ * @userplane/storage
  * Unified storage package for Cloudflare R2
  * Supports multiple bucket types with per-bucket credentials
  */

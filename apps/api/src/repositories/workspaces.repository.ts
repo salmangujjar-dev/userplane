@@ -3,9 +3,9 @@
  * Handles all database operations for workspace entities
  */
 
-import type { DbClient, WorkspaceInvitePolicy, WorkspaceRole } from '@workspace/db';
-import { and, count, eq, ilike, ne, notInArray, or, sql } from '@workspace/db';
-import { workspaceMembers, workspaces } from '@workspace/db';
+import type { DbClient, WorkspaceInvitePolicy, WorkspaceRole } from '@userplane/db';
+import { and, count, eq, ilike, ne, notInArray, or, sql } from '@userplane/db';
+import { workspaceMembers, workspaces } from '@userplane/db';
 
 import type { CreateWorkspaceInput, Transaction } from '@/api/types';
 

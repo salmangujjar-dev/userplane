@@ -6,16 +6,16 @@
  * and customer portal URL generation.
  */
 
-import type { CacheService } from '@workspace/cache';
+import type { CacheService } from '@userplane/cache';
 import {
   billingError,
   type PlanChangePreviewData,
   type PlanChangeResultData,
   SEATS_ADDON_MAX_PACKS,
-} from '@workspace/contract';
-import type { DodoPayments } from '@workspace/payments/client';
-import type { PlanId } from '@workspace/pricing';
-import { PLAN_NAMES } from '@workspace/pricing';
+} from '@userplane/contract';
+import type { DodoPayments } from '@userplane/payments/client';
+import type { PlanId } from '@userplane/pricing';
+import { PLAN_NAMES } from '@userplane/pricing';
 
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';

@@ -28,4 +28,4 @@ export type {
   WorkspaceRestoreData,
   WorkspaceRestoreInfoData,
   WorkspaceRole,
-} from '@workspace/contract';
+} from '@userplane/contract';

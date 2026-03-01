@@ -3,9 +3,9 @@
  */
 
 /**
- * Logger interface — re-exported from @workspace/console-logger
+ * Logger interface — re-exported from @userplane/console-logger
  */
-import type { Logger } from '@workspace/console-logger';
+import type { Logger } from '@userplane/console-logger';
 export type { Logger };
 
 /**

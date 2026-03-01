@@ -60,7 +60,7 @@ const schema = {
 ### Host Side
 
 ```javascript
-import { host } from '@workspace/postbridge';
+import { host } from '@userplane/postbridge';
 
 const worker = new Worker('worker.js', { type: 'module' });
 
@@ -89,7 +89,7 @@ console.log('Result:', result);
 ### Guest Side
 
 ```javascript
-import { guest } from '@workspace/postbridge';
+import { guest } from '@userplane/postbridge';
 
 const connection = await guest.connect({
   processLargeDataset: async (data, remote) => {

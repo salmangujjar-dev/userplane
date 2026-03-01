@@ -1,6 +1,6 @@
 /**
  * Notification utilities
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
-export { getVisibleNotificationFields } from '@workspace/contract';
+export { getVisibleNotificationFields } from '@userplane/contract';

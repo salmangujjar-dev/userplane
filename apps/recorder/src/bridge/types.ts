@@ -3,7 +3,7 @@
  * Type definitions for postbridge communication between recorder (guest) and SDK (host)
  */
 
-// Re-export shared bridge types from @workspace/contract
+// Re-export shared bridge types from @userplane/contract
 export type {
   BlurrState,
   CaptureRecorderState,
@@ -16,7 +16,7 @@ export type {
   SerializableObject,
   TabMetadata,
   VerificationData,
-} from '@workspace/contract/bridge';
+} from '@userplane/contract/bridge';
 
 // Import shared types for local use in recorder-only interfaces
 import type {
@@ -30,7 +30,7 @@ import type {
   RecordingState,
   TabMetadata,
   VerificationData,
-} from '@workspace/contract/bridge';
+} from '@userplane/contract/bridge';
 
 /**
  * Raw verification result from parent SDK (wire format)

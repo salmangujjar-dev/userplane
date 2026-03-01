@@ -1,6 +1,6 @@
 /**
  * Project-related constants
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
-export { PROJECT_PAGINATION } from '@workspace/contract';
+export { PROJECT_PAGINATION } from '@userplane/contract';

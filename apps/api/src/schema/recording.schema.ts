@@ -3,7 +3,7 @@
  * Schemas for recording operations
  */
 
-import type { Recording } from '@workspace/db';
+import type { Recording } from '@userplane/db';
 import { z } from 'zod';
 
 import { SORT_DIRECTIONS } from './common.schema';

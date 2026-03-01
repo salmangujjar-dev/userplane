@@ -1,7 +1,7 @@
 'use client';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
-import { cn } from '@workspace/ui/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
+import { cn } from '@userplane/ui/lib/utils';
 import { Check, ChevronDown, ChevronRight, ChevronUp, Copy, MoreHorizontal } from 'lucide-react';
 import * as React from 'react';
 

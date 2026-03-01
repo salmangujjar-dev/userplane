@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/contract",
+  "name": "@userplane/contract",
   "type": "module",
   "version": "1.0.0",
   "main": "./dist/index.js",
@@ -25,11 +25,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@workspace/logger": "workspace:*",
+    "@userplane/logger": "workspace:*",
     "@orpc/contract": "^1.0.3",
     "@orpc/zod": "^1.0.3",
-    "@workspace/payments": "workspace:*",
-    "@workspace/pricing": "workspace:*",
+    "@userplane/payments": "workspace:*",
+    "@userplane/pricing": "workspace:*",
     "validator": "^13.12.0",
     "zod": "^3.24.2"
   },
@@ -37,8 +37,8 @@
     "@orpc/server": "^1.12.3",
     "@types/node": "^22.14.1",
     "@types/validator": "^13.12.2",
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "eslint": "^9.32.0",
     "typescript": "5.8.2"
   },

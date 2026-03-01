@@ -1,5 +1,5 @@
-import { WorkspaceInvitePolicy } from '@workspace/contract';
-import { isDisposableEmail } from '@workspace/shared';
+import { WorkspaceInvitePolicy } from '@userplane/contract';
+import { isDisposableEmail } from '@userplane/shared';
 
 export function determineWorkspaceInvitePolicyFromEmail(userEmail: string): {
   workspaceInvitePolicy: WorkspaceInvitePolicy;

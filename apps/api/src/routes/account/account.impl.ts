@@ -1,6 +1,6 @@
 /**
  * Account contract implementation using oRPC
- * Implements the account contract defined in @workspace/contract
+ * Implements the account contract defined in @userplane/contract
  */
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';

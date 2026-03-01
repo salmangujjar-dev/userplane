@@ -1,15 +1,15 @@
 'use client';
 
-import { Badge } from '@workspace/ui/components/badge';
-import { Button } from '@workspace/ui/components/button';
+import { Badge } from '@userplane/ui/components/badge';
+import { Button } from '@userplane/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
+} from '@userplane/ui/components/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
 import {
   Ban,
   Building2,

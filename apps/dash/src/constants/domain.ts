@@ -1,6 +1,6 @@
 /**
  * Domain-related constants
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
-export { DOMAIN_PAGINATION } from '@workspace/contract';
+export { DOMAIN_PAGINATION } from '@userplane/contract';

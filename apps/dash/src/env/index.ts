@@ -4,7 +4,7 @@
  *
  * Types are inferred from Zod schemas in schema.ts to ensure consistency.
  */
-import { isSecureEnvironment } from '@workspace/shared/env';
+import { isSecureEnvironment } from '@userplane/shared/env';
 import { ZodError } from 'zod';
 
 import {

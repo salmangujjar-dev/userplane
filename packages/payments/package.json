@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/payments",
+  "name": "@userplane/payments",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -49,14 +49,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@workspace/console-logger": "workspace:*",
-    "@workspace/pricing": "workspace:*",
+    "@userplane/console-logger": "workspace:*",
+    "@userplane/pricing": "workspace:*",
     "dodopayments": "^2.19.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "eslint": "^9.32.0",
     "typescript": "^5.5.4"
   }

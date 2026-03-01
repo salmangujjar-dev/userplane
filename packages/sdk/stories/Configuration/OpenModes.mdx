@@ -47,7 +47,7 @@ The recorder does **not** open on initialization. You control when it opens by c
 initialize({ openImmediately: false });
 
 // Later — when you want to open:
-import { open } from '@workspace/sdk';
+import { open } from '@userplane/sdk';
 open('tok_abc123');
 ```
 
@@ -79,7 +79,7 @@ initialize({ openImmediately: 'tok_abc123' });
 Regardless of `openImmediately`, you can always call `open()` later:
 
 ```typescript
-import { open, isInitialized } from '@workspace/sdk';
+import { open, isInitialized } from '@userplane/sdk';
 
 function handleRecordButton(token: string) {
   if (!isInitialized()) {

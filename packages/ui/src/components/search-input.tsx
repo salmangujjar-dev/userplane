@@ -1,7 +1,7 @@
 'use client';
 
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@workspace/ui/components/input-group';
-import { cn } from '@workspace/ui/lib/utils';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@userplane/ui/components/input-group';
+import { cn } from '@userplane/ui/lib/utils';
 import { Search } from 'lucide-react';
 import * as React from 'react';
 

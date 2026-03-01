@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/client",
+  "name": "@userplane/client",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -21,13 +21,13 @@
     "@orpc/client": "^1.12.3",
     "@orpc/contract": "^1.12.3",
     "@orpc/openapi-client": "^1.12.3",
-    "@workspace/contract": "workspace:*"
+    "@userplane/contract": "workspace:*"
   },
   "devDependencies": {
     "eslint": "^9.32.0",
-    "@workspace/eslint-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
     "@types/node": "^22.14.1",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "typescript": "5.8.2"
   }
 }

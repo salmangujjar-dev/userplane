@@ -20,8 +20,8 @@
  * - PostHog error tracking
  */
 
-import type { CacheService } from '@workspace/cache';
-import { createLinkProviderData } from '@workspace/contract';
+import type { CacheService } from '@userplane/cache';
+import { createLinkProviderData } from '@userplane/contract';
 
 import {
   buildAccessRequestedCanvas,

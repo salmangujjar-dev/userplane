@@ -7,9 +7,9 @@
  * - Updating refund status
  */
 
-import type { DbClient } from '@workspace/db';
-import { and, eq } from '@workspace/db';
-import { refunds } from '@workspace/db';
+import type { DbClient } from '@userplane/db';
+import { and, eq } from '@userplane/db';
+import { refunds } from '@userplane/db';
 
 import type { Transaction } from '@/api/types';
 

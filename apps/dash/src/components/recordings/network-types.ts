@@ -1,6 +1,6 @@
-import type { ParsedBody, RecordingNetworkLog } from '@workspace/contract';
+import type { ParsedBody, RecordingNetworkLog } from '@userplane/contract';
 
-export type { ParsedBody, RecordingNetworkLog } from '@workspace/contract';
+export type { ParsedBody, RecordingNetworkLog } from '@userplane/contract';
 
 export type NetworkFilterType =
   | 'all'

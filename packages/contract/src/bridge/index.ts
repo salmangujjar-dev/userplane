@@ -4,7 +4,7 @@
  * Pure TypeScript types — no Zod, no oRPC, no runtime dependencies.
  */
 
-import type { ProcessedLogEntry } from '@workspace/logger';
+import type { ProcessedLogEntry } from '@userplane/logger';
 
 // ─── Serializable Types ──────────────────────────────────────────────────────
 

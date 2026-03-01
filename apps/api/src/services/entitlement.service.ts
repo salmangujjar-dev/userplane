@@ -10,10 +10,10 @@
  * - Caching usage summaries for dashboard performance
  */
 
-import type { CacheService } from '@workspace/cache';
-import type { AddonItem, SubscriptionAccessStatus } from '@workspace/contract';
-import type { DodoFeatureLimits } from '@workspace/payments/types';
-import type { BillingCadence, PlanId, PlanName, ResourceType } from '@workspace/pricing';
+import type { CacheService } from '@userplane/cache';
+import type { AddonItem, SubscriptionAccessStatus } from '@userplane/contract';
+import type { DodoFeatureLimits } from '@userplane/payments/types';
+import type { BillingCadence, PlanId, PlanName, ResourceType } from '@userplane/pricing';
 import {
   calculateFairShareLimit,
   FREE_PLAN_ENTITLEMENTS,
@@ -21,7 +21,7 @@ import {
   PLAN_NAMES,
   RESOURCE_TYPE_VALUES,
   UNLIMITED_QUOTED_LIMIT,
-} from '@workspace/pricing';
+} from '@userplane/pricing';
 
 import type { EntitlementRepository } from '@/api/repositories/entitlements.repository';
 import type { BillingService } from '@/api/services/billing.service';

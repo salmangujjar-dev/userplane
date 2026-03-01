@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { RetentionDays } from '@workspace/contract';
+import type { RetentionDays } from '@userplane/contract';
 
 import { apiClient } from '@/client';
 import {

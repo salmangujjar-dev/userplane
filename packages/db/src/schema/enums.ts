@@ -6,4 +6,4 @@
  * The constant array is re-exported here for shared access.
  */
 
-export { BILLING_CADENCES } from '@workspace/pricing';
+export { BILLING_CADENCES } from '@userplane/pricing';

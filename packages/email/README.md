@@ -1,4 +1,4 @@
-# @workspace/email
+# @userplane/email
 
 Unified email package with clients and React Email templates.
 
@@ -17,7 +17,7 @@ Unified email package with clients and React Email templates.
 ### Email Client
 
 ```typescript
-import { createEmailClient } from '@workspace/email';
+import { createEmailClient } from '@userplane/email';
 
 const client = createEmailClient({
   provider: 'resend',
@@ -105,7 +105,7 @@ console.log(`Sent ${response.ids.length} emails`);
 ### Email Templates
 
 ```typescript
-import { renderWorkspaceInvite } from '@workspace/email';
+import { renderWorkspaceInvite } from '@userplane/email';
 
 // Render template to HTML
 const html = await renderWorkspaceInvite({

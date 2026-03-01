@@ -4,11 +4,11 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Embed vs SDK
 
-`@workspace/embed` and `@workspace/sdk` both provide the Userplane recorder. This page explains when to use each.
+`@userplane/embed` and `@userplane/sdk` both provide the Userplane recorder. This page explains when to use each.
 
 ## Side-by-Side Comparison
 
-| | `@workspace/embed` | `@workspace/sdk` |
+| | `@userplane/embed` | `@userplane/sdk` |
 |---|---|---|
 | **Delivery** | CDN `<script>` tag | npm package |
 | **Initialization** | Automatic on script load | Manual `initialize()` call |
@@ -21,7 +21,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 | **Caching** | Long-term via content hash | Bundled with your app |
 | **Updates** | Instant — new manifest on deploy | Requires app re-deploy |
 
-## When to Use `@workspace/embed`
+## When to Use `@userplane/embed`
 
 Use the embed script when:
 
@@ -37,7 +37,7 @@ Use the embed script when:
 <script src="https://cdn.example.com/embed/script.js" defer></script>
 ```
 
-## When to Use `@workspace/sdk`
+## When to Use `@userplane/sdk`
 
 Use the npm SDK when:
 
@@ -49,7 +49,7 @@ Use the npm SDK when:
 - **Controlled updates** — you want recorder updates tied to your app's release cycle
 
 ```typescript
-import { initialize } from '@workspace/sdk';
+import { initialize } from '@userplane/sdk';
 
 initialize({
   workspaceId: 'ws_abc',
@@ -67,7 +67,7 @@ No — use one or the other. Using both will result in duplicate initialization.
 Moving from embed to SDK:
 
 1. Remove the `<script src="...script.js">` tag
-2. `npm install @workspace/sdk`
+2. `npm install @userplane/sdk`
 3. Call `initialize()` in your app entry point
 4. Remove `window.userplane` usages — use named imports instead
 

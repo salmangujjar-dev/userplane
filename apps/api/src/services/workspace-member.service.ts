@@ -3,15 +3,15 @@
  * Contains business logic for workspace membership management
  */
 
-import type { CacheService } from '@workspace/cache';
-import type { WorkspaceRole } from '@workspace/contract';
+import type { CacheService } from '@userplane/cache';
+import type { WorkspaceRole } from '@userplane/contract';
 import {
   billingError,
   getDefaultNotificationPreferences,
   getEditableNotificationKeys,
   getLockedNotificationOverrides,
   workspaceError,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 import { generateWorkspaceMemberId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';

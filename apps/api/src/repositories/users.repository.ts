@@ -3,9 +3,9 @@
  * Handles all database operations for user entities
  */
 
-import type { DbClient } from '@workspace/db';
-import { eq } from '@workspace/db';
-import { user } from '@workspace/db';
+import type { DbClient } from '@userplane/db';
+import { eq } from '@userplane/db';
+import { user } from '@userplane/db';
 
 export class UserRepository {
   constructor(private db: DbClient) {}

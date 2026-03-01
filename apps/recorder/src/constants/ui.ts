@@ -3,7 +3,7 @@
  * Colors, timings, and display defaults
  */
 
-import { RECORDING_DEFAULTS } from '@workspace/contract';
+import { RECORDING_DEFAULTS } from '@userplane/contract';
 
 // ===========================================
 // Colors and Branding (from contract)

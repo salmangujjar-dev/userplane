@@ -3,9 +3,9 @@
  * Contains validation and business rules for link management
  */
 
-import type { CacheService } from '@workspace/cache';
-import type { LinkProviderData } from '@workspace/contract';
-import { billingError, linkError } from '@workspace/contract';
+import type { CacheService } from '@userplane/cache';
+import type { LinkProviderData } from '@userplane/contract';
+import { billingError, linkError } from '@userplane/contract';
 
 import { env } from '@/api/env';
 import { generateLinkId } from '@/api/lib/id';

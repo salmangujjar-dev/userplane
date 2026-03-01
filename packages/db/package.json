@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/db",
+  "name": "@userplane/db",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -31,10 +31,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@workspace/contract": "workspace:*",
-    "@workspace/common-logger": "workspace:*",
-    "@workspace/payments": "workspace:*",
-    "@workspace/pricing": "workspace:*",
+    "@userplane/contract": "workspace:*",
+    "@userplane/common-logger": "workspace:*",
+    "@userplane/payments": "workspace:*",
+    "@userplane/pricing": "workspace:*",
     "better-auth": "^1.4.17",
     "drizzle-orm": "^0.45.1",
     "pg": "^8.13.1"
@@ -43,8 +43,8 @@
     "@types/bun": "^1.1.14",
     "@types/node": "^22.10.2",
     "@types/pg": "8.11.10",
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "drizzle-kit": "^0.31.9",
     "eslint": "^9.32.0",
     "typescript": "^5.5.4"

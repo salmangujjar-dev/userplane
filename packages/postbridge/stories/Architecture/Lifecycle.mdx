@@ -89,7 +89,7 @@ const connectionPromise = host.connect(worker, {
 
 ```javascript
 // In worker.js
-import { guest } from '@workspace/postbridge';
+import { guest } from '@userplane/postbridge';
 
 const connectionPromise = guest.connect({
   processData: (data) => data.map(x => x * 2)

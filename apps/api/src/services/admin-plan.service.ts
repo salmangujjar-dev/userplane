@@ -7,14 +7,14 @@ import type {
   AdminCreatePlanInput,
   AdminPlanProduct,
   AdminUpdatePlanInput,
-} from '@workspace/contract';
-import { adminError } from '@workspace/contract';
-import { getSeatsAddonIdForInterval } from '@workspace/payments';
-import type { DodoPayments } from '@workspace/payments/client';
-import type { DodoFeatureLimits } from '@workspace/payments/metadata';
-import { buildFlatMetadata, parseFlatMetadata } from '@workspace/payments/metadata';
-import type { FeatureGate, PlanFeatureGates } from '@workspace/pricing';
-import { FEATURE_GATE_KEYS, FEATURE_GATE_LABELS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
+} from '@userplane/contract';
+import { adminError } from '@userplane/contract';
+import { getSeatsAddonIdForInterval } from '@userplane/payments';
+import type { DodoPayments } from '@userplane/payments/client';
+import type { DodoFeatureLimits } from '@userplane/payments/metadata';
+import { buildFlatMetadata, parseFlatMetadata } from '@userplane/payments/metadata';
+import type { FeatureGate, PlanFeatureGates } from '@userplane/pricing';
+import { FEATURE_GATE_KEYS, FEATURE_GATE_LABELS, RESOURCE_TYPE_VALUES } from '@userplane/pricing';
 
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';

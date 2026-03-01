@@ -4,7 +4,7 @@
  * Type-safe client for interacting with the Userplane API
  */
 
-import { createClient, createSafeClient } from '@workspace/client';
+import { createClient, createSafeClient } from '@userplane/client';
 
 import { env } from '@/env';
 import { createLogger } from '@/lib/logger';

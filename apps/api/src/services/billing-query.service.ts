@@ -7,10 +7,10 @@
  * - Feature gate lookups
  */
 
-import type { CacheService } from '@workspace/cache';
-import type { SubscriptionAccessStatus } from '@workspace/contract';
-import type { PlanFeatureGates, PlanId } from '@workspace/pricing';
-import { FREE_PLAN_FEATURE_GATES, PLAN_NAMES } from '@workspace/pricing';
+import type { CacheService } from '@userplane/cache';
+import type { SubscriptionAccessStatus } from '@userplane/contract';
+import type { PlanFeatureGates, PlanId } from '@userplane/pricing';
+import { FREE_PLAN_FEATURE_GATES, PLAN_NAMES } from '@userplane/pricing';
 
 import { createLogger } from '@/api/lib/logger';
 import type { DisputeRepository } from '@/api/repositories/disputes.repository';

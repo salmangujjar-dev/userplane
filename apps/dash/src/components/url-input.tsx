@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@workspace/ui/lib/utils';
+import { cn } from '@userplane/ui/lib/utils';
 import React from 'react';
 
 interface URLInputProps {

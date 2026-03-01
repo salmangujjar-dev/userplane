@@ -1,6 +1,6 @@
 /**
  * Common Zod validation schemas
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
-export { PaginationMetaSchema } from '@workspace/contract';
+export { PaginationMetaSchema } from '@userplane/contract';

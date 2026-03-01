@@ -31,7 +31,7 @@ import {
   type MetadataFunction,
   type Serializable,
   set as setMetadataValue,
-} from '@workspace/metadata';
+} from '@userplane/metadata';
 
 import type { RecordingSessionInfo } from './bridge';
 import { FrameManagerFactory } from './frame/factory';

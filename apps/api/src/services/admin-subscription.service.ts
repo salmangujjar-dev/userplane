@@ -6,10 +6,10 @@
  * processor then picks up changes via the embedded snapshot mechanism.
  */
 
-import { adminError } from '@workspace/contract';
-import type { DodoPayments } from '@workspace/payments/client';
-import { mergeAndBuildFlatMetadata } from '@workspace/payments/metadata';
-import type { PlanFeatureGates, ResourceLimits, ResourceType } from '@workspace/pricing';
+import { adminError } from '@userplane/contract';
+import type { DodoPayments } from '@userplane/payments/client';
+import { mergeAndBuildFlatMetadata } from '@userplane/payments/metadata';
+import type { PlanFeatureGates, ResourceLimits, ResourceType } from '@userplane/pricing';
 
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';

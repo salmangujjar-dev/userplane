@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import { Link as LinkIcon, Plus, Rocket } from 'lucide-react';
 
 interface AdminTopActionsProps {

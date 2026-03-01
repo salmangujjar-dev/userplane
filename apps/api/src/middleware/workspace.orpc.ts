@@ -3,8 +3,8 @@
  * Checks workspace membership and attaches workspace context
  */
 
-import type { WorkspaceRole } from '@workspace/contract';
-import { workspaceError } from '@workspace/contract';
+import type { WorkspaceRole } from '@userplane/contract';
+import { workspaceError } from '@userplane/contract';
 
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';

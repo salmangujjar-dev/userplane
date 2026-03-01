@@ -13,11 +13,11 @@
  * - Cache invalidation on dispute state changes
  */
 
-import type { CacheService } from '@workspace/cache';
-import type { DbClient } from '@workspace/db';
-import type { getDodoPaymentsClient } from '@workspace/payments/client';
-import type { DisputeEventType, DodoDispute, WebhookPayload } from '@workspace/payments/types';
-import { isDisputeResolutionEvent } from '@workspace/payments/types';
+import type { CacheService } from '@userplane/cache';
+import type { DbClient } from '@userplane/db';
+import type { getDodoPaymentsClient } from '@userplane/payments/client';
+import type { DisputeEventType, DodoDispute, WebhookPayload } from '@userplane/payments/types';
+import { isDisputeResolutionEvent } from '@userplane/payments/types';
 
 import { createLogger } from '@/api/lib/logger';
 import type { DisputeRepository } from '@/api/repositories/disputes.repository';

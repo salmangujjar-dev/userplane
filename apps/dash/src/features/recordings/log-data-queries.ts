@@ -3,7 +3,7 @@ import type {
   RecordingActionLog,
   RecordingConsoleLog,
   RecordingNetworkLog,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 import { recordingKeys } from './query-keys';
 

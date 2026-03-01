@@ -3,8 +3,8 @@
  * All defaults are defined here to eliminate sprawl and ensure consistency
  */
 
-import { DEFAULT_TRIAL_PERIOD_DAYS } from '@workspace/contract';
-import { SUPPORT_EMAIL as SHARED_SUPPORT_EMAIL } from '@workspace/shared';
+import { DEFAULT_TRIAL_PERIOD_DAYS } from '@userplane/contract';
+import { SUPPORT_EMAIL as SHARED_SUPPORT_EMAIL } from '@userplane/shared';
 
 // =============================================================================
 // Time Constants (in seconds)

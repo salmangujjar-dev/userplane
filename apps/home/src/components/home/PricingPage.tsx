@@ -14,8 +14,8 @@ import {
   PLAN_CATEGORY_FEATURES,
   type PlanCycle,
   SALES_FORM_URL,
-} from '@workspace/pricing';
-import { Button } from '@workspace/ui/components/button';
+} from '@userplane/pricing';
+import { Button } from '@userplane/ui/components/button';
 import { Check, ChevronDown, Minus, Plus, X } from 'lucide-react';
 import { Fragment, useState } from 'react';
 

@@ -1,13 +1,13 @@
 'use client';
 
-import { ADDITIONAL_SEATS_OPTIONS } from '@workspace/pricing';
+import { ADDITIONAL_SEATS_OPTIONS } from '@userplane/pricing';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@workspace/ui/components/accordion';
-import { Label } from '@workspace/ui/components/label';
+} from '@userplane/ui/components/accordion';
+import { Label } from '@userplane/ui/components/label';
 import { CreditCard, Loader2, Minus, MoveUpRight, Plus } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';

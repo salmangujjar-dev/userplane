@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
+import { Button } from '@userplane/ui/components/button';
+import Logo from '@userplane/ui/components/logo';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
 import { Globe, Loader2, Shield } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';

@@ -6,11 +6,11 @@ const nextConfig: NextConfig = {
 
   // Transpile workspace packages (SDK and its transitive workspace deps)
   transpilePackages: [
-    '@workspace/sdk',
-    '@workspace/blurr',
-    '@workspace/console-logger',
-    '@workspace/metadata',
-    '@workspace/postbridge',
+    '@userplane/sdk',
+    '@userplane/blurr',
+    '@userplane/console-logger',
+    '@userplane/metadata',
+    '@userplane/postbridge',
   ],
 };
 

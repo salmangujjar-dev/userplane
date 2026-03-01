@@ -3,7 +3,7 @@
  * Official Resend API integration
  */
 
-import { createServerLogger, type LogLevel } from '@workspace/common-logger';
+import { createServerLogger, type LogLevel } from '@userplane/common-logger';
 import type { CreateEmailOptions, CreateEmailRequestOptions } from 'resend';
 import { Resend } from 'resend';
 

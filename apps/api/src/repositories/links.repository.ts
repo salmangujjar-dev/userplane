@@ -3,9 +3,9 @@
  * Handles all database operations for link entities
  */
 
-import type { LinkProviderData } from '@workspace/contract';
-import type { DbClient, Domain } from '@workspace/db';
-import { and, asc, count, desc, eq, inArray, sql } from '@workspace/db';
+import type { LinkProviderData } from '@userplane/contract';
+import type { DbClient, Domain } from '@userplane/db';
+import { and, asc, count, desc, eq, inArray, sql } from '@userplane/db';
 import {
   domains,
   links,
@@ -14,7 +14,7 @@ import {
   user,
   workspaceMembers,
   workspaces,
-} from '@workspace/db';
+} from '@userplane/db';
 
 import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';
 import type {

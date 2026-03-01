@@ -4,8 +4,8 @@
  * Focused on recording functionality - session management, state tracking, tab protection
  */
 
-import { getCustomMetadata } from '@workspace/metadata';
-import { type Connection, host } from '@workspace/postbridge';
+import { getCustomMetadata } from '@userplane/metadata';
+import { type Connection, host } from '@userplane/postbridge';
 
 import { CONNECTION_PREFIXES, generateConnectionId, URL_PARAMS } from '../constants';
 import { createSdkLogger } from '../logger';

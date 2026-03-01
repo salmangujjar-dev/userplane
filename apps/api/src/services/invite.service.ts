@@ -3,9 +3,9 @@
  * Orchestrates sending and accepting workspace invitations
  */
 
-import { domainError, inviteError, workspaceError } from '@workspace/contract';
-import type { DbClient } from '@workspace/db';
-import { getEmailDomain } from '@workspace/shared';
+import { domainError, inviteError, workspaceError } from '@userplane/contract';
+import type { DbClient } from '@userplane/db';
+import { getEmailDomain } from '@userplane/shared';
 
 import { createLogger } from '@/api/lib/logger';
 import { EmailService } from '@/api/services/email.service';

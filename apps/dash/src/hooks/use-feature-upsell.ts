@@ -1,4 +1,4 @@
-import type { FeatureGate, FeatureLimit } from '@workspace/pricing';
+import type { FeatureGate, FeatureLimit } from '@userplane/pricing';
 import { useQueryStates } from 'nuqs';
 
 import { planModalParser, upsellFeatureParser } from '@/lib/parsers';

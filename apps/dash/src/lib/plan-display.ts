@@ -3,8 +3,8 @@
  * Handles the display logic for subscription status
  */
 
-import type { SubscriptionStatus } from '@workspace/contract';
-import type { PlanName } from '@workspace/pricing';
+import type { SubscriptionStatus } from '@userplane/contract';
+import type { PlanName } from '@userplane/pricing';
 
 export type { SubscriptionStatus };
 

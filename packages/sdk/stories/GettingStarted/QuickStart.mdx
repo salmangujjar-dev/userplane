@@ -10,10 +10,10 @@ Get the Userplane SDK running in your app in under 5 minutes.
 
 ```bash
 # npm
-npm install @workspace/sdk
+npm install @userplane/sdk
 
 # bun
-bun add @workspace/sdk
+bun add @userplane/sdk
 ```
 
 ## Step 2 — Add Your Workspace ID
@@ -37,7 +37,7 @@ initialize({ workspaceId: 'ws_your_workspace_id_here' });
 Call `initialize()` once when your app loads. The right place is your app's entry point — `main.ts`, `index.ts`, `_app.tsx`, etc.
 
 ```typescript
-import { initialize } from '@workspace/sdk';
+import { initialize } from '@userplane/sdk';
 
 initialize();
 ```
@@ -51,7 +51,7 @@ By default, the SDK opens the recorder automatically when it finds a `userplane-
 To open the recorder programmatically:
 
 ```typescript
-import { open } from '@workspace/sdk';
+import { open } from '@userplane/sdk';
 
 // Open without a token (uses URL param fallback)
 open();
@@ -65,7 +65,7 @@ open('tok_abc123');
 Open your browser's DevTools console. After `initialize()` runs you should see no errors. Check that the SDK is initialized:
 
 ```typescript
-import { isInitialized, isBridgeConnected } from '@workspace/sdk';
+import { isInitialized, isBridgeConnected } from '@userplane/sdk';
 
 console.log('SDK initialized:', isInitialized());
 
@@ -78,7 +78,7 @@ Inspect the DOM — you should see an `<iframe>` and an overlay `<div>` injected
 ## Complete Example
 
 ```typescript
-import { initialize, open, getRecordingState } from '@workspace/sdk';
+import { initialize, open, getRecordingState } from '@userplane/sdk';
 
 // Initialize once at app startup
 initialize({

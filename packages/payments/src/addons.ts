@@ -1,4 +1,4 @@
-import type { PlanId } from '@workspace/pricing';
+import type { PlanId } from '@userplane/pricing';
 
 export type BillingInterval = 'monthly' | 'annual';
 

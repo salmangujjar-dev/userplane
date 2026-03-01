@@ -4,7 +4,7 @@
  * Consistent with the recording error screen styling
  */
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import Image from 'next/image';
 
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';

@@ -1,5 +1,5 @@
-import { AuthErrors, FormEmailSchema } from '@workspace/contract';
-import { isDisposableEmail } from '@workspace/shared';
+import { AuthErrors, FormEmailSchema } from '@userplane/contract';
+import { isDisposableEmail } from '@userplane/shared';
 import { APIError } from 'better-auth';
 import { createAuthMiddleware } from 'better-auth/api';
 

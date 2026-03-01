@@ -6,7 +6,7 @@
  * This ensures consistency and makes URL updates easier to manage
  */
 
-import { SUPPORT_EMAIL } from '@workspace/shared';
+import { SUPPORT_EMAIL } from '@userplane/shared';
 
 import { env } from '@/api/env';
 

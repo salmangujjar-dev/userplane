@@ -1,5 +1,5 @@
-import type { FeatureGate, ResourceType } from '@workspace/pricing';
-import { FEATURE_GATE_KEYS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
+import type { FeatureGate, ResourceType } from '@userplane/pricing';
+import { FEATURE_GATE_KEYS, RESOURCE_TYPE_VALUES } from '@userplane/pricing';
 
 export type AdminCustomPlanLimits = Record<
   ResourceType,

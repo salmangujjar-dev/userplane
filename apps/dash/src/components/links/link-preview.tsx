@@ -1,14 +1,14 @@
 'use client';
 
-import type { LinkProviderType } from '@workspace/contract';
-import { Button } from '@workspace/ui/components/button';
+import type { LinkProviderType } from '@userplane/contract';
+import { Button } from '@userplane/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
+} from '@userplane/ui/components/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
 import {
   ChevronRight,
   ExternalLink,

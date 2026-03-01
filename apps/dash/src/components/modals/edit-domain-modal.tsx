@@ -1,22 +1,22 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@workspace/ui/components/tooltip';
+} from '@userplane/ui/components/tooltip';
 import { HelpCircle } from 'lucide-react';
 import { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';

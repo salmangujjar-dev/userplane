@@ -4,8 +4,8 @@
  */
 
 import { implement } from '@orpc/server';
-import { contract } from '@workspace/contract';
-import { SITE_META } from '@workspace/shared/meta';
+import { contract } from '@userplane/contract';
+import { SITE_META } from '@userplane/shared/meta';
 
 /**
  * Public base for status endpoints (no auth required)

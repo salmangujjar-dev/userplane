@@ -1,6 +1,6 @@
 /**
  * Form-related Zod validation schemas
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
-export { EmailDomainSchema, EmailSchema, FormEmailSchema, URLSchema } from '@workspace/contract';
+export { EmailDomainSchema, EmailSchema, FormEmailSchema, URLSchema } from '@userplane/contract';

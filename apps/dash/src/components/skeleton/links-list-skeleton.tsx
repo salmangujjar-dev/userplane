@@ -1,4 +1,4 @@
-import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 
 interface LinksListSkeletonProps {
   count?: number;

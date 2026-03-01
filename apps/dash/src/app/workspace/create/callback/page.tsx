@@ -1,6 +1,6 @@
 'use client';
 
-import { SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
+import { SUPPORT_EMAIL_MAILTO } from '@userplane/shared';
 import { redirect, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 

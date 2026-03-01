@@ -6,9 +6,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@workspace/ui/components/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@workspace/ui/components/chart';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+} from '@userplane/ui/components/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@userplane/ui/components/chart';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import { Calendar, Play, Upload, Video } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useMemo, useState } from 'react';

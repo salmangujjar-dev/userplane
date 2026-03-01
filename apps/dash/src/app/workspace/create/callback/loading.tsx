@@ -1,4 +1,4 @@
-import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 

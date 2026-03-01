@@ -2,7 +2,7 @@
  * Date utility functions for restoration and deletion operations
  */
 
-import type { AdminNotifyDuration, RestorationStatus } from '@workspace/contract';
+import type { AdminNotifyDuration, RestorationStatus } from '@userplane/contract';
 
 import { env } from '@/api/env';
 

@@ -1,5 +1,5 @@
-import { Table, TableBody, TableCell, TableRow } from '@workspace/ui/components/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import { Table, TableBody, TableCell, TableRow } from '@userplane/ui/components/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@userplane/ui/components/tabs';
 import {
   Cable,
   File,

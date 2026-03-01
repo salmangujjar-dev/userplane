@@ -31,7 +31,7 @@ type SerializableObject = { [key: string]: Serializable };
 ### Example
 
 ```typescript
-import { set } from '@workspace/sdk';
+import { set } from '@userplane/sdk';
 
 set('userId', 'user_abc123');
 set('plan', 'professional');
@@ -63,7 +63,7 @@ function metadata(fn: MetadataFunction): void
 ### Example
 
 ```typescript
-import { metadata } from '@workspace/sdk';
+import { metadata } from '@userplane/sdk';
 
 // Synchronous
 metadata(() => ({
@@ -104,7 +104,7 @@ function clearMetadata(keyOrType?: string): void
 ### Example
 
 ```typescript
-import { clearMetadata } from '@workspace/sdk';
+import { clearMetadata } from '@userplane/sdk';
 
 // Remove a specific static key
 clearMetadata('userId');
@@ -133,7 +133,7 @@ function getTabRef(): string | null
 The tab reference string (e.g., `'userplane_tab_V1StGXR8_Z5jdHi6B-myT'`) or `null` if the SDK is not initialized.
 
 ```typescript
-import { getTabRef } from '@workspace/sdk';
+import { getTabRef } from '@userplane/sdk';
 
 const tabRef = getTabRef();
 // 'userplane_tab_V1StGXR8_Z5jdHi6B-myT' or null
@@ -154,7 +154,7 @@ function clearTabRef(): void
 After calling `clearTabRef()`, the next `initialize()` will generate a new tab reference.
 
 ```typescript
-import { clearTabRef } from '@workspace/sdk';
+import { clearTabRef } from '@userplane/sdk';
 
 clearTabRef(); // removes from window.name
 ```

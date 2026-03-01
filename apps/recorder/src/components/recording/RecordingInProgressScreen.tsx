@@ -3,7 +3,7 @@
  * Shows live preview and recording indicator
  */
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import Image from 'next/image';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 

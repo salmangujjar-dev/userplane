@@ -3,8 +3,8 @@
  * Handles multipart form data uploads for workspace logos
  */
 
-import { FILE_SIZE_LIMITS } from '@workspace/contract';
-import { ASSETS_ALLOWED_CONTENT_TYPES, type AssetsContentType } from '@workspace/storage';
+import { FILE_SIZE_LIMITS } from '@userplane/contract';
+import { ASSETS_ALLOWED_CONTENT_TYPES, type AssetsContentType } from '@userplane/storage';
 import type { Context } from 'hono';
 
 import { auth } from '@/api/clients/auth';
