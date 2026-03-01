@@ -3,6 +3,8 @@ import storybookPlugin from 'eslint-plugin-storybook';
 
 /** @type {import("eslint").Linter.Config} */
 export default [
+  // Generated bundle — built by `bun build` from bridge-worker.ts, not authored code
+  { ignores: ['src/bridge-worker.js'] },
   ...baseConfig,
   ...storybookPlugin.configs['flat/recommended'],
   {

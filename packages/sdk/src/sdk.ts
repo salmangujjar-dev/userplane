@@ -284,6 +284,7 @@ export function initialize(options: InitializeOptions = {}): void {
     onSessionReady: handleSessionReady,
     onRecordingStateChange: handleRecordingStateChange,
     onCaptureConnected: handleCaptureConnected,
+    excludeCaptureEndpoints: options.excludeCaptureEndpoints,
   });
 
   // Determine open behavior

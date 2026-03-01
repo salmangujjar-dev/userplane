@@ -36,6 +36,8 @@ export interface FrameManagerFactoryConfig {
   onCaptureConnected?: () => void;
   /** Callback when recorder state changes (for capture cross-tab) */
   onCaptureRecorderStateChange?: (state: CaptureRecorderState) => void;
+  /** URLs to exclude from network log capture */
+  excludeCaptureEndpoints?: string[];
 }
 
 /**
@@ -103,6 +105,7 @@ export class FrameManagerFactory {
       onRequestClose: this.config.onRequestClose,
       onConnected: this.config.onCaptureConnected,
       onRecorderStateChange: this.config.onCaptureRecorderStateChange,
+      excludeCaptureEndpoints: this.config.excludeCaptureEndpoints,
     };
     return new CaptureFrameManager(config);
   }
