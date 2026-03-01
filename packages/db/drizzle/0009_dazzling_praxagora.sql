@@ -1,0 +1,1 @@
+ALTER TABLE "recordings" ADD COLUMN "recording_started_at" timestamp with time zone;

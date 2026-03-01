@@ -67,6 +67,7 @@ export const recordings = pgTable(
     recordingDurationMs: integer('recording_duration')
       .notNull()
       .default(RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS),
+    recordingStartedAt: timestamp('recording_started_at', { withTimezone: true }),
 
     // Retention
     expiresAt: timestamp('expires_at', { withTimezone: true }),
