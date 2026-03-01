@@ -1,6 +1,7 @@
 import { LOGGER_NAME } from '../constants';
 import { dispatch } from '../event-bridge';
 import type { UserActionLogEvent } from '../types';
+import { now } from '../utils/time';
 
 /**
  * Creates and registers focus/blur/visibilitychange handlers.
@@ -21,6 +22,7 @@ export function patchFocus(tabId: string | undefined): (e: Event) => void {
         has_focus: window.__userplane_has_focus,
         tabId,
         type: 'user-action',
+        timestamp: now(),
         data: {
           action,
           url: window.location.href,
@@ -49,6 +51,7 @@ export function initFocusState(tabId: string | undefined): void {
       has_focus: window.__userplane_has_focus,
       tabId,
       type: 'user-action',
+      timestamp: now(),
       data: {
         action: 'init_page',
         url: window.location.href,

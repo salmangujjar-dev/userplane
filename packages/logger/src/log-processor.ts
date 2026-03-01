@@ -78,7 +78,6 @@ export class LogProcessor {
   private _maskResponseBody: boolean = false;
   private _scriptUrl: string;
   private _initialLogCaptured: boolean = false;
-  private _serverDeltaMs: number;
   private _internalEndpointMatchers: RegExp[];
 
   // ─── Dispatch ──────────────────────────────────────────────────
@@ -101,7 +100,6 @@ export class LogProcessor {
     saveFunction: SaveFunction,
     workspaceId: string,
     scriptUrl: string = '',
-    serverDeltaMs: number = 0,
     internalEndpoints?: string[],
     options?: {
       dispatchMode?: DispatchMode;
@@ -113,7 +111,6 @@ export class LogProcessor {
   ) {
     this._workspaceId = workspaceId;
     this._scriptUrl = scriptUrl;
-    this._serverDeltaMs = serverDeltaMs;
     this._tabId = tabId;
     this._saveFunction = saveFunction;
     this._internalEndpointMatchers = buildEndpointMatchers(
@@ -151,7 +148,7 @@ export class LogProcessor {
   // ─── Time ───────────────────────────────────────────────────────
 
   serverNow(): number {
-    return Date.now() + this._serverDeltaMs;
+    return Date.now();
   }
 
   // ─── Configuration Setters ──────────────────────────────────────
@@ -228,9 +225,6 @@ export class LogProcessor {
       // Remove and re-add the relay listener
       document.removeEventListener(CUSTOM_EVENT_NAME, this.loggerRelayListener as EventListener);
       document.addEventListener(CUSTOM_EVENT_NAME, this.loggerRelayListener as EventListener);
-
-      // Set server delta for the low-level logger
-      window.__userplane_server_delta_ms = this._serverDeltaMs;
 
       // Only inject the script if not already loaded
       if (window.__userplane_logger_loaded) {

@@ -6,7 +6,7 @@ import type { ConsoleLogEvent } from '../types';
  * Creates and registers a handler for Content Security Policy violations.
  * Returns the handler for later removal.
  */
-export function patchCSP(serverDeltaMs: number): (e: SecurityPolicyViolationEvent) => void {
+export function patchCSP(): (e: SecurityPolicyViolationEvent) => void {
   const handler = (event: SecurityPolicyViolationEvent): void => {
     const message = `Refused to load ${
       event.blockedURI ? `'${event.blockedURI}'` : 'a resource'
@@ -26,7 +26,7 @@ export function patchCSP(serverDeltaMs: number): (e: SecurityPolicyViolationEven
         disposition: event.disposition,
         originalPolicy: event.originalPolicy,
         statusCode: event.statusCode,
-        timestamp: Date.now() + serverDeltaMs,
+        timestamp: Date.now(),
       } as ConsoleLogEvent);
       // eslint-disable-next-line no-empty -- intentional: CSP handler must not throw
     } catch {}

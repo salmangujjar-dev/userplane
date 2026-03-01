@@ -55,17 +55,13 @@ const log = createLogger('userplane-logger', {
  * Prerequisites:
  * - `window.__userplane_pristine_natives` must be set before calling this
  *   (contains references to the original, unpatched browser APIs)
- * - `window.__userplane_server_delta_ms` may be set for clock synchronization
  */
 export function initPatches(): void {
   // Guard against double-initialization
   if (window.__userplane_logger_loaded) return;
   window.__userplane_logger_loaded = true;
 
-  // Server time delta for clock synchronization
-  const serverDelta = window.__userplane_server_delta_ms;
-  const serverDeltaMs =
-    typeof serverDelta === 'number' && Number.isFinite(serverDelta) ? serverDelta : 0;
+  // Server time delta is now applied centrally at upload time, not in interceptors
 
   // ─── Handler references (for cleanup during unpatch) ──────────────
 
@@ -287,13 +283,13 @@ export function initPatches(): void {
   // ─── Patch all browser APIs ───────────────────────────────────────
 
   // 1. Console interception
-  patchConsole(serverDeltaMs);
+  patchConsole();
 
   // 2. Unhandled promise rejections
-  unhandledRejectionHandler = patchUnhandledRejection(serverDeltaMs);
+  unhandledRejectionHandler = patchUnhandledRejection();
 
   // 3. Global JS errors
-  globalErrorHandler = patchGlobalErrors(serverDeltaMs);
+  globalErrorHandler = patchGlobalErrors();
 
   // 4. Navigation (history API, popstate, hashchange, Navigation API)
   navigationHandlers = patchNavigation(tabId);
@@ -309,17 +305,17 @@ export function initPatches(): void {
   beforeUnloadHandler = patchBeforeUnload(tabId);
 
   // 8. Fetch interception
-  patchFetch(serverDeltaMs);
+  patchFetch();
 
   // 9. XHR interception
-  patchXHR(serverDeltaMs);
+  patchXHR();
 
   // 10. Resource loading (PerformanceObserver)
-  performanceObserver = observeResources(serverDeltaMs);
+  performanceObserver = observeResources();
 
   // 11. Resource load errors
-  resourceErrorHandler = patchResourceErrors(serverDeltaMs);
+  resourceErrorHandler = patchResourceErrors();
 
   // 12. CSP violations
-  cspHandler = patchCSP(serverDeltaMs);
+  cspHandler = patchCSP();
 }

@@ -12,12 +12,38 @@ export type LogStoreType = 'network' | 'console' | 'activity';
 const STORE_NAMES: LogStoreType[] = ['network', 'console', 'activity'];
 const DB_VERSION = 1;
 
+export const LOG_DB_PREFIX = 'userplane_logs_';
+
 export class LogStore {
   private db: IDBDatabase | null = null;
   private dbName: string;
 
   constructor(sessionId: string, tabId: string) {
-    this.dbName = `userplane_logs_${sessionId}_${tabId}`;
+    this.dbName = `${LOG_DB_PREFIX}${sessionId}_${tabId}`;
+  }
+
+  static async cleanupOrphanedDatabases(): Promise<void> {
+    try {
+      if (typeof indexedDB?.databases !== 'function') return;
+
+      const allDbs = await indexedDB.databases();
+      const orphaned = allDbs.filter((db) => db.name?.startsWith(LOG_DB_PREFIX));
+      if (orphaned.length === 0) return;
+
+      await Promise.all(
+        orphaned.map(
+          (db) =>
+            new Promise<void>((resolve) => {
+              const req = indexedDB.deleteDatabase(db.name!);
+              req.onsuccess = () => resolve();
+              req.onerror = () => resolve();
+              req.onblocked = () => resolve();
+            })
+        )
+      );
+    } catch {
+      // Best-effort — never throw from cleanup utility
+    }
   }
 
   async open(): Promise<void> {
@@ -42,6 +68,10 @@ export class LogStore {
 
       request.onerror = () => {
         reject(request.error);
+      };
+
+      request.onblocked = () => {
+        reject(new Error(`IndexedDB open blocked for ${this.dbName}`));
       };
     });
   }
@@ -101,6 +131,17 @@ export class LogStore {
     );
 
     await Promise.all(promises);
+  }
+
+  async deleteDatabase(): Promise<void> {
+    const dbName = this.dbName;
+    this.close();
+    return new Promise<void>((resolve) => {
+      const request = indexedDB.deleteDatabase(dbName);
+      request.onsuccess = () => resolve();
+      request.onerror = () => resolve(); // best-effort
+      request.onblocked = () => resolve(); // will delete when connections close
+    });
   }
 
   close(): void {

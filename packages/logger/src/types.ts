@@ -41,7 +41,6 @@ declare global {
     __userplane_logger_loaded?: boolean;
     __userplane_logger_originals?: LoggerOriginals;
     __userplane_pristine_natives?: PristineNatives;
-    __userplane_server_delta_ms?: number;
     __userplane_has_focus?: boolean;
     __userplane_removeNavigationApiHook?: () => void;
     navigation?: Navigation;
@@ -287,18 +286,20 @@ export interface ResourceErrorLogEvent extends BaseLogEvent {
   performance?: PerformanceData;
 }
 
+export type UserActionType =
+  | 'click'
+  | 'spa_route'
+  | 'tab_activated'
+  | 'tab_deactivated'
+  | 'init_page'
+  | 'page_unload'
+  | 'recorder-pause'
+  | 'recorder-resume'
+  | 'tab_switch'
+  | 'navigate';
+
 export interface UserActionData {
-  action:
-    | 'click'
-    | 'spa_route'
-    | 'tab_activated'
-    | 'tab_deactivated'
-    | 'init_page'
-    | 'page_unload'
-    | 'recorder-pause'
-    | 'recorder-resume'
-    | 'tab_switch'
-    | 'navigate';
+  action: UserActionType;
   url?: string;
   title?: string;
   from?: string;

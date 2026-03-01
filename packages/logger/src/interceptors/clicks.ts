@@ -1,6 +1,7 @@
 import { EXTENSION_TAG, LOGGER_NAME } from '../constants';
 import { dispatch } from '../event-bridge';
 import type { UserActionLogEvent } from '../types';
+import { now } from '../utils/time';
 
 let lastClickTime = 0;
 let lastClickTarget: EventTarget | null = null;
@@ -43,6 +44,7 @@ export function patchClicks(tabId: string | undefined): (e: Event) => void {
       has_focus: window.__userplane_has_focus,
       tabId,
       type: 'user-action',
+      timestamp: now(),
       data: {
         action: 'click',
         info: {

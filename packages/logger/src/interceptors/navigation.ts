@@ -2,6 +2,7 @@ import { LOGGER_NAME } from '../constants';
 import { dispatch } from '../event-bridge';
 import type { LastNavigation, UserActionLogEvent } from '../types';
 import { shouldLogNavigation } from '../utils/throttle';
+import { now } from '../utils/time';
 
 let lastHref = window.location.href;
 let lastNav: LastNavigation = { from: null, to: lastHref, method: null };
@@ -141,6 +142,7 @@ export function patchNavigation(_tabId: string | undefined): {
         has_focus: window.__userplane_has_focus,
         tabId,
         type: 'user-action',
+        timestamp: now(),
         data: {
           action: 'spa_route',
           from: fromUrl,
@@ -155,14 +157,14 @@ export function patchNavigation(_tabId: string | undefined): {
     }
   };
 
-  // Wrap pushState and replaceState
-  let currentPushState = history.pushState;
-  let currentReplaceState = history.replaceState;
+  // Wrap pushState and replaceState, then use defineProperty to intercept future overwrites.
+  // IMPORTANT: Update the closure variables to the wrapped versions so the getter returns them.
+  let currentPushState = createPushStateWrapper(history.pushState, nativeOriginals);
+  let currentReplaceState = createReplaceStateWrapper(history.replaceState, nativeOriginals);
 
-  history.pushState = createPushStateWrapper(currentPushState, nativeOriginals);
-  history.replaceState = createReplaceStateWrapper(currentReplaceState, nativeOriginals);
+  history.pushState = currentPushState;
+  history.replaceState = currentReplaceState;
 
-  // Use defineProperty to intercept future overwrites
   Object.defineProperty(history, 'pushState', {
     configurable: true,
     get: () => currentPushState,
