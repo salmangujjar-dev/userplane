@@ -1,5 +1,5 @@
 /* Import shared UI styles from workspace */
-@import "@workspace/ui/globals.css";
+@import "@userplane/ui/globals.css";
 
 /* Custom animations */
 @keyframes pulse-fast {

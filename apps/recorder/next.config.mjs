@@ -1,6 +1,6 @@
 /* global process */
 import { withPostHogConfig } from '@posthog/nextjs-config'
-import { getEnvFileName } from '@workspace/shared/env'
+import { getEnvFileName } from '@userplane/shared/env'
 import dotenv from 'dotenv'
 
 // Load environment-specific .env file based on APP_ENV
@@ -16,7 +16,7 @@ const shouldUsePostHog = appEnv === 'production' || !!process.env.POSTHOG_PERSON
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@workspace/ui'],
+  transpilePackages: ['@userplane/ui'],
   allowedDevOrigins: [
     'recorder-dev.userplane.io',
   ],
