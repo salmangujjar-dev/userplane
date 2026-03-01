@@ -48,7 +48,7 @@ The overlay provides the backdrop. The iframe holds the recorder application.
 
 ## Communication: PostBridge RPC
 
-The SDK and the recorder communicate via `window.postMessage` — the only cross-origin communication channel available between a parent window and a cross-origin iframe. The SDK uses `@workspace/postbridge` to wrap this in a typed RPC layer.
+The SDK and the recorder communicate via `window.postMessage` — the only cross-origin communication channel available between a parent window and a cross-origin iframe. The SDK uses `@userplane/postbridge` to wrap this in a typed RPC layer.
 
 ```
 Host Page (SDK)                     Recorder Iframe

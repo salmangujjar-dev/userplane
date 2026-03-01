@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/console-logger",
+  "name": "@userplane/console-logger",
   "version": "0.0.0",
   "type": "module",
   "private": true,
@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "typescript": "5.8.2"
   }
 }

@@ -1,24 +1,24 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
-import { Checkbox } from '@workspace/ui/components/checkbox';
+import { Button } from '@userplane/ui/components/button';
+import { Checkbox } from '@userplane/ui/components/checkbox';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import { Input } from '@userplane/ui/components/input';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
+} from '@userplane/ui/components/select';
 import { useRef, useState } from 'react';
 
 import type { WorkspaceRole } from '@/types';

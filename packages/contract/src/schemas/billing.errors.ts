@@ -2,7 +2,7 @@
  * Billing error definitions
  *
  * Error factory is created in utils/errors.ts
- * Import billingError from '@workspace/contract' to use
+ * Import billingError from '@userplane/contract' to use
  */
 
 export const BillingErrors = {

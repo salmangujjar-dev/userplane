@@ -1,9 +1,9 @@
 /**
  * Session contract implementation using oRPC
- * Implements the session contract defined in @workspace/contract
+ * Implements the session contract defined in @userplane/contract
  */
 import { implement } from '@orpc/server';
-import { parseLinkProviderData, sessionContract, sessionError } from '@workspace/contract';
+import { parseLinkProviderData, sessionContract, sessionError } from '@userplane/contract';
 
 import { REQUEST_HEADERS } from '@/api/constants/headers';
 import { createLogger } from '@/api/lib/logger';

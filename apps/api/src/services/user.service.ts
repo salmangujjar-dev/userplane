@@ -3,7 +3,7 @@
  * Contains business logic for user account management
  */
 
-import { accountError } from '@workspace/contract';
+import { accountError } from '@userplane/contract';
 import { randomBytes } from 'crypto';
 
 import { auth } from '@/api/clients/auth';

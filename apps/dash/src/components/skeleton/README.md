@@ -176,6 +176,6 @@ export default function RecordingsLoading() {
 - Use actual components (Sidebar, TopActions) in loading states - don't create skeleton versions
 - Skeleton components should only represent content that's loading, not persistent UI
 - Match the structure of actual page layouts
-- Use the Skeleton component from @workspace/ui for consistent animations
+- Use the Skeleton component from @userplane/ui for consistent animations
 - Keep skeleton components small and focused on single responsibilities
 - Provide sensible defaults for props

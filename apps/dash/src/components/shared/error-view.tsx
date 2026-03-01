@@ -1,7 +1,7 @@
 'use client';
 
-import { COMPANY_NAME } from '@workspace/shared';
-import { Button } from '@workspace/ui/components/button';
+import { COMPANY_NAME } from '@userplane/shared';
+import { Button } from '@userplane/ui/components/button';
 import Image from 'next/image';
 
 import { mediaClient } from '@/lib/media';

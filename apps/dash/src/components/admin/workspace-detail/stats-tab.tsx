@@ -1,8 +1,8 @@
 'use client';
 
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Input } from '@userplane/ui/components/input';
+import { Label } from '@userplane/ui/components/label';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 
 import type { WorkspaceDetail } from './types';
 

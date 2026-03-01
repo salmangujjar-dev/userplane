@@ -1,13 +1,13 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dropdown-menu';
+import Logo from '@userplane/ui/components/logo';
 import { Link as LinkIcon, MoreVertical, Pencil, Share2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 

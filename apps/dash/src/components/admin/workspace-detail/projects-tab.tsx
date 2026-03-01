@@ -1,12 +1,12 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
+} from '@userplane/ui/components/dropdown-menu';
 import {
   Pagination,
   PaginationContent,
@@ -15,8 +15,8 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@workspace/ui/components/pagination';
-import { SearchInput } from '@workspace/ui/components/search-input';
+} from '@userplane/ui/components/pagination';
+import { SearchInput } from '@userplane/ui/components/search-input';
 import {
   ArrowDown,
   ArrowUp,

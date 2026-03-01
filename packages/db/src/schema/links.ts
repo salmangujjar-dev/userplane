@@ -1,4 +1,4 @@
-import type { LinkProviderType, LinkType } from '@workspace/contract';
+import type { LinkProviderType, LinkType } from '@userplane/contract';
 import { relations, sql } from 'drizzle-orm';
 import { boolean, check, index, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 

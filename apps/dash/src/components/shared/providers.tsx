@@ -1,8 +1,8 @@
 'use client';
 
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@workspace/ui/components/sonner';
-import { TooltipProvider } from '@workspace/ui/components/tooltip';
+import { Toaster } from '@userplane/ui/components/sonner';
+import { TooltipProvider } from '@userplane/ui/components/tooltip';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import posthog from 'posthog-js';
 import * as React from 'react';

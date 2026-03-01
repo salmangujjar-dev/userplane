@@ -4,14 +4,14 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Userplane Embed
 
-`@workspace/embed` is the CDN distribution layer for the Userplane SDK. It wraps `@workspace/sdk` with two unique additions designed for no-bundler environments:
+`@userplane/embed` is the CDN distribution layer for the Userplane SDK. It wraps `@userplane/sdk` with two unique additions designed for no-bundler environments:
 
 1. **Two-stage bootstrap loader** — a tiny `script.js` fetches a `manifest.json` and dynamically injects the content-hashed `main.{hash}.js`, enabling long-term caching with instant updates on deploy.
 2. **Auto-initialization** — the full SDK initializes automatically on script load and is exposed as `window.userplane`.
 
 ## Two-Package Model
 
-| | `@workspace/embed` | `@workspace/sdk` |
+| | `@userplane/embed` | `@userplane/sdk` |
 |---|---|---|
 | **Delivery** | CDN `<script>` tag | npm package |
 | **Initialization** | Automatic on load | Manual `initialize()` call |

@@ -8,7 +8,7 @@ Use Userplane in any page with a single `<script>` tag — no bundler, no npm, n
 
 ## The Embed Package
 
-CDN distribution is handled by `@workspace/embed`, which wraps the SDK in a two-stage loader optimised for long-term caching with instant updates.
+CDN distribution is handled by `@userplane/embed`, which wraps the SDK in a two-stage loader optimised for long-term caching with instant updates.
 
 ## Basic Usage
 
@@ -125,4 +125,4 @@ Content-Security-Policy: script-src 'nonce-abc123' https://cdn.userplane.com;
 | Need TypeScript types | npm |
 | Need tree-shaking | npm |
 
-The npm package (`@workspace/sdk`) gives you full TypeScript types, tree-shaking, and control over initialization. The CDN embed (`script.js`) gives you zero-config drop-in integration with automatic cache busting.
+The npm package (`@userplane/sdk`) gives you full TypeScript types, tree-shaking, and control over initialization. The CDN embed (`script.js`) gives you zero-config drop-in integration with automatic cache busting.

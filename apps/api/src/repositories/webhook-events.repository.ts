@@ -7,9 +7,9 @@
  * - Processing status management
  */
 
-import type { DbClient } from '@workspace/db';
-import { eq } from '@workspace/db';
-import { webhookEvents } from '@workspace/db';
+import type { DbClient } from '@userplane/db';
+import { eq } from '@userplane/db';
+import { webhookEvents } from '@userplane/db';
 
 import type { Transaction } from '@/api/types';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -9,22 +9,22 @@ import {
   DialogFooter,
   DialogTitle,
   DialogTrigger,
-} from '@workspace/ui/components/dialog';
+} from '@userplane/ui/components/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
-import { Switch } from '@workspace/ui/components/switch';
+} from '@userplane/ui/components/dropdown-menu';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
+import { Switch } from '@userplane/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@workspace/ui/components/tooltip';
+} from '@userplane/ui/components/tooltip';
 import { ChevronDown, ChevronUp, Copy, FolderKanban, Globe, HelpCircle, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';

@@ -9,8 +9,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { Switch } from '@workspace/ui/components/switch';
+} from '@userplane/ui/components/dropdown-menu';
+import { Switch } from '@userplane/ui/components/switch';
 import { EyeOff, Settings2 } from 'lucide-react';
 
 interface SettingsDropdownProps {

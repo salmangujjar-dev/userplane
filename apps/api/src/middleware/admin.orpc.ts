@@ -3,7 +3,7 @@
  * Checks if the authenticated user has admin access (admin or csm role)
  */
 
-import { adminError } from '@workspace/contract';
+import { adminError } from '@userplane/contract';
 
 import type { AdminService } from '@/api/services/admin.service';
 

@@ -9,13 +9,13 @@
  * so every subsequent webhook carries the snapshot directly.
  */
 
-import type { getDodoPaymentsClient } from '@workspace/payments/client';
+import type { getDodoPaymentsClient } from '@userplane/payments/client';
 import {
   buildFlatMetadata,
   fetchProductMetadata,
   parseFlatMetadata,
-} from '@workspace/payments/metadata';
-import type { DodoSubscription, ProductPlanMetadata } from '@workspace/payments/types';
+} from '@userplane/payments/metadata';
+import type { DodoSubscription, ProductPlanMetadata } from '@userplane/payments/types';
 
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';

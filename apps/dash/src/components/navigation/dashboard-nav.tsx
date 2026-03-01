@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge } from '@workspace/ui/components/badge';
-import Logo from '@workspace/ui/components/logo';
+import { Badge } from '@userplane/ui/components/badge';
+import Logo from '@userplane/ui/components/logo';
 import Link from 'next/link';
 
 import { useWorkspaceMembers } from '@/features/workspace';

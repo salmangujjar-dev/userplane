@@ -8,7 +8,7 @@ import {
   type SessionPreferences,
   type SessionTokenPayload,
   toRecordingPreferences as contractToRecordingPreferences,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 import {
   DEFAULT_COMPANY_NAME,

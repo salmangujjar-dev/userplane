@@ -140,12 +140,12 @@ export const UrlWithProtocolSchema = URLSchema;
  *
  * IMPORTANT: This is the single source of truth for all enum values used in both API and database.
  *
- * WARNING: Changing these enum constants requires corresponding changes in @workspace/db package:
+ * WARNING: Changing these enum constants requires corresponding changes in @userplane/db package:
  * - Database schema definitions (PostgreSQL enum types)
  * - Database migrations to add/remove/rename enum values
  * - Any existing database records with these enum values
  *
- * The @workspace/db package imports and re-exports these constants to maintain backward compatibility.
+ * The @userplane/db package imports and re-exports these constants to maintain backward compatibility.
  */
 
 /**

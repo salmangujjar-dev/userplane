@@ -3,8 +3,8 @@
  * Handles user management, ban/unban, and session management
  */
 
-import { adminError } from '@workspace/contract';
-import type { WorkspaceRole } from '@workspace/db';
+import { adminError } from '@userplane/contract';
+import type { WorkspaceRole } from '@userplane/db';
 
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';

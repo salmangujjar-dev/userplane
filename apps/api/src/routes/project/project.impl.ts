@@ -1,9 +1,9 @@
 /**
  * Project contract implementation using oRPC
- * Implements the project contract defined in @workspace/contract
+ * Implements the project contract defined in @userplane/contract
  */
 
-import { projectError, type RetentionDays } from '@workspace/contract';
+import { projectError, type RetentionDays } from '@userplane/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import {

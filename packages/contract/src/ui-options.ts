@@ -6,7 +6,7 @@
  *
  * Usage:
  * ```typescript
- * import { SORT_DIRECTION_OPTIONS, WORKSPACE_ROLE_OPTIONS } from '@workspace/contract/ui-options';
+ * import { SORT_DIRECTION_OPTIONS, WORKSPACE_ROLE_OPTIONS } from '@userplane/contract/ui-options';
  *
  * <Select>
  *   {SORT_DIRECTION_OPTIONS.map(opt => (
@@ -16,8 +16,8 @@
  * ```
  */
 
-import type { PlanId, UserSelectablePlanId } from '@workspace/pricing';
-import { PLAN_IDS, PLAN_NAMES, USER_SELECTABLE_PLAN_IDS } from '@workspace/pricing';
+import type { PlanId, UserSelectablePlanId } from '@userplane/pricing';
+import { PLAN_IDS, PLAN_NAMES, USER_SELECTABLE_PLAN_IDS } from '@userplane/pricing';
 
 import type {
   AdminFilterStatus,

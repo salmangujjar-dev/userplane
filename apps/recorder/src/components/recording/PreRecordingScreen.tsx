@@ -3,7 +3,7 @@
  * Lets user choose recording mode and start recording
  */
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import Image from 'next/image';
 import { type ReactNode, useState } from 'react';
 

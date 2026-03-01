@@ -1,14 +1,14 @@
 'use client';
 
-import { isProductId, PLAN_NAMES, type PlanId } from '@workspace/pricing';
+import { isProductId, PLAN_NAMES, type PlanId } from '@userplane/pricing';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import Logo from '@workspace/ui/components/logo';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+} from '@userplane/ui/components/dialog';
+import Logo from '@userplane/ui/components/logo';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import { ArrowRight, CheckCircle2, ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useEffect, useRef, useState } from 'react';

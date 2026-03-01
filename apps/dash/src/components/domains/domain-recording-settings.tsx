@@ -1,7 +1,7 @@
-import type { FeatureGate } from '@workspace/pricing';
-import { Label } from '@workspace/ui/components/label';
-import { Switch } from '@workspace/ui/components/switch';
-import { cn } from '@workspace/ui/lib/utils';
+import type { FeatureGate } from '@userplane/pricing';
+import { Label } from '@userplane/ui/components/label';
+import { Switch } from '@userplane/ui/components/switch';
+import { cn } from '@userplane/ui/lib/utils';
 
 import { useSubscriptionStatus } from '@/features/billing';
 import { useFeatureUpsell } from '@/hooks/use-feature-upsell';

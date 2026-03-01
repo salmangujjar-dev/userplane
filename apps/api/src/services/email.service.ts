@@ -1,6 +1,6 @@
 /**
  * EmailService - Infrastructure service for sending emails
- * Uses @workspace/email package and React Email templates
+ * Uses @userplane/email package and React Email templates
  * Emails are sent from configured inboxes with sender context in content
  */
 
@@ -30,8 +30,8 @@ import {
   renderWelcomeEmailRequester,
   renderWelcomeEmailSubscription,
   renderWorkspaceInvite,
-} from '@workspace/email';
-import type { MediaClient } from '@workspace/storage/media';
+} from '@userplane/email';
+import type { MediaClient } from '@userplane/storage/media';
 
 import { emailClient } from '@/api/clients/email';
 import { getMediaClient } from '@/api/clients/media';

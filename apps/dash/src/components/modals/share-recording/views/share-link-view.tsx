@@ -1,4 +1,4 @@
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import { Link } from 'lucide-react';
 import type { KeyboardEvent } from 'react';
 import type { FieldArrayWithId, FieldErrors } from 'react-hook-form';

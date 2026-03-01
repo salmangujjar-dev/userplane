@@ -58,7 +58,7 @@ unmount() called
 The `tabUnloadEnabled` field in `RecordingContext` reflects whether the handler is active:
 
 ```typescript
-import { getRecordingContext } from '@workspace/sdk';
+import { getRecordingContext } from '@userplane/sdk';
 
 const ctx = getRecordingContext();
 console.log(ctx?.tabUnloadEnabled); // true when active/retained
@@ -81,7 +81,7 @@ Modern browsers have restrictions on the `beforeunload` dialog:
 To verify the handler is working in development:
 
 ```typescript
-import { getRecordingContext } from '@workspace/sdk';
+import { getRecordingContext } from '@userplane/sdk';
 
 // During an active session, try navigating away
 // The browser should show a "Leave page?" dialog

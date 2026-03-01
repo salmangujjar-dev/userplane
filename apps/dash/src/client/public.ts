@@ -1,4 +1,4 @@
-import { createClient, safe } from '@workspace/client';
+import { createClient, safe } from '@userplane/client';
 
 import { env } from '@/env';
 import { handleSafeResult } from '@/lib/errors';

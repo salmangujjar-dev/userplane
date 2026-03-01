@@ -1,9 +1,9 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Button } from '@userplane/ui/components/button';
+import { Input } from '@userplane/ui/components/input';
+import { Label } from '@userplane/ui/components/label';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import { useState } from 'react';
 
 import { AdminDeactivateWorkspaceModal } from '@/components/modals/admin-deactivate-workspace-modal';

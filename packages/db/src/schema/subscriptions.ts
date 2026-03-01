@@ -1,6 +1,6 @@
-import type { AddonItems } from '@workspace/contract';
-import { SUBSCRIPTION_STATUSES, type SubscriptionStatus } from '@workspace/payments/types';
-import { BILLING_CADENCES, type BillingCadence, type PlanFeatureGates } from '@workspace/pricing';
+import type { AddonItems } from '@userplane/contract';
+import { SUBSCRIPTION_STATUSES, type SubscriptionStatus } from '@userplane/payments/types';
+import { BILLING_CADENCES, type BillingCadence, type PlanFeatureGates } from '@userplane/pricing';
 import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
@@ -34,7 +34,7 @@ export const subscriptions = pgTable(
     subscriptionId: text('subscription_id').notNull(),
     productId: text('product_id').notNull(),
 
-    // Plan mapping (references @workspace/pricing PlanId)
+    // Plan mapping (references @userplane/pricing PlanId)
     planId: text('plan_id').notNull(),
 
     // Subscription status

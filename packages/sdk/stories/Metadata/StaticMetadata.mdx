@@ -9,7 +9,7 @@ Static metadata is a set of key-value pairs that you set once. The value is capt
 ## `set(key, value)`
 
 ```typescript
-import { set } from '@workspace/sdk';
+import { set } from '@userplane/sdk';
 
 set(key: string, value: Serializable): void
 ```
@@ -71,7 +71,7 @@ set('plan', 'pro'); // overwrites 'free'
 Remove a single static key:
 
 ```typescript
-import { clearMetadata } from '@workspace/sdk';
+import { clearMetadata } from '@userplane/sdk';
 
 clearMetadata('userId'); // removes the 'userId' entry
 ```

@@ -1,4 +1,4 @@
-import { toast } from '@workspace/ui/components/sonner';
+import { toast } from '@userplane/ui/components/sonner';
 
 // ============================================
 // CLIPBOARD

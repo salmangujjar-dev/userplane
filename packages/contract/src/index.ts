@@ -1,5 +1,5 @@
 /**
- * @workspace/contract
+ * @userplane/contract
  *
  * Userplane API contract definitions using oRPC
  * Provides type-safe API contracts for client generation and validation

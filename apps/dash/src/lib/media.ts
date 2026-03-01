@@ -4,7 +4,7 @@
  * Includes Cloudflare Image Transform support for on-the-fly optimization.
  */
 
-import { createMediaClient } from '@workspace/storage/media';
+import { createMediaClient } from '@userplane/storage/media';
 
 import { env } from '@/env';
 

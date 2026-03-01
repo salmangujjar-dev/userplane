@@ -1,5 +1,5 @@
 /**
- * @workspace/cache - Redis caching and rate limiting
+ * @userplane/cache - Redis caching and rate limiting
  *
  * Provides:
  * - Redis client management

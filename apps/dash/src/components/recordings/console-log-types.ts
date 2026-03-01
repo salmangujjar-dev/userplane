@@ -1,6 +1,6 @@
-import type { RecordingConsoleLog, SerializedValue } from '@workspace/contract';
+import type { RecordingConsoleLog, SerializedValue } from '@userplane/contract';
 
-export type { RecordingConsoleLog, SerializedValue } from '@workspace/contract';
+export type { RecordingConsoleLog, SerializedValue } from '@userplane/contract';
 
 export type LogLevel = 'log' | 'error' | 'warning' | 'info' | 'debug';
 

@@ -1,4 +1,4 @@
-import type { WorkspaceRole } from '@workspace/contract';
+import type { WorkspaceRole } from '@userplane/contract';
 import { relations, sql } from 'drizzle-orm';
 import { boolean, check, index, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 

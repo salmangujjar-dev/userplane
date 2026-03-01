@@ -1,4 +1,4 @@
-import { createClientLogger, type Logger } from '@workspace/common-logger/browser';
+import { createClientLogger, type Logger } from '@userplane/common-logger/browser';
 
 // Client-side logger for the dash app
 export const logger: Logger = createClientLogger('dash', { level: 'info' });

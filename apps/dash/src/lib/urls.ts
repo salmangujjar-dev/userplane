@@ -8,7 +8,7 @@ import {
   extractUrlFromString,
   getFaviconUrl,
   isValidUrl,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 export { extractHostname, extractUrlFromString, getFaviconUrl, isValidUrl };
 

@@ -1,6 +1,6 @@
 /**
  * Admin-related constants
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
 export {
@@ -25,4 +25,4 @@ export {
   SORT_DIRECTION_OPTIONS,
   STREAMING_STATUS_OPTIONS,
   UPLOAD_STATUS_OPTIONS,
-} from '@workspace/contract';
+} from '@userplane/contract';

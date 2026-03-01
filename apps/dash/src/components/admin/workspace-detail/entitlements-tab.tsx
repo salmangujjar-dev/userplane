@@ -1,23 +1,23 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
+} from '@userplane/ui/components/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+} from '@userplane/ui/components/dropdown-menu';
+import { Input } from '@userplane/ui/components/input';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@workspace/ui/components/table';
+} from '@userplane/ui/components/table';
 import { MoreVertical, Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

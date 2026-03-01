@@ -3,9 +3,9 @@
  * Handles all database operations for subscription entities
  */
 
-import { type AddonItems, AddonItemsDbSchema, FeatureGatesSchema } from '@workspace/contract';
-import { type DbClient, eq, subscriptions, workspaces } from '@workspace/db';
-import type { BillingCadence, PlanFeatureGates, PlanId } from '@workspace/pricing';
+import { type AddonItems, AddonItemsDbSchema, FeatureGatesSchema } from '@userplane/contract';
+import { type DbClient, eq, subscriptions, workspaces } from '@userplane/db';
+import type { BillingCadence, PlanFeatureGates, PlanId } from '@userplane/pricing';
 
 import { createLogger } from '@/api/lib/logger';
 import type { Transaction } from '@/api/types';

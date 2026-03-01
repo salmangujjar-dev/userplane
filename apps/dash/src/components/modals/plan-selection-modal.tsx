@@ -7,14 +7,14 @@ import {
   formatPlanRate,
   PLAN_CARD_HIGHLIGHTS,
   type PlanCycle,
-} from '@workspace/pricing';
+} from '@userplane/pricing';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import Logo from '@userplane/ui/components/logo';
 import { Check } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useRef, useState } from 'react';

@@ -69,7 +69,7 @@ function createErrors<T extends ErrorMap>(definitions: T): ErrorFactory<T> {
  * Import and throw directly:
  *
  * @example
- * import { accountError, workspaceError } from '@workspace/contract';
+ * import { accountError, workspaceError } from '@userplane/contract';
  *
  * // Without additional data
  * throw workspaceError.WORKSPACE_NOT_FOUND();

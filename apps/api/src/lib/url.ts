@@ -9,4 +9,4 @@ export {
   extractUrlFromString,
   getFaviconUrl,
   isValidUrl,
-} from '@workspace/contract';
+} from '@userplane/contract';

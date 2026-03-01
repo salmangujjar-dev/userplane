@@ -6,7 +6,7 @@ import type {
   PlanFeatureGates,
   ResourceLimits,
   ResourceType,
-} from '@workspace/pricing';
+} from '@userplane/pricing';
 
 import { apiClient } from '@/client';
 import { authClient } from '@/client/auth';

@@ -3,9 +3,9 @@
  * Handles all database operations for recording entities
  */
 
-import type { LinkProviderData } from '@workspace/contract';
-import type { DbClient, Recording } from '@workspace/db';
-import { and, asc, count, desc, eq, inArray, sql } from '@workspace/db';
+import type { LinkProviderData } from '@userplane/contract';
+import type { DbClient, Recording } from '@userplane/db';
+import { and, asc, count, desc, eq, inArray, sql } from '@userplane/db';
 import {
   domains,
   links,
@@ -14,7 +14,7 @@ import {
   user,
   workspaceMembers,
   workspaces,
-} from '@workspace/db';
+} from '@userplane/db';
 
 import { createLogger } from '@/api/lib/logger';
 import { getUploadStatusesForGroup } from '@/api/schema/recording.schema';

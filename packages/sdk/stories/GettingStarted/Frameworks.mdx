@@ -21,7 +21,7 @@ Create a client component for the SDK:
 'use client';
 
 import { useEffect } from 'react';
-import { initialize } from '@workspace/sdk';
+import { initialize } from '@userplane/sdk';
 
 export function UserplaneProvider() {
   useEffect(() => {
@@ -68,7 +68,7 @@ import type { AppProps } from 'next/app';
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     // This runs only in the browser
-    import('@workspace/sdk').then(({ initialize }) => {
+    import('@userplane/sdk').then(({ initialize }) => {
       initialize({ workspaceId: process.env.NEXT_PUBLIC_USERPLANE_WORKSPACE_ID });
     });
   }, []);
@@ -103,7 +103,7 @@ app.mount('#app');
 
 // Initialize SDK after mount (browser-only)
 if (typeof window !== 'undefined') {
-  import('@workspace/sdk').then(({ initialize }) => {
+  import('@userplane/sdk').then(({ initialize }) => {
     initialize({ workspaceId: import.meta.env.VITE_USERPLANE_WORKSPACE_ID });
   });
 }
@@ -114,7 +114,7 @@ Or as a Vue plugin:
 ```typescript
 // plugins/userplane.ts
 import type { App } from 'vue';
-import { initialize } from '@workspace/sdk';
+import { initialize } from '@userplane/sdk';
 
 export const userplanePlugin = {
   install(_app: App) {
@@ -141,7 +141,7 @@ SvelteKit has SSR by default. Use the `browser` store or `onMount` to guard init
 
   onMount(async () => {
     if (browser) {
-      const { initialize } = await import('@workspace/sdk');
+      const { initialize } = await import('@userplane/sdk');
       initialize({
         workspaceId: import.meta.env.VITE_USERPLANE_WORKSPACE_ID,
       });
@@ -160,7 +160,7 @@ import { browser } from '$app/environment';
 
 export async function load() {
   if (browser) {
-    const { initialize } = await import('@workspace/sdk');
+    const { initialize } = await import('@userplane/sdk');
     initialize();
   }
 }
@@ -181,7 +181,7 @@ if (typeof window !== 'undefined') {
 // Or with dynamic import
 async function initSDK() {
   if (typeof window === 'undefined') return;
-  const { initialize } = await import('@workspace/sdk');
+  const { initialize } = await import('@userplane/sdk');
   initialize();
 }
 ```

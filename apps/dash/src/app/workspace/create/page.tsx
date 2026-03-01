@@ -1,10 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { SUPPORT_EMAIL_MAILTO } from '@workspace/shared';
-import { Button } from '@workspace/ui/components/button';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
+import { SUPPORT_EMAIL_MAILTO } from '@userplane/shared';
+import { Button } from '@userplane/ui/components/button';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
 import { ArrowLeftRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';

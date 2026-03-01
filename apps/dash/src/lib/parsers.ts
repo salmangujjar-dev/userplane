@@ -1,4 +1,4 @@
-import { isProductId, PLAN_IDS, type PlanId } from '@workspace/pricing';
+import { isProductId, PLAN_IDS, type PlanId } from '@userplane/pricing';
 import { createParser } from 'nuqs';
 
 export const pageParser = createParser({

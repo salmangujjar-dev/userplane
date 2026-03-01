@@ -7,7 +7,7 @@
  * @see https://developers.intercom.com/docs/build-an-integration/learn-more/installation-health-check
  */
 
-import type { CacheService } from '@workspace/cache';
+import type { CacheService } from '@userplane/cache';
 
 import { createLogger } from '@/api/lib/logger';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';

@@ -3,9 +3,9 @@
  * Handles all database operations for project entities
  */
 
-import type { DbClient } from '@workspace/db';
-import { and, asc, count, desc, eq, ilike, ne } from '@workspace/db';
-import { projects } from '@workspace/db';
+import type { DbClient } from '@userplane/db';
+import { and, asc, count, desc, eq, ilike, ne } from '@userplane/db';
+import { projects } from '@userplane/db';
 
 import type { CreateProjectInput, Transaction } from '@/api/types';
 

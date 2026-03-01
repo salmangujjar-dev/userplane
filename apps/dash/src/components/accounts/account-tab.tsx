@@ -1,6 +1,6 @@
 'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@userplane/ui/components/tabs';
 import { useQueryState } from 'nuqs';
 
 import { tabParser } from '@/lib/parsers';

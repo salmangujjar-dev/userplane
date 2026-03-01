@@ -3,7 +3,7 @@
  * Handles OAuth flow and API calls to Intercom
  */
 
-import type { IntercomRegion } from '@workspace/contract';
+import type { IntercomRegion } from '@userplane/contract';
 
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';

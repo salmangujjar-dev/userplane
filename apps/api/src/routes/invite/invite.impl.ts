@@ -4,7 +4,7 @@
  */
 
 import { implement } from '@orpc/server';
-import { contract } from '@workspace/contract';
+import { contract } from '@userplane/contract';
 
 import type { InviteService } from '@/api/services/invite.service';
 

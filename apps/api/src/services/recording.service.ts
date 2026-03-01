@@ -3,14 +3,14 @@
  * Contains validation and business rules for recording management
  */
 
-import { billingError, recordingError } from '@workspace/contract';
+import { billingError, recordingError } from '@userplane/contract';
 import type {
   ClientActionsStorageClient,
   ConsoleLogsStorageClient,
   NetworkLogsStorageClient,
   ThumbnailsStorageClient,
   VideoStorageClient,
-} from '@workspace/storage';
+} from '@userplane/storage';
 
 import { inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';

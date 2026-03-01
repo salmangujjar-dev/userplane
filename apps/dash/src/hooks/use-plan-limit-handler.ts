@@ -1,4 +1,4 @@
-import type { FeatureLimit } from '@workspace/pricing';
+import type { FeatureLimit } from '@userplane/pricing';
 
 import { useFeatureUpsell } from './use-feature-upsell';
 

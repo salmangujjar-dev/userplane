@@ -1,15 +1,15 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Label } from '@workspace/ui/components/label';
-import { Switch } from '@workspace/ui/components/switch';
+} from '@userplane/ui/components/dialog';
+import { Label } from '@userplane/ui/components/label';
+import { Switch } from '@userplane/ui/components/switch';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 

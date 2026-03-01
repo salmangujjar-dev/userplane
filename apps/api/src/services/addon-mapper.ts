@@ -6,9 +6,9 @@
  * WebhookProcessorService, BillingService, and EntitlementService.
  */
 
-import { type AddonItems, billingError, SEATS_ADDON_PACK_SIZE } from '@workspace/contract';
-import { getSeatsAddonIdForPlanId, isSeatsAddonId } from '@workspace/payments';
-import type { AttachAddon, DodoSubscription } from '@workspace/payments/types';
+import { type AddonItems, billingError, SEATS_ADDON_PACK_SIZE } from '@userplane/contract';
+import { getSeatsAddonIdForPlanId, isSeatsAddonId } from '@userplane/payments';
+import type { AttachAddon, DodoSubscription } from '@userplane/payments/types';
 
 export class AddonMapper {
   /**

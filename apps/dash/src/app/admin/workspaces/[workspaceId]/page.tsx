@@ -1,7 +1,7 @@
 'use client';
 
-import { Card, CardContent, CardHeader } from '@workspace/ui/components/card';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+import { Card, CardContent, CardHeader } from '@userplane/ui/components/card';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import { redirect, RedirectType, useParams } from 'next/navigation';
 import { Suspense } from 'react';
 

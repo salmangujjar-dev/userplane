@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/email",
+  "name": "@userplane/email",
   "version": "0.0.1",
   "type": "module",
   "private": true,
@@ -20,9 +20,9 @@
   },
   "dependencies": {
     "@react-email/components": "^1.0.4",
-    "@workspace/common-logger": "workspace:*",
-    "@workspace/shared": "workspace:*",
-    "@workspace/storage": "workspace:*",
+    "@userplane/common-logger": "workspace:*",
+    "@userplane/shared": "workspace:*",
+    "@userplane/storage": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "resend": "^4.0.1"
@@ -32,8 +32,8 @@
     "@types/node": "^22.10.5",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "eslint": "^9.32.0",
     "react-email": "^5.2.5",
     "typescript": "^5.5.4"

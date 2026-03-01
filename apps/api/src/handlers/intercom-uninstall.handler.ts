@@ -8,7 +8,7 @@
  * @see https://developers.intercom.com/docs/build-an-integration/learn-more/authentication/installing-uninstalling-apps#uninstallation
  */
 
-import type { CacheService } from '@workspace/cache';
+import type { CacheService } from '@userplane/cache';
 import type { Context } from 'hono';
 import { z } from 'zod';
 

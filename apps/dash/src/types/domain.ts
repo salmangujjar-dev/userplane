@@ -1,12 +1,12 @@
 /**
  * Domain-related types
- * Re-exports from @workspace/contract for type consistency
+ * Re-exports from @userplane/contract for type consistency
  *
  * Note: Contract uses z.coerce.date() so JSON string dates are
  * automatically coerced to Date objects during parsing.
  */
 
-import { DomainStatus } from '@workspace/contract';
+import { DomainStatus } from '@userplane/contract';
 import type { z } from 'zod';
 
 import { DomainRecordingPreferencesSchema } from '@/schemas';
@@ -18,12 +18,12 @@ export type {
   DomainStatus,
   DomainUpdateData,
   WorkspaceDomainsData,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 // Aliases for backward compatibility
-export type { DomainItem as WorkspaceDomain } from '@workspace/contract';
-export type { DomainAddData as DomainResponse } from '@workspace/contract';
-export type { WorkspaceDomainsData as DomainsData } from '@workspace/contract';
+export type { DomainItem as WorkspaceDomain } from '@userplane/contract';
+export type { DomainAddData as DomainResponse } from '@userplane/contract';
+export type { WorkspaceDomainsData as DomainsData } from '@userplane/contract';
 
 /**
  * Domain recording preferences from API contract

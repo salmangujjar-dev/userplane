@@ -4,10 +4,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { SearchInput } from '@workspace/ui/components/search-input';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@workspace/ui/components/tooltip';
-import { cn } from '@workspace/ui/lib/utils';
+} from '@userplane/ui/components/dropdown-menu';
+import { SearchInput } from '@userplane/ui/components/search-input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
+import { cn } from '@userplane/ui/lib/utils';
 import { Check, ChevronDown, LucideIcon, X } from 'lucide-react';
 import { useState } from 'react';
 

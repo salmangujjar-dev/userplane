@@ -2,7 +2,7 @@
  * Session schema - Zod schemas for session/upload API validation
  */
 
-import { RecordingNotesSchema, SESSION_CONSTANTS } from '@workspace/contract';
+import { RecordingNotesSchema, SESSION_CONSTANTS } from '@userplane/contract';
 import { z } from 'zod';
 
 import { env } from '@/api/env';

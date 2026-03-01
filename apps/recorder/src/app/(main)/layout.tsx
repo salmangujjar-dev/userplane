@@ -1,6 +1,6 @@
 import '@/styles/global.css';
 
-import { getAppMeta } from '@workspace/shared/meta';
+import { getAppMeta } from '@userplane/shared/meta';
 import type { Metadata } from 'next';
 
 import { PostHogInit } from '@/posthog/PostHogInit';

@@ -1,4 +1,4 @@
-import { nextJsConfig } from '@workspace/eslint-config/next-js';
+import { nextJsConfig } from '@userplane/eslint-config/next-js';
 import storybookPlugin from 'eslint-plugin-storybook';
 
 /** @type {import("eslint").Linter.Config} */

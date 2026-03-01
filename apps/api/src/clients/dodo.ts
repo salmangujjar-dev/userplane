@@ -5,7 +5,7 @@
  * such as subscription plan changes (upgrades/downgrades).
  */
 
-import { type DodoPayments, getDodoPaymentsClient } from '@workspace/payments/client';
+import { type DodoPayments, getDodoPaymentsClient } from '@userplane/payments/client';
 
 import { env } from '@/api/env';
 

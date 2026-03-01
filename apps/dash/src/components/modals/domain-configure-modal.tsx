@@ -1,24 +1,24 @@
 'use client';
 
-import type { FeatureGate, PlanFeatureGates } from '@workspace/pricing';
-import { Button } from '@workspace/ui/components/button';
+import type { FeatureGate, PlanFeatureGates } from '@userplane/pricing';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
-import { Switch } from '@workspace/ui/components/switch';
+} from '@userplane/ui/components/dialog';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
+import { Switch } from '@userplane/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@workspace/ui/components/tooltip';
-import { cn } from '@workspace/ui/lib/utils';
+} from '@userplane/ui/components/tooltip';
+import { cn } from '@userplane/ui/lib/utils';
 import { AlertCircle, HelpCircle } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 

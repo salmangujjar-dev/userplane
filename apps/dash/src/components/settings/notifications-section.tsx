@@ -1,7 +1,7 @@
 'use client';
 
-import { Label } from '@workspace/ui/components/label';
-import { Switch } from '@workspace/ui/components/switch';
+import { Label } from '@userplane/ui/components/label';
+import { Switch } from '@userplane/ui/components/switch';
 import { useCallback, useMemo, useState } from 'react';
 
 import { SectionError } from '@/components/shared/section-error';

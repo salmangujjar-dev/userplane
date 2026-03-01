@@ -1,4 +1,4 @@
-import { cn } from '@workspace/ui/lib/utils';
+import { cn } from '@userplane/ui/lib/utils';
 import Avatar from 'boring-avatars';
 import { nanoid } from 'nanoid';
 import { useRef } from 'react';

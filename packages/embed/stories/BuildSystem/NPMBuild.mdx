@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # NPM Build
 
-Running `bun run build` (without `OPTIMIZE_MODE=cdn`) activates the standard npm build profile. This produces the package output consumed by projects that install `@workspace/embed` from npm.
+Running `bun run build` (without `OPTIMIZE_MODE=cdn`) activates the standard npm build profile. This produces the package output consumed by projects that install `@userplane/embed` from npm.
 
 ## Output Files
 
@@ -32,7 +32,7 @@ The NPM build produces both ES module and CommonJS formats:
 ```typescript
 // ESM: dist/index.es.js
 export const userplane = sdk;
-export * from '@workspace/sdk';
+export * from '@userplane/sdk';
 
 // CJS: dist/index.cjs.js
 module.exports = { ...sdk };
@@ -68,24 +68,24 @@ The `package.json` exports map determines which file is loaded for each use case
 }
 ```
 
-## When to Use @workspace/embed vs @workspace/sdk
+## When to Use @userplane/embed vs @userplane/sdk
 
-`@workspace/embed` and `@workspace/sdk` both work as npm packages, but they differ in one important way:
+`@userplane/embed` and `@userplane/sdk` both work as npm packages, but they differ in one important way:
 
-**`@workspace/embed`** has a **side effect on import** — `initialize()` runs when the module is loaded:
+**`@userplane/embed`** has a **side effect on import** — `initialize()` runs when the module is loaded:
 
 ```typescript
-import '@workspace/embed'; // initialize() runs immediately
+import '@userplane/embed'; // initialize() runs immediately
 ```
 
-**`@workspace/sdk`** has **no side effects on import**:
+**`@userplane/sdk`** has **no side effects on import**:
 
 ```typescript
-import { initialize } from '@workspace/sdk'; // nothing runs
+import { initialize } from '@userplane/sdk'; // nothing runs
 initialize(); // you control when it happens
 ```
 
-Use `@workspace/embed` as an npm package only if you want the auto-init behavior in a bundled context. For most framework apps, use `@workspace/sdk` directly for full control.
+Use `@userplane/embed` as an npm package only if you want the auto-init behavior in a bundled context. For most framework apps, use `@userplane/sdk` directly for full control.
 
 ## Building
 

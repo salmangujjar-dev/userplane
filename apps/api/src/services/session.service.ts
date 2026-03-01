@@ -17,18 +17,18 @@ import type {
   DomainRecordingPrefs,
   LinkCore,
   WorkspaceRecordingPrefs,
-} from '@workspace/cache';
-import { linkKeys, workspaceRecordingKeys } from '@workspace/cache';
-import { billingError, sessionError } from '@workspace/contract';
-import type { DbClient } from '@workspace/db';
-import type { PlanFeatureGates } from '@workspace/pricing';
+} from '@userplane/cache';
+import { linkKeys, workspaceRecordingKeys } from '@userplane/cache';
+import { billingError, sessionError } from '@userplane/contract';
+import type { DbClient } from '@userplane/db';
+import type { PlanFeatureGates } from '@userplane/pricing';
 import type {
   ClientActionsStorageClient,
   ConsoleLogsStorageClient,
   NetworkLogsStorageClient,
   ThumbnailsStorageClient,
   VideoStorageClient,
-} from '@workspace/storage';
+} from '@userplane/storage';
 
 import { inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';

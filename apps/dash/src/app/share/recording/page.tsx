@@ -1,13 +1,13 @@
 'use client';
 
-import type { ViewSharedRecordingData } from '@workspace/contract';
-import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
+import type { ViewSharedRecordingData } from '@userplane/contract';
+import { Button } from '@userplane/ui/components/button';
+import Logo from '@userplane/ui/components/logo';
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from '@workspace/ui/components/resizable';
+} from '@userplane/ui/components/resizable';
 import { ArrowUpRight, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';

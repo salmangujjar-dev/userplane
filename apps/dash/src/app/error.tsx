@@ -1,6 +1,6 @@
 'use client';
 
-import { toast } from '@workspace/ui/components/sonner';
+import { toast } from '@userplane/ui/components/sonner';
 import posthog from 'posthog-js';
 import { useEffect } from 'react';
 

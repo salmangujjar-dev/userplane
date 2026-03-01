@@ -4,7 +4,7 @@
  * Focused solely on verification - no recording state management
  */
 
-import { type Connection, guest } from '@workspace/postbridge';
+import { type Connection, guest } from '@userplane/postbridge';
 
 import { createLogger } from '@/lib/logger';
 import { classifyVerificationApiError, createVerificationError } from '@/lib/verification-errors';

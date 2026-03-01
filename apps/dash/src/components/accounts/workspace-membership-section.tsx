@@ -1,12 +1,12 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
+} from '@userplane/ui/components/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@workspace/ui/components/table';
+} from '@userplane/ui/components/table';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowRight, ArrowUpRight, Bell, LogOut, MoreVertical } from 'lucide-react';
 import Link from 'next/link';

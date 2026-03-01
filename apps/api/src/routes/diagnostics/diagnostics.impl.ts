@@ -13,14 +13,14 @@
  * - all: All of the above
  */
 
-import type { CacheService } from '@workspace/cache';
+import type { CacheService } from '@userplane/cache';
 import {
   domainRecordingKeys,
   getCacheKeysByTypes,
   integrationKeys,
   linkKeys,
-} from '@workspace/cache';
-import type { CacheType } from '@workspace/contract';
+} from '@userplane/cache';
+import type { CacheType } from '@userplane/contract';
 
 import { createLogger } from '@/api/lib/logger';
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';

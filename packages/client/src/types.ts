@@ -5,7 +5,7 @@
  */
 
 import type { ContractRouterClient } from '@orpc/contract';
-import type { contract } from '@workspace/contract';
+import type { contract } from '@userplane/contract';
 
 import type { ClientContext } from './index';
 
@@ -86,4 +86,4 @@ export type {
   ShareContract,
   StatusContract,
   WorkspaceContract,
-} from '@workspace/contract';
+} from '@userplane/contract';

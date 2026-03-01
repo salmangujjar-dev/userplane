@@ -34,7 +34,7 @@ function open(token?: string): boolean
 ### Example
 
 ```typescript
-import { open } from '@workspace/sdk';
+import { open } from '@userplane/sdk';
 
 // Open with URL token (token must have been in URL at initialize() time)
 open();
@@ -75,7 +75,7 @@ function unmount(): void
 ### Example
 
 ```typescript
-import { unmount, isRecorderMounted } from '@workspace/sdk';
+import { unmount, isRecorderMounted } from '@userplane/sdk';
 
 if (isRecorderMounted()) {
   unmount();
@@ -105,7 +105,7 @@ function isRecorderMounted(): boolean
 `true` if the recorder iframe has been mounted and not yet unmounted.
 
 ```typescript
-import { isRecorderMounted } from '@workspace/sdk';
+import { isRecorderMounted } from '@userplane/sdk';
 
 console.log(isRecorderMounted()); // false (before open())
 
@@ -145,7 +145,7 @@ isRecorderMounted() = true              isBridgeConnected() = true
 ```
 
 ```typescript
-import { isBridgeConnected, isRecorderMounted } from '@workspace/sdk';
+import { isBridgeConnected, isRecorderMounted } from '@userplane/sdk';
 
 // Both true only after bridge is fully connected
 console.log(isRecorderMounted());   // true (iframe in DOM)

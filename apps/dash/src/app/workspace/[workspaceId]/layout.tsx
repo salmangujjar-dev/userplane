@@ -1,6 +1,6 @@
 'use client';
 
-import { SidebarInset, SidebarProvider } from '@workspace/ui/components/sidebar';
+import { SidebarInset, SidebarProvider } from '@userplane/ui/components/sidebar';
 import { useParams, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 

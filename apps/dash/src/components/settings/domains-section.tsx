@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
+} from '@userplane/ui/components/select';
 import { ArrowUpDown } from 'lucide-react';
 import { useCallback, useState } from 'react';
 

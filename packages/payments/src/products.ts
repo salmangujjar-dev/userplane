@@ -5,7 +5,7 @@
  * DodoPayments dashboard. Update these values after creating products.
  */
 
-import type { PlanId } from '@workspace/pricing';
+import type { PlanId } from '@userplane/pricing';
 
 import type { ProductConfig } from './types';
 

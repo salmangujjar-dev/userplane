@@ -1,7 +1,7 @@
 'use client';
 
-import type { FeatureGate } from '@workspace/pricing';
-import { Button } from '@workspace/ui/components/button';
+import type { FeatureGate } from '@userplane/pricing';
+import { Button } from '@userplane/ui/components/button';
 import { ArrowUpRight, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 

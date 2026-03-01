@@ -21,7 +21,7 @@
  * browser APIs to their pristine state.
  */
 
-import { createLogger } from '@workspace/console-logger';
+import { createLogger } from '@userplane/console-logger';
 
 import { CONSOLE_PATCHED_FLAG, TAB_REF_PREFIX } from './constants';
 import { disableDispatch, onTeardown } from './event-bridge';

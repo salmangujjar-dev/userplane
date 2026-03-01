@@ -1,9 +1,9 @@
 /**
  * Recording contract implementation using oRPC
- * Implements the recording contract defined in @workspace/contract
+ * Implements the recording contract defined in @userplane/contract
  */
 
-import { billingError, recordingError } from '@workspace/contract';
+import { billingError, recordingError } from '@userplane/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';

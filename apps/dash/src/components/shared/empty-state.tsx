@@ -1,4 +1,4 @@
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import { Plus } from 'lucide-react';
 
 interface ListViewEmptyStateProps {

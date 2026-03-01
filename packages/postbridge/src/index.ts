@@ -125,7 +125,7 @@
  *
  * SUBPATH EXPORTS:
  * ───────────────
- * - '@workspace/postbridge/bridge': Cross-tab broadcasting via SharedWorker
+ * - '@userplane/postbridge/bridge': Cross-tab broadcasting via SharedWorker
  *   Separated because it uses new URL() worker pattern that requires Vite/Rollup.
  *
  * SEE ALSO:
@@ -144,7 +144,7 @@ import { withTransferable } from './rpc';
 
 // Export main APIs
 // Note: bridge (cross-tab SharedWorker) is exported separately via
-// '@workspace/postbridge/bridge' to avoid pulling SharedWorker code
+// '@userplane/postbridge/bridge' to avoid pulling SharedWorker code
 // into bundlers that don't support the new URL() worker pattern (e.g. Turbopack).
 export { guest, host, withTransferable };
 

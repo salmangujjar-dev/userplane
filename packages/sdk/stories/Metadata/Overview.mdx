@@ -79,7 +79,7 @@ Non-serializable values (functions, `undefined`, class instances, `Date` objects
 ## Example: User Context
 
 ```typescript
-import { set, metadata } from '@workspace/sdk';
+import { set, metadata } from '@userplane/sdk';
 
 // After user logs in:
 function onUserLogin(user: User) {
@@ -98,7 +98,7 @@ metadata(() => ({
 ## Clearing Metadata
 
 ```typescript
-import { clearMetadata } from '@workspace/sdk';
+import { clearMetadata } from '@userplane/sdk';
 
 clearMetadata('userId');    // remove a specific static key
 clearMetadata();            // remove all static keys and dynamic functions

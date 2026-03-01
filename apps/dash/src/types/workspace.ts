@@ -1,6 +1,6 @@
 /**
  * Workspace-related types
- * Re-exports from @workspace/contract for type consistency
+ * Re-exports from @userplane/contract for type consistency
  */
 
 import type {
@@ -8,7 +8,7 @@ import type {
   LeaveWorkspaceDataSchema,
   WorkspaceItem,
   WorkspaceNotificationPreferences,
-} from '@workspace/contract';
+} from '@userplane/contract';
 import type { z } from 'zod';
 
 /**
@@ -29,12 +29,12 @@ export type {
   WorkspaceResourcesCountData,
   WorkspacesListData,
   WorkspaceStatusData,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 // Aliases for backward compatibility
-export type { SuggestedWorkspaceItem as SuggestedWorkspace } from '@workspace/contract';
-export type { SuggestWorkspacesData as WorkspaceSuggestionsData } from '@workspace/contract';
-export type { WorkspaceResourcesCountData as WorkspaceResourceCountsData } from '@workspace/contract';
+export type { SuggestedWorkspaceItem as SuggestedWorkspace } from '@userplane/contract';
+export type { SuggestWorkspacesData as WorkspaceSuggestionsData } from '@userplane/contract';
+export type { WorkspaceResourcesCountData as WorkspaceResourceCountsData } from '@userplane/contract';
 
 // ============================================
 // FRONTEND-SPECIFIC SIMPLIFIED TYPES

@@ -1,4 +1,4 @@
-import Logo from '@workspace/ui/components/logo';
+import Logo from '@userplane/ui/components/logo';
 import { ArrowLeftRight, Globe } from 'lucide-react';
 
 export function DomainVerificationHeader() {

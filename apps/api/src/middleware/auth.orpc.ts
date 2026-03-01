@@ -4,7 +4,7 @@
  */
 
 import { implement } from '@orpc/server';
-import { accountError, contract } from '@workspace/contract';
+import { accountError, contract } from '@userplane/contract';
 
 import { auth } from '@/api/clients/auth';
 

@@ -4,5 +4,5 @@
  */
 
 // Re-export session error codes from contract
-export type { SessionErrors as SessionErrorsType } from '@workspace/contract';
-export { SessionErrors } from '@workspace/contract';
+export type { SessionErrors as SessionErrorsType } from '@userplane/contract';
+export { SessionErrors } from '@userplane/contract';

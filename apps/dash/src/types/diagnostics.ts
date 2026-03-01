@@ -1,6 +1,6 @@
 /**
  * Diagnostics-related types
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
-export type { CacheType } from '@workspace/contract';
+export type { CacheType } from '@userplane/contract';

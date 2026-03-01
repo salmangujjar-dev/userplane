@@ -1,6 +1,6 @@
-import type { BackendLogLevel, RecordingBackendLog } from '@workspace/contract';
+import type { BackendLogLevel, RecordingBackendLog } from '@userplane/contract';
 
-export type { BackendLogLevel, RecordingBackendLog } from '@workspace/contract';
+export type { BackendLogLevel, RecordingBackendLog } from '@userplane/contract';
 
 export function formatTimestamp(timestamp: number): string {
   const date = new Date(timestamp);

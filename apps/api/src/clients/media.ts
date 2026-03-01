@@ -9,7 +9,7 @@ import {
   DEFAULT_CDN_DOMAIN,
   DEFAULT_IMAGE_ZONE,
   type MediaClient,
-} from '@workspace/storage/media';
+} from '@userplane/storage/media';
 
 import { env } from '@/api/env';
 

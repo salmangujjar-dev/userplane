@@ -1,4 +1,4 @@
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import { ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
 
 interface PagedSectionHeaderProps {

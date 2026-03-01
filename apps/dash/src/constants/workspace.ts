@@ -1,6 +1,6 @@
 /**
  * Workspace-related constants
- * Re-exports from @workspace/contract for convenience
+ * Re-exports from @userplane/contract for convenience
  */
 
 export {
@@ -14,4 +14,4 @@ export {
   // Role options for UI
   WORKSPACE_ROLE_OPTIONS,
   WORKSPACE_SUGGESTIONS_PAGINATION,
-} from '@workspace/contract';
+} from '@userplane/contract';

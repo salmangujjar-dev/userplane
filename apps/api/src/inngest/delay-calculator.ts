@@ -4,7 +4,7 @@
  * Returns epoch milliseconds for Inngest's `ts` field on send()
  */
 
-import type { Recording } from '@workspace/db';
+import type { Recording } from '@userplane/db';
 
 import { env } from '@/api/env';
 import { RECORDING_STATUS_GROUPS } from '@/api/schema/recording.schema';

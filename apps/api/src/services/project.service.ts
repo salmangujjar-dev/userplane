@@ -3,15 +3,15 @@
  * Contains business logic for project management
  */
 
-import type { CacheService } from '@workspace/cache';
+import type { CacheService } from '@userplane/cache';
 import {
   billingError,
   DEFAULT_RETENTION_DAYS,
   projectError,
   type RetentionDays,
   workspaceError,
-} from '@workspace/contract';
-import type { DbClient } from '@workspace/db';
+} from '@userplane/contract';
+import type { DbClient } from '@userplane/db';
 
 import { generateProjectId } from '@/api/lib/id';
 import type { LinkRepository } from '@/api/repositories/links.repository';

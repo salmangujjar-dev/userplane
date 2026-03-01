@@ -1,9 +1,9 @@
 /**
  * Admin-related types
- * Re-exports from @workspace/contract + frontend-specific types
+ * Re-exports from @userplane/contract + frontend-specific types
  */
 
-import type { WorkspaceRole } from '@workspace/contract';
+import type { WorkspaceRole } from '@userplane/contract';
 
 // Re-export all admin types from contract
 export type {
@@ -63,7 +63,7 @@ export type {
   AdminWorkspaceRecordingStats,
   AdminWorkspacesListData,
   AdminWorkspaceSubscriptionData,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 // ============================================
 // FRONTEND-SPECIFIC TYPES

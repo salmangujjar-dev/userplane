@@ -4,10 +4,10 @@
  * CRUD operations, atomic consumption tracking, and batch provisioning
  */
 
-import type { DbClient } from '@workspace/db';
-import { and, eq, inArray, sql } from '@workspace/db';
-import { entitlements } from '@workspace/db';
-import { type BillingCadence, PERIOD_BASED_RESOURCES, type ResourceType } from '@workspace/pricing';
+import type { DbClient } from '@userplane/db';
+import { and, eq, inArray, sql } from '@userplane/db';
+import { entitlements } from '@userplane/db';
+import { type BillingCadence, PERIOD_BASED_RESOURCES, type ResourceType } from '@userplane/pricing';
 
 import { generateEntitlementId } from '@/api/lib/id';
 import type { Transaction } from '@/api/types';

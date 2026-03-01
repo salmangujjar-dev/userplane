@@ -1,4 +1,4 @@
-import { createServerLogger, type Logger } from '@workspace/common-logger';
+import { createServerLogger, type Logger } from '@userplane/common-logger';
 
 const isDev = process.env.NODE_ENV !== 'production';
 

@@ -1,13 +1,13 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
+import { Button } from '@userplane/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu';
-import { SearchInput } from '@workspace/ui/components/search-input';
+} from '@userplane/ui/components/dropdown-menu';
+import { SearchInput } from '@userplane/ui/components/search-input';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,

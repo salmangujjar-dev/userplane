@@ -3,11 +3,11 @@
  * Contains business logic for workspace management
  */
 
-import type { CacheService } from '@workspace/cache';
-import { MAX_EMAIL_DOMAINS, workspaceError } from '@workspace/contract';
-import type { DbClient } from '@workspace/db';
-import type { DodoPayments } from '@workspace/payments/client';
-import { isDisposableEmail, isDisposableEmailDomain } from '@workspace/shared';
+import type { CacheService } from '@userplane/cache';
+import { MAX_EMAIL_DOMAINS, workspaceError } from '@userplane/contract';
+import type { DbClient } from '@userplane/db';
+import type { DodoPayments } from '@userplane/payments/client';
+import { isDisposableEmail, isDisposableEmailDomain } from '@userplane/shared';
 
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
 import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@/api/lib/id';

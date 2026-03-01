@@ -3,7 +3,7 @@
  * Detects provider type, extracts canonical IDs, and generates titles
  */
 
-import { isValidUrl } from '@workspace/contract';
+import { isValidUrl } from '@userplane/contract';
 
 import type { LinkProviderType } from '@/api/types';
 
@@ -199,7 +199,7 @@ const PROVIDER_PATTERNS: ProviderPattern[] = [
   },
 ];
 
-// isValidUrl imported from @workspace/contract
+// isValidUrl imported from @userplane/contract
 
 /**
  * Try to match URL against known provider patterns

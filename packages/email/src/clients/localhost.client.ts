@@ -4,7 +4,7 @@
  * Mimics Resend's API but writes to local files
  */
 
-import { createServerLogger, type LogLevel } from '@workspace/common-logger';
+import { createServerLogger, type LogLevel } from '@userplane/common-logger';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 

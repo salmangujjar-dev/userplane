@@ -1,5 +1,5 @@
 /**
- * @workspace/email
+ * @userplane/email
  * Unified email package with clients and React Email templates
  * Supports localhost (file-based) and Resend
  */

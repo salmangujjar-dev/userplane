@@ -1,6 +1,6 @@
-import type { DbClient } from '@workspace/db';
-import * as schema from '@workspace/db/schema';
-import { type Environment, isSecureEnvironment } from '@workspace/shared/env';
+import type { DbClient } from '@userplane/db';
+import * as schema from '@userplane/db/schema';
+import { type Environment, isSecureEnvironment } from '@userplane/shared/env';
 import { APIError, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, magicLink, openAPI } from 'better-auth/plugins';
@@ -22,7 +22,7 @@ export { isValidRoleName } from './types';
 // Export feature flag utilities for composable hook configuration
 export * from './flags';
 
-// Note: For client-side usage, import from '@workspace/auth/permissions-client'
+// Note: For client-side usage, import from '@userplane/auth/permissions-client'
 // to avoid importing server-only Better Auth code
 
 export interface AdminConfig {

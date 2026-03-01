@@ -1,4 +1,4 @@
-import { mergeTransformOptions } from '@workspace/storage/media';
+import { mergeTransformOptions } from '@userplane/storage/media';
 
 import { mediaClient } from '../lib/media';
 import type { HighlightConfig } from './types';

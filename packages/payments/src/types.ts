@@ -5,7 +5,7 @@
  * Userplane-specific types for billing integration.
  */
 
-import type { PlanId } from '@workspace/pricing';
+import type { PlanId } from '@userplane/pricing';
 import type DodoPayments from 'dodopayments';
 
 // Re-export official DodoPayments types
@@ -28,7 +28,7 @@ export type AddonCartResponseItem = DodoPayments.AddonCartResponseItem;
  *
  * @example
  * ```typescript
- * import { ConflictError } from '@workspace/payments';
+ * import { ConflictError } from '@userplane/payments';
  *
  * try {
  *   await dodoClient.subscriptions.changePlan(subscriptionId, params);

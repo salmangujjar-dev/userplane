@@ -109,6 +109,7 @@ export default defineConfig({
     dts({
       include: ['src'],
       rollupTypes: true,
+      bundledPackages: ['@userplane/metadata', '@userplane/contract'],
     }),
   ],
 });

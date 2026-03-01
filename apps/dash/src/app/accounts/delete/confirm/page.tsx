@@ -5,9 +5,9 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@workspace/ui/components/accordion';
-import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/accordion';
+import { Button } from '@userplane/ui/components/button';
+import Logo from '@userplane/ui/components/logo';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';

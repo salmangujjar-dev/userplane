@@ -1,7 +1,7 @@
 'use client';
 
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import { Skeleton } from '@userplane/ui/components/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@userplane/ui/components/tabs';
 import dynamic from 'next/dynamic';
 import { useQueryState } from 'nuqs';
 

@@ -1,4 +1,4 @@
-import { COMPANY_NAME, NOT_FOUND_COPY } from '@workspace/shared';
+import { COMPANY_NAME, NOT_FOUND_COPY } from '@userplane/shared';
 import Image from 'next/image';
 
 import { mediaClient } from '@/lib/media';

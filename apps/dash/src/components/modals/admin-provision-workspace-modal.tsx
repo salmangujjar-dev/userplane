@@ -6,33 +6,33 @@ import {
   AdminPlanBillingCycleSchema,
   type AdminWorkspaceProvisionData,
   DEFAULT_TRIAL_PERIOD_DAYS,
-} from '@workspace/contract';
+} from '@userplane/contract';
 import {
   FEATURE_GATE_KEYS,
   FEATURE_GATE_LABELS,
   type FeatureGate,
   RESOURCE_TYPE_VALUES,
   type ResourceType,
-} from '@workspace/pricing';
-import { Button } from '@workspace/ui/components/button';
+} from '@userplane/pricing';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import { Input } from '@userplane/ui/components/input';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
-import { Switch } from '@workspace/ui/components/switch';
+} from '@userplane/ui/components/select';
+import { Switch } from '@userplane/ui/components/switch';
 import { Check, ChevronDown, ChevronUp, Copy, ExternalLink, Zap } from 'lucide-react';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';

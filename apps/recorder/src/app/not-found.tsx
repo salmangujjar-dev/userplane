@@ -1,7 +1,7 @@
 import '@/styles/global.css';
 
-import { COMPANY_NAME, NOT_FOUND_COPY } from '@workspace/shared';
-import { getAppMeta } from '@workspace/shared/meta';
+import { COMPANY_NAME, NOT_FOUND_COPY } from '@userplane/shared';
+import { getAppMeta } from '@userplane/shared/meta';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 

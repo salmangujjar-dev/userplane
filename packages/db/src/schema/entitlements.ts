@@ -3,7 +3,7 @@ import {
   type BillingCadence,
   RESOURCE_TYPE_VALUES,
   type ResourceType,
-} from '@workspace/pricing';
+} from '@userplane/pricing';
 import { relations, sql } from 'drizzle-orm';
 import {
   boolean,

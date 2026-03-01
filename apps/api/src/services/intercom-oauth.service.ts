@@ -6,7 +6,7 @@
  * 2. Workspace integration flow: Connects to existing workspace (workspaceId in state)
  */
 
-import type { CacheService } from '@workspace/cache';
+import type { CacheService } from '@userplane/cache';
 import {
   createProviderMeta,
   createProviderToken,
@@ -15,7 +15,7 @@ import {
   type IntercomRegion,
   provisionerError,
   workspaceError,
-} from '@workspace/contract';
+} from '@userplane/contract';
 
 import {
   detectRegionAndGetMe,

@@ -1,5 +1,5 @@
-import { BASE_PRICING_PLANS, formatPlanRate, type PlanFeatureHighlight } from '@workspace/pricing';
-import { Button } from '@workspace/ui/components/button';
+import { BASE_PRICING_PLANS, formatPlanRate, type PlanFeatureHighlight } from '@userplane/pricing';
+import { Button } from '@userplane/ui/components/button';
 import { ChevronRight } from 'lucide-react';
 
 import { SIGNUP_URL } from '@/constants/onboarding';

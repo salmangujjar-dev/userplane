@@ -1,6 +1,6 @@
 'use client';
 
-import * as userplane from '@workspace/sdk';
+import * as userplane from '@userplane/sdk';
 import { useEffect } from 'react';
 
 import { log } from '@/lib/client-logger';

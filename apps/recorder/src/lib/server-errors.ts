@@ -3,7 +3,7 @@
  * Type-locked config for oRPC/API errors
  */
 
-import { isDefinedError } from '@workspace/client';
+import { isDefinedError } from '@userplane/client';
 
 import { createLogger } from '@/lib/logger';
 import { SessionErrors } from '@/types';

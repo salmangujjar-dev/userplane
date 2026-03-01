@@ -9,9 +9,9 @@
  * - Returns false/undefined when no override
  * - On override, sets accessStatus to 'active'
  */
-import type { SubscriptionAccessStatus } from '@workspace/contract';
-import type { PlanId } from '@workspace/pricing';
-import { PLAN_IDS } from '@workspace/pricing';
+import type { SubscriptionAccessStatus } from '@userplane/contract';
+import type { PlanId } from '@userplane/pricing';
+import { PLAN_IDS } from '@userplane/pricing';
 import { PostHog } from 'posthog-node';
 
 import { env } from '@/api/env';

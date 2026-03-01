@@ -5,7 +5,7 @@ initPostHogFeatureFlags();
 
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { isDefinedError, onError } from '@orpc/server';
-import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@workspace/cache';
+import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@userplane/cache';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';

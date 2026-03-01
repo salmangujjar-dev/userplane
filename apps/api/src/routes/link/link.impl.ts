@@ -1,9 +1,9 @@
 /**
  * Link contract implementation using oRPC
- * Implements the link contract defined in @workspace/contract
+ * Implements the link contract defined in @userplane/contract
  */
 
-import { linkError } from '@workspace/contract';
+import { linkError } from '@userplane/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import { createWorkspaceMiddleware } from '@/api/middleware/workspace.orpc';

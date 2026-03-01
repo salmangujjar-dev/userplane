@@ -1,4 +1,4 @@
-import { FEATURE_GATE_KEYS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
+import { FEATURE_GATE_KEYS, RESOURCE_TYPE_VALUES } from '@userplane/pricing';
 import { z } from 'zod';
 
 import {

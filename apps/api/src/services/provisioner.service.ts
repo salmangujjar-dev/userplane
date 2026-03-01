@@ -4,9 +4,9 @@
  * All new workspaces start on free plan - users upgrade via subscription
  */
 
-import { provisionerError, WorkspaceNameSchema } from '@workspace/contract';
-import type { DbClient } from '@workspace/db';
-import { ABUSE_PREVENTION } from '@workspace/pricing';
+import { provisionerError, WorkspaceNameSchema } from '@userplane/contract';
+import type { DbClient } from '@userplane/db';
+import { ABUSE_PREVENTION } from '@userplane/pricing';
 
 import { env } from '@/api/env';
 import { deriveWorkspaceName } from '@/api/lib/workspace';

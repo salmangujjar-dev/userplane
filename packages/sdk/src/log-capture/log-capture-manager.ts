@@ -7,8 +7,8 @@
  * and persists them to IndexedDB via LogStore.
  */
 
-import type { ProcessedLogEntry } from '@workspace/logger';
-import { LogProcessor, LogStore } from '@workspace/logger';
+import type { ProcessedLogEntry } from '@userplane/logger';
+import { LogProcessor, LogStore } from '@userplane/logger';
 
 import type { LogCapturePreferences, LogCaptureState } from '../bridge/types';
 import { createSdkLogger } from '../logger';

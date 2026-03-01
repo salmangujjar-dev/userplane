@@ -7,9 +7,9 @@
  * - Updating dispute status on resolution
  */
 
-import type { DbClient } from '@workspace/db';
-import { and, eq } from '@workspace/db';
-import { disputes } from '@workspace/db';
+import type { DbClient } from '@userplane/db';
+import { and, eq } from '@userplane/db';
+import { disputes } from '@userplane/db';
 
 import type { Transaction } from '@/api/types';
 

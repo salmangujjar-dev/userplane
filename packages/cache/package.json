@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/cache",
+  "name": "@userplane/cache",
   "version": "0.0.0",
   "private": true,
   "license": "PROPRIETARY",
@@ -29,13 +29,13 @@
   "dependencies": {
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.34.3",
-    "@workspace/console-logger": "workspace:*",
-    "@workspace/contract": "workspace:*"
+    "@userplane/console-logger": "workspace:*",
+    "@userplane/contract": "workspace:*"
   },
   "devDependencies": {
     "eslint": "^9.32.0",
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "hono": "^4.6.16",
     "typescript": "5.7.3"
   },

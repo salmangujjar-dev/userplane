@@ -1,5 +1,5 @@
-import { buttonVariants } from '@workspace/ui/components/button';
-import { cn } from '@workspace/ui/lib/utils';
+import { buttonVariants } from '@userplane/ui/components/button';
+import { cn } from '@userplane/ui/lib/utils';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 

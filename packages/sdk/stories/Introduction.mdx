@@ -4,7 +4,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Userplane SDK
 
-The Userplane SDK (`@workspace/sdk`) embeds a screen recorder into any web application. It manages the full lifecycle of a recording session — from mounting an isolated iframe to coordinating cross-tab state — without polluting the host page.
+The Userplane SDK (`@userplane/sdk`) embeds a screen recorder into any web application. It manages the full lifecycle of a recording session — from mounting an isolated iframe to coordinating cross-tab state — without polluting the host page.
 
 ## What the SDK Does
 
@@ -12,7 +12,7 @@ The Userplane SDK (`@workspace/sdk`) embeds a screen recorder into any web appli
 ┌─────────────────────────────────────────────────────────────┐
 │                        Host Page                             │
 │                                                             │
-│   import { initialize } from '@workspace/sdk'               │
+│   import { initialize } from '@userplane/sdk'               │
 │   initialize({ workspaceId: 'ws_...' })                      │
 │           │                                                 │
 │           ▼                                                 │
@@ -39,7 +39,7 @@ The SDK acts as the **host** in a PostBridge RPC pair. The recorder runs in a sa
 | **Zero import side effects** | Nothing executes until you call `initialize()` |
 | **TypeScript** | Full type definitions exported — no `@types/` package needed |
 | **Cross-tab coordination** | Hidden capture iframe tracks recorder state across tabs |
-| **Privacy blur** | Integrates with `@workspace/blurr` for sensitive field masking |
+| **Privacy blur** | Integrates with `@userplane/blurr` for sensitive field masking |
 | **Metadata** | Static and dynamic key-value pairs attached to each recording |
 
 ## Simplest Possible Setup
@@ -51,7 +51,7 @@ The SDK acts as the **host** in a PostBridge RPC pair. The recorder runs in a sa
 
 ```typescript
 // 2. Initialize the SDK once (e.g., in your app entry point)
-import { initialize } from '@workspace/sdk';
+import { initialize } from '@userplane/sdk';
 
 initialize();
 // That's it — the SDK will open the recorder when a

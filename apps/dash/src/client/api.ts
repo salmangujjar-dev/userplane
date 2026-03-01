@@ -1,4 +1,4 @@
-import { createClient, createSafeClient, isDefinedError } from '@workspace/client';
+import { createClient, createSafeClient, isDefinedError } from '@userplane/client';
 import posthog from 'posthog-js';
 
 import { authClient } from '@/client/auth';

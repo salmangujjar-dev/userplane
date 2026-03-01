@@ -1,24 +1,24 @@
 'use client';
 
-import { RETENTION_DAYS_VALUES, type RetentionDays } from '@workspace/contract';
-import { Button } from '@workspace/ui/components/button';
+import { RETENTION_DAYS_VALUES, type RetentionDays } from '@userplane/contract';
+import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Label } from '@workspace/ui/components/label';
-import Logo from '@workspace/ui/components/logo';
+} from '@userplane/ui/components/dialog';
+import { Label } from '@userplane/ui/components/label';
+import Logo from '@userplane/ui/components/logo';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
-import { cn } from '@workspace/ui/lib/utils';
+} from '@userplane/ui/components/select';
+import { cn } from '@userplane/ui/lib/utils';
 import { addDays, differenceInDays, format, formatDistanceToNow } from 'date-fns';
 import { useRef, useState } from 'react';
 

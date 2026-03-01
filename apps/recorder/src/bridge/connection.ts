@@ -4,7 +4,7 @@
  * Syncs recording state with cross-tab coordinator for multi-tab awareness
  */
 
-import { type Connection, guest } from '@workspace/postbridge';
+import { type Connection, guest } from '@userplane/postbridge';
 
 import { createLogger } from '@/lib/logger';
 

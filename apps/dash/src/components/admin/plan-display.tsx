@@ -1,6 +1,6 @@
-import type { AdminPlanProduct } from '@workspace/contract';
-import { Badge } from '@workspace/ui/components/badge';
-import { cn } from '@workspace/ui/lib/utils';
+import type { AdminPlanProduct } from '@userplane/contract';
+import { Badge } from '@userplane/ui/components/badge';
+import { cn } from '@userplane/ui/lib/utils';
 
 import {
   PLAN_AVATAR_SIZES,

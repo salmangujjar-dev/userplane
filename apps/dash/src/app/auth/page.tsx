@@ -1,16 +1,16 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@workspace/ui/components/button';
-import { Field, FieldError } from '@workspace/ui/components/field';
+import { Button } from '@userplane/ui/components/button';
+import { Field, FieldError } from '@userplane/ui/components/field';
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '@workspace/ui/components/input-group';
-import Logo from '@workspace/ui/components/logo';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+} from '@userplane/ui/components/input-group';
+import Logo from '@userplane/ui/components/logo';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';

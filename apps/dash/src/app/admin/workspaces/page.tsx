@@ -2,9 +2,9 @@
 
 import type {
   PlanId, // Used for create invite (includes all plans including sandbox/free)
-} from '@workspace/pricing';
-import { SearchInput } from '@workspace/ui/components/search-input';
-import { Skeleton } from '@workspace/ui/components/skeleton';
+} from '@userplane/pricing';
+import { SearchInput } from '@userplane/ui/components/search-input';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import { ArrowDown, ArrowUp, ArrowUpDown, Building2, Clock } from 'lucide-react';
 import { redirect, RedirectType, useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';

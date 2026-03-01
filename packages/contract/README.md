@@ -1,4 +1,4 @@
-# @workspace/contract
+# @userplane/contract
 
 API contract definitions for Userplane API using oRPC.
 
@@ -14,7 +14,7 @@ This package contains type-safe contract definitions for all Userplane API endpo
 ## Usage
 
 ```typescript
-import { contract } from '@workspace/contract';
+import { contract } from '@userplane/contract';
 
 // Use contracts for type-safe API clients
 const client = createClient(contract);

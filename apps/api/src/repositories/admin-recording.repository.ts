@@ -3,9 +3,9 @@
  * Handles database queries for workspace recording stats
  */
 
-import type { DbClient } from '@workspace/db';
-import { and, count, eq, sql } from '@workspace/db';
-import { recordings, user, workspaceMembers, workspaces } from '@workspace/db';
+import type { DbClient } from '@userplane/db';
+import { and, count, eq, sql } from '@userplane/db';
+import { recordings, user, workspaceMembers, workspaces } from '@userplane/db';
 
 export interface AdminRecordingWeeklyStat {
   week: string;

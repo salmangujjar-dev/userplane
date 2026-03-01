@@ -6,8 +6,8 @@
 import type {
   AdminWorkspaceProvisionData,
   AdminWorkspaceProvisionInput,
-} from '@workspace/contract';
-import { adminError } from '@workspace/contract';
+} from '@userplane/contract';
+import { adminError } from '@userplane/contract';
 
 import { env } from '@/api/env';
 import { generateInviteToken } from '@/api/lib/id';

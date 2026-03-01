@@ -5,9 +5,9 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '@workspace/ui/components/dialog';
-import Logo from '@workspace/ui/components/logo';
-import { Spinner } from '@workspace/ui/components/spinner';
+} from '@userplane/ui/components/dialog';
+import Logo from '@userplane/ui/components/logo';
+import { Spinner } from '@userplane/ui/components/spinner';
 import { ArrowLeftRight, Globe } from 'lucide-react';
 
 interface DomainVerificationVerifyingModalProps {

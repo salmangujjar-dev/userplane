@@ -3,7 +3,7 @@
  * Re-exports from contract package for convenient access
  */
 
-import { RECORDING_DEFAULTS, RECORDING_DURATION_LIMITS } from '@workspace/contract';
+import { RECORDING_DEFAULTS, RECORDING_DURATION_LIMITS } from '@userplane/contract';
 
 /**
  * Default company name displayed in recordings

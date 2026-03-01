@@ -23,7 +23,7 @@ function isInitialized(): boolean
 `true` after `initialize()` has been called successfully. `false` before `initialize()` is called.
 
 ```typescript
-import { isInitialized } from '@workspace/sdk';
+import { isInitialized } from '@userplane/sdk';
 
 isInitialized(); // false
 
@@ -56,7 +56,7 @@ type RecordingState = 'inactive' | 'active' | 'retained';
 Returns `'inactive'` if the SDK is not initialized.
 
 ```typescript
-import { getRecordingState } from '@workspace/sdk';
+import { getRecordingState } from '@userplane/sdk';
 
 console.log(getRecordingState()); // 'inactive'
 
@@ -97,7 +97,7 @@ Returns `null` if the SDK is not initialized.
 `sessionInfo` is `null` when `state === 'inactive'`.
 
 ```typescript
-import { getRecordingContext } from '@workspace/sdk';
+import { getRecordingContext } from '@userplane/sdk';
 
 const ctx = getRecordingContext();
 if (ctx === null) {
@@ -126,7 +126,7 @@ function getSessionId(): string | null
 The session ID (e.g., `'sess_abc123'`) or `null` if no session is active.
 
 ```typescript
-import { getSessionId } from '@workspace/sdk';
+import { getSessionId } from '@userplane/sdk';
 
 const sessionId = getSessionId();
 if (sessionId) {
@@ -155,7 +155,7 @@ The link ID (e.g., `'lnk_xyz789'`) or `null` if no session is active.
 The link ID identifies which Userplane sharing link triggered this session. Multiple sessions can originate from the same link.
 
 ```typescript
-import { getLinkId } from '@workspace/sdk';
+import { getLinkId } from '@userplane/sdk';
 
 const linkId = getLinkId();
 // 'lnk_xyz789' or null

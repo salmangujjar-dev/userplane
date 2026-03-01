@@ -10,7 +10,7 @@
  * <script src="https://cdn.userplane.io/embed/script.js"></script>
  */
 
-import { createLogger } from '@workspace/console-logger';
+import { createLogger } from '@userplane/console-logger';
 
 declare const __DEV__: boolean;
 

@@ -3,7 +3,7 @@
  * Handles workspace recording stats retrieval
  */
 
-import { adminError } from '@workspace/contract';
+import { adminError } from '@userplane/contract';
 
 import type {
   AdminRecordingRepository,

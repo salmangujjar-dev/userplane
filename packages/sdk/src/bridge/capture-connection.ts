@@ -15,9 +15,9 @@
  * - Connects to SharedWorker for cross-tab coordination
  */
 
-import { BlurManager } from '@workspace/blurr';
-import { getCustomMetadata } from '@workspace/metadata';
-import { type Connection, host } from '@workspace/postbridge';
+import { BlurManager } from '@userplane/blurr';
+import { getCustomMetadata } from '@userplane/metadata';
+import { type Connection, host } from '@userplane/postbridge';
 
 import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
 import type { LogCapturePreferences, LogCaptureState } from '../log-capture';

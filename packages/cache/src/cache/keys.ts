@@ -7,7 +7,7 @@
  * Type safety: Each key type is branded to prevent mixing keys with wrong value types.
  */
 
-import type { CacheType } from '@workspace/contract';
+import type { CacheType } from '@userplane/contract';
 
 // ============================================================
 // Branded key types - ensures type safety between keys and values

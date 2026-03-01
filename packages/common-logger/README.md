@@ -1,4 +1,4 @@
-# @workspace/logger
+# @userplane/logger
 
 Structured logging using Pino. Two exports: server and client. Both return `pino.Logger`.
 
@@ -8,12 +8,12 @@ The package does not read `process.env` -- each app passes config explicitly.
 
 ## Exports
 
-### `@workspace/logger` -- `createServerLogger`
+### `@userplane/logger` -- `createServerLogger`
 
 Server-side logger using Pino with optional pretty-printing via pino-pretty transport.
 
 ```typescript
-import { createServerLogger, type LogLevel } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@userplane/logger';
 
 const logger = createServerLogger('my-service', {
   level: 'debug',
@@ -33,12 +33,12 @@ logger.error({ err }, 'Something failed');
 | `pretty` | `boolean`                 | no       | Enable pretty-printed output (default: `false`) |
 | `base`   | `Record<string, unknown>` | no       | Additional base fields on every log line        |
 
-### `@workspace/logger/browser` -- `createClientLogger`
+### `@userplane/logger/browser` -- `createClientLogger`
 
 Client-side logger using Pino's native browser build. Outputs structured objects via `console.*` methods.
 
 ```typescript
-import { createClientLogger } from '@workspace/logger/browser';
+import { createClientLogger } from '@userplane/logger/browser';
 
 const logger = createClientLogger('my-component', { level: 'info' });
 
@@ -58,7 +58,7 @@ Each app should create a thin local wrapper that binds env-specific config once:
 
 ```typescript
 // apps/api/src/lib/logger.ts
-import { createServerLogger, type LogLevel } from '@workspace/logger';
+import { createServerLogger, type LogLevel } from '@userplane/logger';
 import { env } from '@/api/env';
 
 const isDev = env.server.nodeEnv !== 'production';

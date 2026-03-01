@@ -1,4 +1,4 @@
-import { createClientLogger, type Logger } from '@workspace/common-logger/browser';
+import { createClientLogger, type Logger } from '@userplane/common-logger/browser';
 
 export function createLogger(context: string): Logger {
   return createClientLogger(context, {

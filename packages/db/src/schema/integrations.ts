@@ -6,7 +6,7 @@ import { workspaces } from './workspaces';
 /**
  * Integrations table
  * Stores OAuth tokens and workspace mapping for third-party integrations
- * Provider types, token schemas, and metadata schemas are defined in @workspace/contract
+ * Provider types, token schemas, and metadata schemas are defined in @userplane/contract
  * Each provider defines its own token structure - no separate token type field needed
  */
 export const integrations = pgTable(

@@ -8,7 +8,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@workspace/ui/components/pagination';
+} from '@userplane/ui/components/pagination';
 import { Plus } from 'lucide-react';
 
 import type { WorkspaceDomain } from '@/types';

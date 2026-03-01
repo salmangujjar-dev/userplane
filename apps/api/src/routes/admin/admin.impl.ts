@@ -3,9 +3,9 @@
  * Handlers for admin user, workspace, and recording management operations
  */
 
-import { isValidRoleName } from '@workspace/auth';
-import type { WorkspaceRole } from '@workspace/contract';
-import type { ResourceLimits, ResourceType } from '@workspace/pricing';
+import { isValidRoleName } from '@userplane/auth';
+import type { WorkspaceRole } from '@userplane/contract';
+import type { ResourceLimits, ResourceType } from '@userplane/pricing';
 
 import { generateWorkspaceId } from '@/api/lib/id';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';

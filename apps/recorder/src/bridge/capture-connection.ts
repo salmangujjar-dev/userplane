@@ -10,7 +10,7 @@
  * This is the guest-side implementation (runs in the capture iframe)
  */
 
-import { type Connection, guest } from '@workspace/postbridge';
+import { type Connection, guest } from '@userplane/postbridge';
 
 import { createLogger } from '@/lib/logger';
 

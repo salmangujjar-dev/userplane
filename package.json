@@ -15,8 +15,8 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "drizzle-kit": "^0.31.9",
     "husky": "^9.1.7",
     "lint-staged": "^15.3.0",

@@ -1,6 +1,6 @@
-import type { RecordingActionLog, UserActionData, UserActionType } from '@workspace/contract';
+import type { RecordingActionLog, UserActionData, UserActionType } from '@userplane/contract';
 
-export type { RecordingActionLog, UserActionData, UserActionType } from '@workspace/contract';
+export type { RecordingActionLog, UserActionData, UserActionType } from '@userplane/contract';
 
 export function formatActionTarget(data: UserActionData): string {
   if (!data.info) return '';

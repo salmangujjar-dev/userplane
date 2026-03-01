@@ -12,7 +12,7 @@
  * - Optionally masks response bodies for privacy
  */
 
-import { createLogger } from '@workspace/console-logger';
+import { createLogger } from '@userplane/console-logger';
 
 import {
   buildEndpointMatchers,

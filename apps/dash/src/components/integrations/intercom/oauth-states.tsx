@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@workspace/ui/components/button';
-import Logo from '@workspace/ui/components/logo';
+import { Button } from '@userplane/ui/components/button';
+import Logo from '@userplane/ui/components/logo';
 import { ArrowLeftRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 

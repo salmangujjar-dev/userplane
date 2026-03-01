@@ -1,30 +1,30 @@
 'use client';
 
-import { AdminPlanBillingCycleSchema, type AdminPlanProduct } from '@workspace/contract';
-import type { FeatureGate, ResourceType } from '@workspace/pricing';
-import { FEATURE_GATE_KEYS, FEATURE_GATE_LABELS, RESOURCE_TYPE_VALUES } from '@workspace/pricing';
-import { Badge } from '@workspace/ui/components/badge';
-import { Button } from '@workspace/ui/components/button';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
+import { AdminPlanBillingCycleSchema, type AdminPlanProduct } from '@userplane/contract';
+import type { FeatureGate, ResourceType } from '@userplane/pricing';
+import { FEATURE_GATE_KEYS, FEATURE_GATE_LABELS, RESOURCE_TYPE_VALUES } from '@userplane/pricing';
+import { Badge } from '@userplane/ui/components/badge';
+import { Button } from '@userplane/ui/components/button';
+import { Input } from '@userplane/ui/components/input';
+import { Label } from '@userplane/ui/components/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select';
+} from '@userplane/ui/components/select';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@workspace/ui/components/sheet';
-import { Skeleton } from '@workspace/ui/components/skeleton';
-import { Switch } from '@workspace/ui/components/switch';
-import { Textarea } from '@workspace/ui/components/textarea';
-import { VisuallyHidden } from '@workspace/ui/components/visually-hidden';
+} from '@userplane/ui/components/sheet';
+import { Skeleton } from '@userplane/ui/components/skeleton';
+import { Switch } from '@userplane/ui/components/switch';
+import { Textarea } from '@userplane/ui/components/textarea';
+import { VisuallyHidden } from '@userplane/ui/components/visually-hidden';
 import { ChevronLeft, ChevronRight, CreditCard, Loader2, Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';

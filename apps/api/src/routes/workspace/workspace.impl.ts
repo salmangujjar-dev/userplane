@@ -1,11 +1,11 @@
 /**
  * Workspace contract implementation using oRPC
- * Implements the workspace contract defined in @workspace/contract
+ * Implements the workspace contract defined in @userplane/contract
  *
  * INCREMENTAL MIGRATION: Starting with basic CRUD operations
  */
 
-import { billingError, domainError, inviteError, workspaceError } from '@workspace/contract';
+import { billingError, domainError, inviteError, workspaceError } from '@userplane/contract';
 
 import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import {

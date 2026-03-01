@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/metadata",
+  "name": "@userplane/metadata",
   "version": "0.0.1",
   "type": "module",
   "private": false,
@@ -17,6 +17,7 @@
     "dist"
   ],
   "publishConfig": {
+    "access": "public",
     "main": "./dist/index.cjs.js",
     "module": "./dist/index.es.js",
     "types": "./dist/index.d.ts",
@@ -38,16 +39,14 @@
     "lint": "eslint .",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "preview": "vite preview",
-    "prepublishOnly": "bun run build:npm"
-  },
-  "dependencies": {
-    "@workspace/console-logger": "workspace:*"
+    "prepublishOnly": "echo 'Use GitHub Actions to publish. Do not publish locally.' && exit 1"
   },
   "devDependencies": {
+    "@userplane/console-logger": "workspace:*",
     "@rollup/plugin-terser": "^0.4.4",
     "@types/node": "^22.14.1",
-    "@workspace/eslint-config": "workspace:*",
-    "@workspace/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "workspace:*",
+    "@userplane/typescript-config": "workspace:*",
     "eslint": "^9.32.0",
     "terser": "^5.46.0",
     "typescript": "5.8.2",

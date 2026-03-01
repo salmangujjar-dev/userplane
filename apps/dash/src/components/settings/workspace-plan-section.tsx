@@ -1,15 +1,15 @@
 'use client';
 
-import { type PlanId, type PlanName, UNLIMITED_QUOTED_LIMIT } from '@workspace/pricing';
-import Logo from '@workspace/ui/components/logo';
-import { Progress } from '@workspace/ui/components/progress';
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@workspace/ui/components/sheet';
+import { type PlanId, type PlanName, UNLIMITED_QUOTED_LIMIT } from '@userplane/pricing';
+import Logo from '@userplane/ui/components/logo';
+import { Progress } from '@userplane/ui/components/progress';
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@userplane/ui/components/sheet';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@workspace/ui/components/tooltip';
+} from '@userplane/ui/components/tooltip';
 import { CheckCircle2, FileText, Info, MoveUpRight } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';

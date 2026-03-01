@@ -10,7 +10,7 @@ The `window.userplane` global is the public API surface of the embed package. It
 
 ```typescript
 // src/index.ts
-import * as sdk from '@workspace/sdk';
+import * as sdk from '@userplane/sdk';
 
 if (typeof window !== 'undefined') {
   sdk.initialize();
@@ -20,7 +20,7 @@ if (typeof window !== 'undefined') {
 (window as any).userplane = sdk;
 ```
 
-The global is the entire SDK module namespace — every exported function from `@workspace/sdk` is available on `window.userplane`.
+The global is the entire SDK module namespace — every exported function from `@userplane/sdk` is available on `window.userplane`.
 
 ## Timing
 
@@ -83,7 +83,7 @@ For typed access to `window.userplane` in TypeScript projects, augment the `Wind
 
 ```typescript
 // userplane.d.ts (add to your project)
-import type * as UserplaneSDK from '@workspace/sdk';
+import type * as UserplaneSDK from '@userplane/sdk';
 
 declare global {
   interface Window {
