@@ -51,6 +51,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Build dependencies
+        run: turbo build --filter=@userplane/${{ inputs.package }}...
+
       - name: Build metadata
         if: inputs.package == 'sdk'
         run: |
