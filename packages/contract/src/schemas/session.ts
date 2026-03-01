@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { RECORDING_DURATION_LIMITS } from '../constants/session';
+import { FILE_SIZE_LIMITS, RECORDING_DURATION_LIMITS } from '../constants/session';
 import { FileTypeSchema, RecordingIdSchema, TokenSchema, UploadStatusSchema } from './common';
 import { RecordingNotesSchema } from './recording';
 
@@ -28,12 +28,31 @@ export const SessionInitDataSchema = z.object({
 /**
  * Upload file info
  */
-export const UploadFileSchema = z.object({
-  type: FileTypeSchema,
-  name: z.string().min(1, 'File name is required'),
-  size: z.number().int().nonnegative(),
-  mime_type: z.string().min(1, 'MIME type is required'),
-});
+function getMaxSizeForFileType(type: string): number {
+  switch (type) {
+    case 'video':
+      return FILE_SIZE_LIMITS.MAX_VIDEO_SIZE;
+    case 'thumbnail':
+      return FILE_SIZE_LIMITS.MAX_THUMBNAIL_SIZE;
+    case 'console_log':
+    case 'network_log':
+    case 'action':
+      return FILE_SIZE_LIMITS.MAX_LOG_SIZE;
+    default:
+      return FILE_SIZE_LIMITS.MAX_FILE_SIZE;
+  }
+}
+
+export const UploadFileSchema = z
+  .object({
+    type: FileTypeSchema,
+    name: z.string().min(1, 'File name is required'),
+    size: z.number().int().nonnegative(),
+    mime_type: z.string().min(1, 'MIME type is required'),
+  })
+  .refine((data) => data.size <= getMaxSizeForFileType(data.type), {
+    message: 'File size exceeds maximum allowed for this type',
+  });
 
 /**
  * System metadata - arbitrary key-value pairs
@@ -59,7 +78,8 @@ export const InitUploadSchema = z.object({
       .int()
       .min(RECORDING_DURATION_LIMITS.MIN_DURATION_MS)
       .max(RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS),
-    files: z.array(UploadFileSchema).min(1).max(4),
+    recording_started_at: z.number().int().positive().optional(),
+    files: z.array(UploadFileSchema).min(1).max(5),
     metadata: SessionRecordingMetaSchema,
   }),
 });
