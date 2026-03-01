@@ -49,7 +49,7 @@ function logNetworkErrorToConsole(
     dispatch(
       truncatePayload({
         source: LOGGER_NAME,
-        has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
+        has_focus: window.__userplane_has_focus ?? true,
         type: 'console',
         subtype: level,
         level,
@@ -204,7 +204,7 @@ function createSendWrapper(
 
               dispatch({
                 source: LOGGER_NAME,
-                has_focus: __userplane_has_focus,
+                has_focus: window.__userplane_has_focus,
                 type: isError ? 'network-error' : 'network',
                 initiatorType: 'xhr',
                 requestDetails: tracking,
@@ -239,7 +239,7 @@ function createSendWrapper(
 
         dispatch({
           source: LOGGER_NAME,
-          has_focus: __userplane_has_focus,
+          has_focus: window.__userplane_has_focus,
           type: 'network-error',
           initiatorType: 'xhr',
           url: tracking.request.url,
@@ -270,7 +270,7 @@ function createSendWrapper(
 
         dispatch({
           source: LOGGER_NAME,
-          has_focus: __userplane_has_focus,
+          has_focus: window.__userplane_has_focus,
           type: 'network-error',
           initiatorType: 'xhr',
           url: tracking.request.url,
@@ -301,7 +301,7 @@ function createSendWrapper(
 
         dispatch({
           source: LOGGER_NAME,
-          has_focus: __userplane_has_focus,
+          has_focus: window.__userplane_has_focus,
           type: 'network-error',
           initiatorType: 'xhr',
           url: tracking.request.url,

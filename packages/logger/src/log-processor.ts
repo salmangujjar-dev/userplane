@@ -23,6 +23,7 @@ import {
 } from './constants';
 import { BatchedDispatcher, ImmediateDispatcher } from './dispatch-strategy';
 import { requestTeardown } from './event-bridge';
+import { initPatches } from './patcher';
 import type {
   CaptureOptions,
   ConsoleLogEvent,
@@ -99,8 +100,8 @@ export class LogProcessor {
     tabId: string,
     saveFunction: SaveFunction,
     workspaceId: string,
-    scriptUrl: string,
-    serverDeltaMs: number,
+    scriptUrl: string = '',
+    serverDeltaMs: number = 0,
     internalEndpoints?: string[],
     options?: {
       dispatchMode?: DispatchMode;
@@ -234,6 +235,14 @@ export class LogProcessor {
       // Only inject the script if not already loaded
       if (window.__userplane_logger_loaded) {
         log.debug('start() script already loaded, skipping injection');
+      } else if (!this._scriptUrl) {
+        // No script URL — call initPatches() directly (SDK-bundled mode)
+        log.debug('start() no scriptUrl, calling initPatches() directly');
+        try {
+          initPatches();
+        } catch (err) {
+          log.error({ err }, 'initPatches() failed');
+        }
       } else {
         // Inject the logger script
         const script = document.createElement('script');

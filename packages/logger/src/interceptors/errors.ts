@@ -16,7 +16,7 @@ export function patchUnhandledRejection(serverDeltaMs: number): (e: PromiseRejec
     try {
       dispatch({
         source: LOGGER_NAME,
-        has_focus: __userplane_has_focus,
+        has_focus: window.__userplane_has_focus,
         type: 'console',
         subtype: 'error',
         level: 'error',
@@ -55,7 +55,7 @@ export function patchGlobalErrors(serverDeltaMs: number): (e: ErrorEvent) => voi
     try {
       dispatch({
         source: LOGGER_NAME,
-        has_focus: __userplane_has_focus,
+        has_focus: window.__userplane_has_focus,
         type: 'console',
         subtype: 'error',
         level: 'error',

@@ -138,7 +138,7 @@ export function patchNavigation(_tabId: string | undefined): {
     if (!isDuplicate && isNonTrivialReplace) {
       dispatch({
         source: LOGGER_NAME,
-        has_focus: __userplane_has_focus,
+        has_focus: window.__userplane_has_focus,
         tabId,
         type: 'user-action',
         data: {

@@ -1,6 +1,8 @@
 // ─── Core Modules ───────────────────────────────────────────────────────────
 
 export { LogProcessor } from './log-processor';
+export type { LogStoreType } from './log-store';
+export { LogStore } from './log-store';
 export { initPatches } from './patcher';
 
 // ─── Dispatch ───────────────────────────────────────────────────────────────
