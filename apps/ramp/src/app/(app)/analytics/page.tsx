@@ -1,23 +1,34 @@
 'use client';
 
 import { CheckCircleIcon, ClockIcon, DollarSignIcon, ReceiptTextIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { CategoryBreakdown } from '@/components/analytics/CategoryBreakdown';
 import { MetricCard } from '@/components/analytics/MetricCard';
 import { SpendingChart } from '@/components/analytics/SpendingChart';
 import { TopSpendersCard } from '@/components/analytics/TopSpendersCard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Card, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs';
 import { toastManager } from '@/components/ui/toast';
 import { useExpenses } from '@/hooks/useExpenses';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { log } from '@/lib/client-logger';
+import { getActiveFailureFlags, isFeatureEnabled } from '@/lib/feature-flags';
 import { formatCurrency } from '@/lib/utils';
 
 export default function AnalyticsPage() {
   const { expenses, isLoading } = useExpenses();
   const [trendPeriod, setTrendPeriod] = useState<string | number>('90');
+
+  useEffect(() => {
+    const activeFlags = getActiveFailureFlags();
+    log.debug({ activeFlags }, 'AnalyticsPage mounted');
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) log.debug({ expenseCount: expenses.length }, 'AnalyticsPage data ready');
+  }, [expenses, isLoading]);
 
   const metrics = useMemo(() => {
     const approved = expenses.filter((e) => e.status === 'approved');
@@ -85,6 +96,7 @@ export default function AnalyticsPage() {
             value={trendPeriod}
             onValueChange={(val) => {
               if (!isFeatureEnabled('spendingTrendTabs')) {
+                console.error('[Analytics] Spending trend controls are temporarily unavailable');
                 toastManager.add({
                   title: 'Unable to change time period',
                   description:
@@ -102,13 +114,19 @@ export default function AnalyticsPage() {
               <TabsTab value="365">1 Year</TabsTab>
             </TabsList>
             <TabsPanel value="30" className="pt-4">
-              <SpendingChart expenses={expenses} days={30} />
+              <ErrorBoundary>
+                <SpendingChart expenses={expenses} days={30} />
+              </ErrorBoundary>
             </TabsPanel>
             <TabsPanel value="90" className="pt-4">
-              <SpendingChart expenses={expenses} days={90} />
+              <ErrorBoundary>
+                <SpendingChart expenses={expenses} days={90} />
+              </ErrorBoundary>
             </TabsPanel>
             <TabsPanel value="365" className="pt-4">
-              <SpendingChart expenses={expenses} days={365} />
+              <ErrorBoundary>
+                <SpendingChart expenses={expenses} days={365} />
+              </ErrorBoundary>
             </TabsPanel>
           </Tabs>
         </CardPanel>
@@ -120,7 +138,9 @@ export default function AnalyticsPage() {
           <CardTitle>Category Breakdown</CardTitle>
         </CardHeader>
         <CardPanel>
-          <CategoryBreakdown expenses={expenses} />
+          <ErrorBoundary>
+            <CategoryBreakdown expenses={expenses} />
+          </ErrorBoundary>
         </CardPanel>
       </Card>
 
@@ -130,7 +150,9 @@ export default function AnalyticsPage() {
           <CardTitle>Top Spenders</CardTitle>
         </CardHeader>
         <CardPanel>
-          <TopSpendersCard expenses={expenses} />
+          <ErrorBoundary>
+            <TopSpendersCard expenses={expenses} />
+          </ErrorBoundary>
         </CardPanel>
       </Card>
     </div>

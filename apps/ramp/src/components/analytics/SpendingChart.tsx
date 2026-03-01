@@ -11,6 +11,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import type { ExpenseWithRelations } from '@/lib/data/types';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 
 const chartConfig = {
   total: {
@@ -25,6 +26,10 @@ interface SpendingChartProps {
 }
 
 export function SpendingChart({ expenses, days }: SpendingChartProps) {
+  if (!isFeatureEnabled('analyticsChartRender')) {
+    throw new Error('SpendingChart: Recharts internal error — invalid data series configuration.');
+  }
+
   const data = useMemo(() => {
     const now = new Date();
     const start = startOfDay(subDays(now, days));

@@ -26,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { ExpenseWithRelations } from '@/lib/data/types';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 import { ExpenseStatusBadge } from './ExpenseStatusBadge';
@@ -64,6 +65,12 @@ export function ExpensesTable({
   onReject,
   onEdit,
 }: ExpensesTableProps) {
+  if (!isFeatureEnabled('expenseTableRender')) {
+    throw new Error(
+      'ExpensesTable: failed to deserialize expense data from cache. Cached entry corrupted.'
+    );
+  }
+
   const router = useRouter();
 
   const renderSortIcon = (field: SortField) => {

@@ -14,8 +14,10 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
+    "drizzle-kit": "^0.31.9",
     "husky": "^9.1.7",
     "lint-staged": "^15.3.0",
     "prettier": "^3.6.2",
@@ -37,6 +39,9 @@
     ]
   },
   "dependencies": {
+    "better-auth": "^1.5.0",
+    "better-sqlite3": "^12.6.2",
+    "drizzle-orm": "^0.45.1",
     "prism-react-renderer": "^2.4.1"
   },
   "overrides": {

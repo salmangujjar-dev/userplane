@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['ramp-dev.userplane.io'],
+  serverExternalPackages: ['better-sqlite3'],
 
   // Transpile workspace packages (SDK and its transitive workspace deps)
   transpilePackages: [

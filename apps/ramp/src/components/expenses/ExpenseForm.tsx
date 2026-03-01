@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCategories } from '@/hooks/useCategories';
 import { useEmployees } from '@/hooks/useEmployees';
 import type { Expense } from '@/lib/data/types';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 
 // -- Fake data pools keyed by category id for realistic autofill --
 const FAKE_DATA: Record<
@@ -307,7 +308,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isSubmitting }: Expen
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
+    const data: Record<string, unknown> = {
       employeeId,
       categoryId,
       amount: parseFloat(amount),
@@ -315,7 +316,15 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isSubmitting }: Expen
       merchant,
       date: new Date(date).toISOString(),
       notes: notes || undefined,
-    });
+    };
+
+    // Validation sabotage: silently drop required fields
+    if (!isFeatureEnabled('expenseFormValidation')) {
+      delete data.employeeId;
+      delete data.merchant;
+    }
+
+    onSubmit(data);
   };
 
   return (

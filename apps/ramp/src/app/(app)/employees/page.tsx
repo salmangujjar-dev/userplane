@@ -3,7 +3,7 @@
 import BoringAvatar from 'boring-avatars';
 import { SearchIcon, UsersIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardPanel } from '@/components/ui/card';
@@ -25,6 +25,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useExpenses } from '@/hooks/useExpenses';
+import { log } from '@/lib/client-logger';
 import { formatCurrency } from '@/lib/utils';
 
 const AVATAR_COLORS = ['#1F1F1F', '#E4F222', '#737373', '#A3A3A3', '#D4D4D4'];
@@ -39,6 +40,14 @@ export default function EmployeesPage() {
   const [department, setDepartment] = useState('All');
 
   const isLoading = empLoading || expLoading;
+
+  useEffect(() => {
+    log.debug('EmployeesPage mounted');
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) log.debug({ employeeCount: employees.length }, 'EmployeesPage data ready');
+  }, [employees, isLoading]);
 
   const enrichedEmployees = useMemo(() => {
     return employees.map((emp) => {
