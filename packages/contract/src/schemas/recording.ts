@@ -111,6 +111,7 @@ export const RecordingResourceSchema = z.object({
   sources: z.array(VideoSourceSchema).optional(),
   size: z.number().int().nullable().optional(),
   durationMs: z.number().int().nullable().optional(),
+  captureEnabled: z.boolean().optional(),
 });
 
 /**
