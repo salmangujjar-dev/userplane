@@ -12,23 +12,19 @@ import { parseResponseHeaders } from '../utils/headers';
 import { HTTP_STATUS_TEXT } from '../utils/http-status';
 import { enrichWithPerformance } from '../utils/performance';
 import { shouldLogNetwork } from '../utils/throttle';
+import { now } from '../utils/time';
 import { truncatePayload } from '../utils/truncation';
 
 const BODY_LIMIT = 131072; // 128KB
 const BODY_TRUNCATION_MSG = '\n\n[Body truncated over the 128KB limit]';
 const xhrMetadata = new WeakMap<XMLHttpRequest, XHRTrackingData>();
 
-function now(serverDeltaMs: number): number {
-  return Date.now() + serverDeltaMs;
-}
-
 function logNetworkErrorToConsole(
   method: string,
   url: string,
   status: number | null,
   statusText: string | null,
-  fallbackText: string | null,
-  serverDeltaMs: number
+  fallbackText: string | null
 ): void {
   try {
     const level = 'error';
@@ -54,7 +50,7 @@ function logNetworkErrorToConsole(
         subtype: level,
         level,
         args: [message],
-        timestamp: now(serverDeltaMs),
+        timestamp: now(),
       } as ConsoleLogEvent)
     );
     // eslint-disable-next-line no-empty -- intentional: header parsing is best-effort
@@ -66,8 +62,7 @@ function logNetworkErrorToConsole(
  */
 function createOpenWrapper(
   _original: typeof XMLHttpRequest.prototype.open,
-  nativeOpen: typeof XMLHttpRequest.prototype.open,
-  serverDeltaMs: number
+  nativeOpen: typeof XMLHttpRequest.prototype.open
 ): typeof XMLHttpRequest.prototype.open {
   return function (
     this: XMLHttpRequest,
@@ -88,7 +83,7 @@ function createOpenWrapper(
         headers: {},
         body: null,
         startTime: performance.now(),
-        timestamp: now(serverDeltaMs),
+        timestamp: now(),
       },
       response: {
         status: 0,
@@ -125,8 +120,7 @@ function createSetRequestHeaderWrapper(
  */
 function createSendWrapper(
   _original: typeof XMLHttpRequest.prototype.send,
-  nativeSend: typeof XMLHttpRequest.prototype.send,
-  serverDeltaMs: number
+  nativeSend: typeof XMLHttpRequest.prototype.send
 ): typeof XMLHttpRequest.prototype.send {
   return function (
     this: XMLHttpRequest,
@@ -198,7 +192,7 @@ function createSendWrapper(
 
             // Emit network event
             try {
-              const isError = tracking.response.status >= 400;
+              const isError = tracking.response.status >= 400 || tracking.response.status === 0;
               const key = `xhr|${tracking.request.method}|${tracking.request.url}|${isError ? tracking.response.status : 200}`;
               if (!shouldLogNetwork(key)) return;
 
@@ -208,7 +202,7 @@ function createSendWrapper(
                 type: isError ? 'network-error' : 'network',
                 initiatorType: 'xhr',
                 requestDetails: tracking,
-                timestamp: now(serverDeltaMs),
+                timestamp: now(),
               } as NetworkLogEvent);
 
               if (isError) {
@@ -217,8 +211,7 @@ function createSendWrapper(
                   tracking.response.url || tracking.request.url || '',
                   tracking.response.status,
                   tracking.response.statusText || null,
-                  null,
-                  serverDeltaMs
+                  null
                 );
               }
               // eslint-disable-next-line no-empty -- intentional: network event dispatch is best-effort
@@ -245,7 +238,7 @@ function createSendWrapper(
           url: tracking.request.url,
           method: tracking.request.method,
           error: 'error',
-          timestamp: now(serverDeltaMs),
+          timestamp: now(),
         } as NetworkErrorLogEvent);
 
         logNetworkErrorToConsole(
@@ -253,8 +246,7 @@ function createSendWrapper(
           tracking.request.url,
           null,
           null,
-          '(Network error)',
-          serverDeltaMs
+          '(Network error)'
         );
       },
       { once: true }
@@ -276,7 +268,7 @@ function createSendWrapper(
           url: tracking.request.url,
           method: tracking.request.method,
           error: 'abort',
-          timestamp: now(serverDeltaMs),
+          timestamp: now(),
         } as NetworkErrorLogEvent);
 
         logNetworkErrorToConsole(
@@ -284,8 +276,7 @@ function createSendWrapper(
           tracking.request.url,
           null,
           null,
-          '(Abort)',
-          serverDeltaMs
+          '(Abort)'
         );
       },
       { once: true }
@@ -307,7 +298,7 @@ function createSendWrapper(
           url: tracking.request.url,
           method: tracking.request.method,
           error: 'timeout',
-          timestamp: now(serverDeltaMs),
+          timestamp: now(),
         } as NetworkErrorLogEvent);
 
         logNetworkErrorToConsole(
@@ -315,8 +306,7 @@ function createSendWrapper(
           tracking.request.url,
           null,
           null,
-          '(Timeout)',
-          serverDeltaMs
+          '(Timeout)'
         );
       },
       { once: true }
@@ -332,7 +322,7 @@ function createSendWrapper(
  *
  * Uses defineProperty to re-wrap if other code overwrites XHR methods.
  */
-export function patchXHR(serverDeltaMs: number): void {
+export function patchXHR(): void {
   const originals = window.__userplane_logger_originals!.native;
   const nativeOpen = originals.xhrOpen!;
   const nativeSend = originals.xhrSend!;
@@ -341,13 +331,13 @@ export function patchXHR(serverDeltaMs: number): void {
   const proto = XMLHttpRequest.prototype;
 
   // Patch open
-  let currentOpen = createOpenWrapper(proto.open, nativeOpen, serverDeltaMs);
+  let currentOpen = createOpenWrapper(proto.open, nativeOpen);
   try {
     Object.defineProperty(proto, 'open', {
       configurable: true,
       get: () => currentOpen,
       set(fn) {
-        currentOpen = createOpenWrapper(fn, nativeOpen, serverDeltaMs);
+        currentOpen = createOpenWrapper(fn, nativeOpen);
       },
     });
   } catch {
@@ -371,13 +361,13 @@ export function patchXHR(serverDeltaMs: number): void {
   }
 
   // Patch send
-  let currentSend = createSendWrapper(proto.send, nativeSend, serverDeltaMs);
+  let currentSend = createSendWrapper(proto.send, nativeSend);
   try {
     Object.defineProperty(proto, 'send', {
       configurable: true,
       get: () => currentSend,
       set(fn) {
-        currentSend = createSendWrapper(fn, nativeSend, serverDeltaMs);
+        currentSend = createSendWrapper(fn, nativeSend);
       },
     });
   } catch {

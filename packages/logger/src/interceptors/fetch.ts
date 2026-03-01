@@ -11,16 +11,13 @@ import { isTextContentType } from '../utils/content-type';
 import { HTTP_STATUS_TEXT } from '../utils/http-status';
 import { enrichWithPerformance } from '../utils/performance';
 import { shouldLogNetwork } from '../utils/throttle';
+import { now } from '../utils/time';
 import { truncatePayload } from '../utils/truncation';
 import { isSameSite } from '../utils/url';
 import { isCrossOrigin } from '../utils/url';
 
 const BODY_LIMIT = 131072; // 128KB
 const BODY_TRUNCATION_MSG = '\n\n[Body truncated over the 128KB limit]';
-
-function now(serverDeltaMs: number): number {
-  return Date.now() + serverDeltaMs;
-}
 
 /**
  * Logs a network error to the console log stream (as the original code does).
@@ -30,8 +27,7 @@ function logNetworkErrorToConsole(
   url: string,
   status: number | null,
   statusText: string | null,
-  fallbackText: string | null,
-  serverDeltaMs: number
+  fallbackText: string | null
 ): void {
   try {
     const level = 'error';
@@ -57,7 +53,7 @@ function logNetworkErrorToConsole(
         subtype: level,
         level,
         args: [message],
-        timestamp: now(serverDeltaMs),
+        timestamp: now(),
       } as ConsoleLogEvent)
     );
     // eslint-disable-next-line no-empty -- intentional: network error console logging is best-effort
@@ -67,7 +63,7 @@ function logNetworkErrorToConsole(
 /**
  * Creates a fetch wrapper that intercepts and logs network requests.
  */
-function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number): typeof fetch {
+function createFetchWrapper(originalFetch: typeof fetch): typeof fetch {
   return function (this: unknown, ...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
     const startTime = performance.now();
     const fetchFn =
@@ -75,49 +71,51 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
         ? originalFetch
         : window.__userplane_logger_originals?.current?.fetch || fetch;
 
+    // Build requestInfo before the fetch call so it's accessible in both .then() and .catch()
+    const method =
+      args[0] instanceof Request ? args[0].method : (args[1] as RequestInit)?.method || 'GET';
+    const url = args[0] instanceof Request ? args[0].url : String(args[0]);
+
+    const requestInfo = {
+      method,
+      url,
+      headers: {} as Record<string, string>,
+      body: null as ReturnType<typeof parseFetchBody> | null,
+      startTime,
+      timestamp: now(),
+    };
+
+    // Extract request headers and body
+    try {
+      if (args[0] instanceof Request) {
+        const cloned = args[0].clone();
+        cloned.headers.forEach((v, k) => (requestInfo.headers[k] = v));
+        if (!cloned.body?.locked) {
+          cloned
+            .text()
+            .then((text) => {
+              requestInfo.body = parseFetchBody(text);
+            })
+            .catch(() => {});
+        }
+      }
+      const init = args[1] as RequestInit | undefined;
+      if (init?.headers) {
+        const headers =
+          init.headers instanceof Headers ? init.headers : new Headers(init.headers as HeadersInit);
+        headers.forEach((v, k) => (requestInfo.headers[k] = v));
+      }
+      if (init?.body) {
+        requestInfo.body = parseFetchBody(init.body);
+      }
+      // eslint-disable-next-line no-empty -- intentional: request header extraction is best-effort
+    } catch {}
+
     const promise = fetchFn.apply(this, args);
 
     promise
       .then((response) => {
         try {
-          const requestInfo = {
-            method:
-              args[0] instanceof Request
-                ? args[0].method
-                : (args[1] as RequestInit)?.method || 'GET',
-            url: args[0] instanceof Request ? args[0].url : String(args[0]),
-            headers: {} as Record<string, string>,
-            body: null as ReturnType<typeof parseFetchBody> | null,
-            startTime,
-            timestamp: now(serverDeltaMs),
-          };
-
-          // Extract request headers and body
-          try {
-            if (args[0] instanceof Request) {
-              const cloned = args[0].clone();
-              cloned.headers.forEach((v, k) => (requestInfo.headers[k] = v));
-              if (!cloned.body?.locked) {
-                cloned
-                  .text()
-                  .then((text) => {
-                    requestInfo.body = parseFetchBody(text);
-                  })
-                  .catch(() => {});
-              }
-            } else if ((args[1] as RequestInit)?.headers) {
-              const headers =
-                (args[1] as RequestInit).headers instanceof Headers
-                  ? ((args[1] as RequestInit).headers as Headers)
-                  : new Headers((args[1] as RequestInit).headers as HeadersInit);
-              headers.forEach((v, k) => (requestInfo.headers[k] = v));
-              if ((args[1] as RequestInit)?.body) {
-                requestInfo.body = parseFetchBody((args[1] as RequestInit).body);
-              }
-            }
-            // eslint-disable-next-line no-empty -- intentional: request header extraction is best-effort
-          } catch {}
-
           const responseInfo: NetworkResponseInfo = {
             status: response.status,
             statusText: response.statusText,
@@ -127,6 +125,9 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
             body: null,
           };
           response.headers.forEach((v, k) => (responseInfo.headers[k] = v));
+
+          // Clone immediately while the body stream is still unlocked
+          const responseClone = response.clone();
 
           // Deferred processing (match original's setTimeout(..., 0))
           setTimeout(() => {
@@ -153,7 +154,7 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
 
               const contentType = response.headers.get('content-type') || '';
 
-              // Check if we should capture the body (same-site, text content, not locked)
+              // Check if we should capture the body (same-site, text content)
               let shouldSkipBody = false;
               try {
                 const pageUrl = new URL(location.href);
@@ -166,8 +167,7 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
                 if (
                   !sameSite ||
                   response.type === 'opaque' ||
-                  !isTextContentType(response.headers.get('content-type') || '') ||
-                  response.body?.locked
+                  !isTextContentType(response.headers.get('content-type') || '')
                 ) {
                   shouldSkipBody = true;
                 }
@@ -181,14 +181,8 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
               }
 
               if (isTextContentType(contentType)) {
-                const body = response.body;
-                if (body?.locked || response.type === 'opaque' || !isTextContentType(contentType)) {
-                  emitNetworkEvent();
-                  return;
-                }
                 try {
-                  response
-                    .clone()
+                  responseClone
                     .text()
                     .then((text) => {
                       let captured = text.slice(0, BODY_LIMIT);
@@ -220,7 +214,7 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
                     initiatorType: 'fetch',
                     request: requestInfo,
                     response: responseInfo,
-                    timestamp: now(serverDeltaMs),
+                    timestamp: now(),
                   } as NetworkLogEvent);
 
                   if (isError) {
@@ -229,8 +223,7 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
                       responseInfo.url || requestInfo.url || '',
                       responseInfo.status,
                       responseInfo.statusText || null,
-                      null,
-                      serverDeltaMs
+                      null
                     );
                   }
                   // eslint-disable-next-line no-empty -- intentional: response body read is best-effort
@@ -246,14 +239,10 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
       })
       .catch((error) => {
         try {
-          const url = args[0] instanceof Request ? args[0].url : String(args[0]);
-          const method =
-            args[0] instanceof Request ? args[0].method : (args[1] as RequestInit)?.method || 'GET';
-
           let errorType: string;
           if (error && error.name === 'AbortError') {
             errorType = 'abort';
-          } else if (error && error.name === 'TypeError' && isCrossOrigin(url)) {
+          } else if (error && error.name === 'TypeError' && isCrossOrigin(requestInfo.url)) {
             errorType = 'cors';
           } else {
             errorType = 'network';
@@ -264,14 +253,21 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
             has_focus: window.__userplane_has_focus,
             type: 'network-error',
             initiatorType: 'fetch',
-            url,
-            method,
+            request: requestInfo,
+            url: requestInfo.url,
+            method: requestInfo.method,
             error: errorType,
             message: error?.message || undefined,
-            timestamp: now(serverDeltaMs),
+            timestamp: now(),
           } as NetworkErrorLogEvent);
 
-          logNetworkErrorToConsole(method, url, null, null, '(Network error)', serverDeltaMs);
+          logNetworkErrorToConsole(
+            requestInfo.method,
+            requestInfo.url,
+            null,
+            null,
+            '(Network error)'
+          );
           // eslint-disable-next-line no-empty -- intentional: catch handler logging must not suppress the original error
         } catch {}
 
@@ -286,14 +282,14 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
  * Patches window.fetch to intercept and log all fetch requests.
  * Uses defineProperty to re-wrap if other code overwrites fetch.
  */
-export function patchFetch(serverDeltaMs: number): void {
-  let currentFetch = createFetchWrapper(window.fetch, serverDeltaMs);
+export function patchFetch(): void {
+  let currentFetch = createFetchWrapper(window.fetch);
 
   Object.defineProperty(window, 'fetch', {
     configurable: true,
     get: () => currentFetch,
     set(fn: typeof fetch) {
-      currentFetch = createFetchWrapper(fn, serverDeltaMs);
+      currentFetch = createFetchWrapper(fn);
     },
   });
 }

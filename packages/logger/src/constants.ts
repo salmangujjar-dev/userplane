@@ -11,7 +11,6 @@ export const EXTENSION_TAG = 'USERPLANE-EXTENSION';
 export const WIN_LOGGER_LOADED = '__userplane_logger_loaded';
 export const WIN_LOGGER_ORIGINALS = '__userplane_logger_originals';
 export const WIN_PRISTINE_NATIVES = '__userplane_pristine_natives';
-export const WIN_SERVER_DELTA = '__userplane_server_delta_ms';
 export const WIN_HAS_FOCUS = '__userplane_has_focus';
 export const WIN_REMOVE_NAV_HOOK = '__userplane_removeNavigationApiHook';
 export const CONSOLE_PATCHED_FLAG = '__userplane_patched__';

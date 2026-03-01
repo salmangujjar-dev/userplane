@@ -63,8 +63,9 @@ const TEXT_EXACT = ['application/xhtml+xml', 'application/x-www-form-urlencoded'
  * that should have its body captured.
  */
 export function isTextContentType(contentType: string): boolean {
+  const base = (contentType.split(';')[0] ?? contentType).trim().toLowerCase();
   for (const prefix of TEXT_PREFIXES) {
-    if (contentType.startsWith(prefix)) return true;
+    if (base.startsWith(prefix)) return true;
   }
-  return TEXT_EXACT.includes(contentType);
+  return TEXT_EXACT.includes(base);
 }

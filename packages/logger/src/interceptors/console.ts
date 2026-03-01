@@ -3,6 +3,7 @@ import { dispatch } from '../event-bridge';
 import type { ConsoleLogEvent, LogEvent, RepeatEntry } from '../types';
 import { cleanPayload } from '../utils/clean';
 import { parseStack, serializeValue } from '../utils/serialization';
+import { now } from '../utils/time';
 import { truncatePayload } from '../utils/truncation';
 
 type ConsoleLevel = 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace';
@@ -31,13 +32,6 @@ let _insideWrapper = false;
 
 const repeatTracker = new Map<string, RepeatEntry>();
 const REPEAT_FLUSH_MS = 100;
-
-/**
- * Returns the adjusted timestamp using server delta.
- */
-function now(serverDeltaMs: number): number {
-  return Date.now() + serverDeltaMs;
-}
 
 /**
  * Checks if args are "empty" (null, undefined, or single empty value).
@@ -92,10 +86,7 @@ function tryBatchRepeat(
 /**
  * Creates a console wrapper for the given level that intercepts and logs calls.
  */
-function createConsoleWrapper(
-  level: ConsoleLevel,
-  serverDeltaMs: number
-): (...args: unknown[]) => void {
+function createConsoleWrapper(level: ConsoleLevel): (...args: unknown[]) => void {
   return function (...rawArgs: unknown[]) {
     // Re-entrancy guard: if we're already inside a wrapper call, forward
     // directly to pristine natives and skip dispatch to avoid infinite recursion.
@@ -135,7 +126,7 @@ function createConsoleWrapper(
             level,
             args: serializedArgs,
             trace,
-            timestamp: now(serverDeltaMs),
+            timestamp: now(),
           };
           if (count > 1) {
             event.repeatCount = count - 1;
@@ -152,7 +143,7 @@ function createConsoleWrapper(
             level,
             args: serializedArgs,
             trace,
-            timestamp: now(serverDeltaMs),
+            timestamp: now(),
           };
           try {
             dispatch(truncatePayload(cleanPayload(event)));
@@ -187,7 +178,7 @@ function createConsoleWrapper(
             args: [
               `${LOGGER_PREFIX} console forward failed: ${(err as Error)?.message || String(err)}`,
             ],
-            timestamp: now(serverDeltaMs),
+            timestamp: now(),
           } as ConsoleLogEvent);
           // eslint-disable-next-line no-empty -- intentional: error reporting must not throw
         } catch {}
@@ -203,7 +194,7 @@ function createConsoleWrapper(
  *
  * Uses defineProperty to re-wrap if other code overwrites console methods.
  */
-export function patchConsole(serverDeltaMs: number): void {
+export function patchConsole(): void {
   // `console` has no index signature in TypeScript, so dynamic property access
   // (e.g. console[level], console[CONSOLE_PATCHED_FLAG]) is a type error.
   // One cast here; all dynamic accesses below go through this alias.
@@ -218,7 +209,7 @@ export function patchConsole(serverDeltaMs: number): void {
     if (patchedFlags[level]) return;
     patchedFlags[level] = true;
 
-    let currentWrapper = createConsoleWrapper(level, serverDeltaMs);
+    let currentWrapper = createConsoleWrapper(level);
 
     try {
       Object.defineProperty(console, level, {
@@ -236,7 +227,7 @@ export function patchConsole(serverDeltaMs: number): void {
           if (window.__userplane_logger_originals?.console) {
             window.__userplane_logger_originals.console[level] = fn;
           }
-          currentWrapper = createConsoleWrapper(level, serverDeltaMs);
+          currentWrapper = createConsoleWrapper(level);
         },
       });
     } catch {

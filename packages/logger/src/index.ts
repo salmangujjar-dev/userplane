@@ -115,6 +115,7 @@ export type {
   TruncationMeta,
   UserActionData,
   UserActionLogEvent,
+  UserActionType,
   XHRTrackingData,
 } from './types';
 export { TabState } from './types';

@@ -3,17 +3,14 @@ import { dispatch } from '../event-bridge';
 import type { ResourceErrorLogEvent, ResourceLogEvent } from '../types';
 import { inferContentType } from '../utils/content-type';
 import { extractPerformanceData } from '../utils/performance';
-
-function now(serverDeltaMs: number): number {
-  return Date.now() + serverDeltaMs;
-}
+import { now } from '../utils/time';
 
 /**
  * Sets up a PerformanceObserver to track resource loading (CSS, images, fonts, etc.).
  * Skips fetch and XHR entries (those are handled by their own interceptors).
  * Returns the observer for later disconnection.
  */
-export function observeResources(serverDeltaMs: number): PerformanceObserver {
+export function observeResources(): PerformanceObserver {
   const observer = new PerformanceObserver((list) => {
     list.getEntries().forEach((entry) => {
       const resEntry = entry as PerformanceResourceTiming;
@@ -46,7 +43,7 @@ export function observeResources(serverDeltaMs: number): PerformanceObserver {
           requestStart: resEntry.requestStart,
           responseStart: resEntry.responseStart,
           responseEnd: resEntry.responseEnd,
-          timestamp: now(serverDeltaMs),
+          timestamp: now(),
           headers: {
             contentType: inferContentType(entry.name, resEntry.initiatorType),
           },
@@ -70,7 +67,7 @@ export function observeResources(serverDeltaMs: number): PerformanceObserver {
  * (script, img, link, iframe, video, audio, source elements).
  * Returns the handler for later removal.
  */
-export function patchResourceErrors(serverDeltaMs: number): (e: Event) => void {
+export function patchResourceErrors(): (e: Event) => void {
   const handler = (event: Event): void => {
     const target = event.target as Element;
 
@@ -122,7 +119,7 @@ export function patchResourceErrors(serverDeltaMs: number): (e: Event) => void {
       type: 'resource-error',
       tag: tag.toUpperCase(),
       url,
-      timestamp: now(serverDeltaMs),
+      timestamp: now(),
       headers: {
         contentType: inferContentType(url, ''),
       },

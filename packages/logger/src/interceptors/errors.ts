@@ -7,7 +7,7 @@ import { serializeValue } from '../utils/serialization';
  * Creates and registers the unhandled promise rejection handler.
  * Returns the handler function for later removal.
  */
-export function patchUnhandledRejection(serverDeltaMs: number): (e: PromiseRejectionEvent) => void {
+export function patchUnhandledRejection(): (e: PromiseRejectionEvent) => void {
   const handler = (e: PromiseRejectionEvent): void => {
     const reason = e.reason;
     // Skip errors originating from the logger itself
@@ -26,7 +26,7 @@ export function patchUnhandledRejection(serverDeltaMs: number): (e: PromiseRejec
             ? { name: reason.name, message: reason.message, stack: reason.stack }
             : serializeValue(reason)!,
         ],
-        timestamp: Date.now() + serverDeltaMs,
+        timestamp: Date.now(),
       } as ConsoleLogEvent);
       // eslint-disable-next-line no-empty -- intentional: rejection handler must not throw
     } catch {}
@@ -47,7 +47,7 @@ function isLoggerError(filename: string | undefined): boolean {
  * Creates and registers the global error handler for JS errors.
  * Returns the handler function for later removal.
  */
-export function patchGlobalErrors(serverDeltaMs: number): (e: ErrorEvent) => void {
+export function patchGlobalErrors(): (e: ErrorEvent) => void {
   const handler = (e: ErrorEvent): void => {
     // Skip logger's own errors and resource load errors (handled separately)
     if (isLoggerError(e.filename) || e.target instanceof HTMLElement) return;
@@ -60,7 +60,7 @@ export function patchGlobalErrors(serverDeltaMs: number): (e: ErrorEvent) => voi
         subtype: 'error',
         level: 'error',
         args: [`JS Error: ${e.message} at ${e.filename}:${e.lineno}:${e.colno}`],
-        timestamp: Date.now() + serverDeltaMs,
+        timestamp: Date.now(),
       } as ConsoleLogEvent);
       // eslint-disable-next-line no-empty -- intentional: global error handler must not throw
     } catch {}
