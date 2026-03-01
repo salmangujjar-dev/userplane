@@ -21,17 +21,10 @@ import { formatSerializedValue } from './console-log-types';
 const baseTime = Date.now() - 60000;
 
 const mockLogs: RecordingConsoleLog[] = [
-  createMockConsoleLog('1', baseTime, 'log', ['Application started'], 'app.js'),
-  createMockConsoleLog('2', baseTime + 1333, 'info', ['User authentication successful'], 'auth.js'),
+  createMockConsoleLog(baseTime, 'log', ['Application started'], 'app.js'),
+  createMockConsoleLog(baseTime + 1333, 'info', ['User authentication successful'], 'auth.js'),
+  createMockConsoleLog(baseTime + 2666, 'warning', ['Deprecated API usage detected'], 'api.js'),
   createMockConsoleLog(
-    '3',
-    baseTime + 2666,
-    'warning',
-    ['Deprecated API usage detected'],
-    'api.js'
-  ),
-  createMockConsoleLog(
-    '4',
     baseTime + 3999,
     'error',
     ['Failed to load resource: net::ERR_CONNECTION_REFUSED'],
@@ -39,105 +32,76 @@ const mockLogs: RecordingConsoleLog[] = [
     ['at fetchData (api.js:45:12)', 'at loadUser (user.js:23:8)', 'at init (app.js:12:4)']
   ),
   createMockConsoleLog(
-    '5',
     baseTime + 5332,
     'log',
     [{ user: 'john', id: 123, active: true }],
     'data.js'
   ),
   createMockConsoleLog(
-    '6',
     baseTime + 6665,
     'debug',
     ['Component mounted: UserProfile'],
     'components.js'
   ),
   createMockConsoleLog(
-    '7',
     baseTime + 7998,
     'info',
     ['API response received in 234ms'],
     'api-client.js'
   ),
   createMockConsoleLog(
-    '8',
     baseTime + 9331,
     'warning',
     ['Memory usage high: 85% of heap'],
     'monitor.js'
   ),
   createMockConsoleLog(
-    '9',
     baseTime + 10664,
     'error',
     ['TypeError: Cannot read property "map" of undefined'],
     'list-view.js',
     ['at renderList (list-view.js:234:16)', 'at render (component.js:67:8)']
   ),
-  createMockConsoleLog('10', baseTime + 11997, 'log', ['Fetching user preferences'], 'settings.js'),
+  createMockConsoleLog(baseTime + 11997, 'log', ['Fetching user preferences'], 'settings.js'),
   createMockConsoleLog(
-    '11',
     baseTime + 13330,
     'debug',
     ['WebSocket connection established'],
     'websocket.js'
   ),
-  createMockConsoleLog('12', baseTime + 14663, 'info', ['Theme changed to dark mode'], 'theme.js'),
+  createMockConsoleLog(baseTime + 14663, 'info', ['Theme changed to dark mode'], 'theme.js'),
   createMockConsoleLog(
-    '13',
     baseTime + 15996,
     'warning',
     ['Slow network detected: 2G'],
     'network-monitor.js'
   ),
   createMockConsoleLog(
-    '14',
     baseTime + 17329,
     'log',
     [{ status: 'success', items: 42, hasMore: true }],
     'pagination.js'
   ),
-  createMockConsoleLog('15', baseTime + 18662, 'debug', ['Redux store updated'], 'store.js'),
+  createMockConsoleLog(baseTime + 18662, 'debug', ['Redux store updated'], 'store.js'),
+  createMockConsoleLog(baseTime + 19995, 'error', ['Failed to save to localStorage'], 'storage.js'),
+  createMockConsoleLog(baseTime + 21328, 'info', ['Form validation passed'], 'form-validator.js'),
+  createMockConsoleLog(baseTime + 22661, 'log', ['Animation completed'], 'animations.js'),
   createMockConsoleLog(
-    '16',
-    baseTime + 19995,
-    'error',
-    ['Failed to save to localStorage'],
-    'storage.js'
-  ),
-  createMockConsoleLog(
-    '17',
-    baseTime + 21328,
-    'info',
-    ['Form validation passed'],
-    'form-validator.js'
-  ),
-  createMockConsoleLog('18', baseTime + 22661, 'log', ['Animation completed'], 'animations.js'),
-  createMockConsoleLog(
-    '19',
     baseTime + 23994,
     'warning',
     ['Image failed to load: avatar.png'],
     'image-loader.js'
   ),
+  createMockConsoleLog(baseTime + 25327, 'debug', ['Cache cleared for user session'], 'cache.js'),
   createMockConsoleLog(
-    '20',
-    baseTime + 25327,
-    'debug',
-    ['Cache cleared for user session'],
-    'cache.js'
-  ),
-  createMockConsoleLog(
-    '21',
     baseTime + 26660,
     'error',
     ['Network request failed: 500 Internal Server Error'],
     'error-handler.js',
     ['at handleError (error-handler.js:123:24)', 'at fetch (api.js:45:12)']
   ),
-  createMockConsoleLog('22', baseTime + 27993, 'info', ['User logged out successfully'], 'auth.js'),
+  createMockConsoleLog(baseTime + 27993, 'info', ['User logged out successfully'], 'auth.js'),
   createMockConsoleLog(
-    '23',
     baseTime + 29000,
     'log',
     [
@@ -147,7 +111,6 @@ const mockLogs: RecordingConsoleLog[] = [
     'debug.js'
   ),
   createMockConsoleLog(
-    '24',
     baseTime + 30000,
     'error',
     [
@@ -160,7 +123,7 @@ const mockLogs: RecordingConsoleLog[] = [
     ],
     'eval.js'
   ),
-  createMockConsoleLog('25', baseTime + 31000, 'log', [[1, 2, 3, 4, 5]], 'data.js'),
+  createMockConsoleLog(baseTime + 31000, 'log', [[1, 2, 3, 4, 5]], 'data.js'),
 ];
 
 const CONSOLE_FILTERS: { value: LogLevel; label: string; icon: LucideIcon; iconClass: string }[] = [
@@ -174,9 +137,11 @@ const CONSOLE_FILTERS: { value: LogLevel; label: string; icon: LucideIcon; iconC
 export function ConsolePanel({
   data,
   isLoading,
+  recordingStartTime: recordingStartTimeProp,
 }: {
   data?: RecordingConsoleLog[];
   isLoading?: boolean;
+  recordingStartTime?: number;
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<Set<LogLevel>>(
@@ -204,7 +169,8 @@ export function ConsolePanel({
     return matchesFilter && matchesSearch;
   });
 
-  const recordingStartTime = logs.length > 0 ? logs[0]?.timestamp : undefined;
+  const recordingStartTime =
+    recordingStartTimeProp ?? (logs.length > 0 ? logs[0]?.timestamp : undefined);
 
   return (
     <div className="h-full flex flex-col">
@@ -277,7 +243,7 @@ export function ConsolePanel({
         ) : (
           filteredLogs.map((log, index) => (
             <ConsoleLogEntry
-              key={`${log.id}-${index}`}
+              key={`${log.timestamp}-${index}`}
               log={log}
               recordingStartTime={recordingStartTime}
             />

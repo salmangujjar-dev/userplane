@@ -15,6 +15,7 @@ import { useState } from 'react';
 import type { RecordingConsoleLog, SerializedValue } from './console-log-types';
 import { formatSerializedValue } from './console-log-types';
 import { useRecordingPlayerSeek } from './recording-player-context';
+import { getRecordingTime } from './recording-time-utils';
 
 function isExpandableValue(value: SerializedValue): boolean {
   if (value === null || typeof value !== 'object') return false;
@@ -110,15 +111,6 @@ function LevelIcon({ type }: LevelIconProps) {
     default:
       return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
   }
-}
-
-function getRecordingTime(eventTimestamp: number, recordingStartTime?: number): string {
-  if (!recordingStartTime) return '00:00';
-  const elapsed = eventTimestamp - recordingStartTime;
-  const totalSeconds = Math.floor(elapsed / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 const tabTriggerClass =

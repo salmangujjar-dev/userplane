@@ -31,78 +31,78 @@ import { createMockActionLog } from './action-types';
 const baseTime = Date.now() - 60000;
 
 const mockActions: RecordingActionLog[] = [
-  createMockActionLog('1', baseTime, {
+  createMockActionLog(baseTime, {
     action: 'init_page',
     url: 'https://app.example.com/dashboard',
     title: 'Dashboard',
   }),
-  createMockActionLog('2', baseTime + 2500, {
+  createMockActionLog(baseTime + 2500, {
     action: 'click',
     url: 'https://app.example.com/dashboard',
     info: { tagName: 'BUTTON', id: 'submit-btn', classList: ['submit', 'primary'] },
   }),
-  createMockActionLog('3', baseTime + 5000, {
+  createMockActionLog(baseTime + 5000, {
     action: 'click',
     url: 'https://app.example.com/dashboard',
     info: { tagName: 'A', id: '', classList: ['nav-link'] },
   }),
-  createMockActionLog('4', baseTime + 7000, {
+  createMockActionLog(baseTime + 7000, {
     action: 'spa_route',
     from: '/dashboard',
     to: '/settings',
     triggeredBy: 'pushState',
   }),
-  createMockActionLog('5', baseTime + 9000, {
+  createMockActionLog(baseTime + 9000, {
     action: 'click',
     url: 'https://app.example.com/settings',
     info: { tagName: 'INPUT', id: 'agree-terms', classList: ['checkbox'] },
   }),
-  createMockActionLog('6', baseTime + 11000, {
+  createMockActionLog(baseTime + 11000, {
     action: 'click',
     url: 'https://app.example.com/settings',
     info: { tagName: 'BUTTON', id: 'save-btn', classList: ['primary'] },
   }),
-  createMockActionLog('7', baseTime + 14000, {
+  createMockActionLog(baseTime + 14000, {
     action: 'tab_deactivated',
     tabId: 'tab-1',
   }),
-  createMockActionLog('8', baseTime + 16000, {
+  createMockActionLog(baseTime + 16000, {
     action: 'tab_activated',
     tabId: 'tab-1',
   }),
-  createMockActionLog('9', baseTime + 18000, {
+  createMockActionLog(baseTime + 18000, {
     action: 'navigate',
     from: 'https://app.example.com/settings',
     to: 'https://app.example.com/profile',
     method: 'pushState',
   }),
-  createMockActionLog('10', baseTime + 20000, {
+  createMockActionLog(baseTime + 20000, {
     action: 'click',
     url: 'https://app.example.com/profile',
     info: { tagName: 'BUTTON', id: 'delete-btn', classList: ['danger'] },
   }),
-  createMockActionLog('11', baseTime + 23000, {
+  createMockActionLog(baseTime + 23000, {
     action: 'click',
     url: 'https://app.example.com/profile',
     info: { tagName: 'BUTTON', id: 'confirm-delete', classList: ['danger', 'confirm'] },
   }),
-  createMockActionLog('12', baseTime + 25000, {
+  createMockActionLog(baseTime + 25000, {
     action: 'spa_route',
     from: '/profile',
     to: '/dashboard',
     triggeredBy: 'popState',
   }),
-  createMockActionLog('13', baseTime + 28000, {
+  createMockActionLog(baseTime + 28000, {
     action: 'tab_switch',
     from: 'tab-1',
     to: 'tab-2',
   }),
-  createMockActionLog('14', baseTime + 32000, {
+  createMockActionLog(baseTime + 32000, {
     action: 'click',
     url: 'https://app.example.com/dashboard',
     info: { tagName: 'BUTTON', id: 'theme-toggle', classList: ['toggle'] },
   }),
-  createMockActionLog('15', baseTime + 35000, {
+  createMockActionLog(baseTime + 35000, {
     action: 'page_unload',
     url: 'https://app.example.com/dashboard',
   }),
@@ -131,9 +131,11 @@ const ALL_ACTION_TYPES = new Set<UserActionType>(ACTION_FILTERS.map((f) => f.val
 export function ActionsPanel({
   data,
   isLoading,
+  recordingStartTime: recordingStartTimeProp,
 }: {
   data?: RecordingActionLog[];
   isLoading?: boolean;
+  recordingStartTime?: number;
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<Set<UserActionType>>(
@@ -174,7 +176,8 @@ export function ActionsPanel({
     return matchesFilter && matchesSearch;
   });
 
-  const recordingStartTime = actions.length > 0 ? actions[0]?.timestamp : undefined;
+  const recordingStartTime =
+    recordingStartTimeProp ?? (actions.length > 0 ? actions[0]?.timestamp : undefined);
 
   return (
     <div className="h-full flex flex-col">
@@ -247,7 +250,7 @@ export function ActionsPanel({
         ) : (
           filteredActions.map((action, index) => (
             <ActionEntry
-              key={`${action.id}-${index}`}
+              key={`${action.timestamp}-${index}`}
               action={action}
               recordingStartTime={recordingStartTime}
             />
