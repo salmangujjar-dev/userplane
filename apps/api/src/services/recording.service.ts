@@ -205,6 +205,7 @@ export class RecordingService {
     return {
       recordingId: row.recordingId,
       recordingDurationMs: row.recordingDurationMs,
+      recordingStartedAt: row.recordingStartedAt ?? null,
       meta: {
         link: {
           linkId: row.recordingLinkId,

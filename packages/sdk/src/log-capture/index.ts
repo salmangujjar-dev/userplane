@@ -1,5 +1,2 @@
-export {
-  LogCaptureManager,
-  type LogCapturePreferences,
-  type LogCaptureState,
-} from './log-capture-manager';
+export type { LogCapturePreferences, LogCaptureState } from '../bridge/types';
+export { LogCaptureManager } from './log-capture-manager';

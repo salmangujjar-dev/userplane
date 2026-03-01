@@ -196,7 +196,7 @@ export class CaptureBridgeConnection {
     }
 
     this.logger.debug('Disconnecting from capture iframe');
-    this.logCaptureManager?.destroy();
+    this.logCaptureManager?.destroy().catch(() => {});
     this.connection.close();
     this.connection = null;
     this.callbacks.onDisconnected?.();

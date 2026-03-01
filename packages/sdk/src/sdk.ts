@@ -409,6 +409,7 @@ export function open(token?: string): boolean {
       return false;
     }
     params = pendingParams;
+    pendingParams = null;
   } else {
     const urlData = parseUserplaneUrl(window.location.href);
     if (!urlData || !urlData.token) {
@@ -654,6 +655,56 @@ export function set(key: string, value: Serializable): void {
  */
 export function clearMetadata(keyOrType?: string): void {
   clearMetadataFn(keyOrType);
+}
+
+/**
+ * Destroy the SDK and reset all state.
+ *
+ * Tears down both the main frame (recording/verification) and the capture iframe,
+ * resets all module-level state so that `initialize()` can be called again.
+ * Useful for SPAs that need to reinitialize (workspace switch, logout/login).
+ *
+ * @example
+ * ```typescript
+ * // Tear down before reinitializing
+ * userplane.destroy();
+ * userplane.initialize({ workspaceId: 'ws_new' });
+ * ```
+ */
+export function destroy(): void {
+  // Unmount main frame (recording/verification)
+  if (currentManager) {
+    currentManager.unmount();
+    currentManager = null;
+  }
+
+  // Unmount capture iframe
+  if (captureManager) {
+    captureManager.unmount();
+    captureManager = null;
+  }
+
+  // Reset all module state
+  factory = null;
+  pendingParams = null;
+  initOptions = {};
+  captureEnabled = true;
+  initialized = false;
+
+  // Reset URLs to compile-time defaults
+  recorderBaseUrl =
+    typeof __RECORDER_BASE_URL__ !== 'undefined'
+      ? __RECORDER_BASE_URL__
+      : 'https://recorder.userplane.io';
+  verificationBaseUrl =
+    typeof __VERIFICATION_BASE_URL__ !== 'undefined'
+      ? __VERIFICATION_BASE_URL__
+      : 'https://api.userplane.io/api/v1';
+
+  // Note: tabRef is intentionally NOT cleared — window.name should persist
+  // so the same tab re-identifies on reinit (important for cross-tab coordination)
+
+  logger.info('SDK destroyed');
 }
 
 // Re-export types for consumers

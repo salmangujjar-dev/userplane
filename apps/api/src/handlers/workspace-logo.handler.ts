@@ -3,6 +3,7 @@
  * Handles multipart form data uploads for workspace logos
  */
 
+import { FILE_SIZE_LIMITS } from '@workspace/contract';
 import { ASSETS_ALLOWED_CONTENT_TYPES, type AssetsContentType } from '@workspace/storage';
 import type { Context } from 'hono';
 
@@ -14,10 +15,7 @@ import { workspaceMemberService } from '@/api/services';
 
 const logger = createLogger('workspace-logo-handler');
 
-/**
- * Maximum logo file size: 2MB
- */
-const MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_LOGO_SIZE_BYTES = FILE_SIZE_LIMITS.MAX_LOGO_SIZE;
 
 /**
  * Allowed content types for logo uploads
