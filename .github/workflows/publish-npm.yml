@@ -67,6 +67,12 @@ jobs:
           cd packages/${{ inputs.package }}
           bun run build:npm
 
+      - name: Prepare package.json for publish
+        run: |
+          cd packages/${{ inputs.package }}
+          npm pkg delete devDependencies
+          npm pkg delete scripts.prepublishOnly
+
       - name: Pack (dry run)
         if: inputs.dry-run
         run: |
