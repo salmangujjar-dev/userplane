@@ -95,6 +95,15 @@ export function RecordingLogReplayPanel({
   const getOverlayReason = (featureGateEnabled: boolean | undefined) =>
     featureGateEnabled ? ('preference-disabled' as const) : ('feature-gated' as const);
 
+  // Derive the recording start time for log timestamp alignment.
+  // Prefer the explicit recordingStartedAt stored during upload.
+  // Fall back to createdAt - durationMs for older recordings (approximate).
+  const recordingStartTime = recording.recordingStartedAt
+    ? new Date(recording.recordingStartedAt).getTime()
+    : recording.meta.createdAt
+      ? new Date(recording.meta.createdAt).getTime() - recording.recordingDurationMs
+      : undefined;
+
   // Branching per resource:
   //   URL exists           → render data (it was captured, regardless of current preference)
   //   URL null, pref OFF   → show overlay (preference disabled → upsell or helpdesk)
@@ -136,7 +145,11 @@ export function RecordingLogReplayPanel({
 
           <TabsContent value="console" className="h-full mt-0 p-0">
             {consoleLog?.url != null ? (
-              <ConsolePanel data={consoleLogData.data} isLoading={consoleLogData.isLoading} />
+              <ConsolePanel
+                data={consoleLogData.data}
+                isLoading={consoleLogData.isLoading}
+                recordingStartTime={recordingStartTime}
+              />
             ) : consoleLog && !consoleLog.captureEnabled ? (
               <CaptureGateOverlay
                 title="Console Logs"
@@ -147,7 +160,7 @@ export function RecordingLogReplayPanel({
                 <ConsolePanel />
               </CaptureGateOverlay>
             ) : consoleLog ? (
-              <ConsolePanel data={[]} />
+              <ConsolePanel data={[]} recordingStartTime={recordingStartTime} />
             ) : (
               <ConsolePanel isLoading />
             )}
@@ -155,7 +168,11 @@ export function RecordingLogReplayPanel({
 
           <TabsContent value="network" className="h-full mt-0 p-0">
             {networkLog?.url != null ? (
-              <NetworkPanel data={networkLogData.data} isLoading={networkLogData.isLoading} />
+              <NetworkPanel
+                data={networkLogData.data}
+                isLoading={networkLogData.isLoading}
+                recordingStartTime={recordingStartTime}
+              />
             ) : networkLog && !networkLog.captureEnabled ? (
               <CaptureGateOverlay
                 title="Network Activity"
@@ -166,7 +183,7 @@ export function RecordingLogReplayPanel({
                 <NetworkPanel />
               </CaptureGateOverlay>
             ) : networkLog ? (
-              <NetworkPanel data={[]} />
+              <NetworkPanel data={[]} recordingStartTime={recordingStartTime} />
             ) : (
               <NetworkPanel isLoading />
             )}
@@ -174,7 +191,11 @@ export function RecordingLogReplayPanel({
 
           <TabsContent value="actions" className="h-full mt-0 p-0">
             {action?.url != null ? (
-              <ActionsPanel data={actionLogData.data} isLoading={actionLogData.isLoading} />
+              <ActionsPanel
+                data={actionLogData.data}
+                isLoading={actionLogData.isLoading}
+                recordingStartTime={recordingStartTime}
+              />
             ) : action && !action.captureEnabled ? (
               <CaptureGateOverlay
                 title="User Actions"
@@ -185,7 +206,7 @@ export function RecordingLogReplayPanel({
                 <ActionsPanel />
               </CaptureGateOverlay>
             ) : action ? (
-              <ActionsPanel data={[]} />
+              <ActionsPanel data={[]} recordingStartTime={recordingStartTime} />
             ) : (
               <ActionsPanel isLoading />
             )}

@@ -37,13 +37,8 @@ export function formatActionLabel(action: UserActionType): string {
   }
 }
 
-export function createMockActionLog(
-  id: string,
-  timestamp: number,
-  data: UserActionData
-): RecordingActionLog {
+export function createMockActionLog(timestamp: number, data: UserActionData): RecordingActionLog {
   return {
-    id,
     log_type: 'action',
     type: 'action',
     timestamp,

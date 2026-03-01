@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FILE_SIZE_LIMITS } from '@workspace/contract';
 
 import { apiClient } from '@/client';
 import {
@@ -801,7 +802,7 @@ interface LogoUploadErrorResponse {
   error: string;
 }
 
-const MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_LOGO_SIZE_BYTES = FILE_SIZE_LIMITS.MAX_LOGO_SIZE;
 
 /**
  * Upload workspace logo

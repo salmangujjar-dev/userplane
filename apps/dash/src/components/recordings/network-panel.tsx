@@ -473,9 +473,11 @@ const ALL_NETWORK_TYPES = new Set<Exclude<NetworkFilterType, 'all'>>(
 export function NetworkPanel({
   data,
   isLoading,
+  recordingStartTime: recordingStartTimeProp,
 }: {
   data?: RecordingNetworkLog[];
   isLoading?: boolean;
+  recordingStartTime?: number;
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<Set<Exclude<NetworkFilterType, 'all'>>>(
@@ -506,7 +508,8 @@ export function NetworkPanel({
     return matchesSearch && activeFilters.has(requestFilterType);
   });
 
-  const recordingStartTime = requests.length > 0 ? requests[0]?.timestamp : undefined;
+  const recordingStartTime =
+    recordingStartTimeProp ?? (requests.length > 0 ? requests[0]?.timestamp : undefined);
 
   return (
     <div className="h-full flex flex-col">
@@ -587,7 +590,7 @@ export function NetworkPanel({
         ) : (
           filteredRequests.map((request, index) => (
             <NetworkEntry
-              key={`${request.id}-${index}`}
+              key={`${request.timestamp}-${index}`}
               request={request}
               recordingStartTime={recordingStartTime}
             />

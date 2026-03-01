@@ -40,7 +40,6 @@ export function formatSerializedValue(value: unknown): string {
 }
 
 export function createMockConsoleLog(
-  id: string,
   timestamp: number,
   type: string,
   args: unknown[],
@@ -48,7 +47,6 @@ export function createMockConsoleLog(
   trace?: string[]
 ): RecordingConsoleLog {
   return {
-    id,
     log_type: 'console',
     type,
     args: args as SerializedValue[],

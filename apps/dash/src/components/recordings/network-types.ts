@@ -57,7 +57,7 @@ export function getStatusColor(status: number): string {
 }
 
 export function createMockNetworkLog(
-  id: string,
+  requestId: string,
   url: string,
   method: string,
   type: string,
@@ -76,9 +76,8 @@ export function createMockNetworkLog(
   }
 ): RecordingNetworkLog {
   return {
-    id,
     log_type: 'network',
-    requestId: id,
+    requestId,
     startedDateTime: timestamp,
     timestamp,
     url,

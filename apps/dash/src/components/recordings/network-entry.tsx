@@ -17,18 +17,10 @@ import { useState } from 'react';
 import type { RecordingNetworkLog } from './network-types';
 import { formatTime, getStatusColor } from './network-types';
 import { useRecordingPlayerSeek } from './recording-player-context';
+import { getRecordingTime } from './recording-time-utils';
 
 const tabTriggerClass =
   'rounded-none border-0 bg-transparent px-0 pb-2 shadow-none data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none text-muted-foreground relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-foreground';
-
-function getRecordingTime(eventTimestamp: number, recordingStartTime?: number): string {
-  if (!recordingStartTime) return '00:00';
-  const elapsed = eventTimestamp - recordingStartTime;
-  const totalSeconds = Math.floor(elapsed / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
 
 function getFileName(url: string): string {
   try {
