@@ -65,7 +65,7 @@ jobs:
       - name: Set version
         run: |
           cd packages/${{ inputs.package }}
-          npm version ${{ inputs.version }} --no-git-tag-version
+          npm pkg set version=${{ inputs.version }}
 
       - name: Pack (dry run)
         if: inputs.dry-run
