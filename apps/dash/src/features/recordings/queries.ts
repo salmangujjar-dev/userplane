@@ -214,3 +214,30 @@ export function useRecordingNetworkLog(workspaceId: string | null, recordingId: 
     retry: 2,
   });
 }
+
+/**
+ * Hook to fetch recording action resource
+ * Returns presigned URL for action log file
+ *
+ * Returns SafeResult - check result.success before using data
+ * Known API errors won't trigger error monitoring
+ */
+export function useRecordingAction(workspaceId: string | null, recordingId: string) {
+  return useQuery({
+    queryKey: recordingKeys.action(workspaceId ?? '', recordingId),
+    queryFn: async () => {
+      if (!workspaceId || !recordingId) {
+        throw new Error('Missing workspace or recording ID');
+      }
+
+      const [error, response] = await apiClient.recording.resources.action({
+        params: { workspaceId, recordingId },
+      });
+
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: !!workspaceId && !!recordingId,
+    staleTime: 50 * 60 * 1000, // 50 minutes
+    retry: 2,
+  });
+}

@@ -5,7 +5,7 @@
  */
 import { z } from 'zod';
 
-import { AUTH, DEV_URLS, POSTHOG, STORAGE } from './defaults';
+import { AUTH, DEV_URLS, POSTHOG, STORAGE, SUPPORT } from './defaults';
 
 // =============================================================================
 // Parse Utilities
@@ -59,6 +59,7 @@ export const urlEnvSchema = z.object({
   NEXT_PUBLIC_RECORDER_URL: urlWithDefault(DEV_URLS.RECORDER),
   NEXT_PUBLIC_CDN_DOMAIN: urlWithDefault(DEV_URLS.CDN),
   NEXT_PUBLIC_ASSETS_DOMAIN: urlWithDefault(DEV_URLS.ASSETS),
+  NEXT_PUBLIC_SUPPORT_DOCS_URL: urlWithDefault(SUPPORT.DOCS_URL),
 });
 
 /** Auth env vars schema */
@@ -134,6 +135,11 @@ export const posthogConfigSchema = z.object({
   host: z.string().url(),
 });
 
+/** Support configuration schema */
+export const supportConfigSchema = z.object({
+  docsUrl: z.string().url(),
+});
+
 /** Complete environment configuration schema */
 export const envConfigSchema = z.object({
   appEnv: z.enum(['development', 'production']),
@@ -145,6 +151,7 @@ export const envConfigSchema = z.object({
   auth: authConfigSchema,
   storage: storageConfigSchema,
   posthog: posthogConfigSchema,
+  support: supportConfigSchema,
 });
 
 // =============================================================================
@@ -158,4 +165,5 @@ export type RecorderConfig = z.infer<typeof recorderConfigSchema>;
 export type AuthConfig = z.infer<typeof authConfigSchema>;
 export type StorageConfig = z.infer<typeof storageConfigSchema>;
 export type PostHogConfig = z.infer<typeof posthogConfigSchema>;
+export type SupportConfig = z.infer<typeof supportConfigSchema>;
 export type EnvConfig = z.infer<typeof envConfigSchema>;

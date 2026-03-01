@@ -125,6 +125,153 @@ function LinkIllustration() {
   );
 }
 
+// --- Panel empty state illustrations (compact, for recording detail panels) ---
+
+function ConsoleIllustration() {
+  return (
+    <div className="w-52 h-32 rounded-xl overflow-hidden bg-gradient-to-br from-orange-200 via-amber-200 to-yellow-200 p-3">
+      <div className="bg-white rounded-lg shadow-sm h-full p-2.5 space-y-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+          <div className="flex-1 h-1.5 bg-gray-100 rounded ml-1.5" />
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+            <div className="h-1.5 bg-gray-200 rounded w-4/5" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+            <div className="h-1.5 bg-gray-200 rounded w-3/5" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+            <div className="h-1.5 bg-gray-200 rounded w-2/3" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NetworkIllustration() {
+  return (
+    <div className="w-52 h-32 rounded-xl overflow-hidden bg-gradient-to-br from-cyan-200 via-teal-200 to-emerald-200 p-3">
+      <div className="bg-white rounded-lg shadow-sm h-full p-2.5 space-y-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+          <div className="flex-1 h-1.5 bg-gray-100 rounded ml-1.5" />
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <div className="px-1 py-0.5 rounded bg-emerald-100 text-[6px] font-bold text-emerald-600 leading-none shrink-0">
+              GET
+            </div>
+            <div className="h-1.5 bg-gray-200 rounded flex-1" />
+            <div className="px-1 py-0.5 rounded bg-emerald-50 text-[6px] font-medium text-emerald-500 leading-none shrink-0">
+              200
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="px-1 py-0.5 rounded bg-blue-100 text-[6px] font-bold text-blue-600 leading-none shrink-0">
+              POST
+            </div>
+            <div className="h-1.5 bg-gray-200 rounded flex-1" />
+            <div className="px-1 py-0.5 rounded bg-emerald-50 text-[6px] font-medium text-emerald-500 leading-none shrink-0">
+              201
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="px-1 py-0.5 rounded bg-emerald-100 text-[6px] font-bold text-emerald-600 leading-none shrink-0">
+              GET
+            </div>
+            <div className="h-1.5 bg-gray-200 rounded flex-1" />
+            <div className="px-1 py-0.5 rounded bg-red-50 text-[6px] font-medium text-red-500 leading-none shrink-0">
+              404
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActionsIllustration() {
+  return (
+    <div className="w-52 h-32 rounded-xl overflow-hidden bg-gradient-to-br from-rose-200 via-pink-200 to-fuchsia-200 p-3">
+      <div className="bg-white rounded-lg shadow-sm h-full p-2.5 space-y-2 relative">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+          <div className="flex-1 h-1.5 bg-gray-100 rounded ml-1.5" />
+        </div>
+        <div className="space-y-1.5">
+          <div className="h-3 bg-gray-100 rounded w-full" />
+          <div className="flex gap-1.5">
+            <div className="h-6 bg-pink-100 rounded flex-1" />
+            <div className="h-6 bg-gray-100 rounded flex-1" />
+          </div>
+          <div className="h-2 bg-gray-100 rounded w-3/4" />
+        </div>
+        <svg
+          className="absolute bottom-3 left-[55%] w-3 h-3 text-pink-500 drop-shadow-sm"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M4 0L4 20L9 15L14 22L17 20L12 13L19 13Z" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+export function ConsolePanelEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 px-4">
+      <div className="relative mb-4">
+        <ConsoleIllustration />
+      </div>
+      <h4 className="text-sm font-medium text-foreground mb-1">No console logs</h4>
+      <p className="text-xs text-muted-foreground text-center max-w-[220px]">
+        No console logs were captured during this recording
+      </p>
+    </div>
+  );
+}
+
+export function NetworkPanelEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 px-4">
+      <div className="relative mb-4">
+        <NetworkIllustration />
+      </div>
+      <h4 className="text-sm font-medium text-foreground mb-1">No network activity</h4>
+      <p className="text-xs text-muted-foreground text-center max-w-[220px]">
+        No network activity was captured during this recording
+      </p>
+    </div>
+  );
+}
+
+export function ActionsPanelEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 px-4">
+      <div className="relative mb-4">
+        <ActionsIllustration />
+      </div>
+      <h4 className="text-sm font-medium text-foreground mb-1">No user actions</h4>
+      <p className="text-xs text-muted-foreground text-center max-w-[220px]">
+        No user actions were captured during this recording
+      </p>
+    </div>
+  );
+}
+
 interface RecordingEmptyStateProps {
   onRequestRecording: () => void;
 }

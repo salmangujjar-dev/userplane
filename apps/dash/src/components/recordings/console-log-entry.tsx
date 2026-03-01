@@ -7,12 +7,14 @@ import {
   ChevronRight,
   Info,
   MessageSquare,
+  Play,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
 
 import type { RecordingConsoleLog, SerializedValue } from './console-log-types';
 import { formatSerializedValue } from './console-log-types';
+import { useRecordingPlayerSeek } from './recording-player-context';
 
 function isExpandableValue(value: SerializedValue): boolean {
   if (value === null || typeof value !== 'object') return false;
@@ -125,10 +127,12 @@ const tabTriggerClass =
 interface ConsoleDetailPanelProps {
   log: RecordingConsoleLog;
   hasTrace: boolean;
+  seekSeconds?: number;
   onClose: () => void;
 }
 
-function ConsoleDetailPanel({ log, hasTrace, onClose }: ConsoleDetailPanelProps) {
+function ConsoleDetailPanel({ log, hasTrace, seekSeconds, onClose }: ConsoleDetailPanelProps) {
+  const playerContext = useRecordingPlayerSeek();
   return (
     <div className="border-b border-border bg-background p-4">
       <Tabs defaultValue="output" className="w-full">
@@ -146,9 +150,20 @@ function ConsoleDetailPanel({ log, hasTrace, onClose }: ConsoleDetailPanelProps)
               </TabsTrigger>
             )}
           </TabsList>
-          <button onClick={onClose} className="hover:bg-muted rounded p-1 mb-2">
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {playerContext && seekSeconds !== undefined && (
+              <button
+                onClick={() => playerContext.seekTo(seekSeconds)}
+                title="Jump to this point in recording"
+                className="hover:bg-muted rounded p-1 mb-2"
+              >
+                <Play className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <button onClick={onClose} className="hover:bg-muted rounded p-1 mb-2">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <TabsContent value="output" className="mt-4">
@@ -217,6 +232,10 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
 
   const recordingTime = getRecordingTime(log.timestamp, recordingStartTime);
   const hasTrace = !!(log.trace && log.trace.length > 0);
+  const seekSeconds =
+    recordingStartTime != null
+      ? Math.max(0, (log.timestamp - recordingStartTime) / 1000)
+      : undefined;
 
   return (
     <div className="border-b border-border/50">
@@ -251,7 +270,12 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
       </button>
 
       {showDetails && (
-        <ConsoleDetailPanel log={log} hasTrace={hasTrace} onClose={() => setShowDetails(false)} />
+        <ConsoleDetailPanel
+          log={log}
+          hasTrace={hasTrace}
+          seekSeconds={seekSeconds}
+          onClose={() => setShowDetails(false)}
+        />
       )}
     </div>
   );

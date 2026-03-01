@@ -39,3 +39,11 @@ export const STORAGE = {
 export const POSTHOG = {
   HOST: 'https://us.i.posthog.com',
 } as const;
+
+// =============================================================================
+// Support Defaults
+// =============================================================================
+
+export const SUPPORT = {
+  DOCS_URL: 'https://userplane.io/help',
+} as const;

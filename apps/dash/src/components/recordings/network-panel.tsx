@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { NetworkPanelEmptyState } from '../shared/empty-state';
 import { NetworkEntry } from './network-entry';
 import type { RecordingNetworkLog } from './network-types';
 import {
@@ -469,7 +470,13 @@ const ALL_NETWORK_TYPES = new Set<Exclude<NetworkFilterType, 'all'>>(
   NETWORK_FILTERS.map((f) => f.value)
 );
 
-export function NetworkPanel() {
+export function NetworkPanel({
+  data,
+  isLoading,
+}: {
+  data?: RecordingNetworkLog[];
+  isLoading?: boolean;
+}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<Set<Exclude<NetworkFilterType, 'all'>>>(
     new Set(ALL_NETWORK_TYPES)
@@ -485,7 +492,10 @@ export function NetworkPanel() {
     setActiveFilters(next);
   };
 
-  const filteredRequests = mockRequests.filter((request) => {
+  const isEmpty = data && data.length === 0;
+  const requests = data ?? mockRequests;
+
+  const filteredRequests = requests.filter((request) => {
     if (activeFilters.size === 0) return false;
 
     const matchesSearch =
@@ -496,7 +506,7 @@ export function NetworkPanel() {
     return matchesSearch && activeFilters.has(requestFilterType);
   });
 
-  const recordingStartTime = mockRequests.length > 0 ? mockRequests[0]?.timestamp : undefined;
+  const recordingStartTime = requests.length > 0 ? requests[0]?.timestamp : undefined;
 
   return (
     <div className="h-full flex flex-col">
@@ -564,17 +574,24 @@ export function NetworkPanel() {
       </div>
 
       <div className="flex-1 overflow-y-auto font-mono">
-        {filteredRequests.map((request) => (
-          <NetworkEntry
-            key={request.id}
-            request={request}
-            recordingStartTime={recordingStartTime}
-          />
-        ))}
-        {filteredRequests.length === 0 && (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
+            Loading network activity...
+          </div>
+        ) : isEmpty ? (
+          <NetworkPanelEmptyState />
+        ) : filteredRequests.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
             No network requests match the current filters
           </div>
+        ) : (
+          filteredRequests.map((request, index) => (
+            <NetworkEntry
+              key={`${request.id}-${index}`}
+              request={request}
+              recordingStartTime={recordingStartTime}
+            />
+          ))
         )}
       </div>
     </div>

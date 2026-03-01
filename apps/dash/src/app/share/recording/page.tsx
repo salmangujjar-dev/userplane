@@ -17,6 +17,7 @@ import { fetchSharedRecording } from '@/client/public';
 import { PublicShareRecordingModal } from '@/components/modals/public-share-recording-modal';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
 import { RecordingPlayer } from '@/components/recordings/recording-player';
+import { RecordingPlayerProvider } from '@/components/recordings/recording-player-context';
 import { ErrorView } from '@/components/shared/error-view';
 import { NotFoundPage } from '@/components/shared/not-found-page';
 import { RecordingDetailSkeleton } from '@/components/skeleton';
@@ -59,25 +60,35 @@ function RecordingContent({
 }) {
   return (
     <main className="w-full pl-4 overflow-hidden flex-1">
-      <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg overflow-hidden">
-        <ResizablePanel defaultSize={66} minSize={30} className="overflow-y-auto">
-          <div className="relative pr-4">
-            <RecordingPlayer
-              videoSources={resources.video.sources ?? []}
-              thumbnailUrl={resources.thumbnail.url}
-              durationMs={recording.recordingDurationMs}
-            />
-          </div>
-        </ResizablePanel>
+      <RecordingPlayerProvider>
+        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg overflow-hidden">
+          <ResizablePanel defaultSize={66} minSize={30} className="overflow-y-auto">
+            <div className="relative pr-4">
+              <RecordingPlayer
+                videoSources={resources.video.sources ?? []}
+                thumbnailUrl={resources.thumbnail.url}
+                durationMs={recording.recordingDurationMs}
+              />
+            </div>
+          </ResizablePanel>
 
-        <ResizableHandle withHandle />
+          <ResizableHandle withHandle />
 
-        <ResizablePanel defaultSize={34} minSize={25} className="overflow-hidden">
-          <div className="pl-4 h-full">
-            <RecordingLogReplayPanel recordingId={recording.recordingId} recording={recording} />
-          </div>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+          <ResizablePanel defaultSize={34} minSize={25} className="overflow-hidden">
+            <div className="pl-4 h-full">
+              <RecordingLogReplayPanel
+                recordingId={recording.recordingId}
+                recording={recording}
+                resources={{
+                  consoleLog: resources.consoleLog,
+                  networkLog: resources.networkLog,
+                  action: resources.action,
+                }}
+              />
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </RecordingPlayerProvider>
     </main>
   );
 }

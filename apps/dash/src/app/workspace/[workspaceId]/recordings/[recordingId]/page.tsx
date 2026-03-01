@@ -16,6 +16,7 @@ import { ShareRecordingModal } from '@/components/modals/share-recording';
 import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
 import { RecordingPlayer } from '@/components/recordings/recording-player';
+import { RecordingPlayerProvider } from '@/components/recordings/recording-player-context';
 import { RecordingDetailSkeleton } from '@/components/skeleton';
 import {
   useDeleteRecording,
@@ -106,25 +107,27 @@ export default function RecordingDetailPage() {
       />
 
       <main className="w-full pl-4 overflow-hidden flex-1">
-        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg overflow-hidden">
-          <ResizablePanel defaultSize={66} minSize={30} className="overflow-y-auto">
-            <div className="relative pr-4">
-              <RecordingPlayer
-                videoSources={videoData?.resource.sources ?? []}
-                thumbnailUrl={thumbnailData?.resource.url ?? null}
-                durationMs={recording.recordingDurationMs}
-              />
-            </div>
-          </ResizablePanel>
+        <RecordingPlayerProvider>
+          <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg overflow-hidden">
+            <ResizablePanel defaultSize={66} minSize={30} className="overflow-y-auto">
+              <div className="relative pr-4">
+                <RecordingPlayer
+                  videoSources={videoData?.resource.sources ?? []}
+                  thumbnailUrl={thumbnailData?.resource.url ?? null}
+                  durationMs={recording.recordingDurationMs}
+                />
+              </div>
+            </ResizablePanel>
 
-          <ResizableHandle withHandle />
+            <ResizableHandle withHandle />
 
-          <ResizablePanel defaultSize={34} minSize={25} className="overflow-hidden">
-            <div className="pl-4 h-full">
-              <RecordingLogReplayPanel recordingId={recordingId} recording={recording} />
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+            <ResizablePanel defaultSize={34} minSize={25} className="overflow-hidden">
+              <div className="pl-4 h-full">
+                <RecordingLogReplayPanel recordingId={recordingId} recording={recording} />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </RecordingPlayerProvider>
       </main>
 
       <EditRecordingModal
