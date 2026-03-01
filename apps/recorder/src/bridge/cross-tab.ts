@@ -146,6 +146,11 @@ interface CrossTabSchema {
   broadcastStopLogCapture: (remote: CrossTabSchema) => void;
 
   /**
+   * Broadcast clear log store command to all capture iframes
+   */
+  broadcastClearLogStore: (remote: CrossTabSchema) => void;
+
+  /**
    * Request logs from all capture iframes (scatter)
    */
   requestLogs: (request: LogsRequest, remote: CrossTabSchema) => void;
@@ -198,6 +203,8 @@ export interface CrossTabCoordinatorCallbacks {
   ) => void;
   /** Called when this tab (capture) receives stop log capture command */
   onLogCaptureStop?: () => void;
+  /** Called when this tab (capture) receives clear log store command */
+  onClearLogStore?: () => void;
 }
 
 /**
@@ -259,6 +266,7 @@ export class CrossTabCoordinator {
 
   // Health check interval for capture iframes
   private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
+  private healthCheckSkipFirst = true;
   private readonly HEALTH_CHECK_INTERVAL_MS = 5000; // Check every 5 seconds
 
   constructor(config: CrossTabCoordinatorConfig = {}) {
@@ -341,8 +349,12 @@ export class CrossTabCoordinator {
    */
   public async connect(tabId?: string): Promise<void> {
     if (this.connection) {
-      logger.warn('already connected');
-      return;
+      logger.debug('already connected, force-closing old connection');
+      this.stopHealthCheck();
+      this.connection.close();
+      this.connection = null;
+      this.localTabId = null;
+      this.isOwner = false;
     }
 
     logger.debug('initiating connection');
@@ -535,6 +547,17 @@ export class CrossTabCoordinator {
         self.config.callbacks.onLogCaptureStop?.();
       },
 
+      // Log capture: clear log store (runs in capture iframes)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      broadcastClearLogStore(_remote: CrossTabSchema) {
+        // Only capture iframes should handle clear log store commands
+        if (!self.localTabId || !isCaptureTab(self.localTabId)) {
+          return;
+        }
+        logger.debug({ localTabId: self.localTabId }, 'clear log store received');
+        self.config.callbacks.onClearLogStore?.();
+      },
+
       // Log scatter-gather: handle log request (runs in capture iframes)
       // postbridge automatically appends _remote as the last parameter
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -637,7 +660,8 @@ export class CrossTabCoordinator {
    * If this tab owns the recorder, it will be released
    */
   public async disconnect(): Promise<void> {
-    if (!this.connection) {
+    const connToClose = this.connection;
+    if (!connToClose) {
       logger.warn('not connected');
       return;
     }
@@ -654,11 +678,16 @@ export class CrossTabCoordinator {
       await this.releaseLock();
     }
 
-    this.connection.close();
-    this.connection = null;
-    this.localTabId = null;
-    this.isOwner = false;
-    logger.debug({ previousTabId: tabId }, 'disconnected');
+    // Only close if no new connect() replaced our connection during async work
+    if (this.connection === connToClose) {
+      connToClose.close();
+      this.connection = null;
+      this.localTabId = null;
+      this.isOwner = false;
+      logger.debug({ previousTabId: tabId }, 'disconnected');
+    } else {
+      logger.debug({ previousTabId: tabId }, 'skipped close — connection replaced');
+    }
   }
 
   /**
@@ -673,9 +702,14 @@ export class CrossTabCoordinator {
 
     // Clear existing interval if any
     this.stopHealthCheck();
+    this.healthCheckSkipFirst = true;
 
     logger.debug('starting health check');
     this.healthCheckInterval = setInterval(async () => {
+      if (this.healthCheckSkipFirst) {
+        this.healthCheckSkipFirst = false;
+        return;
+      }
       await this.performHealthCheck();
     }, this.HEALTH_CHECK_INTERVAL_MS);
   }
@@ -1172,6 +1206,26 @@ export class CrossTabCoordinator {
   }
 
   /**
+   * Broadcast clear log store command to all capture iframes
+   */
+  public async broadcastClearLogStore(): Promise<void> {
+    if (!this.connection) {
+      logger.warn('cannot broadcast clear log store - not connected');
+      return;
+    }
+
+    logger.debug('broadcasting clear log store');
+    try {
+      const remote = this.connection.remote as unknown as {
+        broadcastClearLogStore: () => Promise<void>;
+      };
+      await remote.broadcastClearLogStore();
+    } catch (error) {
+      logger.error({ err: error }, 'clear log store broadcast failed');
+    }
+  }
+
+  /**
    * Check if log capture is currently enabled
    */
   public isLogCaptureEnabled(): boolean {
@@ -1490,7 +1544,8 @@ export class CrossTabCoordinator {
       const { metadata } = response;
 
       // Extract custom metadata (everything except system keys)
-      const { ...customMeta } = metadata;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { _pageUrl, _pageTitle, ...customMeta } = metadata;
       const customMetadata = Object.keys(customMeta).length > 0 ? customMeta : null;
 
       // Store flattened structure directly

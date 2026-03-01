@@ -3,46 +3,34 @@
  * Type definitions for postbridge communication between recorder (guest) and SDK (host)
  */
 
-import type { ProcessedLogEntry } from '@workspace/logger';
+// Re-export shared bridge types from @workspace/contract
+export type {
+  BlurrState,
+  CaptureRecorderState,
+  CustomMetadata,
+  LogCapturePreferences,
+  LogCaptureState,
+  LogEntries,
+  RecordingSessionInfo,
+  RecordingState,
+  SerializableObject,
+  TabMetadata,
+  VerificationData,
+} from '@workspace/contract/bridge';
 
-/**
- * Recording state as exposed to the parent
- */
-export type RecordingState = 'inactive' | 'active' | 'retained';
-
-/**
- * Session information sent to the parent
- */
-export interface RecordingSessionInfo {
-  workspaceId: string;
-  sessionId: string;
-  linkId?: string;
-}
-
-/**
- * Serializable object type for custom metadata
- * Matches the SDK's SerializableObject type
- */
-type SerializablePrimitive = string | number | boolean | null | undefined;
-type SerializableArray = Serializable[];
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface SerializableObject extends Record<string | number, Serializable> {}
-type Serializable = SerializablePrimitive | SerializableArray | SerializableObject;
-
-/**
- * Custom metadata from the host application
- */
-export type CustomMetadata = SerializableObject | null;
-
-/**
- * Verification result data returned on success
- */
-export interface VerificationData {
-  domainStatus: string;
-  workspaceId: string;
-  domainId: string;
-  domainUrl: string;
-}
+// Import shared types for local use in recorder-only interfaces
+import type {
+  BlurrState,
+  CaptureRecorderState,
+  CustomMetadata,
+  LogCapturePreferences,
+  LogCaptureState,
+  LogEntries,
+  RecordingSessionInfo,
+  RecordingState,
+  TabMetadata,
+  VerificationData,
+} from '@workspace/contract/bridge';
 
 /**
  * Raw verification result from parent SDK (wire format)
@@ -99,37 +87,6 @@ export interface GuestSchema {
 // ---------------------------------------------------------------------------
 // Capture Types (for /capture page - lightweight metadata extraction)
 // ---------------------------------------------------------------------------
-
-/**
- * Metadata collected from a tab (recorder or capture iframe)
- * Flattened structure - system keys prefixed with underscore, custom metadata keys at top level
- */
-export interface TabMetadata {
-  /** Page URL (system key) */
-  _pageUrl: string;
-  /** Page title (system key) */
-  _pageTitle: string;
-  /** Custom metadata keys are spread at this level */
-  [key: string]: unknown;
-}
-
-/**
- * Recorder state tracked by the capture iframe
- * Used for cross-tab awareness
- */
-export interface CaptureRecorderState {
-  /** Tab ID of the active recorder (null if no recording) */
-  recorderTabId: string | null;
-  /** Current recording state: inactive/active/retained */
-  recorderState: RecordingState;
-  /** Timestamp of last state update */
-  lastStateUpdate: number;
-}
-
-/**
- * Blurr state indicating whether privacy blur is enabled or disabled
- */
-export type BlurrState = 'enabled' | 'disabled';
 
 /**
  * Methods exposed by the SDK (host/parent) for capture functionality
@@ -378,29 +335,6 @@ export interface MetadataResponse {
 // ---------------------------------------------------------------------------
 // Log Capture Types
 // ---------------------------------------------------------------------------
-
-/**
- * Preferences for what types of logs to capture
- */
-export interface LogCapturePreferences {
-  captureConsole: boolean;
-  captureNetwork: boolean;
-  captureAction: boolean;
-}
-
-/**
- * Log capture state
- */
-export type LogCaptureState = 'enabled' | 'disabled';
-
-/**
- * Aggregated log entries from a tab
- */
-export interface LogEntries {
-  network: ProcessedLogEntry[];
-  console: ProcessedLogEntry[];
-  activity: ProcessedLogEntry[];
-}
 
 /**
  * Scatter-gather request for logs

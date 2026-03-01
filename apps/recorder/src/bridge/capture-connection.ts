@@ -423,6 +423,13 @@ export class CaptureBridgeConnection {
   public async getLogEntries(): Promise<LogEntries> {
     return this.handleGetLogEntries();
   }
+
+  /**
+   * Clear the log store on the parent page
+   */
+  public async clearLogStore(): Promise<void> {
+    await this.handleClearLogStore();
+  }
 }
 
 // ---------------------------------------------------------------------------

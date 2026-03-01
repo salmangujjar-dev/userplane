@@ -56,6 +56,7 @@ export interface SessionData {
   maxRecordingDurationMs: number;
   maxRecordingSize: number | null;
   requesterName: string | null;
+  serverDeltaMs: number;
 }
 
 export type { SystemMetadata };
@@ -65,6 +66,7 @@ const logger = createLogger('recording-session');
 export class RecordingSession {
   private client: ReturnType<typeof getRecorderClient>;
   private sessionToken: string | null = null;
+  private serverDeltaMs: number = 0;
 
   // Decoded session token properties (public API)
   public workspaceId: string | null = null;
@@ -148,6 +150,10 @@ export class RecordingSession {
     this.requesterName = this.preferences?.requestedBy ?? null;
     this.maxRecordingSize = null; // Not currently used
 
+    // Compute server-client clock offset from JWT issued-at timestamp
+    const serverDeltaMs = payload.iat ? payload.iat * 1000 - Date.now() : 0;
+    this.serverDeltaMs = serverDeltaMs;
+
     logger.debug(
       { sessionId: this.sessionId, workspaceId: this.workspaceId },
       'session initialized'
@@ -186,6 +192,7 @@ export class RecordingSession {
         maxRecordingDurationMs: this.maxRecordingDurationMs,
         maxRecordingSize: this.maxRecordingSize,
         requesterName: this.requesterName,
+        serverDeltaMs,
       },
     };
   }
@@ -205,7 +212,8 @@ export class RecordingSession {
     recordingDurationMs: number | null,
     customMetadata?: Record<string, unknown> | null,
     notes?: string,
-    aggregatedLogs?: AggregatedLogs | null
+    aggregatedLogs?: AggregatedLogs | null,
+    recordingStartedAt?: number | null
   ): Promise<ServerResult<UploadState>> {
     logger.debug('initializing upload');
 
@@ -247,7 +255,7 @@ export class RecordingSession {
 
     // Add log files from aggregated logs
     if (aggregatedLogs) {
-      const mergedLogs = mergeAllTabLogs(aggregatedLogs);
+      const mergedLogs = mergeAllTabLogs(aggregatedLogs, this.serverDeltaMs);
 
       if (mergedLogs.console.length > 0) {
         const blob = new Blob([JSON.stringify(mergedLogs.console)], { type: 'application/json' });
@@ -289,6 +297,9 @@ export class RecordingSession {
           customMetadata: customMetadata ?? {},
           ...(notes ? { notes } : {}),
         },
+        ...(recordingStartedAt != null
+          ? { recording_started_at: recordingStartedAt + this.serverDeltaMs }
+          : {}),
       },
     };
 
@@ -320,7 +331,7 @@ export class RecordingSession {
     // Build log blobs for upload
     const logBlobs: UploadState['logBlobs'] = {};
     if (aggregatedLogs) {
-      const mergedLogs = mergeAllTabLogs(aggregatedLogs);
+      const mergedLogs = mergeAllTabLogs(aggregatedLogs, this.serverDeltaMs);
       if (mergedLogs.console.length > 0) {
         logBlobs.console = new Blob([JSON.stringify(mergedLogs.console)], {
           type: 'application/json',
@@ -547,9 +558,11 @@ export class RecordingSession {
 }
 
 /**
- * Merge logs from all tabs into a single set of arrays
+ * Merge logs from all tabs into a single set of arrays.
+ * Applies the server-client clock delta to all timestamps in one centralized place,
+ * then sorts each category chronologically (entries from multiple tabs are unordered).
  */
-function mergeAllTabLogs(aggregatedLogs: AggregatedLogs): LogEntries {
+function mergeAllTabLogs(aggregatedLogs: AggregatedLogs, serverDeltaMs: number): LogEntries {
   const network: LogEntries['network'] = [];
   const console: LogEntries['console'] = [];
   const activity: LogEntries['activity'] = [];
@@ -559,6 +572,34 @@ function mergeAllTabLogs(aggregatedLogs: AggregatedLogs): LogEntries {
     console.push(...tabLogs.console);
     activity.push(...tabLogs.activity);
   }
+
+  // Apply server delta to all timestamps in one centralized place
+  if (serverDeltaMs !== 0) {
+    for (const entry of network) {
+      if (typeof entry.timestamp === 'number') entry.timestamp += serverDeltaMs;
+      if (typeof entry.startedDateTime === 'number') {
+        entry.startedDateTime = (entry.startedDateTime as number) + serverDeltaMs;
+      }
+    }
+    for (const entry of console) {
+      if (typeof entry.timestamp === 'number') entry.timestamp += serverDeltaMs;
+    }
+    for (const entry of activity) {
+      if (typeof entry.timestamp === 'number') entry.timestamp += serverDeltaMs;
+    }
+  }
+
+  // Sort each log type chronologically
+  const getTs = (entry: LogEntries['network'][number]): number =>
+    typeof entry.timestamp === 'number' ? entry.timestamp : 0;
+
+  network.sort((a, b) => {
+    const aTime = typeof a.startedDateTime === 'number' ? (a.startedDateTime as number) : getTs(a);
+    const bTime = typeof b.startedDateTime === 'number' ? (b.startedDateTime as number) : getTs(b);
+    return aTime - bTime;
+  });
+  console.sort((a, b) => getTs(a) - getTs(b));
+  activity.sort((a, b) => getTs(a) - getTs(b));
 
   return { network, console, activity };
 }
