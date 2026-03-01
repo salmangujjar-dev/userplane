@@ -22,6 +22,11 @@ on:
           - latest
           - beta
           - next
+      dry-run:
+        description: 'Dry run (build and pack without publishing)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   publish:
@@ -62,7 +67,21 @@ jobs:
           cd packages/${{ inputs.package }}
           bun run build:npm
 
+      - name: Pack (dry run)
+        if: inputs.dry-run
+        run: |
+          cd packages/${{ inputs.package }}
+          npm pack --dry-run 2>&1
+          echo ""
+          echo "--- Packed tarball contents ---"
+          npm pack
+          tar tzf userplane-${{ inputs.package }}-${{ inputs.version }}.tgz
+          echo ""
+          echo "--- package.json in tarball ---"
+          tar xzf userplane-${{ inputs.package }}-${{ inputs.version }}.tgz package/package.json -O
+
       - name: Publish
+        if: ${{ !inputs.dry-run }}
         run: |
           cd packages/${{ inputs.package }}
           npm publish --access public --tag ${{ inputs.tag }}
@@ -70,6 +89,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Git tag
+        if: ${{ !inputs.dry-run }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
