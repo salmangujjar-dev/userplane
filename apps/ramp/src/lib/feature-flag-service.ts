@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db/client';
 import { featureFlagOverrides } from '@/lib/db/schema';
-import { type FeatureFlag, applyOverrides } from '@/lib/feature-flags';
+import { applyOverrides, type FeatureFlag, FLAG_DEFAULTS } from '@/lib/feature-flags';
 
 export function getOverridesMap(): Partial<Record<FeatureFlag, boolean>> {
   const rows = db.select().from(featureFlagOverrides).all();
@@ -36,5 +36,21 @@ export function clearOverride(flag: FeatureFlag): void {
 
 export function clearAllOverrides(): void {
   db.delete(featureFlagOverrides).run();
+  loadAndApplyOverrides();
+}
+
+export function setOverrides(overrides: Partial<Record<FeatureFlag, boolean>>): void {
+  db.transaction((tx) => {
+    tx.delete(featureFlagOverrides).run();
+
+    for (const [flag, value] of Object.entries(overrides) as [FeatureFlag, boolean][]) {
+      if (flag in FLAG_DEFAULTS && value !== FLAG_DEFAULTS[flag]) {
+        tx.insert(featureFlagOverrides)
+          .values({ flag, value, updatedAt: new Date().toISOString() })
+          .run();
+      }
+    }
+  });
+
   loadAndApplyOverrides();
 }

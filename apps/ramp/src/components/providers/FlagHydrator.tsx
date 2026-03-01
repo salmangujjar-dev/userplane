@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { type FeatureFlag, applyOverrides } from '@/lib/feature-flags';
+import { applyOverrides, type FeatureFlag } from '@/lib/feature-flags';
 
 interface FlagHydratorProps {
   overrides: Partial<Record<FeatureFlag, boolean>>;
