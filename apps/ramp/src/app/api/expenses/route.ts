@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { store } from '@/lib/data/store';
+import { withFailureInjection } from '@/lib/api/with-failure-injection';
+import * as repo from '@/lib/db/repository';
 import { isFeatureEnabled } from '@/lib/feature-flags';
+import { log } from '@/lib/logger';
 
-export async function GET(request: NextRequest) {
+export const GET = withFailureInjection(async (request: NextRequest) => {
   const { searchParams } = request.nextUrl;
   const status = searchParams.get('status') || undefined;
   const categoryId = searchParams.get('categoryId') || undefined;
@@ -14,7 +16,12 @@ export async function GET(request: NextRequest) {
   const page = searchParams.get('page') ? Number(searchParams.get('page')) : undefined;
   const pageSize = searchParams.get('pageSize') ? Number(searchParams.get('pageSize')) : undefined;
 
-  const { data: expenses, total } = store.getExpenses({
+  log.debug(
+    { status, categoryId, employeeId, search, sortField, sortDir, page, pageSize },
+    'GET /api/expenses'
+  );
+
+  const { data: expenses, total } = repo.getExpenses({
     status,
     categoryId,
     employeeId,
@@ -28,9 +35,11 @@ export async function GET(request: NextRequest) {
   // Populate relations
   const data = expenses.map((expense) => ({
     ...expense,
-    employee: store.getEmployee(expense.employeeId),
-    category: store.getCategory(expense.categoryId),
+    employee: repo.getEmployee(expense.employeeId),
+    category: repo.getCategory(expense.categoryId),
   }));
+
+  log.debug({ count: data.length, total }, 'GET /api/expenses response');
 
   return NextResponse.json({
     success: true,
@@ -38,11 +47,14 @@ export async function GET(request: NextRequest) {
     total,
     ...(page != null && { page, pageSize: pageSize ?? 10 }),
   });
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withFailureInjection(async (request: NextRequest) => {
+  log.debug('POST /api/expenses');
+
   // Feature flag: reject expense creation when disabled
   if (!isFeatureEnabled('createExpenseSubmit')) {
+    log.debug('POST /api/expenses blocked by feature flag createExpenseSubmit');
     return NextResponse.json(
       { success: false, error: 'Expense creation is temporarily unavailable' },
       { status: 503 }
@@ -54,13 +66,14 @@ export async function POST(request: NextRequest) {
     const { employeeId, categoryId, amount, description, merchant, date, notes } = body;
 
     if (!employeeId || !categoryId || !amount || !description || !merchant || !date) {
+      log.debug({ body }, 'POST /api/expenses missing required fields');
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    const expense = store.createExpense({
+    const expense = repo.createExpense({
       employeeId,
       categoryId,
       amount: Number(amount),
@@ -70,8 +83,11 @@ export async function POST(request: NextRequest) {
       notes,
     });
 
+    log.debug({ expenseId: expense.id }, 'POST /api/expenses created');
+
     return NextResponse.json({ success: true, data: expense }, { status: 201 });
-  } catch {
+  } catch (err) {
+    log.error({ err }, 'POST /api/expenses failed');
     return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
   }
-}
+});

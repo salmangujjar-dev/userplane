@@ -2,8 +2,9 @@
 
 import { PlusIcon, ReceiptTextIcon } from 'lucide-react';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ExpenseFilters } from '@/components/expenses/ExpenseFilters';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { ExpensesTable } from '@/components/expenses/ExpensesTable';
@@ -27,13 +28,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toastManager } from '@/components/ui/toast';
 import { useExpenses } from '@/hooks/useExpenses';
 import { api } from '@/lib/api/client';
+import { log } from '@/lib/client-logger';
 import type { ExpenseWithRelations } from '@/lib/data/types';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { getActiveFailureFlags, isFeatureEnabled } from '@/lib/feature-flags';
 
 type SortField = 'date' | 'amount' | 'employee' | 'category' | 'status';
 type SortDirection = 'asc' | 'desc';
 
 const PAGE_SIZE = 10;
+const SEARCH_DEBOUNCE_MS = 300;
 
 // URL search param parsers -- all filter state lives in the URL
 const filterParsers = {
@@ -77,6 +80,24 @@ function ExpensesContent() {
   const [editExpense, setEditExpense] = useState<ExpenseWithRelations | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Debounced search: when searchDebounce is enabled, delay search by 300ms
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      if (!isFeatureEnabled('searchDebounce')) {
+        // Sabotage: fire immediately on every keystroke — no debounce
+        setFilters({ search: value, page: 0 });
+        return;
+      }
+
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = setTimeout(() => {
+        setFilters({ search: value, page: 0 });
+      }, SEARCH_DEBOUNCE_MS);
+    },
+    [setFilters]
+  );
+
   const params = useMemo(() => {
     const p: Record<string, string> = {};
     if (filters.status !== 'all') p.status = filters.status;
@@ -92,6 +113,15 @@ function ExpensesContent() {
 
   const { expenses, total, isLoading, mutate } = useExpenses(params);
 
+  useEffect(() => {
+    const activeFlags = getActiveFailureFlags();
+    log.debug({ activeFlags }, 'ExpensesPage mounted');
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) log.debug({ count: expenses.length, total }, 'ExpensesPage data ready');
+  }, [expenses, total, isLoading]);
+
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const handleSort = (field: SortField) => {
@@ -103,13 +133,16 @@ function ExpensesContent() {
   };
 
   const handleCreate = async (data: Record<string, unknown>) => {
+    log.debug('expense create started');
     setIsSubmitting(true);
     try {
       await api.expenses.create(data);
       await mutate();
       setCreateOpen(false);
+      log.debug('expense created successfully');
       toastManager.add({ title: 'Expense created', type: 'success' });
     } catch (err) {
+      log.error({ err }, 'expense create failed');
       toastManager.add({
         title: 'Failed to create expense',
         description:
@@ -123,36 +156,57 @@ function ExpensesContent() {
 
   const handleEdit = async (data: Record<string, unknown>) => {
     if (!editExpense) return;
+    log.debug({ expenseId: editExpense.id }, 'expense edit started');
     setIsSubmitting(true);
     try {
       await api.expenses.update(editExpense.id, data);
       await mutate();
       setEditExpense(null);
+      log.debug({ expenseId: editExpense.id }, 'expense edited successfully');
       toastManager.add({ title: 'Expense updated', type: 'success' });
-    } catch {
-      toastManager.add({ title: 'Failed to update expense', type: 'error' });
+    } catch (err) {
+      log.error({ expenseId: editExpense.id, err }, 'expense edit failed');
+      toastManager.add({
+        title: 'Failed to update expense',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred.',
+        type: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleApprove = async (id: string) => {
+    log.debug({ expenseId: id }, 'expense approve started');
     try {
       await api.expenses.approve(id);
       await mutate();
+      log.debug({ expenseId: id }, 'expense approved');
       toastManager.add({ title: 'Expense approved', type: 'success' });
-    } catch {
-      toastManager.add({ title: 'Failed to approve expense', type: 'error' });
+    } catch (err) {
+      log.error({ expenseId: id, err }, 'expense approve failed');
+      toastManager.add({
+        title: 'Failed to approve expense',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred.',
+        type: 'error',
+      });
     }
   };
 
   const handleReject = async (id: string) => {
+    log.debug({ expenseId: id }, 'expense reject started');
     try {
       await api.expenses.reject(id);
       await mutate();
+      log.debug({ expenseId: id }, 'expense rejected');
       toastManager.add({ title: 'Expense rejected', type: 'success' });
-    } catch {
-      toastManager.add({ title: 'Failed to reject expense', type: 'error' });
+    } catch (err) {
+      log.error({ expenseId: id, err }, 'expense reject failed');
+      toastManager.add({
+        title: 'Failed to reject expense',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred.',
+        type: 'error',
+      });
     }
   };
 
@@ -167,11 +221,12 @@ function ExpensesContent() {
           onStatusChange={(v) => setFilters({ status: v, page: 0 })}
           onCategoryChange={(v) => setFilters({ categoryId: v, page: 0 })}
           onEmployeeChange={(v) => setFilters({ employeeId: v, page: 0 })}
-          onSearchChange={(v) => setFilters({ search: v, page: 0 })}
+          onSearchChange={handleSearchChange}
         />
         <Button
           onClick={() => {
             if (!isFeatureEnabled('newExpenseButton')) {
+              console.error('[Expenses] New expense action is temporarily unavailable');
               toastManager.add({
                 title: 'Unable to create expense',
                 description: 'This action is temporarily unavailable. Please try again later.',
@@ -211,20 +266,22 @@ function ExpensesContent() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <ExpensesTable
-          expenses={expenses}
-          sortField={filters.sortField as SortField}
-          sortDir={filters.sortDir as SortDirection}
-          page={filters.page}
-          pageSize={PAGE_SIZE}
-          total={total}
-          totalPages={totalPages}
-          onSort={handleSort}
-          onPageChange={(p) => setFilters({ page: p })}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          onEdit={setEditExpense}
-        />
+        <ErrorBoundary>
+          <ExpensesTable
+            expenses={expenses}
+            sortField={filters.sortField as SortField}
+            sortDir={filters.sortDir as SortDirection}
+            page={filters.page}
+            pageSize={PAGE_SIZE}
+            total={total}
+            totalPages={totalPages}
+            onSort={handleSort}
+            onPageChange={(p) => setFilters({ page: p })}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            onEdit={setEditExpense}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Create Dialog */}

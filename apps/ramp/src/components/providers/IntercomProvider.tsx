@@ -3,6 +3,8 @@
 import Intercom from '@intercom/messenger-js-sdk';
 import { useEffect } from 'react';
 
+import { log } from '@/lib/client-logger';
+
 interface IntercomProviderProps {
   appId: string;
   apiBase?: string;
@@ -16,12 +18,14 @@ export function IntercomProvider({
 }: IntercomProviderProps) {
   useEffect(() => {
     const initializeIntercom = async () => {
+      log.debug({ appId }, 'IntercomProvider initializing');
       try {
         // Fetch user identity and HMAC hash for Intercom identity verification
         const response = await fetch('/api/intercom-jwt');
         const data = await response.json();
 
         if (data.user_hash) {
+          log.debug({ userId: data.user_id }, 'IntercomProvider identity verified');
           // Initialize Intercom with verified user identity
           Intercom({
             app_id: appId,
@@ -37,8 +41,9 @@ export function IntercomProvider({
             horizontal_padding: 20,
             vertical_padding: 20,
           });
+          log.debug('IntercomProvider initialized with identity');
         } else {
-          console.error('Failed to get Intercom identity:', data.error);
+          log.error({ error: data.error }, 'IntercomProvider identity fetch failed');
           // Fallback: Initialize as anonymous visitor
           Intercom({
             app_id: appId,
@@ -46,9 +51,10 @@ export function IntercomProvider({
             horizontal_padding: 20,
             vertical_padding: 20,
           });
+          log.debug('IntercomProvider initialized as anonymous');
         }
       } catch (error) {
-        console.error('Error initializing Intercom:', error);
+        log.error({ err: error }, 'IntercomProvider initialization error');
         // Fallback: Initialize as anonymous visitor
         Intercom({
           app_id: appId,

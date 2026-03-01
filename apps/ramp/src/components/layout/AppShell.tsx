@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { Sheet, SheetPopup } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
@@ -12,6 +13,8 @@ const pageInfo: Record<string, { title: string; subtitle: string }> = {
   '/expenses': { title: 'Expenses', subtitle: 'Review and manage expense submissions' },
   '/analytics': { title: 'Analytics', subtitle: 'Spending insights and trends' },
   '/employees': { title: 'Employees', subtitle: 'Team directory and spend overview' },
+  '/settings': { title: 'Settings', subtitle: 'Manage your account' },
+  '/flags': { title: 'Feature Flags', subtitle: 'Toggle feature flags at runtime' },
 };
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -59,7 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </Sheet>
 
       {/* Main content - inset panel */}
-      <div className="flex flex-1 flex-col overflow-hidden md:p-2 md:pl-0">
+      <div className={cn('flex flex-1 flex-col overflow-hidden md:p-2', sidebarOpen && 'md:pl-0')}>
         <div className="flex flex-1 flex-col overflow-hidden bg-background md:rounded-lg md:border md:shadow-sm">
           <AppHeader
             title={info.title}

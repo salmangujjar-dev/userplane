@@ -11,11 +11,17 @@
     "start:production": "APP_ENV=production next start -p 3002",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "npx tsx src/lib/db/migrate.ts",
+    "db:seed": "npx tsx src/lib/db/seed.ts",
+    "db:reset": "rm -f data/ramp.db data/ramp.db-wal data/ramp.db-shm && bun run db:migrate && bun run db:seed",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
     "@intercom/messenger-js-sdk": "^0.0.18",
+    "@workspace/common-logger": "workspace:*",
     "@workspace/sdk": "workspace:*",
     "boring-avatars": "^2.0.4",
     "class-variance-authority": "^0.7.1",
