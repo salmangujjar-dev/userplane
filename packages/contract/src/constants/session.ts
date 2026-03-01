@@ -36,7 +36,7 @@ export const FILE_SIZE_LIMITS = {
   MAX_VIDEO_SIZE: 500 * 1024 * 1024, // 500MB
   MAX_THUMBNAIL_SIZE: 10 * 1024 * 1024, // 10MB
   MAX_LOG_SIZE: 50 * 1024 * 1024, // 50MB
-  MAX_LOGO_SIZE: 4 * 1024 * 1024, // 4MB
+  MAX_LOGO_SIZE: 2 * 1024 * 1024, // 2MB
 } as const;
 
 /**
@@ -103,7 +103,7 @@ export const ALLOWED_THUMBNAIL_TYPES = ['image/png', 'image/jpeg', 'image/webp']
 /**
  * Allowed MIME types for console log files
  */
-export const ALLOWED_CONSOLE_LOG_TYPES = ['application/x-ndjson', 'application/ndjson'] as const;
+export const ALLOWED_CONSOLE_LOG_TYPES = ['application/json'] as const;
 
 /**
  * Allowed MIME types for network log files

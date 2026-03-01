@@ -174,6 +174,7 @@ export const RecordingDetailMetaSchema = z.object({
 export const RecordingDetailSchema = z.object({
   recordingId: RecordingIdSchema,
   recordingDurationMs: z.number().int(),
+  recordingStartedAt: z.coerce.date().nullable(),
   meta: RecordingDetailMetaSchema,
 });
 
