@@ -23,7 +23,8 @@
   "scripts": {
     "dev": "tsc --watch",
     "dev:storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6007",
-    "build": "rm -rf dist && tsc",
+    "build:worker": "bun build src/bridge-worker.ts --outfile=dist/bridge-worker.bundle.js --format=esm --target=browser && cp dist/bridge-worker.bundle.js src/bridge-worker.js",
+    "build": "rm -rf dist && tsc && bun run build:worker",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",

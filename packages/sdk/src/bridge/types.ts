@@ -3,6 +3,7 @@
  * Type definitions for postbridge communication between SDK (host) and recorder (guest)
  */
 
+import type { ProcessedLogEntry } from '@workspace/logger';
 import type { SerializableObject } from '@workspace/metadata';
 
 /**
@@ -146,6 +147,29 @@ export interface VerificationHostSchema {
 export type BlurrState = 'enabled' | 'disabled';
 
 /**
+ * Log capture state indicating whether log capture is enabled or disabled
+ */
+export type LogCaptureState = 'enabled' | 'disabled';
+
+/**
+ * Preferences for what types of logs to capture
+ */
+export interface LogCapturePreferences {
+  captureConsole: boolean;
+  captureNetwork: boolean;
+  captureAction: boolean;
+}
+
+/**
+ * Aggregated log entries from a tab
+ */
+export interface LogEntries {
+  network: ProcessedLogEntry[];
+  console: ProcessedLogEntry[];
+  activity: ProcessedLogEntry[];
+}
+
+/**
  * Methods exposed by the SDK (host/parent) for capture iframe
  * The capture iframe is a lightweight hidden 1x1 iframe that:
  * - Extracts metadata from the parent page
@@ -192,6 +216,39 @@ export interface CaptureHostSchema {
    * Returns 'enabled' if blur is active, 'disabled' otherwise
    */
   getBlurrState: () => BlurrState;
+
+  /**
+   * Start log capture on the parent page
+   * Called by capture iframe when recording becomes active
+   */
+  startLogCapture: (
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    tabId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ) => Promise<void>;
+
+  /**
+   * Stop log capture on the parent page
+   * Called by capture iframe when recording becomes inactive
+   */
+  stopLogCapture: () => void;
+
+  /**
+   * Get the current log capture state
+   */
+  getLogCaptureState: () => LogCaptureState;
+
+  /**
+   * Get all captured log entries from IndexedDB
+   */
+  getLogEntries: () => Promise<LogEntries>;
+
+  /**
+   * Clear all stored log entries
+   */
+  clearLogStore: () => Promise<void>;
 }
 
 /**
@@ -248,6 +305,40 @@ export interface CaptureGuestSchema {
    * Returns 'enabled' if blur is active, 'disabled' otherwise
    */
   getBlurrState: () => BlurrState;
+
+  /**
+   * Start log capture on the parent page
+   * Called by recorder when recording becomes active
+   * Relays to parent SDK's startLogCapture
+   */
+  startLogCapture: (
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    tabId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ) => Promise<void>;
+
+  /**
+   * Stop log capture on the parent page
+   * Relays to parent SDK's stopLogCapture
+   */
+  stopLogCapture: () => void;
+
+  /**
+   * Get the current log capture state from the parent
+   */
+  getLogCaptureState: () => LogCaptureState;
+
+  /**
+   * Get all captured log entries from the parent
+   */
+  getLogEntries: () => Promise<LogEntries>;
+
+  /**
+   * Clear all stored log entries on the parent
+   */
+  clearLogStore: () => Promise<void>;
 }
 
 /**

@@ -4,11 +4,23 @@
  */
 
 import type { RecordingContext } from '../bridge';
-import type { CaptureRecorderState, TabMetadata } from '../bridge/types';
+import type {
+  CaptureRecorderState,
+  LogCapturePreferences,
+  LogCaptureState,
+  LogEntries,
+  TabMetadata,
+} from '../bridge/types';
 import type { RecorderFrame, RecorderParams } from '../types';
 
 // Re-export types used by frame managers
-export type { CaptureRecorderState, TabMetadata };
+export type {
+  CaptureRecorderState,
+  LogCapturePreferences,
+  LogCaptureState,
+  LogEntries,
+  TabMetadata,
+};
 
 /**
  * Base frame manager interface
@@ -98,6 +110,37 @@ export interface ICaptureFrameManager extends IFrameManager {
    * Check if the capture iframe is alive/responsive
    */
   ping(): Promise<boolean>;
+
+  /**
+   * Start log capture on the parent page
+   */
+  startLogCapture(
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    tabId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ): Promise<void>;
+
+  /**
+   * Stop log capture on the parent page
+   */
+  stopLogCapture(): void;
+
+  /**
+   * Get current log capture state
+   */
+  getLogCaptureState(): LogCaptureState;
+
+  /**
+   * Get all captured log entries
+   */
+  getLogEntries(): Promise<LogEntries>;
+
+  /**
+   * Clear all stored log entries
+   */
+  clearLogStore(): Promise<void>;
 }
 
 /**
@@ -140,4 +183,6 @@ export interface CaptureFrameManagerConfig extends FrameManagerConfig {
   onConnected?: () => void;
   /** Callback when recorder state changes (from cross-tab) */
   onRecorderStateChange?: (state: CaptureRecorderState) => void;
+  /** URLs to exclude from network log capture */
+  excludeCaptureEndpoints?: string[];
 }

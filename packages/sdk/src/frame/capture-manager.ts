@@ -10,6 +10,7 @@
  */
 
 import { CaptureBridgeConnection, type CaptureRecorderState, type TabMetadata } from '../bridge';
+import type { LogCapturePreferences, LogCaptureState, LogEntries } from '../bridge/types';
 import { URL_PARAMS } from '../constants';
 import { createSdkLogger } from '../logger';
 import type { FrameConfig, RecorderFrame, RecorderParams } from '../types';
@@ -138,6 +139,57 @@ export class CaptureFrameManager implements ICaptureFrameManager {
     return this.bridge?.ping() ?? false;
   }
 
+  // ---------------------------------------------------------------------------
+  // Log Capture Methods (pass-through to bridge)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Start log capture on the parent page
+   */
+  public async startLogCapture(
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    tabId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ): Promise<void> {
+    await this.bridge?.startLogCapture(
+      preferences,
+      sessionId,
+      tabId,
+      workspaceId,
+      internalEndpoints
+    );
+  }
+
+  /**
+   * Stop log capture on the parent page
+   */
+  public stopLogCapture(): void {
+    this.bridge?.stopLogCapture();
+  }
+
+  /**
+   * Get current log capture state
+   */
+  public getLogCaptureState(): LogCaptureState {
+    return this.bridge?.getLogCaptureState() ?? 'disabled';
+  }
+
+  /**
+   * Get all captured log entries
+   */
+  public async getLogEntries(): Promise<LogEntries> {
+    return this.bridge?.getLogEntries() ?? { network: [], console: [], activity: [] };
+  }
+
+  /**
+   * Clear all stored log entries
+   */
+  public async clearLogStore(): Promise<void> {
+    await this.bridge?.clearLogStore();
+  }
+
   /**
    * Build frame configuration for capture iframe
    * Uses minimal config - no overlay, hidden iframe
@@ -260,6 +312,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
 
     this.bridge = new CaptureBridgeConnection({
       tabRef: this.config.tabRef,
+      excludeCaptureEndpoints: this.config.excludeCaptureEndpoints,
       callbacks: {
         onConnected: this.config.onConnected,
         onRecorderStateChange: this.config.onRecorderStateChange,

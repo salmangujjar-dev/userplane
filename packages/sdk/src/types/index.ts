@@ -143,4 +143,18 @@ export interface InitializeOptions {
    * Used for cross-tab synchronization.
    */
   applyUserplaneData?: (data: SerializableUserplaneData) => string;
+
+  /**
+   * URLs to exclude from network log capture.
+   * These are merged with Userplane's internal endpoints.
+   * Useful for filtering out your own API calls, analytics, etc.
+   *
+   * @example
+   * ```typescript
+   * userplane.initialize({
+   *   excludeCaptureEndpoints: ['https://my-api.example.com', 'https://analytics.example.com']
+   * });
+   * ```
+   */
+  excludeCaptureEndpoints?: string[];
 }

@@ -69,6 +69,7 @@
   "dependencies": {
     "@workspace/blurr": "workspace:*",
     "@workspace/console-logger": "workspace:*",
+    "@workspace/logger": "workspace:*",
     "@workspace/metadata": "workspace:*",
     "@workspace/postbridge": "workspace:*",
     "nanoid": "^5.1.6"

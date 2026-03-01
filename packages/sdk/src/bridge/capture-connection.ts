@@ -20,12 +20,15 @@ import { getCustomMetadata } from '@workspace/metadata';
 import { type Connection, host } from '@workspace/postbridge';
 
 import { CONNECTION_PREFIXES, generateConnectionId } from '../constants';
+import type { LogCapturePreferences, LogCaptureState } from '../log-capture';
+import { LogCaptureManager } from '../log-capture';
 import { createSdkLogger } from '../logger';
 import type {
   BlurrState,
   CaptureGuestSchema,
   CaptureHostSchema,
   CaptureRecorderState,
+  LogEntries,
   RecordingState,
   TabMetadata,
 } from './types';
@@ -49,6 +52,8 @@ export interface CaptureBridgeConnectionOptions {
   callbacks?: CaptureBridgeCallbacks;
   /** Tab reference for this capture */
   tabRef: string;
+  /** User-provided URLs to exclude from network log capture */
+  excludeCaptureEndpoints?: string[];
 }
 
 /**
@@ -65,6 +70,12 @@ export class CaptureBridgeConnection {
   // BlurManager instance for privacy blur
   private blurManager: BlurManager | null = null;
 
+  // LogCaptureManager instance for log capture
+  private logCaptureManager: LogCaptureManager | null = null;
+
+  // User-provided endpoints to exclude from network log capture
+  private excludeCaptureEndpoints: string[];
+
   // Recorder state tracked for cross-tab coordination
   private recorderState: CaptureRecorderState = {
     recorderTabId: null,
@@ -75,6 +86,7 @@ export class CaptureBridgeConnection {
   constructor(options: CaptureBridgeConnectionOptions) {
     this.tabRef = options.tabRef;
     this.callbacks = options.callbacks ?? {};
+    this.excludeCaptureEndpoints = options.excludeCaptureEndpoints ?? [];
     // Generate prefixed connection ID: cap_{tabRef}
     this.connectionId = generateConnectionId(CONNECTION_PREFIXES.CAPTURE, this.tabRef);
 
@@ -86,6 +98,15 @@ export class CaptureBridgeConnection {
     } catch (error) {
       this.logger.warn({ err: error }, 'BlurManager initialization failed');
       this.blurManager = null;
+    }
+
+    // Initialize LogCaptureManager
+    try {
+      this.logCaptureManager = new LogCaptureManager();
+      this.logger.debug('LogCaptureManager initialized');
+    } catch (error) {
+      this.logger.warn({ err: error }, 'LogCaptureManager initialization failed');
+      this.logCaptureManager = null;
     }
   }
 
@@ -132,6 +153,27 @@ export class CaptureBridgeConnection {
       getBlurrState: () => {
         return this.getBlurrState();
       },
+      startLogCapture: async (
+        preferences: LogCapturePreferences,
+        sessionId: string,
+        tabId: string,
+        workspaceId: string,
+        internalEndpoints?: string[]
+      ) => {
+        await this.startLogCapture(preferences, sessionId, tabId, workspaceId, internalEndpoints);
+      },
+      stopLogCapture: () => {
+        this.stopLogCapture();
+      },
+      getLogCaptureState: () => {
+        return this.getLogCaptureState();
+      },
+      getLogEntries: async () => {
+        return this.getLogEntries();
+      },
+      clearLogStore: async () => {
+        await this.clearLogStore();
+      },
     };
 
     try {
@@ -154,6 +196,7 @@ export class CaptureBridgeConnection {
     }
 
     this.logger.debug('Disconnecting from capture iframe');
+    this.logCaptureManager?.destroy();
     this.connection.close();
     this.connection = null;
     this.callbacks.onDisconnected?.();
@@ -310,5 +353,90 @@ export class CaptureBridgeConnection {
       return 'disabled';
     }
     return this.blurManager.isStarted ? 'enabled' : 'disabled';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Log Capture Methods
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Start log capture on the parent page
+   * Called by capture iframe when recording becomes active
+   */
+  public async startLogCapture(
+    preferences: LogCapturePreferences,
+    sessionId: string,
+    tabId: string,
+    workspaceId: string,
+    internalEndpoints?: string[]
+  ): Promise<void> {
+    if (!this.logCaptureManager) {
+      this.logger.debug('LogCaptureManager not available, cannot start log capture');
+      return;
+    }
+
+    // Merge relay-provided endpoints with user-provided excludeCaptureEndpoints
+    const mergedEndpoints = [...(internalEndpoints ?? []), ...this.excludeCaptureEndpoints];
+
+    this.logger.debug(
+      {
+        sessionId,
+        tabId,
+        preferences,
+        internalEndpoints: mergedEndpoints.length > 0 ? mergedEndpoints : null,
+      },
+      'Starting log capture'
+    );
+    this.logCaptureManager.setPreferences(preferences);
+    await this.logCaptureManager.initialize(
+      sessionId,
+      tabId,
+      workspaceId,
+      mergedEndpoints.length > 0 ? mergedEndpoints : undefined
+    );
+    this.logCaptureManager.start();
+    this.logger.debug({ state: this.logCaptureManager.getState() }, 'Log capture started');
+  }
+
+  /**
+   * Stop log capture on the parent page
+   * Called by capture iframe when recording becomes inactive
+   */
+  public stopLogCapture(): void {
+    if (!this.logCaptureManager) {
+      this.logger.debug('LogCaptureManager not available, cannot stop log capture');
+      return;
+    }
+
+    this.logger.debug('Stopping log capture');
+    this.logCaptureManager.stop();
+  }
+
+  /**
+   * Get the current log capture state
+   */
+  public getLogCaptureState(): LogCaptureState {
+    if (!this.logCaptureManager) {
+      return 'disabled';
+    }
+    return this.logCaptureManager.getState();
+  }
+
+  /**
+   * Get all captured log entries from IndexedDB
+   */
+  public async getLogEntries(): Promise<LogEntries> {
+    if (!this.logCaptureManager) {
+      return { network: [], console: [], activity: [] };
+    }
+    return this.logCaptureManager.getAllLogs();
+  }
+
+  /**
+   * Clear all stored log entries
+   */
+  public async clearLogStore(): Promise<void> {
+    if (!this.logCaptureManager) return;
+    await this.logCaptureManager.clearLogs();
   }
 }
