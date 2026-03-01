@@ -70,6 +70,7 @@ export const initUploadSchema = z.object({
       SESSION_CONSTANTS.DEFAULT_MAX_DURATION_MS,
       `Recording duration cannot exceed ${SESSION_CONSTANTS.DEFAULT_MAX_DURATION_MS}ms`
     ),
+  recording_started_at: z.number().int().positive().optional(),
   files: z
     .array(uploadFileSchema)
     .min(1, 'At least one file is required')

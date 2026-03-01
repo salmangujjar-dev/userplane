@@ -3,50 +3,36 @@
  * Type definitions for postbridge communication between SDK (host) and recorder (guest)
  */
 
-import type { ProcessedLogEntry } from '@workspace/logger';
-import type { SerializableObject } from '@workspace/metadata';
+// Re-export shared bridge types from @workspace/contract
+export type {
+  BlurrState,
+  CaptureRecorderState,
+  CustomMetadata,
+  LogCapturePreferences,
+  LogCaptureState,
+  LogEntries,
+  RecordingSessionInfo,
+  RecordingState,
+  SerializableObject,
+  TabMetadata,
+  VerificationData,
+  VerificationError,
+} from '@workspace/contract/bridge';
 
-/**
- * Custom metadata from the host application
- * Re-export for convenience
- */
-export type CustomMetadata = SerializableObject | null;
-
-/**
- * Recording state as exposed to the parent
- * Maps internal flow states to public-facing states:
- * - inactive: No recording in progress (loading, setup, error without blob)
- * - active: Recording is happening (countdown, recording)
- * - retained: Recording exists but not yet submitted (review, uploading, success, error with blob)
- */
-export type RecordingState = 'inactive' | 'active' | 'retained';
-
-/**
- * Session information from the recorder
- */
-export interface RecordingSessionInfo {
-  workspaceId: string;
-  sessionId: string;
-  linkId?: string;
-}
-
-/**
- * Verification result data returned on success
- */
-export interface VerificationData {
-  domainStatus: string;
-  workspaceId: string;
-  domainId: string;
-  domainUrl: string;
-}
-
-/**
- * Verification error information
- */
-export interface VerificationError {
-  code: string;
-  message: string;
-}
+// Import shared types for local use in SDK-only interfaces
+import type {
+  BlurrState,
+  CaptureRecorderState,
+  LogCapturePreferences,
+  LogCaptureState,
+  LogEntries,
+  RecordingSessionInfo,
+  RecordingState,
+  SerializableObject,
+  TabMetadata,
+  VerificationData,
+  VerificationError,
+} from '@workspace/contract/bridge';
 
 /**
  * Result of a verification request
@@ -142,34 +128,6 @@ export interface VerificationHostSchema {
 }
 
 /**
- * Blurr state indicating whether privacy blur is enabled or disabled
- */
-export type BlurrState = 'enabled' | 'disabled';
-
-/**
- * Log capture state indicating whether log capture is enabled or disabled
- */
-export type LogCaptureState = 'enabled' | 'disabled';
-
-/**
- * Preferences for what types of logs to capture
- */
-export interface LogCapturePreferences {
-  captureConsole: boolean;
-  captureNetwork: boolean;
-  captureAction: boolean;
-}
-
-/**
- * Aggregated log entries from a tab
- */
-export interface LogEntries {
-  network: ProcessedLogEntry[];
-  console: ProcessedLogEntry[];
-  activity: ProcessedLogEntry[];
-}
-
-/**
  * Methods exposed by the SDK (host/parent) for capture iframe
  * The capture iframe is a lightweight hidden 1x1 iframe that:
  * - Extracts metadata from the parent page
@@ -252,19 +210,6 @@ export interface CaptureHostSchema {
 }
 
 /**
- * Metadata extracted from a tab (recorder or capture iframe)
- * Flattened structure - system keys prefixed with underscore, custom metadata keys at top level
- */
-export interface TabMetadata {
-  /** Page URL (system key) */
-  _pageUrl: string;
-  /** Page title (system key) */
-  _pageTitle: string;
-  /** Custom metadata keys are spread at this level */
-  [key: string]: unknown;
-}
-
-/**
  * Methods exposed by the capture iframe (guest) to the SDK (host)
  */
 export interface CaptureGuestSchema {
@@ -339,19 +284,6 @@ export interface CaptureGuestSchema {
    * Clear all stored log entries on the parent
    */
   clearLogStore: () => Promise<void>;
-}
-
-/**
- * Recorder state tracked by capture iframes
- * Captures use this to know if a recording is active and who owns it
- */
-export interface CaptureRecorderState {
-  /** Tab ID of the active recorder (null if no recording) */
-  recorderTabId: string | null;
-  /** Current recording state: inactive/active/retained */
-  recorderState: RecordingState;
-  /** Timestamp of last state update */
-  lastStateUpdate: number;
 }
 
 /**

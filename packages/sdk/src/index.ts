@@ -32,6 +32,7 @@ export type {
 export {
   clearMetadata,
   clearTabRef,
+  destroy,
   getLinkId,
   getRecordingContext,
   getRecordingState,

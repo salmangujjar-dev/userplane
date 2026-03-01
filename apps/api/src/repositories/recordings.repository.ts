@@ -64,6 +64,7 @@ export interface RecordingDetailRow {
   customMeta: CustomMeta | null;
   notes: string | null;
   recordingDurationMs: number;
+  recordingStartedAt: Date | null;
   expiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -99,6 +100,7 @@ export interface CreateRecordingInput {
   projectId: string;
   createdBy: string;
   recordingDurationMs: number;
+  recordingStartedAt?: Date | null;
   recordingVideoRef: string | null;
   recordingThumbnailRef: string | null;
   recordingConsoleLogRef: string | null;
@@ -362,6 +364,7 @@ export class RecordingRepository {
         customMeta: recordings.customMeta,
         notes: recordings.notes,
         recordingDurationMs: recordings.recordingDurationMs,
+        recordingStartedAt: recordings.recordingStartedAt,
         expiresAt: recordings.expiresAt,
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
@@ -435,6 +438,7 @@ export class RecordingRepository {
         customMeta: recordings.customMeta,
         notes: recordings.notes,
         recordingDurationMs: recordings.recordingDurationMs,
+        recordingStartedAt: recordings.recordingStartedAt,
         expiresAt: recordings.expiresAt,
         createdAt: recordings.createdAt,
         updatedAt: recordings.updatedAt,
@@ -633,6 +637,7 @@ export class RecordingRepository {
         projectId: data.projectId,
         createdBy: data.createdBy,
         recordingDurationMs: data.recordingDurationMs,
+        recordingStartedAt: data.recordingStartedAt ?? undefined,
         recordingVideoRef: data.recordingVideoRef,
         recordingThumbnailRef: data.recordingThumbnailRef,
         recordingConsoleLogRef: data.recordingConsoleLogRef,

@@ -10,15 +10,8 @@
 import type { ProcessedLogEntry } from '@workspace/logger';
 import { LogProcessor, LogStore } from '@workspace/logger';
 
+import type { LogCapturePreferences, LogCaptureState } from '../bridge/types';
 import { createSdkLogger } from '../logger';
-
-export type LogCaptureState = 'enabled' | 'disabled';
-
-export interface LogCapturePreferences {
-  captureConsole: boolean;
-  captureNetwork: boolean;
-  captureAction: boolean;
-}
 
 const DEFAULT_PREFERENCES: LogCapturePreferences = {
   captureConsole: true,
@@ -53,6 +46,20 @@ export class LogCaptureManager {
       { sessionId, tabId, workspaceId, internalEndpoints, preferences: this.preferences },
       'initializing log capture manager'
     );
+
+    // Cleanup any prior state from a previous initialize() call to prevent
+    // leaking IndexedDB connections and event listeners.
+    if (this._isStarted) {
+      this.stop();
+    }
+    if (this.processor) {
+      this.processor.destroy();
+      this.processor = null;
+    }
+    if (this.store) {
+      this.store.close();
+      this.store = null;
+    }
 
     // initPatches() (called by LogProcessor.start()) requires pristine native
     // references to be captured before any patching occurs. The SDK loads early
@@ -98,7 +105,6 @@ export class LogCaptureManager {
       },
       workspaceId,
       '', // Empty scriptUrl — initPatches() called directly
-      0, // serverDeltaMs — not needed for local storage
       internalEndpoints,
       {
         dispatchMode: 'immediate',
@@ -201,22 +207,32 @@ export class LogCaptureManager {
   }
 
   /**
-   * Clear all stored logs
+   * Clear all stored logs and delete the IndexedDB database
    */
   async clearLogs(): Promise<void> {
     if (!this.store) return;
-    await this.store.clear();
+    await this.store.deleteDatabase();
+    this.store = null;
+
+    // Sweep orphaned databases from previous failed/abandoned sessions (fire-and-forget)
+    LogStore.cleanupOrphanedDatabases().catch(() => {});
   }
 
   /**
    * Destroy the manager and cleanup all resources
    */
-  destroy(): void {
+  async destroy(): Promise<void> {
     logger.debug('destroying');
     this.stop();
-    this.store?.close();
+    if (this.store) {
+      try {
+        await this.store.deleteDatabase();
+      } catch {
+        // best-effort cleanup
+      }
+      this.store = null;
+    }
     this.processor?.destroy();
     this.processor = null;
-    this.store = null;
   }
 }

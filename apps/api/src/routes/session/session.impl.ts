@@ -97,7 +97,8 @@ export const initUploadImpl = (sessionService: SessionService) => {
       context.sessionToken,
       input.body.recording_duration,
       files,
-      input.body.metadata
+      input.body.metadata,
+      input.body.recording_started_at
     );
 
     const message =

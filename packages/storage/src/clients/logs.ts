@@ -2,7 +2,7 @@ import { BaseStorageClient } from '../base';
 import type { PresignedUrlOptions, StorageConfig, UploadPresignOptions } from '../types';
 import { CacheControl } from '../types';
 
-const ALLOWED_CONTENT_TYPES = ['application/x-ndjson', 'application/ndjson'] as const;
+const ALLOWED_CONTENT_TYPES = ['application/json'] as const;
 
 export class ConsoleLogsStorageClient extends BaseStorageClient {
   protected readonly allowedContentTypes = ALLOWED_CONTENT_TYPES;
@@ -20,9 +20,9 @@ export class ConsoleLogsStorageClient extends BaseStorageClient {
   // Upload - returns { url, path } where path is stored in DB
 
   async getUploadUrl(sessionId: string, options: Omit<UploadPresignOptions, 'contentType'>) {
-    return super.getUploadUrl(`${sessionId}.ndjson`, {
+    return super.getUploadUrl(`${sessionId}.json`, {
       ...options,
-      contentType: 'application/x-ndjson',
+      contentType: 'application/json',
     });
   }
 

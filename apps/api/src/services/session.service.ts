@@ -361,7 +361,8 @@ export class SessionService {
     sessionToken: string,
     recordingDurationMs: number,
     files: UploadFile[],
-    metadata: RecordingMetaInput
+    metadata: RecordingMetaInput,
+    recordingStartedAt?: number
   ): Promise<UploadInitResult> {
     // Verify and decode session token
     const sessionPayload = this.verifySessionToken(sessionToken);
@@ -468,6 +469,7 @@ export class SessionService {
         projectId: linkData.projectId,
         createdBy: linkData.createdBy,
         recordingDurationMs,
+        recordingStartedAt: recordingStartedAt ? new Date(recordingStartedAt) : undefined,
         recordingVideoRef: filePaths.videoPath,
         recordingThumbnailRef: filePaths.thumbnailPath,
         recordingConsoleLogRef: filePaths.consoleLogPath,
