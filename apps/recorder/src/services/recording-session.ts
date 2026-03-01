@@ -3,6 +3,7 @@
  * Handles session initialization and file uploads using the userplane session API
  */
 
+import type { AggregatedLogs, LogEntries } from '@/bridge/types';
 import { getRecorderClient } from '@/client/api';
 import {
   DEFAULT_MAX_RECORDING_DURATION_MS,
@@ -39,6 +40,11 @@ export interface UploadState {
   }>;
   videoFile: File;
   thumbnailBlob: Blob | null;
+  logBlobs?: {
+    console?: Blob;
+    network?: Blob;
+    activity?: Blob;
+  };
 }
 
 /**
@@ -198,7 +204,8 @@ export class RecordingSession {
     thumbnailBlob: Blob | null,
     recordingDurationMs: number | null,
     customMetadata?: Record<string, unknown> | null,
-    notes?: string
+    notes?: string,
+    aggregatedLogs?: AggregatedLogs | null
   ): Promise<ServerResult<UploadState>> {
     logger.debug('initializing upload');
 
@@ -238,6 +245,41 @@ export class RecordingSession {
       });
     }
 
+    // Add log files from aggregated logs
+    if (aggregatedLogs) {
+      const mergedLogs = mergeAllTabLogs(aggregatedLogs);
+
+      if (mergedLogs.console.length > 0) {
+        const blob = new Blob([JSON.stringify(mergedLogs.console)], { type: 'application/json' });
+        files.push({
+          type: 'console_log',
+          name: 'console.json',
+          size: blob.size,
+          mime_type: 'application/json',
+        });
+      }
+
+      if (mergedLogs.network.length > 0) {
+        const blob = new Blob([JSON.stringify(mergedLogs.network)], { type: 'application/json' });
+        files.push({
+          type: 'network_log',
+          name: 'network.json',
+          size: blob.size,
+          mime_type: 'application/json',
+        });
+      }
+
+      if (mergedLogs.activity.length > 0) {
+        const blob = new Blob([JSON.stringify(mergedLogs.activity)], { type: 'application/json' });
+        files.push({
+          type: 'action',
+          name: 'activity.json',
+          size: blob.size,
+          mime_type: 'application/json',
+        });
+      }
+    }
+
     const uploadInitPayload = {
       body: {
         recording_duration: recordingDurationMs || 0,
@@ -275,6 +317,27 @@ export class RecordingSession {
       recording_stage: 'upload',
     });
 
+    // Build log blobs for upload
+    const logBlobs: UploadState['logBlobs'] = {};
+    if (aggregatedLogs) {
+      const mergedLogs = mergeAllTabLogs(aggregatedLogs);
+      if (mergedLogs.console.length > 0) {
+        logBlobs.console = new Blob([JSON.stringify(mergedLogs.console)], {
+          type: 'application/json',
+        });
+      }
+      if (mergedLogs.network.length > 0) {
+        logBlobs.network = new Blob([JSON.stringify(mergedLogs.network)], {
+          type: 'application/json',
+        });
+      }
+      if (mergedLogs.activity.length > 0) {
+        logBlobs.activity = new Blob([JSON.stringify(mergedLogs.activity)], {
+          type: 'application/json',
+        });
+      }
+    }
+
     return {
       ok: true,
       data: {
@@ -283,6 +346,7 @@ export class RecordingSession {
         presignedUrls,
         videoFile,
         thumbnailBlob,
+        logBlobs: Object.keys(logBlobs).length > 0 ? logBlobs : undefined,
       },
     };
   }
@@ -401,6 +465,31 @@ export class RecordingSession {
       }
     }
 
+    // Upload log files if available (non-critical, like thumbnail)
+    if (uploadState.logBlobs) {
+      const logTypes = [
+        { type: 'console_log' as const, blob: uploadState.logBlobs.console, name: 'console.json' },
+        { type: 'network_log' as const, blob: uploadState.logBlobs.network, name: 'network.json' },
+        { type: 'action' as const, blob: uploadState.logBlobs.activity, name: 'activity.json' },
+      ];
+
+      for (const { type, blob, name } of logTypes) {
+        if (!blob) continue;
+        const logUrl = presignedUrls.find((u) => u.type === type);
+        if (!logUrl) continue;
+
+        try {
+          const logFile = new File([blob], name, { type: 'application/json' });
+          await uploadToObjectStore(logFile, logUrl.url, {
+            ...THUMBNAIL_UPLOAD_CONFIG, // Reuse thumbnail config (small files)
+          });
+          logger.debug({ type }, 'log file uploaded');
+        } catch (err) {
+          logger.warn({ err, type }, 'log file upload failed, proceeding without');
+        }
+      }
+    }
+
     // Report 100% completion
     if (onProgress) {
       onProgress({
@@ -455,4 +544,21 @@ export class RecordingSession {
   destroy(): void {
     this.sessionToken = null;
   }
+}
+
+/**
+ * Merge logs from all tabs into a single set of arrays
+ */
+function mergeAllTabLogs(aggregatedLogs: AggregatedLogs): LogEntries {
+  const network: LogEntries['network'] = [];
+  const console: LogEntries['console'] = [];
+  const activity: LogEntries['activity'] = [];
+
+  for (const tabLogs of Object.values(aggregatedLogs.perTab)) {
+    network.push(...tabLogs.network);
+    console.push(...tabLogs.console);
+    activity.push(...tabLogs.activity);
+  }
+
+  return { network, console, activity };
 }

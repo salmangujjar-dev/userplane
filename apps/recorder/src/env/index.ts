@@ -3,8 +3,6 @@
  * Centralizes all environment variable access with type safety and validation
  *
  * Types are inferred from Zod schemas in schema.ts to ensure consistency.
- *
- * Note: This app uses Astro with import.meta.env (PUBLIC_ prefix)
  */
 import { ZodError } from 'zod';
 
@@ -25,20 +23,31 @@ export type { ApiConfig, EnvConfig, PostHogConfig, StorageConfig };
 // =============================================================================
 
 /**
- * Get raw environment values from Astro's import.meta.env
- * Astro exposes env vars on import.meta.env with PUBLIC_ prefix for client-side
+ * Explicitly reference each NEXT_PUBLIC_* env var so that the Next.js compiler
+ * can inline them at build time. Passing process.env as a whole object does not
+ * trigger static replacement, which causes client-side code to see undefined
+ * for every NEXT_PUBLIC_* key and fall back to defaults.
+ *
+ * Server-only vars (no NEXT_PUBLIC_ prefix) are fine with process.env because
+ * they are read at runtime on the server where process.env is a real object.
  */
-function getRawEnv(): Record<string, string | undefined> {
+function getExplicitEnv(): Record<string, string | undefined> {
   return {
-    NODE_ENV: import.meta.env.MODE === 'production' ? 'production' : 'development',
-    MODE: import.meta.env.MODE,
-    PUBLIC_API_URL: import.meta.env.PUBLIC_API_URL,
-    PUBLIC_CDN_DOMAIN: import.meta.env.PUBLIC_CDN_DOMAIN,
-    PUBLIC_ASSETS_DOMAIN: import.meta.env.PUBLIC_ASSETS_DOMAIN,
-    PUBLIC_CLOUDFLARE_IMAGE_ZONE: import.meta.env.PUBLIC_CLOUDFLARE_IMAGE_ZONE,
-    PUBLIC_SKIP_IMAGE_TRANSFORM: import.meta.env.PUBLIC_SKIP_IMAGE_TRANSFORM,
-    PUBLIC_POSTHOG_KEY: import.meta.env.PUBLIC_POSTHOG_KEY,
-    PUBLIC_POSTHOG_HOST: import.meta.env.PUBLIC_POSTHOG_HOST,
+    // App
+    APP_ENV: process.env.APP_ENV,
+
+    // API
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+
+    // Storage
+    NEXT_PUBLIC_CDN_DOMAIN: process.env.NEXT_PUBLIC_CDN_DOMAIN,
+    NEXT_PUBLIC_ASSETS_DOMAIN: process.env.NEXT_PUBLIC_ASSETS_DOMAIN,
+    NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE: process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE,
+    NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM: process.env.NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM,
+
+    // PostHog
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   };
 }
 
@@ -46,8 +55,7 @@ function getRawEnv(): Record<string, string | undefined> {
  * Parse and validate environment variables using Zod schema
  */
 function parseEnv(): RawEnvConfig {
-  const rawEnv = getRawEnv();
-  const result = rawEnvSchema.safeParse(rawEnv);
+  const result = rawEnvSchema.safeParse(getExplicitEnv());
 
   if (!result.success) {
     const errors = formatZodErrors(result.error);
@@ -78,20 +86,19 @@ function formatZodErrors(error: ZodError): string {
  */
 function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
   return {
-    nodeEnv: raw.NODE_ENV,
-    appEnv: raw.MODE,
+    appEnv: raw.APP_ENV,
     api: {
-      url: raw.PUBLIC_API_URL,
+      url: raw.NEXT_PUBLIC_API_URL,
     },
     storage: {
-      cdnDomain: raw.PUBLIC_CDN_DOMAIN,
-      assetsDomain: raw.PUBLIC_ASSETS_DOMAIN,
-      imageZone: raw.PUBLIC_CLOUDFLARE_IMAGE_ZONE,
-      skipTransform: raw.PUBLIC_SKIP_IMAGE_TRANSFORM,
+      cdnDomain: raw.NEXT_PUBLIC_CDN_DOMAIN,
+      assetsDomain: raw.NEXT_PUBLIC_ASSETS_DOMAIN,
+      imageZone: raw.NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE,
+      skipTransform: raw.NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM,
     },
     posthog: {
-      apiKey: raw.PUBLIC_POSTHOG_KEY,
-      host: raw.PUBLIC_POSTHOG_HOST,
+      apiKey: raw.NEXT_PUBLIC_POSTHOG_KEY,
+      host: raw.NEXT_PUBLIC_POSTHOG_HOST,
     },
   };
 }

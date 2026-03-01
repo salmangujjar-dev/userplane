@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Verification App
  * Main application component that orchestrates the domain verification flow

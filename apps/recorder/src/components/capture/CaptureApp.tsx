@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Capture App
  * Lightweight hidden 1x1 iframe application for metadata extraction
@@ -137,6 +139,7 @@ export default function CaptureApp() {
         logger.debug({ tabRef, captureTabId }, 'initializing cross-tab coordinator');
 
         const crossTab = getCrossTabCoordinator({
+          workerURL: '/bridge-worker.js',
           channel: 'userplane', // Unified channel for recorders and captures
           callbacks: {
             onRecorderStateChanged: (tabId, state) => {
@@ -167,6 +170,25 @@ export default function CaptureApp() {
                 bridge.stopBlurr();
               }
             },
+            onLogCaptureStart: (preferences, sessionId, workspaceId, internalEndpoints) => {
+              if (mounted && bridge) {
+                const tabRef = bridge.getTabRef();
+                logger.debug({ sessionId, tabRef }, 'received log capture start command');
+                bridge.startLogCapture(
+                  preferences,
+                  sessionId,
+                  tabRef ?? '',
+                  workspaceId,
+                  internalEndpoints
+                );
+              }
+            },
+            onLogCaptureStop: () => {
+              if (mounted && bridge) {
+                logger.debug('received log capture stop command');
+                bridge.stopLogCapture();
+              }
+            },
           },
         });
 
@@ -188,6 +210,31 @@ export default function CaptureApp() {
           logger.debug('blur already enabled on connect');
           bridge.startBlurr();
         }
+
+        // Check if log capture is already enabled (for tabs that connect during recording)
+        const logCaptureEnabled = crossTab.isLogCaptureEnabled();
+        if (logCaptureEnabled) {
+          const prefs = crossTab.getLogCapturePreferences();
+          const sessionId = crossTab.getLogCaptureSessionId();
+          const workspaceId = crossTab.getLogCaptureWorkspaceId();
+          const internalEndpoints = crossTab.getLogCaptureInternalEndpoints();
+          if (prefs && sessionId && workspaceId) {
+            const tabRef = bridge.getTabRef();
+            logger.debug('log capture already enabled on connect');
+            bridge.startLogCapture(
+              prefs,
+              sessionId,
+              tabRef ?? '',
+              workspaceId,
+              internalEndpoints ?? undefined
+            );
+          }
+        }
+
+        // Register log extractor for scatter-gather
+        crossTab.setLogExtractor(async () => {
+          return bridge.getLogEntries();
+        });
       } catch (err) {
         logger.error({ err }, 'bridge initialization failed');
         if (mounted) {

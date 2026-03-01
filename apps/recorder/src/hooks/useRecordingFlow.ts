@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { AggregatedLogs } from '@/bridge/types';
 import { RECORDING_LIMITS } from '@/constants';
 import { createLogger } from '@/lib/logger';
 import { posthog } from '@/posthog/client';
@@ -69,7 +70,8 @@ export interface RecordingFlowActions {
    */
   submitRecording: (
     customMetadata?: Record<string, unknown> | null,
-    notes?: string
+    notes?: string,
+    aggregatedLogs?: AggregatedLogs | null
   ) => Promise<void>;
   retryUpload: () => Promise<void>;
   startOver: () => Promise<void>;
@@ -418,7 +420,11 @@ export function useRecordingFlow(
     stopRecordingRef.current = stopRecording;
   }, [stopRecording]);
 
-  async function submitRecording(customMetadata?: Record<string, unknown> | null, notes?: string) {
+  async function submitRecording(
+    customMetadata?: Record<string, unknown> | null,
+    notes?: string,
+    aggregatedLogs?: AggregatedLogs | null
+  ) {
     setIsProcessing(true);
     logger.debug('submitting recording');
 
@@ -452,7 +458,8 @@ export function useRecordingFlow(
       thumbnailBlob,
       recordingDurationMs,
       customMetadata,
-      notes
+      notes,
+      aggregatedLogs
     );
 
     if (!initResult.ok) {

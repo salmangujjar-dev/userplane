@@ -4,6 +4,7 @@
  * Styled consistent with RecordingScreenLayout
  */
 
+import Image from 'next/image';
 import type { ReactNode } from 'react';
 
 import { DEFAULT_COMPANY_NAME } from '@/constants';
@@ -30,9 +31,11 @@ export default function VerificationScreenLayout({
 
       <footer className="flex flex-col items-center gap-2 sm:gap-4 px-4 py-6 sm:py-8 relative z-10">
         <div className="flex items-center gap-2">
-          <img
+          <Image
             src={workspaceLogoUrl ?? mediaClient.getBrandMediaUrl('brand/logo-dark.svg')}
             alt={workspaceName ?? DEFAULT_COMPANY_NAME}
+            width={80}
+            height={16}
             className="h-4 sm:h-5 w-auto object-contain opacity-60"
           />
           <span className="text-xs sm:text-sm font-medium text-gray-600">{workspaceName}</span>

@@ -8,12 +8,14 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 
+import type { AggregatedLogs, LogCapturePreferences } from '@/bridge/types';
 import {
   type RecordingSessionInfo,
   useBridge,
   useCrossTab,
   useCrossTabLock,
 } from '@/contexts/AppModeContext';
+import { env } from '@/env';
 import type { FlowState } from '@/hooks/useRecordingFlow';
 import { createLogger } from '@/lib/logger';
 import { parseMetaParams } from '@/utils/url';
@@ -26,10 +28,16 @@ interface UseEmbeddedBridgeSyncOptions {
   recordingBlob?: Blob | null;
   effectiveBlurEnabled: boolean;
   sessionInfo: RecordingSessionInfo | null;
+  preferences?: {
+    captureClientLog?: boolean;
+    captureNetworkLog?: boolean;
+    captureClientAction?: boolean;
+  } | null;
 }
 
 interface UseEmbeddedBridgeSyncResult {
   gatherAndMergeMetadata: () => Promise<Record<string, unknown> | null>;
+  gatherLogs: () => Promise<AggregatedLogs | null>;
 }
 
 export function useEmbeddedBridgeSync({
@@ -38,6 +46,7 @@ export function useEmbeddedBridgeSync({
   recordingBlob,
   effectiveBlurEnabled,
   sessionInfo,
+  preferences,
 }: UseEmbeddedBridgeSyncOptions): UseEmbeddedBridgeSyncResult {
   const bridge = useBridge();
   const crossTab = useCrossTab();
@@ -46,6 +55,7 @@ export function useEmbeddedBridgeSync({
   const prevFlowStateRef = useRef<FlowState | null>(null);
   const sessionReportedRef = useRef(false);
   const prevBlurStateRef = useRef<'active' | 'inactive' | null>(null);
+  const prevLogCaptureStateRef = useRef<'active' | 'inactive' | null>(null);
 
   // Report state changes to parent via bridge (embedded mode only)
   useEffect(() => {
@@ -104,6 +114,80 @@ export function useEmbeddedBridgeSync({
       crossTab.broadcastStopBlurr();
     }
   }, [crossTab, isEmbedded, crossTabLock.isAcquired, flowState, effectiveBlurEnabled]);
+
+  // Control log capture via cross-tab broadcast to capture iframes
+  useEffect(() => {
+    if (!isEmbedded || !crossTabLock.isAcquired) {
+      logger.debug(
+        { isEmbedded, lockAcquired: crossTabLock.isAcquired },
+        'log capture effect skipped (not embedded or no lock)'
+      );
+      return;
+    }
+    if (!crossTab || !sessionInfo) {
+      logger.debug(
+        { hasCrossTab: !!crossTab, hasSessionInfo: !!sessionInfo },
+        'log capture effect skipped (no crossTab or sessionInfo)'
+      );
+      return;
+    }
+
+    const hasLogPrefs = !!(
+      preferences?.captureClientLog ||
+      preferences?.captureNetworkLog ||
+      preferences?.captureClientAction
+    );
+    const isRecordingPhase = flowState === 'countdown' || flowState === 'recording';
+    const shouldCapture = hasLogPrefs && isRecordingPhase;
+    const logCaptureState = shouldCapture ? 'active' : 'inactive';
+
+    logger.debug(
+      {
+        hasLogPrefs,
+        isRecordingPhase,
+        shouldCapture,
+        flowState,
+        captureClientLog: preferences?.captureClientLog,
+        captureNetworkLog: preferences?.captureNetworkLog,
+        captureClientAction: preferences?.captureClientAction,
+        prev: prevLogCaptureStateRef.current,
+        next: logCaptureState,
+      },
+      'log capture effect evaluated'
+    );
+
+    if (logCaptureState === prevLogCaptureStateRef.current) return;
+
+    const prevLogCaptureState = prevLogCaptureStateRef.current;
+    prevLogCaptureStateRef.current = logCaptureState;
+
+    logger.debug(
+      { from: prevLogCaptureState, to: logCaptureState, flowState },
+      'log capture state changed'
+    );
+
+    if (logCaptureState === 'active') {
+      const logPrefs: LogCapturePreferences = {
+        captureConsole: preferences?.captureClientLog ?? false,
+        captureNetwork: preferences?.captureNetworkLog ?? false,
+        captureAction: preferences?.captureClientAction ?? false,
+      };
+      const internalEndpoints = env.api.url ? [env.api.url] : undefined;
+      logger.debug(
+        { logPrefs, sessionId: sessionInfo.sessionId, internalEndpoints },
+        'broadcasting log capture start'
+      );
+      crossTab.broadcastStartLogCapture(
+        logPrefs,
+        sessionInfo.sessionId,
+        sessionInfo.workspaceId,
+        internalEndpoints
+      );
+    } else if (logCaptureState === 'inactive' && prevLogCaptureState === 'active') {
+      logger.debug('broadcasting log capture stop');
+      crossTab.broadcastStopLogCapture();
+    }
+  }, [crossTab, isEmbedded, crossTabLock.isAcquired, flowState, sessionInfo, preferences]);
 
   // Initialize session with parent when ready
   useEffect(() => {
@@ -200,5 +284,29 @@ export function useEmbeddedBridgeSync({
     return null;
   }, [isEmbedded, crossTab, gatherMetadataFromCaptureTabs]);
 
-  return { gatherAndMergeMetadata };
+  /**
+   * Gather logs from all capture iframes via scatter-gather
+   * Returns aggregated logs from all tabs, or null if not available
+   */
+  const gatherLogs = useCallback(async (): Promise<AggregatedLogs | null> => {
+    if (!crossTab || !isEmbedded) return null;
+
+    try {
+      logger.debug('gathering logs from capture tabs');
+      const aggregatedLogs = await crossTab.scatterGatherLogs(5000);
+      logger.debug(
+        {
+          responded: aggregatedLogs.respondedTabs.length,
+          timedOut: aggregatedLogs.timedOutTabs.length,
+        },
+        'log scatter-gather complete'
+      );
+      return aggregatedLogs;
+    } catch (err) {
+      logger.warn({ err }, 'log collection failed (non-fatal)');
+      return null;
+    }
+  }, [crossTab, isEmbedded]);
+
+  return { gatherAndMergeMetadata, gatherLogs };
 }

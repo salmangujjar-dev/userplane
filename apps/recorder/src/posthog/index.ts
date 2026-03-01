@@ -6,3 +6,4 @@ export {
   createClientErrorWithMessage,
   getClientError,
 } from './client-errors';
+export { PostHogInit } from './PostHogInit';

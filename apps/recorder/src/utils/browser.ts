@@ -167,8 +167,8 @@ export function captureSystemMetadata(): SystemMetadata {
   const os = detectOS();
 
   return {
-    date: now.toISOString().split('T')[0],
-    time: now.toISOString().split('T')[1].split('.')[0],
+    date: now.toISOString().split('T')[0]!,
+    time: now.toISOString().split('T')[1]!.split('.')[0]!,
     browser: browser.name,
     browserVersion: browser.version,
     os: os.name,
