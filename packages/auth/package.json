@@ -27,14 +27,14 @@
   },
   "dependencies": {
     "better-auth": "^1.4.17",
-    "@userplane/contract": "workspace:*",
-    "@userplane/db": "workspace:*",
-    "@userplane/payments": "workspace:*",
-    "@userplane/shared": "workspace:*"
+    "@userplane/contract": "*",
+    "@userplane/db": "*",
+    "@userplane/payments": "*",
+    "@userplane/shared": "*"
   },
   "devDependencies": {
-    "@userplane/eslint-config": "workspace:*",
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "*",
+    "@userplane/typescript-config": "*",
     "eslint": "^9.32.0",
     "typescript": "^5.5.4"
   }

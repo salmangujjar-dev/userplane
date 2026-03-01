@@ -37,8 +37,8 @@
     "@storybook/react": "^10.1.11",
     "@storybook/react-vite": "^10.1.11",
     "@types/node": "^22.14.1",
-    "@userplane/eslint-config": "workspace:*",
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "*",
+    "@userplane/typescript-config": "*",
     "eslint": "^9.32.0",
     "eslint-plugin-storybook": "^10.1.11",
     "react": "^19.2.0",
@@ -51,8 +51,8 @@
     "vite-plugin-dts": "^4.4.0"
   },
   "dependencies": {
-    "@userplane/console-logger": "workspace:*",
-    "@userplane/sdk": "workspace:*",
-    "@userplane/metadata": "workspace:*"
+    "@userplane/console-logger": "*",
+    "@userplane/sdk": "*",
+    "@userplane/metadata": "*"
   }
 }

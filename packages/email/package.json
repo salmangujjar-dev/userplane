@@ -20,9 +20,9 @@
   },
   "dependencies": {
     "@react-email/components": "^1.0.4",
-    "@userplane/common-logger": "workspace:*",
-    "@userplane/shared": "workspace:*",
-    "@userplane/storage": "workspace:*",
+    "@userplane/common-logger": "*",
+    "@userplane/shared": "*",
+    "@userplane/storage": "*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "resend": "^4.0.1"
@@ -32,8 +32,8 @@
     "@types/node": "^22.10.5",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@userplane/eslint-config": "workspace:*",
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "*",
+    "@userplane/typescript-config": "*",
     "eslint": "^9.32.0",
     "react-email": "^5.2.5",
     "typescript": "^5.5.4"
