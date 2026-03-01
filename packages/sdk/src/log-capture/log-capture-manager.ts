@@ -130,7 +130,7 @@ export class LogCaptureManager {
         ? 'network'
         : entry.log_type === 'console'
           ? 'console'
-          : 'activity';
+          : 'action';
 
     this.store.append(storeType, entry).catch((err) => {
       logger.warn({ err, storeType }, 'failed to persist log entry');
@@ -198,10 +198,10 @@ export class LogCaptureManager {
   async getAllLogs(): Promise<{
     network: ProcessedLogEntry[];
     console: ProcessedLogEntry[];
-    activity: ProcessedLogEntry[];
+    action: ProcessedLogEntry[];
   }> {
     if (!this.store) {
-      return { network: [], console: [], activity: [] };
+      return { network: [], console: [], action: [] };
     }
     return this.store.getAllLogs();
   }

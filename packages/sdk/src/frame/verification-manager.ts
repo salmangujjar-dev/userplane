@@ -49,6 +49,7 @@ export class VerificationFrameManager
 
     this.bridge.connect(this.frame.iframe).catch((error) => {
       this.logger.error({ err: error }, 'Bridge connection failed');
+      this.handleCloseRequest();
     });
   }
 

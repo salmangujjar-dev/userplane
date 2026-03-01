@@ -7,6 +7,7 @@ import type { AggregatedLogs, LogEntries } from '@/bridge/types';
 import { getRecorderClient } from '@/client/api';
 import {
   DEFAULT_MAX_RECORDING_DURATION_MS,
+  LOG_UPLOAD_CONFIG,
   THUMBNAIL_UPLOAD_CONFIG,
   VIDEO_UPLOAD_CONFIG,
 } from '@/constants';
@@ -43,7 +44,7 @@ export interface UploadState {
   logBlobs?: {
     console?: Blob;
     network?: Blob;
-    activity?: Blob;
+    action?: Blob;
   };
 }
 
@@ -253,36 +254,44 @@ export class RecordingSession {
       });
     }
 
-    // Add log files from aggregated logs
+    // Merge logs once and build blobs upfront so they can be reused for both
+    // the size computation (sent to the API) and the actual upload.
+    const logBlobs: UploadState['logBlobs'] = {};
     if (aggregatedLogs) {
       const mergedLogs = mergeAllTabLogs(aggregatedLogs, this.serverDeltaMs);
 
       if (mergedLogs.console.length > 0) {
-        const blob = new Blob([JSON.stringify(mergedLogs.console)], { type: 'application/json' });
+        logBlobs.console = new Blob([JSON.stringify(mergedLogs.console)], {
+          type: 'application/json',
+        });
         files.push({
           type: 'console_log',
           name: 'console.json',
-          size: blob.size,
+          size: logBlobs.console.size,
           mime_type: 'application/json',
         });
       }
 
       if (mergedLogs.network.length > 0) {
-        const blob = new Blob([JSON.stringify(mergedLogs.network)], { type: 'application/json' });
+        logBlobs.network = new Blob([JSON.stringify(mergedLogs.network)], {
+          type: 'application/json',
+        });
         files.push({
           type: 'network_log',
           name: 'network.json',
-          size: blob.size,
+          size: logBlobs.network.size,
           mime_type: 'application/json',
         });
       }
 
-      if (mergedLogs.activity.length > 0) {
-        const blob = new Blob([JSON.stringify(mergedLogs.activity)], { type: 'application/json' });
+      if (mergedLogs.action.length > 0) {
+        logBlobs.action = new Blob([JSON.stringify(mergedLogs.action)], {
+          type: 'application/json',
+        });
         files.push({
           type: 'action',
-          name: 'activity.json',
-          size: blob.size,
+          name: 'action.json',
+          size: logBlobs.action.size,
           mime_type: 'application/json',
         });
       }
@@ -327,27 +336,6 @@ export class RecordingSession {
       recording_id: this.recordingId,
       recording_stage: 'upload',
     });
-
-    // Build log blobs for upload
-    const logBlobs: UploadState['logBlobs'] = {};
-    if (aggregatedLogs) {
-      const mergedLogs = mergeAllTabLogs(aggregatedLogs, this.serverDeltaMs);
-      if (mergedLogs.console.length > 0) {
-        logBlobs.console = new Blob([JSON.stringify(mergedLogs.console)], {
-          type: 'application/json',
-        });
-      }
-      if (mergedLogs.network.length > 0) {
-        logBlobs.network = new Blob([JSON.stringify(mergedLogs.network)], {
-          type: 'application/json',
-        });
-      }
-      if (mergedLogs.activity.length > 0) {
-        logBlobs.activity = new Blob([JSON.stringify(mergedLogs.activity)], {
-          type: 'application/json',
-        });
-      }
-    }
 
     return {
       ok: true,
@@ -481,7 +469,7 @@ export class RecordingSession {
       const logTypes = [
         { type: 'console_log' as const, blob: uploadState.logBlobs.console, name: 'console.json' },
         { type: 'network_log' as const, blob: uploadState.logBlobs.network, name: 'network.json' },
-        { type: 'action' as const, blob: uploadState.logBlobs.activity, name: 'activity.json' },
+        { type: 'action' as const, blob: uploadState.logBlobs.action, name: 'action.json' },
       ];
 
       for (const { type, blob, name } of logTypes) {
@@ -492,7 +480,7 @@ export class RecordingSession {
         try {
           const logFile = new File([blob], name, { type: 'application/json' });
           await uploadToObjectStore(logFile, logUrl.url, {
-            ...THUMBNAIL_UPLOAD_CONFIG, // Reuse thumbnail config (small files)
+            ...LOG_UPLOAD_CONFIG,
           });
           logger.debug({ type }, 'log file uploaded');
         } catch (err) {
@@ -565,12 +553,12 @@ export class RecordingSession {
 function mergeAllTabLogs(aggregatedLogs: AggregatedLogs, serverDeltaMs: number): LogEntries {
   const network: LogEntries['network'] = [];
   const console: LogEntries['console'] = [];
-  const activity: LogEntries['activity'] = [];
+  const action: LogEntries['action'] = [];
 
   for (const tabLogs of Object.values(aggregatedLogs.perTab)) {
     network.push(...tabLogs.network);
     console.push(...tabLogs.console);
-    activity.push(...tabLogs.activity);
+    action.push(...tabLogs.action);
   }
 
   // Apply server delta to all timestamps in one centralized place
@@ -584,7 +572,7 @@ function mergeAllTabLogs(aggregatedLogs: AggregatedLogs, serverDeltaMs: number):
     for (const entry of console) {
       if (typeof entry.timestamp === 'number') entry.timestamp += serverDeltaMs;
     }
-    for (const entry of activity) {
+    for (const entry of action) {
       if (typeof entry.timestamp === 'number') entry.timestamp += serverDeltaMs;
     }
   }
@@ -599,7 +587,7 @@ function mergeAllTabLogs(aggregatedLogs: AggregatedLogs, serverDeltaMs: number):
     return aTime - bTime;
   });
   console.sort((a, b) => getTs(a) - getTs(b));
-  activity.sort((a, b) => getTs(a) - getTs(b));
+  action.sort((a, b) => getTs(a) - getTs(b));
 
-  return { network, console, activity };
+  return { network, console, action };
 }

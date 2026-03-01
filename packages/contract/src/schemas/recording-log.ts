@@ -7,16 +7,16 @@ import type {
 } from '@workspace/logger';
 
 export type {
-  SerializedElement,
-  SerializedFunction,
-  SerializedError,
-  SerializedValue,
   ParsedBody,
-  UserActionType,
-  UserActionData,
   ProcessedConsoleEntry,
   ProcessedNetworkEntry,
   ProcessedUserActionEntry,
+  SerializedElement,
+  SerializedError,
+  SerializedFunction,
+  SerializedValue,
+  UserActionData,
+  UserActionType,
 } from '@workspace/logger';
 
 // Backward-compatible aliases used by dash/API

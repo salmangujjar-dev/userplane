@@ -139,12 +139,6 @@ export interface InitializeOptions {
   parseUserplaneData?: (href: string) => SerializableUserplaneData | null;
 
   /**
-   * Custom function to apply userplane data to URL.
-   * Used for cross-tab synchronization.
-   */
-  applyUserplaneData?: (data: SerializableUserplaneData) => string;
-
-  /**
    * URLs to exclude from network log capture.
    * These are merged with Userplane's internal endpoints.
    * Useful for filtering out your own API calls, analytics, etc.

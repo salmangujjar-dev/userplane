@@ -18,6 +18,7 @@ export abstract class BaseFrameManager implements IFrameManager {
   protected frame: RecorderFrame | null = null;
   protected config: FrameManagerConfig;
   protected logger = createSdkLogger('FrameManager');
+  protected pendingMountListener: (() => void) | null = null;
 
   constructor(config: FrameManagerConfig) {
     this.config = config;
@@ -60,6 +61,12 @@ export abstract class BaseFrameManager implements IFrameManager {
    * Unmount and cleanup the frame
    */
   public unmount(): void {
+    // Clean up pending readystatechange listener if mount was deferred
+    if (this.pendingMountListener) {
+      document.removeEventListener('readystatechange', this.pendingMountListener);
+      this.pendingMountListener = null;
+    }
+
     // Disconnect bridge first (implemented by subclass)
     this.disconnectBridge();
 
@@ -177,11 +184,13 @@ export abstract class BaseFrameManager implements IFrameManager {
       if (document.readyState !== 'loading') {
         document.body.appendChild(frame.overlay);
         document.removeEventListener('readystatechange', mountFn);
+        this.pendingMountListener = null;
         frame.iframe.focus();
         this.logger.debug('Frame mounted to DOM');
       }
     };
 
+    this.pendingMountListener = mountFn;
     document.addEventListener('readystatechange', mountFn);
     mountFn();
   }
