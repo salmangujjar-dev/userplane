@@ -1045,4 +1045,28 @@ export class RecordingRepository {
 
     return results;
   }
+
+  /**
+   * Get domain capture preferences for a recording
+   * Joins through recordings → links → domains to fetch the current domain preferences
+   */
+  async getDomainCapturePreferences(recordingId: string): Promise<{
+    captureClientLog: boolean;
+    captureNetworkLog: boolean;
+    captureClientAction: boolean;
+  } | null> {
+    const [result] = await this.db
+      .select({
+        captureClientLog: domains.recordingCaptureClientLog,
+        captureNetworkLog: domains.recordingCaptureNetworkLog,
+        captureClientAction: domains.recordingCaptureClientAction,
+      })
+      .from(recordings)
+      .innerJoin(links, eq(recordings.recordingLinkId, links.linkId))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
+      .where(eq(recordings.recordingId, recordingId))
+      .limit(1);
+
+    return result ?? null;
+  }
 }
