@@ -38,6 +38,7 @@ interface UseEmbeddedBridgeSyncOptions {
 interface UseEmbeddedBridgeSyncResult {
   gatherAndMergeMetadata: () => Promise<Record<string, unknown> | null>;
   gatherLogs: () => Promise<AggregatedLogs | null>;
+  clearLogs: () => Promise<void>;
 }
 
 export function useEmbeddedBridgeSync({
@@ -308,5 +309,15 @@ export function useEmbeddedBridgeSync({
     }
   }, [crossTab, isEmbedded]);
 
-  return { gatherAndMergeMetadata, gatherLogs };
+  const clearLogs = useCallback(async (): Promise<void> => {
+    if (!crossTab || !isEmbedded) return;
+    try {
+      logger.debug('broadcasting clear log store to capture tabs');
+      await crossTab.broadcastClearLogStore();
+    } catch (err) {
+      logger.warn({ err }, 'clear log store broadcast failed (non-fatal)');
+    }
+  }, [crossTab, isEmbedded]);
+
+  return { gatherAndMergeMetadata, gatherLogs, clearLogs };
 }

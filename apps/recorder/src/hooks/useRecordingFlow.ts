@@ -102,6 +102,7 @@ export function useRecordingFlow(
   );
   const [maxRecordingSize, setMaxRecordingSize] = useState<number | null>(null);
   const [recordingDurationMs, setRecordingDurationMs] = useState<number | null>(null);
+  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
   const [preferences, setPreferences] = useState<RecordingPreferences>(
     DEFAULT_RECORDING_PREFERENCES
   );
@@ -353,6 +354,7 @@ export function useRecordingFlow(
       }
 
       const durationMs = mediaCaptureRef.current.getDuration();
+      const startTime = mediaCaptureRef.current.getStartTime();
 
       const blob = await mediaCaptureRef.current.stop();
       logger.debug({ size: blob.size, type: blob.type, durationMs }, 'recording stopped');
@@ -379,8 +381,9 @@ export function useRecordingFlow(
         return;
       }
 
-      // Store duration and blob
+      // Store duration, start time, and blob
       setRecordingDurationMs(durationMs);
+      setRecordingStartedAt(startTime);
       setRecordingBlob(blob);
 
       // Create video URL for preview
@@ -459,7 +462,8 @@ export function useRecordingFlow(
       recordingDurationMs,
       customMetadata,
       notes,
-      aggregatedLogs
+      aggregatedLogs,
+      recordingStartedAt
     );
 
     if (!initResult.ok) {
@@ -607,6 +611,7 @@ export function useRecordingFlow(
       setError(null);
       setMediaStream(null);
       setRecordingDurationMs(null);
+      setRecordingStartedAt(null);
 
       setFlowState('setup');
     } catch (err) {

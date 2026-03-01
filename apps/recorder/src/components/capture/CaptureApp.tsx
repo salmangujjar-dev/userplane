@@ -189,6 +189,14 @@ export default function CaptureApp() {
                 bridge.stopLogCapture();
               }
             },
+            onClearLogStore: () => {
+              if (mounted && bridge) {
+                logger.debug('received clear log store command');
+                bridge.clearLogStore().catch((err) => {
+                  logger.warn({ err }, 'clear log store failed (non-fatal)');
+                });
+              }
+            },
           },
         });
 

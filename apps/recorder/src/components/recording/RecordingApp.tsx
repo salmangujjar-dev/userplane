@@ -79,7 +79,7 @@ function RecordingAppContent() {
   }, [mode, isEmbedded, crossTabLock.status]);
 
   // Bridge sync: state reporting, blur control, log capture, session init, metadata gathering
-  const { gatherAndMergeMetadata, gatherLogs } = useEmbeddedBridgeSync({
+  const { gatherAndMergeMetadata, gatherLogs, clearLogs } = useEmbeddedBridgeSync({
     isEmbedded,
     flowState: state.state,
     recordingBlob: state.recordingBlob,
@@ -102,8 +102,24 @@ function RecordingAppContent() {
         'submit data gathered'
       );
       await actions.submitRecording(customMetadata, notes, aggregatedLogs);
+      // Fire-and-forget: clear log stores on capture tabs after upload
+      clearLogs().catch((err) => {
+        logger.warn({ err }, 'post-upload log cleanup failed (non-fatal)');
+      });
     },
-    [gatherAndMergeMetadata, gatherLogs, actions]
+    [gatherAndMergeMetadata, gatherLogs, clearLogs, actions]
+  );
+
+  const handleStartOver = useCallback(async () => {
+    clearLogs().catch((err) => {
+      logger.warn({ err }, 'start-over log cleanup failed (non-fatal)');
+    });
+    await actions.startOver();
+  }, [clearLogs, actions]);
+
+  const actionsWithCleanup = useMemo(
+    () => ({ ...actions, startOver: handleStartOver }),
+    [actions, handleStartOver]
   );
 
   // === ALL HOOKS ABOVE THIS LINE ===
@@ -144,7 +160,7 @@ function RecordingAppContent() {
     case 'error': {
       const classifiedError = classifyError(state.error);
 
-      return renderErrorScreen(classifiedError, state.preferences, actions);
+      return renderErrorScreen(classifiedError, state.preferences, actionsWithCleanup);
     }
 
     case 'setup':
@@ -189,7 +205,7 @@ function RecordingAppContent() {
           videoUrl={state.videoUrl}
           preferences={state.preferences}
           onSubmit={handleSubmitRecording}
-          onStartOver={actions.startOver}
+          onStartOver={handleStartOver}
           settingsElement={settingsElement}
         />
       );
