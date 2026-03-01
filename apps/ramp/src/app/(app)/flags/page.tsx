@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { type FeatureFlag, type RuntimeFlagInfo, applyOverrides } from '@/lib/feature-flags';
+import { applyOverrides, type FeatureFlag, type RuntimeFlagInfo } from '@/lib/feature-flags';
 
 type GroupedFlags = Record<string, RuntimeFlagInfo[]>;
 
@@ -20,72 +20,72 @@ function groupByCategory(flags: RuntimeFlagInfo[]): GroupedFlags {
 }
 
 export default function FlagsPage() {
-  const [flags, setFlags] = useState<RuntimeFlagInfo[]>([]);
+  const [serverFlags, setServerFlags] = useState<RuntimeFlagInfo[]>([]);
+  const [localFlags, setLocalFlags] = useState<RuntimeFlagInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const fetchFlags = useCallback(async () => {
-    const res = await fetch('/api/flags');
-    const json = await res.json();
-    setFlags(json.data);
-    setLoading(false);
+  const syncFromResponse = useCallback((data: RuntimeFlagInfo[]) => {
+    setServerFlags(data);
+    setLocalFlags(data);
 
-    // Sync client-side runtime state
     const overrides: Partial<Record<FeatureFlag, boolean>> = {};
-    for (const f of json.data as RuntimeFlagInfo[]) {
+    for (const f of data) {
       if (f.isOverridden) overrides[f.flag] = f.value;
     }
     applyOverrides(overrides);
   }, []);
 
+  const fetchFlags = useCallback(async () => {
+    const res = await fetch('/api/flags');
+    const json = await res.json();
+    syncFromResponse(json.data);
+    setLoading(false);
+  }, [syncFromResponse]);
+
   useEffect(() => {
     fetchFlags();
   }, [fetchFlags]);
 
-  const handleToggle = async (flag: FeatureFlag, newValue: boolean) => {
-    // Optimistic update
-    setFlags((prev) =>
-      prev.map((f) =>
-        f.flag === flag ? { ...f, value: newValue, isOverridden: newValue !== f.defaultValue } : f
-      )
-    );
-
-    const res = await fetch(`/api/flags/${flag}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ value: newValue }),
-    });
-    const json = await res.json();
-    setFlags(json.data);
-
-    // Sync client-side runtime state
-    const overrides: Partial<Record<FeatureFlag, boolean>> = {};
-    for (const f of json.data as RuntimeFlagInfo[]) {
-      if (f.isOverridden) overrides[f.flag] = f.value;
+  const { isDirty, pendingChangeCount } = useMemo(() => {
+    const serverMap = new Map(serverFlags.map((f) => [f.flag, f.value]));
+    let count = 0;
+    for (const f of localFlags) {
+      if (f.value !== serverMap.get(f.flag)) count++;
     }
-    applyOverrides(overrides);
+    return { isDirty: count > 0, pendingChangeCount: count };
+  }, [localFlags, serverFlags]);
+
+  const handleToggle = (flag: FeatureFlag, newValue: boolean) => {
+    setLocalFlags((prev) => prev.map((f) => (f.flag === flag ? { ...f, value: newValue } : f)));
   };
 
-  const handleReset = async (flag: FeatureFlag) => {
-    const res = await fetch(`/api/flags/${flag}`, { method: 'DELETE' });
-    const json = await res.json();
-    setFlags(json.data);
-
-    const overrides: Partial<Record<FeatureFlag, boolean>> = {};
-    for (const f of json.data as RuntimeFlagInfo[]) {
-      if (f.isOverridden) overrides[f.flag] = f.value;
+  const handleSave = async () => {
+    setSaving(true);
+    const overrides: Record<string, boolean> = {};
+    for (const f of localFlags) {
+      overrides[f.flag] = f.value;
     }
-    applyOverrides(overrides);
+
+    try {
+      const res = await fetch('/api/flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'save-overrides', overrides }),
+      });
+      const json = await res.json();
+      syncFromResponse(json.data);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleResetAll = async () => {
-    const res = await fetch('/api/flags', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'reset-all' }),
-    });
-    const json = await res.json();
-    setFlags(json.data);
-    applyOverrides({});
+  const handleCancel = () => {
+    setLocalFlags(serverFlags);
+  };
+
+  const handleResetAll = () => {
+    setLocalFlags((prev) => prev.map((f) => ({ ...f, value: f.defaultValue })));
   };
 
   if (loading) {
@@ -96,29 +96,30 @@ export default function FlagsPage() {
     );
   }
 
-  const overrideCount = flags.filter((f) => f.isOverridden).length;
-  const grouped = groupByCategory(flags);
+  const serverOverrideCount = serverFlags.filter((f) => f.isOverridden).length;
+
+  const serverValueMap = new Map(serverFlags.map((f) => [f.flag, f.value]));
+
+  const grouped = groupByCategory(localFlags);
   const categoryOrder = ['Client UI', 'Auth', 'Server API', 'Chaos (API)', 'Chaos (Client)'];
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{flags.length} flags</span>
-            {overrideCount > 0 && (
+            <span className="text-sm text-muted-foreground">{localFlags.length} flags</span>
+            {serverOverrideCount > 0 && (
               <Badge variant="warning" size="sm">
-                {overrideCount} overridden
+                {serverOverrideCount} overridden
               </Badge>
             )}
           </div>
         </div>
-        {overrideCount > 0 && (
-          <Button variant="outline" size="sm" onClick={handleResetAll}>
-            Reset all
-          </Button>
-        )}
+        <Button variant="outline" size="sm" onClick={handleResetAll}>
+          Reset all to defaults
+        </Button>
       </div>
 
       {/* Flag groups */}
@@ -130,45 +131,71 @@ export default function FlagsPage() {
           <div key={category}>
             <h3 className="text-sm font-semibold mb-3">{category}</h3>
             <div className="rounded-lg border divide-y">
-              {categoryFlags.map((flag) => (
-                <div key={flag.flag} className="flex items-center justify-between gap-4 px-4 py-3">
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <code className="text-sm font-mono">{flag.flag}</code>
-                      {flag.isOverridden && (
-                        <Badge variant="warning" size="sm">
-                          overridden
-                        </Badge>
-                      )}
-                      {flag.isChaos && (
-                        <Badge variant="error" size="sm">
-                          chaos
-                        </Badge>
-                      )}
+              {categoryFlags.map((flag) => {
+                const isUnsaved = flag.value !== serverValueMap.get(flag.flag);
+                const isServerOverridden = serverFlags.find(
+                  (sf) => sf.flag === flag.flag
+                )?.isOverridden;
+
+                return (
+                  <div
+                    key={flag.flag}
+                    className="flex items-center justify-between gap-4 px-4 py-3"
+                  >
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <code className="text-sm font-mono">{flag.flag}</code>
+                        {isUnsaved && (
+                          <Badge variant="info" size="sm">
+                            unsaved
+                          </Badge>
+                        )}
+                        {isServerOverridden && (
+                          <Badge variant="warning" size="sm">
+                            overridden
+                          </Badge>
+                        )}
+                        {flag.isChaos && (
+                          <Badge variant="error" size="sm">
+                            chaos
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{flag.description}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{flag.description}</p>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <Switch
+                        checked={flag.value}
+                        onCheckedChange={(checked) => handleToggle(flag.flag, checked)}
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {flag.isOverridden && (
-                      <button
-                        onClick={() => handleReset(flag.flag)}
-                        className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-                      >
-                        reset
-                      </button>
-                    )}
-                    <Switch
-                      checked={flag.value}
-                      onCheckedChange={(checked) => handleToggle(flag.flag, checked)}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <Separator className="mt-6" />
           </div>
         );
       })}
+
+      {/* Sticky bottom action bar */}
+      {isDirty && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center justify-between px-6 py-3">
+            <span className="text-sm text-muted-foreground">
+              {pendingChangeCount} unsaved change{pendingChangeCount !== 1 ? 's' : ''}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleCancel} disabled={saving}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : 'Save changes'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
