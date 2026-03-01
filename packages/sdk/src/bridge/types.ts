@@ -194,6 +194,12 @@ export interface CaptureHostSchema {
   stopLogCapture: () => void;
 
   /**
+   * Pause log capture on the parent page (non-destructive — keeps hooks in place)
+   * Called by capture iframe when recording transitions to retained state
+   */
+  pauseLogCapture: () => void;
+
+  /**
    * Get the current log capture state
    */
   getLogCaptureState: () => LogCaptureState;
@@ -269,6 +275,12 @@ export interface CaptureGuestSchema {
    * Relays to parent SDK's stopLogCapture
    */
   stopLogCapture: () => void;
+
+  /**
+   * Pause log capture on the parent page
+   * Relays to parent SDK's pauseLogCapture
+   */
+  pauseLogCapture: () => void;
 
   /**
    * Get the current log capture state from the parent

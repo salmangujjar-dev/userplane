@@ -183,6 +183,12 @@ export default function CaptureApp() {
                 );
               }
             },
+            onLogCapturePause: () => {
+              if (mounted && bridge) {
+                logger.debug('received log capture pause command');
+                bridge.pauseLogCapture();
+              }
+            },
             onLogCaptureStop: () => {
               if (mounted && bridge) {
                 logger.debug('received log capture stop command');
@@ -229,13 +235,21 @@ export default function CaptureApp() {
           if (prefs && sessionId && workspaceId) {
             const tabRef = bridge.getTabRef();
             logger.debug('log capture already enabled on connect');
-            bridge.startLogCapture(
+            await bridge.startLogCapture(
               prefs,
               sessionId,
               tabRef ?? '',
               workspaceId,
               internalEndpoints ?? undefined
             );
+
+            // If log capture is paused (e.g. during review/upload), immediately
+            // pause this late-joining tab so it doesn't actively capture while
+            // all other tabs are paused.
+            if (crossTab.isLogCapturePaused()) {
+              logger.debug('log capture is paused, pausing late-joining tab');
+              bridge.pauseLogCapture();
+            }
           }
         }
 

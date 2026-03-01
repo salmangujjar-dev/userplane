@@ -165,6 +165,9 @@ export class CaptureBridgeConnection {
       stopLogCapture: () => {
         this.stopLogCapture();
       },
+      pauseLogCapture: () => {
+        this.pauseLogCapture();
+      },
       getLogCaptureState: () => {
         return this.getLogCaptureState();
       },
@@ -412,6 +415,20 @@ export class CaptureBridgeConnection {
 
     this.logger.debug('Stopping log capture');
     this.logCaptureManager.stop();
+  }
+
+  /**
+   * Pause log capture on the parent page (non-destructive — keeps hooks in place)
+   * Called by capture iframe when recording transitions to retained state
+   */
+  public pauseLogCapture(): void {
+    if (!this.logCaptureManager) {
+      this.logger.debug('LogCaptureManager not available, cannot pause log capture');
+      return;
+    }
+
+    this.logger.debug('Pausing log capture');
+    this.logCaptureManager.pause();
   }
 
   /**

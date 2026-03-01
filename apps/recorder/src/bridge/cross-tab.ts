@@ -72,6 +72,8 @@ interface CrossTabSchema {
   blurrEnabled: boolean;
   /** Whether log capture is currently enabled (persistent state for new tabs) */
   logCaptureEnabled: boolean;
+  /** Whether log capture is currently paused (e.g. during review/upload) */
+  logCapturePaused: boolean;
   /** Current log capture preferences */
   logCapturePreferences: LogCapturePreferences | null;
   /** Session ID for log capture (needed to init log capture on new tabs) */
@@ -141,6 +143,12 @@ interface CrossTabSchema {
   ) => void;
 
   /**
+   * Broadcast pause log capture command to all capture iframes
+   * Called by recorder when recording transitions to retained state
+   */
+  broadcastPauseLogCapture: (remote: CrossTabSchema) => void;
+
+  /**
    * Broadcast stop log capture command to all capture iframes
    */
   broadcastStopLogCapture: (remote: CrossTabSchema) => void;
@@ -201,6 +209,8 @@ export interface CrossTabCoordinatorCallbacks {
     workspaceId: string,
     internalEndpoints?: string[]
   ) => void;
+  /** Called when this tab (capture) receives pause log capture command */
+  onLogCapturePause?: () => void;
   /** Called when this tab (capture) receives stop log capture command */
   onLogCaptureStop?: () => void;
   /** Called when this tab (capture) receives clear log store command */
@@ -372,6 +382,7 @@ export class CrossTabCoordinator {
       lastRecorderStateUpdate: 0,
       blurrEnabled: false,
       logCaptureEnabled: false,
+      logCapturePaused: false,
       logCapturePreferences: null,
       logCaptureSessionId: null,
       logCaptureWorkspaceId: null,
@@ -516,6 +527,7 @@ export class CrossTabCoordinator {
       ) {
         // Update persistent log capture state
         remote.logCaptureEnabled = true;
+        remote.logCapturePaused = false;
         remote.logCapturePreferences = preferences;
         remote.logCaptureSessionId = sessionId;
         remote.logCaptureWorkspaceId = workspaceId;
@@ -534,10 +546,23 @@ export class CrossTabCoordinator {
         );
       },
 
+      // Log capture: pause log capture (runs in capture iframes)
+      broadcastPauseLogCapture(remote: CrossTabSchema) {
+        // Keep logCaptureEnabled = true since paused still means "has capture"
+        remote.logCapturePaused = true;
+        // Only capture iframes should handle log capture commands
+        if (!self.localTabId || !isCaptureTab(self.localTabId)) {
+          return;
+        }
+        logger.debug({ localTabId: self.localTabId }, 'log capture pause received');
+        self.config.callbacks.onLogCapturePause?.();
+      },
+
       // Log capture: stop log capture (runs in capture iframes)
       broadcastStopLogCapture(remote: CrossTabSchema) {
         // Update persistent log capture state
         remote.logCaptureEnabled = false;
+        remote.logCapturePaused = false;
 
         // Only capture iframes should handle log capture commands
         if (!self.localTabId || !isCaptureTab(self.localTabId)) {
@@ -1186,6 +1211,27 @@ export class CrossTabCoordinator {
   }
 
   /**
+   * Broadcast pause log capture command to all capture iframes
+   * Called by recorder when recording transitions to retained state
+   */
+  public async broadcastPauseLogCapture(): Promise<void> {
+    if (!this.connection) {
+      logger.warn('cannot broadcast log capture pause - not connected');
+      return;
+    }
+
+    logger.debug('broadcasting pause log capture');
+    try {
+      const remote = this.connection.remote as unknown as {
+        broadcastPauseLogCapture: () => Promise<void>;
+      };
+      await remote.broadcastPauseLogCapture();
+    } catch (error) {
+      logger.error({ err: error }, 'log capture pause broadcast failed');
+    }
+  }
+
+  /**
    * Broadcast stop log capture command to all capture iframes
    */
   public async broadcastStopLogCapture(): Promise<void> {
@@ -1231,6 +1277,14 @@ export class CrossTabCoordinator {
   public isLogCaptureEnabled(): boolean {
     if (!this.connection) return false;
     return this.connection.getVersionedState<boolean>('logCaptureEnabled').value ?? false;
+  }
+
+  /**
+   * Check if log capture is currently paused (e.g. during review/upload)
+   */
+  public isLogCapturePaused(): boolean {
+    if (!this.connection) return false;
+    return this.connection.getVersionedState<boolean>('logCapturePaused').value ?? false;
   }
 
   /**

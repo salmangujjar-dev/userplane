@@ -56,7 +56,7 @@ export function useEmbeddedBridgeSync({
   const prevFlowStateRef = useRef<FlowState | null>(null);
   const sessionReportedRef = useRef(false);
   const prevBlurStateRef = useRef<'active' | 'inactive' | null>(null);
-  const prevLogCaptureStateRef = useRef<'active' | 'inactive' | null>(null);
+  const prevLogCaptureStateRef = useRef<'active' | 'paused' | 'inactive' | null>(null);
 
   // Report state changes to parent via bridge (embedded mode only)
   useEffect(() => {
@@ -139,14 +139,22 @@ export function useEmbeddedBridgeSync({
       preferences?.captureClientAction
     );
     const isRecordingPhase = flowState === 'countdown' || flowState === 'recording';
-    const shouldCapture = hasLogPrefs && isRecordingPhase;
-    const logCaptureState = shouldCapture ? 'active' : 'inactive';
+    const isRetainedPhase =
+      flowState === 'review' ||
+      flowState === 'uploading' ||
+      (flowState === 'error' && !!recordingBlob);
+    const logCaptureState: 'active' | 'paused' | 'inactive' =
+      hasLogPrefs && isRecordingPhase
+        ? 'active'
+        : hasLogPrefs && isRetainedPhase
+          ? 'paused'
+          : 'inactive';
 
     logger.debug(
       {
         hasLogPrefs,
         isRecordingPhase,
-        shouldCapture,
+        isRetainedPhase,
         flowState,
         captureClientLog: preferences?.captureClientLog,
         captureNetworkLog: preferences?.captureNetworkLog,
@@ -184,11 +192,25 @@ export function useEmbeddedBridgeSync({
         sessionInfo.workspaceId,
         internalEndpoints
       );
-    } else if (logCaptureState === 'inactive' && prevLogCaptureState === 'active') {
+    } else if (logCaptureState === 'paused') {
+      logger.debug('broadcasting log capture pause');
+      crossTab.broadcastPauseLogCapture();
+    } else if (
+      logCaptureState === 'inactive' &&
+      (prevLogCaptureState === 'active' || prevLogCaptureState === 'paused')
+    ) {
       logger.debug('broadcasting log capture stop');
       crossTab.broadcastStopLogCapture();
     }
-  }, [crossTab, isEmbedded, crossTabLock.isAcquired, flowState, sessionInfo, preferences]);
+  }, [
+    crossTab,
+    isEmbedded,
+    crossTabLock.isAcquired,
+    flowState,
+    sessionInfo,
+    preferences,
+    recordingBlob,
+  ]);
 
   // Initialize session with parent when ready
   useEffect(() => {

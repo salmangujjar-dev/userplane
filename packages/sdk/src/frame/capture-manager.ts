@@ -177,6 +177,13 @@ export class CaptureFrameManager implements ICaptureFrameManager {
   }
 
   /**
+   * Pause log capture on the parent page (non-destructive)
+   */
+  public pauseLogCapture(): void {
+    this.bridge?.pauseLogCapture();
+  }
+
+  /**
    * Get current log capture state
    */
   public getLogCaptureState(): LogCaptureState {
