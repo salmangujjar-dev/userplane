@@ -83,6 +83,7 @@ export class CaptureBridgeConnection {
       getBlurrState: this.handleGetBlurrState.bind(this),
       startLogCapture: this.handleStartLogCapture.bind(this),
       stopLogCapture: this.handleStopLogCapture.bind(this),
+      pauseLogCapture: this.handlePauseLogCapture.bind(this),
       getLogCaptureState: this.handleGetLogCaptureState.bind(this),
       getLogEntries: this.handleGetLogEntries.bind(this),
       clearLogStore: this.handleClearLogStore.bind(this),
@@ -363,6 +364,19 @@ export class CaptureBridgeConnection {
   }
 
   /**
+   * Handle pause log capture request - relay to parent SDK
+   */
+  private handlePauseLogCapture(): void {
+    const remote = this.getRemote();
+    if (!remote) {
+      logger.warn('not connected, cannot pause log capture');
+      return;
+    }
+    logger.debug('relaying pause log capture');
+    remote.pauseLogCapture();
+  }
+
+  /**
    * Handle get log capture state request - relay to parent SDK
    */
   private handleGetLogCaptureState(): LogCaptureState {
@@ -415,6 +429,13 @@ export class CaptureBridgeConnection {
    */
   public stopLogCapture(): void {
     this.handleStopLogCapture();
+  }
+
+  /**
+   * Pause log capture on the parent page
+   */
+  public pauseLogCapture(): void {
+    this.handlePauseLogCapture();
   }
 
   /**

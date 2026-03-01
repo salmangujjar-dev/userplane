@@ -25,6 +25,7 @@ export class LogCaptureManager {
   private processor: LogProcessor | null = null;
   private store: LogStore | null = null;
   private _isStarted = false;
+  private _isPaused = false;
   private preferences: LogCapturePreferences;
 
   constructor(preferences?: Partial<LogCapturePreferences>) {
@@ -49,7 +50,7 @@ export class LogCaptureManager {
 
     // Cleanup any prior state from a previous initialize() call to prevent
     // leaking IndexedDB connections and event listeners.
-    if (this._isStarted) {
+    if (this._isStarted || this._isPaused) {
       this.stop();
     }
     if (this.processor) {
@@ -157,10 +158,10 @@ export class LogCaptureManager {
   }
 
   /**
-   * Stop capturing logs
+   * Stop capturing logs (full teardown — unpatches hooks)
    */
   stop(): void {
-    if (!this._isStarted) {
+    if (!this._isStarted && !this._isPaused) {
       logger.debug('already stopped');
       return;
     }
@@ -169,13 +170,48 @@ export class LogCaptureManager {
     logger.debug('stopping');
     this.processor.stop();
     this._isStarted = false;
+    this._isPaused = false;
+  }
+
+  /**
+   * Pause capturing logs (non-destructive — keeps hooks in place)
+   */
+  pause(): void {
+    if (!this._isStarted) {
+      logger.debug('not started, cannot pause');
+      return;
+    }
+    if (!this.processor) return;
+
+    logger.debug('pausing');
+    this.processor.pause();
+    this._isStarted = false;
+    this._isPaused = true;
+  }
+
+  /**
+   * Resume capturing logs from a paused state
+   */
+  resume(): void {
+    if (!this._isPaused) {
+      logger.debug('not paused, cannot resume');
+      return;
+    }
+    if (!this.processor) return;
+
+    logger.debug('resuming');
+    this.processor.resume();
+    this._isPaused = false;
+    this._isStarted = true;
   }
 
   /**
    * Get the current log capture state
    */
   getState(): LogCaptureState {
-    return this._isStarted ? 'enabled' : 'disabled';
+    if (this._isStarted) return 'enabled';
+    if (this._isPaused) return 'paused';
+    return 'disabled';
   }
 
   /**

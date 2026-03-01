@@ -70,7 +70,7 @@ export type BlurrState = 'enabled' | 'disabled';
 /**
  * Log capture state indicating whether log capture is enabled or disabled
  */
-export type LogCaptureState = 'enabled' | 'disabled';
+export type LogCaptureState = 'enabled' | 'disabled' | 'paused';
 
 /**
  * Preferences for what types of logs to capture

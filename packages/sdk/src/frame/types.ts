@@ -128,6 +128,11 @@ export interface ICaptureFrameManager extends IFrameManager {
   stopLogCapture(): void;
 
   /**
+   * Pause log capture on the parent page (non-destructive)
+   */
+  pauseLogCapture(): void;
+
+  /**
    * Get current log capture state
    */
   getLogCaptureState(): LogCaptureState;
