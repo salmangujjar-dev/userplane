@@ -52,7 +52,7 @@ function logNetworkErrorToConsole(
     dispatch(
       truncatePayload({
         source: LOGGER_NAME,
-        has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
+        has_focus: window.__userplane_has_focus ?? true,
         type: 'console',
         subtype: level,
         level,
@@ -215,7 +215,7 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
                   const isError = responseInfo.status >= 400 || responseInfo.ok === false;
                   dispatch({
                     source: LOGGER_NAME,
-                    has_focus: __userplane_has_focus,
+                    has_focus: window.__userplane_has_focus,
                     type: isError ? 'network-error' : 'network',
                     initiatorType: 'fetch',
                     request: requestInfo,
@@ -261,7 +261,7 @@ function createFetchWrapper(originalFetch: typeof fetch, serverDeltaMs: number):
 
           dispatch({
             source: LOGGER_NAME,
-            has_focus: __userplane_has_focus,
+            has_focus: window.__userplane_has_focus,
             type: 'network-error',
             initiatorType: 'fetch',
             url,

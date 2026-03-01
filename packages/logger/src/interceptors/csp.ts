@@ -15,7 +15,7 @@ export function patchCSP(serverDeltaMs: number): (e: SecurityPolicyViolationEven
     try {
       dispatch({
         source: LOGGER_NAME,
-        has_focus: __userplane_has_focus,
+        has_focus: window.__userplane_has_focus,
         type: 'console',
         subtype: 'securitypolicyviolation',
         level: 'error',

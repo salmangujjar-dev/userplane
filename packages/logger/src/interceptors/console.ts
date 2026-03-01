@@ -8,6 +8,27 @@ import { truncatePayload } from '../utils/truncation';
 type ConsoleLevel = 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace';
 const CONSOLE_LEVELS: ConsoleLevel[] = ['log', 'info', 'warn', 'error', 'debug', 'trace'];
 
+/**
+ * Re-entrancy guard for console wrappers.
+ *
+ * WHY THIS EXISTS:
+ * We use Object.defineProperty with a getter/setter on console.log (etc).
+ * The getter returns our wrapper, the setter stores the assigned function as
+ * the "original" to forward to. If external code (turbopack HMR, React dev,
+ * browser devtools) reads console.log (gets our wrapper) and writes it back
+ * (e.g., `console.log = console.log`), the setter stores our wrapper as the
+ * "original". Then when the wrapper tries to forward via
+ * `Reflect.apply(originalFn, ...)`, originalFn IS the wrapper, causing:
+ *
+ *   wrapper → Reflect.apply(wrapper) → wrapper → Reflect.apply(wrapper) → ...
+ *   = Maximum call stack size exceeded
+ *
+ * The guard ensures re-entrant calls skip dispatch and forward directly to
+ * the pristine (pre-patch) native stored in __userplane_pristine_natives,
+ * which is captured once at initialization and never overwritten.
+ */
+let _insideWrapper = false;
+
 const repeatTracker = new Map<string, RepeatEntry>();
 const REPEAT_FLUSH_MS = 100;
 
@@ -76,84 +97,103 @@ function createConsoleWrapper(
   serverDeltaMs: number
 ): (...args: unknown[]) => void {
   return function (...rawArgs: unknown[]) {
-    // Capture and serialize args
-    try {
-      const serializedArgs = rawArgs.map(serializeValue).filter((v) => v !== undefined);
-
-      let trace: string[] = [];
-      let stackTop = '';
+    // Re-entrancy guard: if we're already inside a wrapper call, forward
+    // directly to pristine natives and skip dispatch to avoid infinite recursion.
+    if (_insideWrapper) {
       try {
-        const parsed = parseStack(new Error().stack || '');
-        stackTop = parsed.top;
-        trace = parsed.stackLines;
-        // eslint-disable-next-line no-empty -- intentional: stack parsing is best-effort
+        const pristineFn = window.__userplane_pristine_natives?.console?.[level];
+        if (typeof pristineFn === 'function') {
+          return Reflect.apply(pristineFn, console, rawArgs);
+        }
+      } catch {
+        /* best-effort */
+      }
+      return;
+    }
+
+    _insideWrapper = true;
+    try {
+      // Capture and serialize args
+      try {
+        const serializedArgs = rawArgs.map(serializeValue).filter((v) => v !== undefined);
+
+        let trace: string[] = [];
+        let stackTop = '';
+        try {
+          const parsed = parseStack(new Error().stack || '');
+          stackTop = parsed.top;
+          trace = parsed.stackLines;
+          // eslint-disable-next-line no-empty -- intentional: stack parsing is best-effort
+        } catch {}
+
+        const batched = tryBatchRepeat(level, serializedArgs, stackTop, (count) => {
+          const event: ConsoleLogEvent = {
+            source: LOGGER_NAME,
+            has_focus: window.__userplane_has_focus ?? true,
+            type: 'console',
+            subtype: level,
+            level,
+            args: serializedArgs,
+            trace,
+            timestamp: now(serverDeltaMs),
+          };
+          if (count > 1) {
+            event.repeatCount = count - 1;
+          }
+          return truncatePayload(cleanPayload(event));
+        });
+
+        if (!batched) {
+          const event: ConsoleLogEvent = {
+            source: LOGGER_NAME,
+            has_focus: window.__userplane_has_focus ?? true,
+            type: 'console',
+            subtype: level,
+            level,
+            args: serializedArgs,
+            trace,
+            timestamp: now(serverDeltaMs),
+          };
+          try {
+            dispatch(truncatePayload(cleanPayload(event)));
+            // eslint-disable-next-line no-empty -- intentional: dispatch failure must not break console
+          } catch {}
+        }
+        // eslint-disable-next-line no-empty -- intentional: console patching must never throw
       } catch {}
 
-      const batched = tryBatchRepeat(level, serializedArgs, stackTop, (count) => {
-        const event: ConsoleLogEvent = {
-          source: LOGGER_NAME,
-          has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
-          type: 'console',
-          subtype: level,
-          level,
-          args: serializedArgs,
-          trace,
-          timestamp: now(serverDeltaMs),
-        };
-        if (count > 1) {
-          event.repeatCount = count - 1;
-        }
-        return truncatePayload(cleanPayload(event));
-      });
+      // Forward to original console
+      try {
+        const originals = window.__userplane_logger_originals;
+        const pristine = window.__userplane_pristine_natives;
+        const originalFn = originals?.console?.[level];
+        const pristineFn = pristine?.console?.[level];
+        const args = Array.isArray(rawArgs) ? rawArgs : [rawArgs];
 
-      if (!batched) {
-        const event: ConsoleLogEvent = {
-          source: LOGGER_NAME,
-          has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
-          type: 'console',
-          subtype: level,
-          level,
-          args: serializedArgs,
-          trace,
-          timestamp: now(serverDeltaMs),
-        };
+        if (typeof originalFn === 'function') {
+          return Reflect.apply(originalFn, console, args);
+        }
+        if (typeof pristineFn === 'function') {
+          return Reflect.apply(pristineFn, console, args);
+        }
+      } catch (err) {
         try {
-          dispatch(truncatePayload(cleanPayload(event)));
-          // eslint-disable-next-line no-empty -- intentional: dispatch failure must not break console
+          dispatch({
+            source: LOGGER_NAME,
+            has_focus: window.__userplane_has_focus ?? true,
+            type: 'console',
+            subtype: 'error',
+            level: 'error',
+            args: [
+              `${LOGGER_PREFIX} console forward failed: ${(err as Error)?.message || String(err)}`,
+            ],
+            timestamp: now(serverDeltaMs),
+          } as ConsoleLogEvent);
+          // eslint-disable-next-line no-empty -- intentional: error reporting must not throw
         } catch {}
       }
-      // eslint-disable-next-line no-empty -- intentional: console patching must never throw
-    } catch {}
-
-    // Forward to original console
-    try {
-      const originals = window.__userplane_logger_originals;
-      const pristine = window.__userplane_pristine_natives;
-      const originalFn = originals?.console?.[level];
-      const pristineFn = pristine?.console?.[level];
-      const args = Array.isArray(rawArgs) ? rawArgs : [rawArgs];
-
-      if (typeof originalFn === 'function') {
-        return Reflect.apply(originalFn, console, args);
-      }
-      if (typeof pristineFn === 'function') {
-        return Reflect.apply(pristineFn, console, args);
-      }
-    } catch (err) {
-      try {
-        dispatch({
-          source: LOGGER_NAME,
-          has_focus: typeof __userplane_has_focus === 'undefined' || __userplane_has_focus,
-          type: 'console',
-          subtype: 'error',
-          level: 'error',
-          args: [
-            `${LOGGER_PREFIX} console forward failed: ${(err as Error)?.message || String(err)}`,
-          ],
-          timestamp: now(serverDeltaMs),
-        } as ConsoleLogEvent);
-        // eslint-disable-next-line no-empty -- intentional: error reporting must not throw
-      } catch {}
+    } finally {
+      _insideWrapper = false;
     }
   };
 }
@@ -185,7 +225,14 @@ export function patchConsole(serverDeltaMs: number): void {
         configurable: true,
         get: () => currentWrapper,
         set(fn) {
-          // Update originals store so wrapper delegates to the new function
+          // When external code assigns to console.log, store the new function
+          // as the "original" so our wrapper forwards to it.
+          //
+          // CAUTION: if `fn` is our own wrapper (e.g., code did
+          // `console.log = console.log`), we'd store the wrapper as the
+          // original, creating infinite recursion on forward. The
+          // _insideWrapper re-entrancy guard in createConsoleWrapper()
+          // protects against this — see the comment on _insideWrapper above.
           if (window.__userplane_logger_originals?.console) {
             window.__userplane_logger_originals.console[level] = fn;
           }

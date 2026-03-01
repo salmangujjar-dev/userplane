@@ -29,7 +29,7 @@ export function observeResources(serverDeltaMs: number): PerformanceObserver {
       try {
         dispatch({
           source: LOGGER_NAME,
-          has_focus: __userplane_has_focus,
+          has_focus: window.__userplane_has_focus,
           type: 'resource',
           url: entry.name,
           initiatorType: resEntry.initiatorType,
@@ -118,7 +118,7 @@ export function patchResourceErrors(serverDeltaMs: number): (e: Event) => void {
 
     const logEvent: ResourceErrorLogEvent = {
       source: LOGGER_NAME,
-      has_focus: __userplane_has_focus,
+      has_focus: window.__userplane_has_focus,
       type: 'resource-error',
       tag: tag.toUpperCase(),
       url,

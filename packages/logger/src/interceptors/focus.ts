@@ -9,16 +9,16 @@ import type { UserActionLogEvent } from '../types';
  */
 export function patchFocus(tabId: string | undefined): (e: Event) => void {
   const handler = (event: Event): void => {
-    const wasFocused = __userplane_has_focus;
-    __userplane_has_focus = event.type === 'focus' || document.visibilityState === 'visible';
+    const wasFocused = window.__userplane_has_focus;
+    window.__userplane_has_focus = event.type === 'focus' || document.visibilityState === 'visible';
 
-    const action = __userplane_has_focus ? 'tab_activated' : 'tab_deactivated';
+    const action = window.__userplane_has_focus ? 'tab_activated' : 'tab_deactivated';
 
     // Only emit when state actually changes
-    if (wasFocused !== __userplane_has_focus) {
+    if (wasFocused !== window.__userplane_has_focus) {
       dispatch({
         source: LOGGER_NAME,
-        has_focus: __userplane_has_focus,
+        has_focus: window.__userplane_has_focus,
         tabId,
         type: 'user-action',
         data: {
@@ -41,12 +41,12 @@ export function patchFocus(tabId: string | undefined): (e: Event) => void {
  * Initializes focus state and emits init_page event if tab is visible.
  */
 export function initFocusState(tabId: string | undefined): void {
-  __userplane_has_focus = document.visibilityState === 'visible';
+  window.__userplane_has_focus = document.visibilityState === 'visible';
 
-  if (__userplane_has_focus) {
+  if (window.__userplane_has_focus) {
     dispatch({
       source: LOGGER_NAME,
-      has_focus: __userplane_has_focus,
+      has_focus: window.__userplane_has_focus,
       tabId,
       type: 'user-action',
       data: {
