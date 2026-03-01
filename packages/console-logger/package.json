@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/typescript-config": "*",
     "typescript": "5.8.2"
   }
 }

@@ -21,13 +21,13 @@
     "@orpc/client": "^1.12.3",
     "@orpc/contract": "^1.12.3",
     "@orpc/openapi-client": "^1.12.3",
-    "@userplane/contract": "workspace:*"
+    "@userplane/contract": "*"
   },
   "devDependencies": {
     "eslint": "^9.32.0",
-    "@userplane/eslint-config": "workspace:*",
+    "@userplane/eslint-config": "*",
     "@types/node": "^22.14.1",
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/typescript-config": "*",
     "typescript": "5.8.2"
   }
 }

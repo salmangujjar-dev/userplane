@@ -35,7 +35,7 @@
     "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
   },
   "dependencies": {
-    "@userplane/console-logger": "workspace:*"
+    "@userplane/console-logger": "*"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.1.3",
@@ -44,8 +44,8 @@
     "@storybook/react-vite": "^10.1.11",
     "@types/node": "^22.14.1",
     "@vitejs/plugin-react": "^4.3.1",
-    "@userplane/eslint-config": "workspace:^",
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "*",
+    "@userplane/typescript-config": "*",
     "concurrently": "^9.2.1",
     "eslint": "^9.32.0",
     "eslint-plugin-storybook": "^10.1.11",

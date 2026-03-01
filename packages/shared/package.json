@@ -26,8 +26,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@userplane/eslint-config": "workspace:*",
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "*",
+    "@userplane/typescript-config": "*",
     "eslint": "^9.32.0",
     "typescript": "^5.5.4"
   }

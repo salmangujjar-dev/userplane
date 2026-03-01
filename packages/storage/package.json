@@ -43,9 +43,9 @@
   },
   "devDependencies": {
     "eslint": "^9.32.0",
-    "@userplane/eslint-config": "workspace:*",
+    "@userplane/eslint-config": "*",
     "@types/bun": "latest",
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/typescript-config": "*",
     "typescript": "^5.5.4"
   }
 }

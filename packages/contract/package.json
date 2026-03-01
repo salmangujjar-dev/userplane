@@ -25,11 +25,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@userplane/logger": "workspace:*",
+    "@userplane/logger": "*",
     "@orpc/contract": "^1.0.3",
     "@orpc/zod": "^1.0.3",
-    "@userplane/payments": "workspace:*",
-    "@userplane/pricing": "workspace:*",
+    "@userplane/payments": "*",
+    "@userplane/pricing": "*",
     "validator": "^13.12.0",
     "zod": "^3.24.2"
   },
@@ -37,8 +37,8 @@
     "@orpc/server": "^1.12.3",
     "@types/node": "^22.14.1",
     "@types/validator": "^13.12.2",
-    "@userplane/eslint-config": "workspace:*",
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "*",
+    "@userplane/typescript-config": "*",
     "eslint": "^9.32.0",
     "typescript": "5.8.2"
   },

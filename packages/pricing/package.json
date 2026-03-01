@@ -23,8 +23,8 @@
   },
   "devDependencies": {
     "eslint": "^9.32.0",
-    "@userplane/eslint-config": "workspace:*",
-    "@userplane/typescript-config": "workspace:*",
+    "@userplane/eslint-config": "*",
+    "@userplane/typescript-config": "*",
     "typescript": "5.7.3"
   }
 }
