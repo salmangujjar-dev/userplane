@@ -1,7 +1,7 @@
 import terser from '@rollup/plugin-terser';
 import { resolve } from 'path';
 import obfuscator from 'rollup-plugin-obfuscator';
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import dts from 'vite-plugin-dts';
 
 import { cdnPreset, npmPreset } from './obfuscator.config';
@@ -72,6 +72,46 @@ const recorderBaseUrl = process.env.SDK_RECORDER_BASE_URL || 'https://recorder.u
 const verificationBaseUrl =
   process.env.SDK_VERIFICATION_BASE_URL || 'https://api.userplane.io/api/v1';
 
+/**
+ * Rollup plugin that strips `.debug(...)` call sites from production bundles.
+ * The logger level is `warn` in production so these are dead calls, but the
+ * call sites, string arguments and object allocations still cost bytes.
+ */
+function stripDebugCalls(): Plugin {
+  return {
+    name: 'strip-debug-calls',
+    renderChunk(code) {
+      const needle = '.debug(';
+      let out = '';
+      let pos = 0;
+
+      while (pos < code.length) {
+        const idx = code.indexOf(needle, pos);
+        if (idx === -1) {
+          out += code.slice(pos);
+          break;
+        }
+
+        // Keep everything up to (but not including) the `.debug(`
+        out += code.slice(pos, idx);
+
+        // Walk past `.debug(` and track parenthesis depth to find the matching `)`
+        let depth = 1;
+        let i = idx + needle.length;
+        while (i < code.length && depth > 0) {
+          if (code[i] === '(') depth++;
+          else if (code[i] === ')') depth--;
+          i++;
+        }
+
+        pos = i;
+      }
+
+      return { code: out, map: null };
+    },
+  };
+}
+
 export default defineConfig({
   define: {
     __DEV__: JSON.stringify(!isProduction),
@@ -82,7 +122,7 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'UserplaneSDK',
-      formats: ['es', 'cjs'],
+      formats: ['es'],
       fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
@@ -92,6 +132,8 @@ export default defineConfig({
         exports: 'named',
       },
       plugins: [
+        // Strip .debug() calls in production builds (before terser)
+        ...(isProduction ? [stripDebugCalls()] : []),
         // Terser for minification and comment stripping
         terser(terserConfig),
         // Obfuscator runs after terser (only for obfuscate builds)
