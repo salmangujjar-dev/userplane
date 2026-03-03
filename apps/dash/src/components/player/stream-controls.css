@@ -238,7 +238,7 @@
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 13px;
-  white-space: nowrap;
+  max-width: 300px;
   pointer-events: none;
   z-index: 9999;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
