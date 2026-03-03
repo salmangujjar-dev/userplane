@@ -12,8 +12,10 @@ import {
   DEFAULT_PRIMARY_COLOR,
   RECORDING_IN_PROGRESS_COPY,
 } from '@/constants';
+import { useElapsedTime } from '@/hooks/useElapsedTime';
 import { mediaClient } from '@/lib/media';
 import type { RecordingPreferences } from '@/types/session-preferences';
+import { formatElapsedTime } from '@/utils/format-time';
 
 import RecordingScreenLayout from './RecordingScreenLayout';
 
@@ -23,6 +25,7 @@ interface RecordingInProgressScreenProps {
   mediaStream?: MediaStream | null;
   preferences: RecordingPreferences;
   isProcessing?: boolean;
+  recordingStartedAt?: number | null;
   onStopRecording?: () => void;
   /** Optional element for top-right corner (e.g., settings dropdown) */
   settingsElement?: ReactNode;
@@ -34,11 +37,13 @@ export default function RecordingInProgressScreen({
   mediaStream,
   preferences,
   isProcessing = false,
+  recordingStartedAt = null,
   onStopRecording,
   settingsElement,
 }: RecordingInProgressScreenProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasClickedStop, setHasClickedStop] = useState(false);
+  const elapsedSeconds = useElapsedTime(recordingStartedAt);
 
   // Reset click tracking when parent processing completes (React recommended pattern)
   const prevIsProcessingRef = useRef(isProcessing);
@@ -107,6 +112,9 @@ export default function RecordingInProgressScreen({
                 <div className="absolute top-3 right-3 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full shadow-md">
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse-fast" />
                   <span className="text-xs font-semibold">REC</span>
+                  <span className="text-xs font-semibold tabular-nums">
+                    {formatElapsedTime(elapsedSeconds)}
+                  </span>
                 </div>
               </div>
             </div>
