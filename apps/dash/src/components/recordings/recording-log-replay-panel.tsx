@@ -21,6 +21,7 @@ import { CaptureGateOverlay } from './capture-gate-overlay';
 import { ConsolePanel } from './console-panel';
 import { InfoPanel } from './info-panel';
 import { NetworkPanel } from './network-panel';
+import { usePanelTab } from './recording-layout';
 
 interface CaptureResource {
   url: string | null;
@@ -113,9 +114,16 @@ export function RecordingLogReplayPanel({
   const tabTriggerClassName =
     'rounded-none border-0 bg-transparent px-0 pb-3 shadow-none data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none text-muted-foreground relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-foreground';
 
+  const panelTab = usePanelTab();
+
   return (
     <div className="w-full h-full overflow-hidden flex flex-col">
-      <Tabs defaultValue="info" className="flex flex-col h-full">
+      <Tabs
+        {...(panelTab
+          ? { value: panelTab.activeTab, onValueChange: panelTab.setActiveTab }
+          : { defaultValue: 'info' })}
+        className="flex flex-col h-full"
+      >
         <div className="border-b px-6 pt-3">
           <TabsList className="w-full justify-center bg-transparent p-0 h-auto gap-6 border-0">
             <TabsTrigger value="info" className={tabTriggerClassName}>

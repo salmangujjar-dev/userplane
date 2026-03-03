@@ -25,9 +25,11 @@ function ResizablePanel({ ...props }: React.ComponentProps<typeof ResizablePrimi
 function ResizableHandle({
   withHandle,
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> & {
   withHandle?: boolean;
+  children?: React.ReactNode;
 }) {
   return (
     <ResizablePrimitive.PanelResizeHandle
@@ -38,13 +40,15 @@ function ResizableHandle({
       )}
       {...props}
     >
-      {withHandle && (
-        <div className="bg-background border-border z-10 flex h-8 w-4 items-center justify-center rounded-sm border shadow-sm">
-          <GripVerticalIcon className="size-3 text-muted-foreground" />
-        </div>
-      )}
+      {children ??
+        (withHandle && (
+          <div className="bg-background border-border z-10 flex h-8 w-4 items-center justify-center rounded-sm border shadow-sm">
+            <GripVerticalIcon className="size-3 text-muted-foreground" />
+          </div>
+        ))}
     </ResizablePrimitive.PanelResizeHandle>
   );
 }
 
+export type { ImperativePanelHandle } from 'react-resizable-panels';
 export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
