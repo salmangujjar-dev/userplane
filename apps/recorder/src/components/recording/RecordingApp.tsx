@@ -189,6 +189,7 @@ function RecordingAppContent() {
           mediaStream={state.mediaStream}
           preferences={state.preferences}
           isProcessing={state.isProcessing}
+          recordingStartedAt={state.recordingStartedAt}
           onStopRecording={actions.stopRecording}
           settingsElement={settingsElement}
         />

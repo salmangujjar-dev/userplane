@@ -56,6 +56,7 @@ export interface RecordingFlowState {
   maxRecordingDurationMs: number;
   maxRecordingSize: number | null;
   recordingDurationMs: number | null;
+  recordingStartedAt: number | null;
   preferences: RecordingPreferences;
   countdownSeconds: number;
 }
@@ -320,6 +321,7 @@ export function useRecordingFlow(
             countdownIntervalRef.current = null;
           }
           mediaCapture.startRecording();
+          setRecordingStartedAt(Date.now());
           transitionToState('recording');
         }
       }, 1000);
@@ -354,7 +356,6 @@ export function useRecordingFlow(
       }
 
       const durationMs = mediaCaptureRef.current.getDuration();
-      const startTime = mediaCaptureRef.current.getStartTime();
 
       const blob = await mediaCaptureRef.current.stop();
       logger.debug({ size: blob.size, type: blob.type, durationMs }, 'recording stopped');
@@ -381,9 +382,8 @@ export function useRecordingFlow(
         return;
       }
 
-      // Store duration, start time, and blob
+      // Store duration and blob
       setRecordingDurationMs(durationMs);
-      setRecordingStartedAt(startTime);
       setRecordingBlob(blob);
 
       // Create video URL for preview
@@ -636,6 +636,7 @@ export function useRecordingFlow(
       maxRecordingDurationMs,
       maxRecordingSize,
       recordingDurationMs,
+      recordingStartedAt,
       preferences,
       countdownSeconds,
     },
