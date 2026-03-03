@@ -1,10 +1,5 @@
 'use client';
 
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from '@userplane/ui/components/resizable';
 import { useParams, useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { useQueryState } from 'nuqs';
@@ -14,9 +9,11 @@ import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation
 import { EditRecordingModal } from '@/components/modals/edit-recording-modal';
 import { ShareRecordingModal } from '@/components/modals/share-recording';
 import { RecordingDetailNav } from '@/components/navigation/recording-detail-nav';
+import { RecordingLayout } from '@/components/recordings/recording-layout';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
 import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { RecordingPlayerProvider } from '@/components/recordings/recording-player-context';
+import { useConsoleErrorMarkers } from '@/components/recordings/use-console-error-markers';
 import { RecordingDetailSkeleton } from '@/components/skeleton';
 import {
   useDeleteRecording,
@@ -64,6 +61,8 @@ export default function RecordingDetailPage() {
   const { data: roleResult } = useWorkspaceRole();
   const membership = roleResult?.success ? roleResult.data : null;
 
+  const markers = useConsoleErrorMarkers(workspaceId, recordingId, recordingData?.recording);
+
   // Show loading state
   if (isLoadingRecording || isLoadingVideo) {
     return <RecordingDetailSkeleton />;
@@ -106,29 +105,19 @@ export default function RecordingDetailPage() {
         onDelete={canDelete ? () => setShowDeleteModal(true) : undefined}
       />
 
-      <main className="w-full pl-4 overflow-hidden flex-1">
-        <RecordingPlayerProvider>
-          <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg overflow-hidden">
-            <ResizablePanel defaultSize={66} minSize={30} className="overflow-y-auto">
-              <div className="relative pr-4">
-                <RecordingPlayer
-                  videoSources={videoData?.resource.sources ?? []}
-                  thumbnailUrl={thumbnailData?.resource.url ?? null}
-                  durationMs={recording.recordingDurationMs}
-                />
-              </div>
-            </ResizablePanel>
-
-            <ResizableHandle withHandle />
-
-            <ResizablePanel defaultSize={34} minSize={25} className="overflow-hidden">
-              <div className="pl-4 h-full">
-                <RecordingLogReplayPanel recordingId={recordingId} recording={recording} />
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </RecordingPlayerProvider>
-      </main>
+      <RecordingPlayerProvider>
+        <RecordingLayout
+          player={
+            <RecordingPlayer
+              videoSources={videoData?.resource.sources ?? []}
+              thumbnailUrl={thumbnailData?.resource.url ?? null}
+              durationMs={recording.recordingDurationMs}
+              markers={markers}
+            />
+          }
+          panel={<RecordingLogReplayPanel recordingId={recordingId} recording={recording} />}
+        />
+      </RecordingPlayerProvider>
 
       <EditRecordingModal
         open={showEditModal}

@@ -176,17 +176,16 @@ export function VideoProgressBar({
         )}
 
         {/* Markers */}
-        {markers.map((marker) => {
+        {markers.map((marker, index) => {
           const markerPosition = duration > 0 ? (marker.time / duration) * 100 : 0;
           return (
             <div
-              key={`marker-${marker.time}-${marker.label}`}
+              key={`marker-${index}-${marker.time}`}
               className="custom-progress-marker"
               style={{
                 left: `${markerPosition}%`,
                 backgroundColor: marker.color || '#fbbf24',
               }}
-              title={marker.label}
             />
           );
         })}
