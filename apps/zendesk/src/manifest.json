@@ -1,0 +1,47 @@
+{
+  "name": "Userplane",
+  "version": "0.1.0",
+  "author": {
+    "name": "Userplane",
+    "email": "support@userplane.com",
+    "url": "https://userplane.com"
+  },
+  "defaultLocale": "en",
+  "private": true,
+  "frameworkVersion": "2.0",
+  "location": {
+    "support": {
+      "ticket_sidebar": {
+        "url": "assets/index.html",
+        "autoLoad": true,
+        "flexible": true
+      },
+      "new_ticket_sidebar": {
+        "url": "assets/index.html",
+        "autoLoad": true,
+        "flexible": true
+      },
+      "top_bar": {
+        "url": "assets/index.html",
+        "size": {
+          "width": "400px",
+          "height": "500px"
+        }
+      }
+    }
+  },
+  "parameters": [
+    {
+      "name": "apiToken",
+      "type": "text",
+      "secure": true,
+      "required": true
+    },
+    {
+      "name": "workspaceId",
+      "type": "text",
+      "required": true
+    }
+  ],
+  "domainWhitelist": ["*.userplane.com", "*.userplane.io"]
+}
