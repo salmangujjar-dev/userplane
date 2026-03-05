@@ -229,7 +229,6 @@ export class CaptureFrameManager implements ICaptureFrameManager {
       allowFullscreen: false,
       onLoad: () => {
         this.logger.debug('Frame loaded successfully');
-        this.establishBridge();
       },
       onError: () => {
         this.logger.error('Failed to load frame');
@@ -307,6 +306,7 @@ export class CaptureFrameManager implements ICaptureFrameManager {
         document.removeEventListener('readystatechange', mountFn);
         this.pendingMountListener = null;
         this.logger.debug('Frame mounted to DOM (hidden)');
+        this.establishBridge();
       }
     };
 
