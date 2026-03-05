@@ -197,6 +197,12 @@ export const workspaceContract = {
       admins: workspace.getIntercomAdmins,
       suggestions: workspace.getIntercomSuggestions,
     },
+    zendesk: {
+      get: workspace.getZendeskIntegration,
+      authorize: workspace.zendeskIntegrationAuthorize,
+      callback: workspace.zendeskIntegrationCallback,
+      delete: workspace.deleteZendeskIntegration,
+    },
   },
 };
 

@@ -67,4 +67,22 @@ export const ProvisionerErrors = {
     status: 403,
     message: 'Your Intercom email must be verified to connect your workspace',
   },
+
+  // Zendesk OAuth errors
+  ZENDESK_OAUTH_STATE_INVALID: {
+    status: 400,
+    message: 'Invalid or expired OAuth state. Please try connecting again.',
+  },
+  ZENDESK_TOKEN_EXCHANGE_FAILED: {
+    status: 502,
+    message: 'Failed to exchange authorization code with Zendesk. Please try again.',
+  },
+  ZENDESK_USER_INFO_FAILED: {
+    status: 502,
+    message: 'Failed to retrieve user information from Zendesk. Please try again.',
+  },
+  ZENDESK_WORKSPACE_ALREADY_CONNECTED: {
+    status: 409,
+    message: 'This Zendesk account is already connected to another workspace',
+  },
 } as const;

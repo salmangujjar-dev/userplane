@@ -28,6 +28,15 @@ export const IntercomLinkProviderDataSchema = z.object({
 export type IntercomLinkProviderData = z.infer<typeof IntercomLinkProviderDataSchema>;
 
 /**
+ * Zendesk link provider data
+ * Stores the ticket ID from the Zendesk sidebar where the link was created.
+ */
+export const ZendeskLinkProviderDataSchema = z.object({
+  ticketId: z.string().optional(),
+});
+export type ZendeskLinkProviderData = z.infer<typeof ZendeskLinkProviderDataSchema>;
+
+/**
  * General link provider data
  * Fallback for providers that don't require additional context (web, API, etc.).
  * Stores no fields; exists so every provider resolves to a concrete type.
@@ -43,6 +52,7 @@ export type GeneralLinkProviderData = z.infer<typeof GeneralLinkProviderDataSche
  */
 export interface LinkProviderDataConfig {
   intercom: IntercomLinkProviderData;
+  zendesk: ZendeskLinkProviderData;
 }
 
 /**
@@ -81,6 +91,9 @@ export function parseLinkProviderData<P extends LinkProviderType>(
   if (providerType === 'intercom') {
     return IntercomLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
   }
+  if (providerType === 'zendesk') {
+    return ZendeskLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
+  }
   // All other providers: no required fields
   return GeneralLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
 }
@@ -95,6 +108,9 @@ export function createLinkProviderData<P extends LinkProviderType>(
 ): LinkProviderDataFor<P> {
   if (providerType === 'intercom') {
     return IntercomLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
+  }
+  if (providerType === 'zendesk') {
+    return ZendeskLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
   }
   return GeneralLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
 }
