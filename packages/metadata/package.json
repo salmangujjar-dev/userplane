@@ -3,30 +3,21 @@
   "version": "0.0.1",
   "type": "module",
   "private": false,
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/index.es.js",
+  "module": "./dist/index.es.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./src/index.ts",
-      "require": "./src/index.ts"
+      "source": "./src/index.ts",
+      "import": "./dist/index.es.js"
     }
   },
   "files": [
     "dist"
   ],
   "publishConfig": {
-    "access": "public",
-    "main": "./dist/index.es.js",
-    "module": "./dist/index.es.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.es.js"
-      }
-    }
+    "access": "public"
   },
   "sideEffects": false,
   "scripts": {

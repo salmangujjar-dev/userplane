@@ -10,10 +10,12 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
+      "source": "./src/index.ts",
       "import": "./src/index.ts"
     },
     "./bridge": {
       "types": "./src/bridge.ts",
+      "source": "./src/bridge.ts",
       "import": "./src/bridge.ts"
     }
   },

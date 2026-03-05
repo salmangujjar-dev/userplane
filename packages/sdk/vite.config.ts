@@ -113,6 +113,9 @@ function stripDebugCalls(): Plugin {
 }
 
 export default defineConfig({
+  resolve: {
+    conditions: ['source'],
+  },
   define: {
     __DEV__: JSON.stringify(!isProduction),
     __RECORDER_BASE_URL__: JSON.stringify(recorderBaseUrl),

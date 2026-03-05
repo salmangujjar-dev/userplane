@@ -12,6 +12,19 @@ const nextConfig: NextConfig = {
     '@userplane/metadata',
     '@userplane/postbridge',
   ],
+
+  // Turbopack (Next.js 16 default): empty config required when webpack config
+  // is present. transpilePackages + workspace linking handles source resolution.
+  turbopack: {},
+
+  // Webpack fallback: resolve workspace "source" export condition
+  webpack: (config) => {
+    config.resolve.conditionNames = [
+      'source',
+      ...(config.resolve.conditionNames ?? ['import', 'module', 'require', 'default']),
+    ];
+    return config;
+  },
 };
 
 export default nextConfig;
