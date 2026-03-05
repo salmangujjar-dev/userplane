@@ -3,6 +3,12 @@
  */
 
 /**
+ * Timeout for the recorder bridge connection to the parent SDK (ms).
+ * Defense-in-depth: stricter than postbridge's default 15s guest timeout.
+ */
+export const APP_BRIDGE_CONNECT_TIMEOUT_MS = 10_000;
+
+/**
  * Connection ID prefixes for different frame types
  * Used for cross-tab coordination and scatter-gather identification
  */

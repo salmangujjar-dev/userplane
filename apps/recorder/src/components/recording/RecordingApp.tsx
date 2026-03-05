@@ -139,6 +139,22 @@ function RecordingAppContent() {
             crossTabLock.error ||
             'Another recorder is currently active. Only one recorder can be active at a time across all tabs.'
           }
+          primaryActionText="Reload"
+          onPrimaryAction={() => window.location.reload()}
+        />
+      );
+    }
+
+    if (crossTabLock.isError) {
+      return (
+        <ErrorScreen
+          title="Connection Failed"
+          subtitle={
+            crossTabLock.error ||
+            'Could not connect to the parent page. Please reload and try again.'
+          }
+          primaryActionText="Try again"
+          onPrimaryAction={() => window.location.reload()}
         />
       );
     }

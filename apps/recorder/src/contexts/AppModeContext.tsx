@@ -26,6 +26,7 @@ import {
   type RecordingState,
   type VerificationBridgeConnection,
 } from '@/bridge';
+import { APP_BRIDGE_CONNECT_TIMEOUT_MS } from '@/bridge/constants';
 import { createLogger } from '@/lib/logger';
 import { type AppMode, detectAppMode } from '@/utils/browser';
 
@@ -186,7 +187,15 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
     async function connectVerificationBridge() {
       try {
         logger.debug('connecting verification bridge');
-        await verificationBridge.connect();
+        await Promise.race([
+          verificationBridge.connect(),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error('Bridge connection timed out — parent SDK did not respond')),
+              APP_BRIDGE_CONNECT_TIMEOUT_MS
+            )
+          ),
+        ]);
         if (!mounted) return;
         logger.debug('verification bridge connected');
         // For verification, we don't need cross-tab coordination
@@ -223,8 +232,17 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
 
       try {
         // Step 1: Connect bridge to parent SDK to get tabRef
+        // Timeout prevents infinite hang if parent SDK never responds to handshake
         logger.debug('connecting bridge');
-        await bridge.connect();
+        await Promise.race([
+          bridge.connect(),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error('Bridge connection timed out — parent SDK did not respond')),
+              APP_BRIDGE_CONNECT_TIMEOUT_MS
+            )
+          ),
+        ]);
         if (!mounted) return;
 
         const tabRef = bridge.getTabRef();
@@ -357,6 +375,7 @@ export function useCrossTabLock(): {
   isAcquired: boolean;
   isBlocked: boolean;
   isPending: boolean;
+  isError: boolean;
 } {
   const { crossTabLockStatus, crossTabError, blockingTabId } = useAppMode();
   return {
@@ -366,6 +385,7 @@ export function useCrossTabLock(): {
     isAcquired: crossTabLockStatus === 'acquired',
     isBlocked: crossTabLockStatus === 'blocked',
     isPending: crossTabLockStatus === 'pending' || crossTabLockStatus === 'connecting',
+    isError: crossTabLockStatus === 'error',
   };
 }
 
