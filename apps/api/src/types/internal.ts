@@ -475,3 +475,20 @@ export interface IntercomOAuthStatePayload {
   iat: number;
   exp: number;
 }
+
+/**
+ * Zendesk OAuth state payload for CSRF protection
+ * Signed JWT with 15 minute expiry
+ * Always has workspaceId (Zendesk only supports workspace integration flow)
+ * subdomain is required for token exchange with Zendesk
+ */
+export interface ZendeskOAuthStatePayload {
+  iss: string;
+  userId: string;
+  workspaceId: string;
+  subdomain: string;
+  timestamp: number;
+  nonce: string;
+  iat: number;
+  exp: number;
+}

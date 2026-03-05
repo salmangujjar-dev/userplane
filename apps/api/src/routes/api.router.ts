@@ -46,6 +46,7 @@ import {
   workspaceMemberRepo,
   workspaceMemberService,
   workspaceService,
+  zendeskService,
 } from '@/api/services';
 import { IntercomNotificationService } from '@/api/services/intercom-notification.service';
 
@@ -93,6 +94,7 @@ const workspaceProcedures = createWorkspaceProcedures(
   userService,
   tokenService,
   intercomService,
+  zendeskService,
   billingService
 );
 const recordingProcedures = createRecordingProcedures(

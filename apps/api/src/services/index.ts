@@ -66,6 +66,8 @@ import { UserService } from '@/api/services/user.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 // Services
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+import { ZendeskAppService } from '@/api/services/zendesk-app.service';
+import { ZendeskService } from '@/api/services/zendesk-oauth.service';
 
 // Initialize repositories
 const workspaceRepo = new WorkspaceRepository(db);
@@ -294,6 +296,22 @@ export const intercomHealthCheckService = new IntercomHealthCheckService({
   integrationRepo,
   cacheService,
   dashboardBaseUrl: env.dashboard.baseUrl,
+});
+
+// Zendesk OAuth service
+export const zendeskService = new ZendeskService({
+  tokenService,
+  integrationRepo,
+  cacheService,
+});
+
+// Zendesk App service
+export const zendeskAppService = new ZendeskAppService({
+  projectRepo,
+  domainRepo,
+  linkService,
+  userRepo,
+  workspaceMemberRepo,
 });
 
 // Intercom Canvas service
