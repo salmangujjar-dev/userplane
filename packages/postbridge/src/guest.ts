@@ -49,6 +49,11 @@
  */
 
 import {
+  GUEST_CONNECT_TIMEOUT_MS,
+  GUEST_HANDSHAKE_MAX_RETRIES,
+  GUEST_HANDSHAKE_RETRY_INTERVAL_MS,
+} from './constants';
+import {
   addEventListener,
   extractMethods,
   getEventData,
@@ -145,13 +150,29 @@ import { actions, Connection, events, GuestConnectOptions, Schema } from './type
  */
 function connect(schema: Schema = {}, options?: GuestConnectOptions): Promise<Connection> {
   // eslint-disable-next-line no-async-promise-executor
-  return new Promise(async (resolve) => {
+  return new Promise(async (resolve, reject) => {
     // Extract methods from schema (separates functions from data)
     const localMethods = extractMethods(schema);
 
     // Determine where to send messages (host) and where to listen
     const sendTo = options?.hostTarget ?? getTargetHost();
     const listenTo = options?.hostTarget ?? (self || window);
+
+    // Retry state — retries HANDSHAKE_REQUEST in case the host wasn't
+    // listening yet (race condition: guest sends before host.connect()).
+    let retryCount = 0;
+    let retryInterval: ReturnType<typeof setInterval> | null = null;
+
+    // Timeout — reject if handshake never completes
+    const timeoutMs = options?.timeout ?? GUEST_CONNECT_TIMEOUT_MS;
+    const timeoutId = setTimeout(() => {
+      if (retryInterval) {
+        clearInterval(retryInterval);
+        retryInterval = null;
+      }
+      removeEventListener(listenTo, events.MESSAGE, handleHandshakeResponse);
+      reject(new Error(`Guest handshake timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
 
     // Handler for HANDSHAKE_REPLY from host
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -160,6 +181,15 @@ function connect(schema: Schema = {}, options?: GuestConnectOptions): Promise<Co
 
       // Ignore messages that aren't HANDSHAKE_REPLY
       if (eventData?.action !== actions.HANDSHAKE_REPLY) return;
+
+      // Stop retrying — host has responded
+      if (retryInterval) {
+        clearInterval(retryInterval);
+        retryInterval = null;
+      }
+
+      // Clear timeout — handshake succeeded
+      clearTimeout(timeoutId);
 
       // Create proxy functions for host methods
       // After this, we can call remote.hostMethod()
@@ -210,12 +240,24 @@ function connect(schema: Schema = {}, options?: GuestConnectOptions): Promise<Co
     addEventListener(listenTo, events.MESSAGE, handleHandshakeResponse);
 
     // Send HANDSHAKE_REQUEST to initiate connection
-    const payload = {
+    const handshakePayload = {
       action: actions.HANDSHAKE_REQUEST,
       methodNames: Object.keys(localMethods),
       schema: schema, // Schema with functions removed, data preserved
     };
-    postMessageToTarget(sendTo, payload);
+    postMessageToTarget(sendTo, handshakePayload);
+
+    // Re-send HANDSHAKE_REQUEST periodically until the host responds.
+    // Handles the timing race where the guest's postMessage arrives
+    // before the host's iframe.onload fires and sets up its listener.
+    retryInterval = setInterval(() => {
+      if (++retryCount >= GUEST_HANDSHAKE_MAX_RETRIES) {
+        clearInterval(retryInterval!);
+        retryInterval = null;
+        return;
+      }
+      postMessageToTarget(sendTo, handshakePayload);
+    }, GUEST_HANDSHAKE_RETRY_INTERVAL_MS);
   });
 }
 
