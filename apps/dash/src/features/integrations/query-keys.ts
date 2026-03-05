@@ -10,6 +10,9 @@ export const integrationKeys = {
     [...integrationKeys.intercom(workspaceId), 'admins', { excludeMembers }] as const,
   intercomSuggestions: (workspaceId: string, limit?: number) =>
     [...integrationKeys.intercom(workspaceId), 'suggestions', { limit }] as const,
+
+  // Zendesk
+  zendesk: (workspaceId: string) => [...integrationKeys.all, 'zendesk', workspaceId] as const,
 } as const;
 
 // Type helpers for query key inference

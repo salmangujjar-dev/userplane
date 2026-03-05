@@ -22,6 +22,7 @@ interface IntegrationPreConnectModalProps {
   integrationName: string;
   integrationImage: string;
   onConnect?: () => void;
+  children?: React.ReactNode;
 }
 
 export function IntegrationPreConnectModal({
@@ -30,6 +31,7 @@ export function IntegrationPreConnectModal({
   integrationName,
   integrationImage,
   onConnect,
+  children,
 }: IntegrationPreConnectModalProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const config = getIntegrationConfig(integrationName);
@@ -86,6 +88,8 @@ export function IntegrationPreConnectModal({
               ))}
             </div>
           </div>
+
+          {children}
         </div>
 
         <DialogFooter className="mt-8">
