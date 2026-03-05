@@ -57,6 +57,9 @@ const terserConfig = isCdnBuild ? cdnTerserConfig : standardTerserConfig;
 const isProduction = isCdnBuild;
 
 export default defineConfig({
+  resolve: {
+    conditions: ['source'],
+  },
   define: {
     __DEV__: JSON.stringify(!isProduction),
     ...(isCdnBuild ? { __CDN_BASE_URL__: JSON.stringify(cdnBaseUrl) } : {}),

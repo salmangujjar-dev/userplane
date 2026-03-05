@@ -11,6 +11,7 @@
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
+    "customConditions": ["source"],
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
