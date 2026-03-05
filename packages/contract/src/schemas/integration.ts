@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Integration provider types
  * Add new providers here as they are implemented
  */
-export const INTEGRATION_PROVIDERS = ['intercom'] as const;
+export const INTEGRATION_PROVIDERS = ['intercom', 'zendesk'] as const;
 export const IntegrationProviderSchema = z.enum(INTEGRATION_PROVIDERS);
 export type IntegrationProvider = z.infer<typeof IntegrationProviderSchema>;
 
@@ -27,6 +27,13 @@ export const INTERCOM_REGIONS = ['US', 'EU', 'AU'] as const;
 export const IntercomRegionSchema = z.enum(INTERCOM_REGIONS);
 export type IntercomRegion = z.infer<typeof IntercomRegionSchema>;
 
+// Zendesk token - access token + API token for iframe→API auth
+export const ZendeskTokenSchema = z.object({
+  accessToken: z.string(),
+  apiToken: z.string(),
+});
+export type ZendeskToken = z.infer<typeof ZendeskTokenSchema>;
+
 /**
  * Provider-specific metadata schemas
  */
@@ -37,6 +44,12 @@ export const IntercomProviderMetaSchema = z.object({
 });
 export type IntercomProviderMeta = z.infer<typeof IntercomProviderMetaSchema>;
 
+// Zendesk provider metadata
+export const ZendeskProviderMetaSchema = z.object({
+  subdomain: z.string(),
+});
+export type ZendeskProviderMeta = z.infer<typeof ZendeskProviderMetaSchema>;
+
 /**
  * Complete provider configuration
  * Maps each provider to its token and metadata schemas
@@ -45,6 +58,10 @@ export interface ProviderConfig {
   intercom: {
     token: IntercomToken;
     meta: IntercomProviderMeta;
+  };
+  zendesk: {
+    token: ZendeskToken;
+    meta: ZendeskProviderMeta;
   };
 }
 
@@ -68,6 +85,9 @@ export function createProviderMeta<P extends IntegrationProvider>(
   if (provider === 'intercom') {
     return IntercomProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
   }
+  if (provider === 'zendesk') {
+    return ZendeskProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
+  }
   throw new Error(`Unknown provider: ${provider}`);
 }
 
@@ -80,6 +100,9 @@ export function parseProviderMeta<P extends IntegrationProvider>(
 ): ProviderMetaFor<P> {
   if (provider === 'intercom') {
     return IntercomProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
+  }
+  if (provider === 'zendesk') {
+    return ZendeskProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
   }
   throw new Error(`Unknown provider: ${provider}`);
 }
@@ -94,6 +117,9 @@ export function createProviderToken<P extends IntegrationProvider>(
   if (provider === 'intercom') {
     return IntercomTokenSchema.parse(token) as ProviderTokenFor<P>;
   }
+  if (provider === 'zendesk') {
+    return ZendeskTokenSchema.parse(token) as ProviderTokenFor<P>;
+  }
   throw new Error(`Unknown provider: ${provider}`);
 }
 
@@ -106,6 +132,9 @@ export function parseProviderToken<P extends IntegrationProvider>(
 ): ProviderTokenFor<P> {
   if (provider === 'intercom') {
     return IntercomTokenSchema.parse(token) as ProviderTokenFor<P>;
+  }
+  if (provider === 'zendesk') {
+    return ZendeskTokenSchema.parse(token) as ProviderTokenFor<P>;
   }
   throw new Error(`Unknown provider: ${provider}`);
 }
@@ -120,6 +149,9 @@ export function extractAccessToken<P extends IntegrationProvider>(
 ): string {
   if (provider === 'intercom') {
     return (token as IntercomToken).accessToken;
+  }
+  if (provider === 'zendesk') {
+    return (token as ZendeskToken).accessToken;
   }
   throw new Error(`Unknown provider: ${provider}`);
 }

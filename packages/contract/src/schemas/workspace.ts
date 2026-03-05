@@ -1262,6 +1262,87 @@ export const IntercomSuggestionsDataSchema = z.object({
 });
 
 // ============================================================================
+// ZENDESK INTEGRATION SCHEMAS
+// ============================================================================
+
+/**
+ * Get Zendesk integration status request
+ */
+export const GetZendeskIntegrationSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Get Zendesk integration status response
+ */
+export const ZendeskIntegrationStatusDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  integration: IntegrationStatusSchema,
+});
+
+/**
+ * Zendesk integration authorize request
+ * Requires subdomain since Zendesk OAuth URLs are per-account
+ */
+export const ZendeskIntegrationAuthorizeSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    subdomain: z.string().min(1),
+  }),
+});
+
+/**
+ * Zendesk integration authorize response
+ */
+export const ZendeskIntegrationAuthorizeDataSchema = z.object({
+  authorizationUrl: z.string().url(),
+  state: z.string(),
+});
+
+/**
+ * Zendesk integration callback request
+ */
+export const ZendeskIntegrationCallbackSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    code: z.string(),
+    state: z.string(),
+  }),
+});
+
+/**
+ * Zendesk integration callback response
+ */
+export const ZendeskIntegrationCallbackDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  connected: z.literal(true),
+  providerWorkspaceId: z.string(),
+});
+
+/**
+ * Delete Zendesk integration request
+ */
+export const DeleteZendeskIntegrationSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Delete Zendesk integration response
+ */
+export const DeleteZendeskIntegrationDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  disconnected: z.literal(true),
+});
+
+// ============================================================================
 // WORKSPACE LOGO UPLOAD
 // ============================================================================
 
