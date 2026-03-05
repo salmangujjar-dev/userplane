@@ -27,12 +27,24 @@ import {
 import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.handler';
 import { createUninstallHandler } from '@/api/handlers/intercom-uninstall.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
+import {
+  createCreateLinkHandler,
+  createGetDomainsHandler,
+  createGetProjectsHandler,
+  createGetStatusHandler,
+} from '@/api/handlers/zendesk-app.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
+import { createZendeskAuthMiddleware } from '@/api/middleware/zendesk-auth';
 import { captureException } from '@/api/posthog';
 import { apiRouter } from '@/api/routes/api.router';
 import { billingWebhookRoute } from '@/api/routes/billing/billing-webhook.route.setup';
-import { integrationRepo, intercomCanvasService, intercomHealthCheckService } from '@/api/services';
+import {
+  integrationRepo,
+  intercomCanvasService,
+  intercomHealthCheckService,
+  zendeskAppService,
+} from '@/api/services';
 
 const app = new Hono();
 
@@ -78,6 +90,16 @@ app.use(
 );
 app.use(
   '/api/v1/session',
+  cors({
+    origin: '*',
+    credentials: false,
+    maxAge: env.cors.maxAge,
+  })
+);
+
+// Zendesk app endpoints need permissive CORS (called from Zendesk iframe)
+app.use(
+  '/api/v1/zendesk/*',
   cors({
     origin: '*',
     credentials: false,
@@ -221,6 +243,38 @@ app.route('/api/v1/intercom/canvas/messenger', messengerRouter);
 app.route('/api/v1/intercom/canvas/inbox', inboxRouter);
 app.route('/api/v1/intercom/health-check', healthCheckRouter);
 app.route('/api/v1/intercom/uninstall', uninstallRouter);
+
+// Zendesk App Routes
+// ===========================
+// Called from Zendesk iframe app, authenticated via apiToken
+/**
+ * Extract workspace ID from Zendesk auth context for rate limiting.
+ * Falls back to IP if workspace ID not available.
+ */
+function getZendeskWorkspaceId(c: Context): string {
+  const workspaceId = c.get('workspaceId') as string | undefined;
+  return workspaceId ? `zendesk:${workspaceId}` : getClientIP(c);
+}
+
+const zendeskAuthMiddleware = createZendeskAuthMiddleware({ integrationRepo });
+const zendeskRouter = new Hono();
+zendeskRouter.use('*', zendeskAuthMiddleware);
+// Rate limit after auth (which sets workspaceId)
+if (rateLimiter.isAvailable()) {
+  zendeskRouter.use(
+    '*',
+    createRateLimitMiddleware(rateLimiter, {
+      tier: 'webhook',
+      getIdentifier: getZendeskWorkspaceId,
+    })
+  );
+}
+zendeskRouter.post('/links', createCreateLinkHandler(zendeskAppService));
+zendeskRouter.get('/projects', createGetProjectsHandler(zendeskAppService));
+zendeskRouter.get('/domains', createGetDomainsHandler(zendeskAppService));
+zendeskRouter.get('/status', createGetStatusHandler());
+
+app.route('/api/v1/zendesk', zendeskRouter);
 
 // Workspace logo upload route (multipart/form-data - handled before OpenAPI)
 // This route handles file uploads which require special multipart handling

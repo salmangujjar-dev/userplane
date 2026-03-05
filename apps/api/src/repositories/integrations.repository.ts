@@ -205,6 +205,29 @@ export class IntegrationRepository {
   }
 
   /**
+   * Find integration by provider and API token (stored in providerToken JSONB)
+   * Used for authenticating Zendesk iframe app requests
+   */
+  async findByApiToken<P extends IntegrationProvider>(
+    provider: P,
+    apiToken: string
+  ): Promise<TypedIntegration<P> | null> {
+    const [integration] = await this.db
+      .select()
+      .from(integrations)
+      .where(
+        and(
+          eq(integrations.provider, provider),
+          eq(integrations.isDeleted, false),
+          sql`${integrations.providerToken}->>'apiToken' = ${apiToken}`
+        )
+      )
+      .limit(1);
+
+    return integration ? this.parseIntegration(integration, provider) : null;
+  }
+
+  /**
    * Restore a soft-deleted integration by workspace ID and provider
    * Sets isDeleted to false and clears deletedAt timestamp
    * Restores only the record matching the specific deletedAt timestamp

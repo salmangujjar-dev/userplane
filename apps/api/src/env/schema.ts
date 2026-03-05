@@ -78,6 +78,13 @@ export const intercomEnvSchema = z.object({
   INTERCOM_REDIRECT_URI: urlWithDefault(`${DEV_URLS.DASH}${AUTH.INTERCOM_REDIRECT_PATH}`),
 });
 
+/** Zendesk OAuth env vars schema */
+export const zendeskEnvSchema = z.object({
+  ZENDESK_CLIENT_ID: z.string().optional().default(''),
+  ZENDESK_CLIENT_SECRET: z.string().optional().default(''),
+  ZENDESK_REDIRECT_URI: urlWithDefault(`${DEV_URLS.DASH}${AUTH.ZENDESK_REDIRECT_PATH}`),
+});
+
 /** Dashboard env vars schema */
 export const dashboardEnvSchema = z.object({
   INVITE_APP_URL: urlWithDefault(DEV_URLS.DASH),
@@ -235,6 +242,7 @@ export const rawEnvSchema = serverEnvSchema
   .merge(authEnvSchema)
   .merge(googleEnvSchema)
   .merge(intercomEnvSchema)
+  .merge(zendeskEnvSchema)
   .merge(dashboardEnvSchema)
   .merge(billingEnvSchema)
   .merge(paymentsEnvSchema)
@@ -448,6 +456,7 @@ export const envConfigSchema = z.object({
   auth: authConfigSchema,
   google: oauthConfigSchema,
   intercom: oauthConfigSchema,
+  zendesk: oauthConfigSchema,
   dashboard: dashboardConfigSchema,
   billing: billingConfigSchema,
   payments: paymentsConfigSchema,

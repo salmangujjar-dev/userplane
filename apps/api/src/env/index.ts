@@ -129,6 +129,11 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       clientSecret: raw.INTERCOM_CLIENT_SECRET,
       redirectUri: raw.INTERCOM_REDIRECT_URI,
     },
+    zendesk: {
+      clientId: raw.ZENDESK_CLIENT_ID,
+      clientSecret: raw.ZENDESK_CLIENT_SECRET,
+      redirectUri: raw.ZENDESK_REDIRECT_URI,
+    },
     dashboard: {
       baseUrl: raw.INVITE_APP_URL,
     },
@@ -408,6 +413,9 @@ function getConfigStatus(): {
 
   if (env.intercom.clientId && env.intercom.clientSecret) configured.push('Intercom');
   else notConfigured.push('Intercom');
+
+  if (env.zendesk.clientId && env.zendesk.clientSecret) configured.push('Zendesk');
+  else notConfigured.push('Zendesk');
 
   if (env.posthog.apiKey) configured.push('PostHog');
   else notConfigured.push('PostHog');

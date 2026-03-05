@@ -18,10 +18,12 @@ import type {
   ShareTokenPayload,
   UploadTokenPayload,
   WorkspaceCreateInviteTokenPayload,
+  ZendeskOAuthStatePayload,
 } from '@/api/types';
 
 // Intercom OAuth state expiry: 15 minutes
 const INTERCOM_OAUTH_STATE_EXPIRES_IN = 15 * 60;
+const ZENDESK_OAUTH_STATE_EXPIRES_IN = 15 * 60;
 
 export class TokenService {
   private jwtSecret: string;
@@ -307,6 +309,51 @@ export class TokenService {
       if (workspaceId !== undefined && payload.workspaceId !== workspaceId) {
         return null;
       }
+
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Generate signed Zendesk OAuth state token
+   * Used for CSRF protection during OAuth flow
+   * Token expires in 15 minutes
+   */
+  signZendeskOAuthState(userId: string, workspaceId: string, subdomain: string): string {
+    const now = Math.floor(Date.now() / 1000);
+    const payload: ZendeskOAuthStatePayload = {
+      iss: this.jwtIssuer,
+      userId,
+      workspaceId,
+      subdomain,
+      timestamp: now,
+      nonce: nanoid(16),
+      iat: now,
+      exp: now + ZENDESK_OAUTH_STATE_EXPIRES_IN,
+    };
+
+    return jwt.sign(payload, this.jwtSecret, { algorithm: 'HS256' });
+  }
+
+  /**
+   * Verify and decode Zendesk OAuth state token
+   * Returns payload if valid and user matches, null otherwise
+   */
+  verifyZendeskOAuthState(
+    token: string,
+    userId: string,
+    workspaceId: string
+  ): ZendeskOAuthStatePayload | null {
+    try {
+      const payload = jwt.verify(token, this.jwtSecret, {
+        algorithms: ['HS256'],
+      }) as ZendeskOAuthStatePayload;
+
+      if (payload.iss !== this.jwtIssuer) return null;
+      if (payload.userId !== userId) return null;
+      if (payload.workspaceId !== workspaceId) return null;
 
       return payload;
     } catch {

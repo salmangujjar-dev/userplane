@@ -64,6 +64,7 @@ export const AUTH = {
   COOKIE_PREFIX: 'userplane',
   GOOGLE_REDIRECT_PATH: '/api/auth/callback/google',
   INTERCOM_REDIRECT_PATH: '/callback/intercom',
+  ZENDESK_REDIRECT_PATH: '/callback/zendesk',
 } as const;
 
 // =============================================================================
