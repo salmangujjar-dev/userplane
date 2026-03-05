@@ -91,6 +91,92 @@ export function useIntercomDisconnect() {
   });
 }
 
+// ============================================================================
+// ZENDESK HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch Zendesk integration status for the current workspace
+ */
+export function useZendeskIntegration() {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery({
+    queryKey: integrationKeys.zendesk(workspaceId ?? ''),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.zendesk.get({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: !!workspaceId,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+/**
+ * Hook to initiate Zendesk OAuth authorization flow
+ * Requires subdomain parameter
+ */
+export function useZendeskAuthorize() {
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (subdomain: string) => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.zendesk.authorize({
+        params: { workspaceId },
+        query: { subdomain },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      window.location.href = result.data.authorizationUrl;
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: integrationKeys.zendesk(workspaceId ?? '') });
+    },
+  });
+}
+
+/**
+ * Hook to disconnect Zendesk integration from the workspace
+ */
+export function useZendeskDisconnect() {
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.zendesk.delete({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: integrationKeys.zendesk(workspaceId ?? '') });
+    },
+  });
+}
+
 /**
  * Hook to fetch Intercom admins for a workspace
  * @param workspaceId - The workspace ID to fetch admins for

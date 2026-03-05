@@ -175,6 +175,16 @@ export function showIntercomDisconnectedToast() {
   toast.success('Intercom disconnected successfully');
 }
 
+export function showZendeskConnectionFailedToast(errorMessage?: string) {
+  toast.error('Failed to connect to Zendesk', {
+    description: errorMessage || 'Please try again.',
+  });
+}
+
+export function showZendeskDisconnectedToast() {
+  toast.success('Zendesk disconnected successfully');
+}
+
 export function showTeammatesInvitedToast(count: number) {
   toast.success(`Invites sent to ${count} teammate${count > 1 ? 's' : ''}`);
 }
