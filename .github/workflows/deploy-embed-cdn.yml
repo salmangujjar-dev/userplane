@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Build SDK dependencies
+        run: bunx turbo build --filter=@userplane/sdk^...
+
       - name: Build metadata (CDN)
         run: cd packages/metadata && bun run build:cdn
 
