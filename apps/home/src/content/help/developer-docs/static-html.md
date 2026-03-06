@@ -1,0 +1,84 @@
+---
+title: 'Static HTML Integration'
+excerpt: 'Install Userplane on a static HTML site using the CDN embed script'
+order: 15
+lastUpdated: 2026-03-07
+---
+
+This guide covers how to install Userplane on a static HTML site with no build step.
+
+## Adding the script
+
+Add these two tags to the `<head>` of every page where you want recordings to work:
+
+```html
+<head>
+  <!-- Sets workspace ID for screen recording -->
+  <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+
+  <!-- Loads Userplane screen recording script -->
+  <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
+</head>
+```
+
+Replace `YOUR_WORKSPACE_ID` with your workspace ID. You can copy the exact snippet with your ID pre-filled from **Workspace Settings > Domains** in the Userplane dashboard.
+
+Place the tags as early as possible in `<head>`. The Userplane script can only capture console logs and network requests that occur after it initializes — placing it early gives you the most complete recording context.
+
+## Sensitive data
+
+To blur an element in recordings, add the `data-userplane-blur` attribute:
+
+```html
+<div data-userplane-blur>
+  <input type="text" placeholder="Credit card number" />
+</div>
+```
+
+To blur all inputs across the page, add a meta tag:
+
+```html
+<meta name="userplane:blur" content="inputs" />
+```
+
+Supported `content` values for the meta tag:
+
+| Value    | What is blurred                                      |
+| -------- | ---------------------------------------------------- |
+| `inputs` | All `<input>`, `<textarea>`, and `<select>` elements |
+| `images` | All `<img>` elements                                 |
+| `all`    | The entire page                                      |
+
+To exclude a specific element from blur (when a parent is blurred):
+
+```html
+<div data-userplane-blur>
+  <p>This is blurred.</p>
+  <p data-userplane-blur="false">This is not blurred.</p>
+</div>
+```
+
+See [Sensitive Data Redaction](/help/developer-docs/sensitive-data-redaction) for the full reference including CSS class blurring and third-party widget compatibility.
+
+## URL parameters
+
+When a customer opens a recording link, Userplane appends `userplane-token`, `userplane-action`, and `userplane-workspace` to the URL. For a static HTML site, these are read automatically by the embed script — no additional configuration is needed.
+
+If your site redirects users to a login page before they reach the recorded page, carry the `userplane-` prefixed parameters through the redirect so the recording session can start after login. See [Setting Up Userplane Scripts](/help/developer-docs/setting-up-userplane-scripts) for an example.
+
+## Example app
+
+A complete static HTML example is available at [github.com/wizenheimer/userplane-sdk-examples/tree/main/examples/static-html](https://github.com/wizenheimer/userplane-sdk-examples/tree/main/examples/static-html).
+
+No environment variables or build step are required. Open `index.html` directly in a browser or serve it with any static file server:
+
+```bash
+cd examples/static-html && npx serve .
+```
+
+## Related articles
+
+- [Setting Up Userplane Scripts](/help/developer-docs/setting-up-userplane-scripts) — script placement, CSP, iframes, and browser support.
+- [Domain Verification Guide](/help/developer-docs/domain-verification-guide) — verify domain ownership after installing the script.
+- [Sensitive Data Redaction](/help/developer-docs/sensitive-data-redaction) — blur sensitive content in recordings.
+- [Web SDK](/help/developer-docs/web-sdk) — programmatic SDK for apps with a build step.
