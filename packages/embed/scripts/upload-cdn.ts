@@ -364,16 +364,18 @@ async function uploadFile(
   cacheControl: string,
   options: UploadOptions
 ): Promise<void> {
-  const content = readFileSync(localPath);
-  const contentType = r2Key.endsWith('.json')
-    ? 'application/json; charset=utf-8'
-    : 'application/javascript; charset=utf-8';
-
+  // Early return before reading files — in dry-run mode, content-addressed
+  // and manifest files are not created on disk.
   if (options.dryRun) {
     log(`[DRY RUN] Would upload: ${r2Key}`);
     verbose(`  Cache-Control: ${cacheControl}`, options);
     return;
   }
+
+  const content = readFileSync(localPath);
+  const contentType = r2Key.endsWith('.json')
+    ? 'application/json; charset=utf-8'
+    : 'application/javascript; charset=utf-8';
 
   const command = new PutObjectCommand({
     Bucket: bucket,
