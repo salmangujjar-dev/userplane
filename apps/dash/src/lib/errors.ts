@@ -135,7 +135,7 @@ export function handleUnknownError(error: unknown, fallbackMessage: string): voi
     action: {
       label: 'Contact support',
       onClick: () => {
-        window.location.href = 'mailto:support@userplane.com';
+        window.location.href = 'mailto:support@userplane.io';
       },
     },
   });
