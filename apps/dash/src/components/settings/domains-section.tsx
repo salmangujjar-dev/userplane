@@ -17,8 +17,8 @@ import { DomainsSectionSkeleton } from '@/components/skeleton';
 import { DOMAIN_PAGINATION } from '@/constants';
 import { env } from '@/env';
 import {
-  type DomainSortField,
   domainKeys,
+  type DomainSortField,
   useCreateDomain,
   useDeleteDomain,
   useDomainStatusPolling,
