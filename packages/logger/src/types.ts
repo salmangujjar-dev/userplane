@@ -349,7 +349,7 @@ export interface XHRTrackingData {
 
 export interface LastNavigation {
   from: string | null;
-  to: string;
+  to: string | null;
   method: string | null;
 }
 

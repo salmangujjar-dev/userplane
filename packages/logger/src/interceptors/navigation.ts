@@ -4,8 +4,8 @@ import type { LastNavigation, UserActionLogEvent } from '../types';
 import { shouldLogNavigation } from '../utils/throttle';
 import { now } from '../utils/time';
 
-let lastHref = window.location.href;
-let lastNav: LastNavigation = { from: null, to: lastHref, method: null };
+let lastHref: string | undefined;
+let lastNav: LastNavigation = { from: null, to: null, method: null };
 
 type RouteChangeHandler = (
   method: string,
@@ -97,11 +97,11 @@ function createReplaceStateWrapper(
 }
 
 function onPopState(): void {
-  throttledRouteChange('popstate', lastHref, window.location.href, {});
+  throttledRouteChange('popstate', lastHref!, window.location.href, {});
 }
 
 function onHashChange(): void {
-  throttledRouteChange('hashchange', lastHref, window.location.href, {});
+  throttledRouteChange('hashchange', lastHref!, window.location.href, {});
 }
 
 /**
@@ -117,6 +117,12 @@ export function patchNavigation(_tabId: string | undefined): {
 } {
   tabId = _tabId;
 
+  // Deferred from module scope for SSR safety
+  if (lastHref === undefined) {
+    lastHref = window.location.href;
+    lastNav = { from: null, to: lastHref, method: null };
+  }
+
   const nativeOriginals = window.__userplane_logger_originals?.history ?? {
     pushState: history.pushState,
     replaceState: history.replaceState,
@@ -129,7 +135,7 @@ export function patchNavigation(_tabId: string | undefined): {
     to: string | null = null,
     extra: Record<string, unknown> = {}
   ) => {
-    const fromUrl = from || lastHref;
+    const fromUrl = from || lastHref!;
     const toUrl = to || window.location.href;
     const triggeredBy = (extra.method as string) || method;
 
@@ -216,5 +222,5 @@ export function patchNavigation(_tabId: string | undefined): {
  * Returns the current last known href (for use by other interceptors).
  */
 export function getLastHref(): string {
-  return lastHref;
+  return lastHref ?? '';
 }
