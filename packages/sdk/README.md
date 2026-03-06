@@ -6,9 +6,15 @@
 
 <p>
   <a href="#quick-start"><strong>Quick Start</strong></a> |
+  <a href="#ssr"><strong>SSR</strong></a> |
   <a href="#initialize-options"><strong>Options</strong></a> |
   <a href="#metadata"><strong>Metadata</strong></a> |
   <a href="#api-reference"><strong>API Reference</strong></a>
+</p>
+
+<p>
+  <a href="https://userplane.io">Website</a> |
+  <a href="https://userplane.io/help">Docs</a>
 </p>
 
 </div>
@@ -38,12 +44,9 @@ npm i @userplane/sdk
 ```typescript
 import * as userplane from '@userplane/sdk';
 
-// Guard for SSR (Next.js, Nuxt, SvelteKit, etc.)
-if (typeof window !== 'undefined') {
-  userplane.initialize({
-    workspaceId: 'ws_xxx',
-  });
-}
+userplane.initialize({
+  workspaceId: 'ws_xxx',
+});
 ```
 
 When users visit a recording link:
@@ -54,13 +57,15 @@ https://yoursite.com?userplane-action=recording&userplane-token=abc123
 
 The recorder automatically mounts. No side effects on import — nothing happens until you call `initialize()`.
 
-## SSR / Framework Usage
+## SSR
 
-The SDK is safe to import in server-rendered frameworks. All functions are no-ops until `initialize()` is called in the browser.
+The SDK is **SSR-safe**. You can `import` it in any server-side environment — Next.js RSC, Nuxt, SvelteKit, Astro SSR, TanStack Start — without hitting `window is not defined` errors. No dynamic imports, no `typeof window` guards, no `ssr: false` needed at the module level.
 
-**Next.js (App Router)**
+The SDK only _records_ in the browser, so call `initialize()` from a client-only lifecycle hook. This ensures the recording patches (`history.pushState`, `fetch`, `console`, etc.) apply after hydration.
 
-```typescript
+### Next.js (App Router)
+
+```tsx
 'use client';
 
 import * as userplane from '@userplane/sdk';
@@ -75,13 +80,46 @@ export function UserplaneProvider() {
 }
 ```
 
-**Next.js / Nuxt / SvelteKit (general pattern)**
+### Nuxt
 
 ```typescript
-if (typeof window !== 'undefined') {
-  userplane.initialize({ workspaceId: 'ws_xxx' });
-}
+// plugins/userplane.client.ts
+export default defineNuxtPlugin(() => {
+  import('@userplane/sdk').then((userplane) => {
+    userplane.initialize({ workspaceId: 'ws_xxx' });
+  });
+});
 ```
+
+### SvelteKit
+
+```svelte
+<script lang="ts">
+  import { onMount } from 'svelte';
+
+  onMount(async () => {
+    const userplane = await import('@userplane/sdk');
+    userplane.initialize({ workspaceId: 'ws_xxx' });
+  });
+</script>
+```
+
+### Astro
+
+```astro
+<script>
+  import * as userplane from '@userplane/sdk';
+  userplane.initialize({ workspaceId: 'ws_xxx' });
+</script>
+```
+
+### Static import vs dynamic import
+
+Both work. A static `import` won't crash on the server. A dynamic `import()` inside lifecycle hooks is recommended to keep the SDK out of the server bundle (smaller SSR payload, faster TTFB), but it's an optimization — not a requirement.
+
+### What about the gap before hydration?
+
+The SDK starts capturing once the lifecycle hook fires. Activity before that (server-side fetches, console output during hydration) is not recorded. This is expected and the same tradeoff every client-side SDK makes in SSR frameworks. Once the hook fires, all subsequent activity is captured for the rest of the session.
 
 ## Initialize Options
 
@@ -266,14 +304,37 @@ userplane.clearTabRef(); // clear; a new ref is generated on next initialize()
 
 Recording links use these query parameters:
 
-| Parameter          | Description                          |
-| ------------------ | ------------------------------------ |
-| `userplane-action` | Action type: `recording` or `verify` |
-| `userplane-token`  | Authentication token                 |
+| Parameter             | Description                          |
+| --------------------- | ------------------------------------ |
+| `userplane-action`    | Action type: `recording` or `verify` |
+| `userplane-token`     | Authentication token                 |
+| `userplane-workspace` | Workspace ID override                |
+| `userplane-meta`      | Encoded metadata                     |
 
 Example: `https://yoursite.com?userplane-action=recording&userplane-token=abc123`
 
 You can override URL parsing with `parseUserplaneData` in initialize options.
+
+### `USERPLANE_URL_PARAMS`
+
+A constant array of all URL parameter names the SDK uses. Import it to keep your router's allowlist in sync — this prevents frameworks with strict param validation (e.g. TanStack Router, Next.js middleware) from stripping or rejecting Userplane parameters.
+
+```typescript
+import { USERPLANE_URL_PARAMS } from '@userplane/sdk';
+
+// Use in your router's param allowlist
+const ALLOWED_PARAMS = new Set(['search', 'sort', ...USERPLANE_URL_PARAMS]);
+
+// TanStack Router with Zod validation
+const userplaneParams = Object.fromEntries(
+  USERPLANE_URL_PARAMS.map((key) => [key, z.string().optional()])
+);
+
+const searchSchema = z.object({
+  search: z.string().optional(),
+  ...userplaneParams,
+});
+```
 
 ## Workspace Configuration
 
@@ -317,6 +378,12 @@ userplane.initialize({ workspaceId: 'ws_xxx,ws_yyy' });
 | `metadata`            | `(fn: MetadataFunction) => void`             | `void`                     |
 | `set`                 | `(key: string, value: Serializable) => void` | `void`                     |
 | `clearMetadata`       | `(keyOrType?: string) => void`               | `void`                     |
+
+### Constants
+
+| Constant               | Type       | Description                         |
+| ---------------------- | ---------- | ----------------------------------- |
+| `USERPLANE_URL_PARAMS` | `string[]` | URL parameter names used by the SDK |
 
 ### Types
 
