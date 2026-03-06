@@ -25,7 +25,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -414,6 +414,19 @@ async function uploadAssets(hashedFilename: string, options: UploadOptions): Pro
       cacheControl: CACHE_CONTROL.immutable,
     },
   ];
+
+  // Discover any additional chunk files produced by Vite (content-hashed .js files)
+  const knownFiles = new Set(filesToUpload.map((f) => f.local));
+  for (const file of readdirSync(DIST_DIR)) {
+    const fullPath = join(DIST_DIR, file);
+    if (file.endsWith('.js') && !knownFiles.has(fullPath)) {
+      filesToUpload.push({
+        local: fullPath,
+        r2Key: `${R2_PREFIX}/${file}`,
+        cacheControl: CACHE_CONTROL.immutable,
+      });
+    }
+  }
 
   log('\nUploading to R2...');
 
