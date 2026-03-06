@@ -56,7 +56,7 @@ export function RecordingDetailNav({
                 {onGetAiPrompt && (
                   <DropdownMenuItem onClick={onGetAiPrompt}>
                     <Bot className="h-4 w-4 mr-2" />
-                    Get AI Prompt
+                    Analyze Issue
                   </DropdownMenuItem>
                 )}
                 {onEdit && (
