@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@userplane/ui/components/dropdown-menu';
 import Logo from '@userplane/ui/components/logo';
-import { Link as LinkIcon, MoreVertical, Pencil, Share2, Trash2 } from 'lucide-react';
+import { Bot, Link as LinkIcon, MoreVertical, Pencil, Share2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -18,6 +18,7 @@ interface RecordingDetailNavProps {
   onShare?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onGetAiPrompt?: () => void;
 }
 
 export function RecordingDetailNav({
@@ -25,6 +26,7 @@ export function RecordingDetailNav({
   onShare,
   onEdit,
   onDelete,
+  onGetAiPrompt,
 }: RecordingDetailNavProps) {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
 
@@ -43,7 +45,7 @@ export function RecordingDetailNav({
             <Share2 className="h-4 w-4" />
             Share
           </Button>
-          {(onEdit || onDelete) && (
+          {(onEdit || onDelete || onGetAiPrompt) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
@@ -51,6 +53,12 @@ export function RecordingDetailNav({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {onGetAiPrompt && (
+                  <DropdownMenuItem onClick={onGetAiPrompt}>
+                    <Bot className="h-4 w-4 mr-2" />
+                    Get AI Prompt
+                  </DropdownMenuItem>
+                )}
                 {onEdit && (
                   <DropdownMenuItem onClick={onEdit}>
                     <Pencil className="h-4 w-4 mr-2" />

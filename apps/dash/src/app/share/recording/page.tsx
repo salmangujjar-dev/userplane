@@ -2,13 +2,20 @@
 
 import type { ViewSharedRecordingData } from '@userplane/contract';
 import { Button } from '@userplane/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@userplane/ui/components/dropdown-menu';
 import Logo from '@userplane/ui/components/logo';
-import { ArrowUpRight, Share2 } from 'lucide-react';
+import { ArrowUpRight, Bot, MoreVertical, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { fetchSharedRecording } from '@/client/public';
+import { AiPromptModal } from '@/components/modals/ai-prompt-modal';
 import { PublicShareRecordingModal } from '@/components/modals/public-share-recording-modal';
 import { RecordingLayout } from '@/components/recordings/recording-layout';
 import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-replay-panel';
@@ -26,7 +33,13 @@ type ShareState =
   | { status: 'not_found' }
   | { status: 'error'; message: string };
 
-function SharedRecordingNav({ onShare }: { onShare: () => void }) {
+function SharedRecordingNav({
+  onShare,
+  onGetAiPrompt,
+}: {
+  onShare: () => void;
+  onGetAiPrompt: () => void;
+}) {
   return (
     <nav>
       <div className="flex w-full items-center justify-between px-6 py-4">
@@ -42,6 +55,19 @@ function SharedRecordingNav({ onShare }: { onShare: () => void }) {
             <Share2 className="h-4 w-4" />
             Share
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onGetAiPrompt}>
+                <Bot className="h-4 w-4 mr-2" />
+                Get AI Prompt
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </nav>
@@ -94,6 +120,7 @@ export default function SharedRecordingPage() {
   const token = searchParams.get('token');
   const [state, setState] = useState<ShareState>({ status: 'loading' });
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showAiPromptModal, setShowAiPromptModal] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -159,7 +186,10 @@ export default function SharedRecordingPage() {
 
   return (
     <div className="h-screen bg-background flex flex-col">
-      <SharedRecordingNav onShare={() => setShowShareModal(true)} />
+      <SharedRecordingNav
+        onShare={() => setShowShareModal(true)}
+        onGetAiPrompt={() => setShowAiPromptModal(true)}
+      />
       <RecordingContent recording={recording} resources={resources} />
 
       <PublicShareRecordingModal
@@ -167,6 +197,17 @@ export default function SharedRecordingPage() {
         onOpenChange={setShowShareModal}
         shareUrl={shareUrl}
         expiresAt={expiresAt}
+      />
+
+      <AiPromptModal
+        open={showAiPromptModal}
+        onOpenChange={setShowAiPromptModal}
+        recording={recording}
+        resources={{
+          consoleLog: resources.consoleLog,
+          networkLog: resources.networkLog,
+          action: resources.action,
+        }}
       />
     </div>
   );
