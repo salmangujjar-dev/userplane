@@ -50,7 +50,7 @@ The feature policy must be set on the **parent window** — the iframe itself ca
 
 The combination of `allow-same-origin` and `allow-scripts` is typically considered a security risk because it allows the iframe to read cookies, localStorage, and the DOM of same-origin pages. However:
 
-- The recorder iframe is served from a **different origin** (`recorder.userplane.com`), not your origin
+- The recorder iframe is served from a **different origin** (`recorder.userplane.io`), not your origin
 - `allow-same-origin` applies to the iframe's own origin — it means the recorder can use its own storage APIs
 - The recorder **cannot** access your page's cookies, localStorage, or DOM, because it's a different origin
 

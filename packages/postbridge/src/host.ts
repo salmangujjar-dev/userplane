@@ -58,6 +58,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
+import { HOST_CONNECT_TIMEOUT_MS } from './constants';
 import {
   addEventListener,
   extractMethods,
@@ -72,7 +73,15 @@ import {
 } from './helpers';
 import { logger } from './logger';
 import { registerLocalMethods, registerRemoteMethods } from './rpc';
-import { actions, Connection, Connections, events, Guest, Schema } from './types';
+import {
+  actions,
+  Connection,
+  Connections,
+  events,
+  Guest,
+  HostConnectOptions,
+  Schema,
+} from './types';
 
 /**
  * Global Connections Map
@@ -267,7 +276,11 @@ function isValidTarget(guest: Guest, event: any) {
  * @param schema Object with functions and data to expose to guest
  * @returns Promise that resolves to Connection object
  */
-function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
+function connect(
+  guest: Guest,
+  schema: Schema = {},
+  options?: HostConnectOptions
+): Promise<Connection> {
   // Validate guest parameter
   if (!guest) throw new Error('a target is required');
 
@@ -282,9 +295,18 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
         ? guest.port // SharedWorker: listen on port
         : window; // iframe: listen on main window
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     // Generate unique connection ID
     const connectionID = generateId();
+
+    // Timeout — reject if handshake never completes
+    const timeoutMs = options?.timeout ?? HOST_CONNECT_TIMEOUT_MS;
+    const timeoutId = setTimeout(() => {
+      removeEventListener(listenTo, events.MESSAGE, handleHandshake);
+      removeEventListener(listenTo, events.MESSAGE, handleHandshakeReply);
+      delete connections[connectionID];
+      reject(new Error(`Host handshake timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
 
     // Handler for initial HANDSHAKE_REQUEST from guest
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -380,6 +402,9 @@ function connect(guest: Guest, schema: Schema = {}): Promise<Connection> {
       if (!connection) {
         throw new Error('PostBridge Error: No connection found for this connectionID');
       }
+
+      // Clear timeout — handshake succeeded
+      clearTimeout(timeoutId);
 
       // Connection is ready! Resolve promise
       return resolve(connection);

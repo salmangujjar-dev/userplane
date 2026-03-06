@@ -375,6 +375,18 @@ export type GuestConnectOptions = {
   hostTarget?: Target;
   /** Callback executed after connection is established but before promise resolves */
   onConnectionSetup?: (remote: Schema) => Promise<void>;
+  /** Timeout in ms for the connect() promise (default: GUEST_CONNECT_TIMEOUT_MS) */
+  timeout?: number;
+};
+
+/**
+ * HostConnectOptions
+ * ──────────────────
+ * Configuration options when a host connects to a guest.
+ */
+export type HostConnectOptions = {
+  /** Timeout in ms for the connect() promise (default: HOST_CONNECT_TIMEOUT_MS) */
+  timeout?: number;
 };
 
 /**
@@ -819,4 +831,6 @@ export type BridgeConnectOptions = {
   tabID?: string;
   /** Default timeout for CAS operations in milliseconds (optional, defaults to 5000) */
   casTimeout?: number;
+  /** Timeout in ms for the connect() handshake (default: BRIDGE_CONNECT_TIMEOUT_MS) */
+  timeout?: number;
 };

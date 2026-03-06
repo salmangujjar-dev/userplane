@@ -1,0 +1,2 @@
+ALTER TABLE "domains" DROP CONSTRAINT "domains_workspace_url_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "domains_active_workspace_url_unique" ON "domains" USING btree ("workspace_id","domain_url") WHERE "domains"."is_deleted" = false;

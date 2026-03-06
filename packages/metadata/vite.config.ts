@@ -57,6 +57,9 @@ const terserConfig = optimizeMode ? optimizedTerserConfig : standardTerserConfig
 const isProduction = !!optimizeMode;
 
 export default defineConfig({
+  resolve: {
+    conditions: ['source'],
+  },
   define: {
     __DEV__: JSON.stringify(!isProduction),
   },

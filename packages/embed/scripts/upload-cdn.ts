@@ -25,7 +25,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -364,16 +364,18 @@ async function uploadFile(
   cacheControl: string,
   options: UploadOptions
 ): Promise<void> {
-  const content = readFileSync(localPath);
-  const contentType = r2Key.endsWith('.json')
-    ? 'application/json; charset=utf-8'
-    : 'application/javascript; charset=utf-8';
-
+  // Early return before reading files — in dry-run mode, content-addressed
+  // and manifest files are not created on disk.
   if (options.dryRun) {
     log(`[DRY RUN] Would upload: ${r2Key}`);
     verbose(`  Cache-Control: ${cacheControl}`, options);
     return;
   }
+
+  const content = readFileSync(localPath);
+  const contentType = r2Key.endsWith('.json')
+    ? 'application/json; charset=utf-8'
+    : 'application/javascript; charset=utf-8';
 
   const command = new PutObjectCommand({
     Bucket: bucket,
@@ -414,6 +416,19 @@ async function uploadAssets(hashedFilename: string, options: UploadOptions): Pro
       cacheControl: CACHE_CONTROL.immutable,
     },
   ];
+
+  // Discover any additional chunk files produced by Vite (content-hashed .js files)
+  const knownFiles = new Set(filesToUpload.map((f) => f.local));
+  for (const file of readdirSync(DIST_DIR)) {
+    const fullPath = join(DIST_DIR, file);
+    if (file.endsWith('.js') && !knownFiles.has(fullPath)) {
+      filesToUpload.push({
+        local: fullPath,
+        r2Key: `${R2_PREFIX}/${file}`,
+        cacheControl: CACHE_CONTROL.immutable,
+      });
+    }
+  }
 
   log('\nUploading to R2...');
 

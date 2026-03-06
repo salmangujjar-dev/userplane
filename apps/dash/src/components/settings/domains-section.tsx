@@ -18,6 +18,7 @@ import { DOMAIN_PAGINATION } from '@/constants';
 import { env } from '@/env';
 import {
   type DomainSortField,
+  domainKeys,
   useCreateDomain,
   useDeleteDomain,
   useDomainStatusPolling,
@@ -157,7 +158,7 @@ export function DomainsSection() {
         if (error) return false;
         const isVerified = response.data.domain.domainStatus === 'verified';
         if (isVerified) {
-          await queryClient.invalidateQueries({ queryKey: ['domains', workspaceId] });
+          await queryClient.invalidateQueries({ queryKey: domainKeys.lists() });
           showDomainVerifiedToast();
         }
         return isVerified;
@@ -220,7 +221,8 @@ export function DomainsSection() {
   const handleCloseVerification = useCallback(() => {
     stopPolling();
     actions.closeVerification();
-  }, [stopPolling, actions]);
+    queryClient.invalidateQueries({ queryKey: domainKeys.lists() });
+  }, [stopPolling, actions, queryClient]);
 
   const handleReverify = useCallback(() => {
     stopPolling();
@@ -371,7 +373,12 @@ export function DomainsSection() {
         verificationSettingsLoading={updateDomainPreferencesMutation.isPending}
         // Create modal
         showCreateModal={state.showCreateModal}
-        onCloseCreateModal={(open) => !open && actions.closeCreateModal()}
+        onCloseCreateModal={(open) => {
+          if (!open) {
+            actions.closeCreateModal();
+            queryClient.invalidateQueries({ queryKey: domainKeys.lists() });
+          }
+        }}
         onCreateDomain={handleCreateDomain}
         onCreateModalStartVerification={handleCreateModalStartVerification}
         onCreateModalPollVerification={handleCreateModalPollVerification}

@@ -14,7 +14,7 @@ export function DomainCodeSnippet({ workspaceId, domainUrl }: DomainCodeSnippetP
 <meta name="userplane:workspace" content="${workspaceId}" />
 
 <!-- Loads Userplane screen recording script -->
-<script src="https://cdn.userplane.io/embed/script.js"></script>
+<script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
 
 <!-- If your site does not set CSP directives, you can skip this -->
 <meta

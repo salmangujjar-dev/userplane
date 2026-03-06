@@ -78,6 +78,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
+import { BRIDGE_CONNECT_TIMEOUT_MS, GET_CONNECTED_TABS_TIMEOUT_MS } from './constants';
 import { extractMethods, generateId, set } from './helpers';
 import { logger } from './logger';
 import {
@@ -328,6 +329,13 @@ async function connect(
       const worker = createSharedWorker(options?.workerURL);
       const port = worker.port;
 
+      // Timeout — reject if handshake ACK never arrives
+      const connectTimeoutMs = options?.timeout ?? BRIDGE_CONNECT_TIMEOUT_MS;
+      const connectTimeoutId = setTimeout(() => {
+        port.close();
+        reject(new Error(`Bridge handshake timed out after ${connectTimeoutMs}ms`));
+      }, connectTimeoutMs);
+
       // Step 4: Set up message handler for handshake and state updates from worker
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sharedStateCache: Record<string, any> = {};
@@ -352,6 +360,7 @@ async function connect(
             // Handshake failed - reject connection
             const errorPayload = data as BridgeHandshakeErrorPayload;
             logger.error({ code: errorPayload.code, err: errorPayload.error }, 'Handshake error');
+            clearTimeout(connectTimeoutId);
             reject(new Error(`Bridge handshake failed: ${errorPayload.error}`));
             break;
           }
@@ -403,6 +412,9 @@ async function connect(
        */
       function handleHandshakeAck(payload: BridgeHandshakeAckPayload) {
         if (payload.tabID !== tabID) return;
+
+        // Clear connect timeout — handshake succeeded
+        clearTimeout(connectTimeoutId);
 
         // Build remote object with broadcast proxy functions and shared state
         // remote will be both an object (for broadcasts) and a function (for direct messages)
@@ -553,10 +565,16 @@ async function connect(
          */
         function getConnectedTabs(): Promise<string[]> {
           return new Promise((resolve) => {
+            const timeoutId = setTimeout(() => {
+              port.removeEventListener('message', responseHandler);
+              resolve([]);
+            }, GET_CONNECTED_TABS_TIMEOUT_MS);
+
             // Create one-time listener for BRIDGE_TABS_RESPONSE
             const responseHandler = (event: MessageEvent) => {
               const data = event.data;
               if (data.action === bridgeActions.BRIDGE_TABS_RESPONSE && data.channel === channel) {
+                clearTimeout(timeoutId);
                 // Remove this listener
                 port.removeEventListener('message', responseHandler);
                 // Resolve with tab IDs

@@ -20,7 +20,7 @@ CDN distribution is handled by `@userplane/embed`, which wraps the SDK in a two-
   <meta name="userplane:workspace" content="ws_your_workspace_id" />
 
   <!-- 2. Load the bootstrap loader -->
-  <script src="https://cdn.userplane.com/embed/script.js"></script>
+  <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
 </head>
 <body>
   <!-- SDK auto-initializes — no extra JS needed -->
@@ -51,9 +51,9 @@ SDK auto-initializes → window.userplane available
 
 | File | URL | Cache-Control |
 |------|-----|---------------|
-| Bootstrap | `cdn.userplane.com/embed/script.js` | `public, max-age=300` (5 min) |
-| Manifest | `cdn.userplane.com/embed/manifest.json` | `public, max-age=300` (5 min) |
-| Main bundle | `cdn.userplane.com/embed/main.{hash}.js` | `public, max-age=31536000, immutable` (1 year) |
+| Bootstrap | `cdn.userplane.io/embed/script.js` | `public, max-age=300` (5 min) |
+| Manifest | `cdn.userplane.io/embed/manifest.json` | `public, max-age=300` (5 min) |
+| Main bundle | `cdn.userplane.io/embed/main.{hash}.js` | `public, max-age=31536000, immutable` (1 year) |
 
 **Why this design?**
 
@@ -89,7 +89,7 @@ The embed script calls `initialize()` automatically — you don't need to call i
 If you need to call SDK functions before auto-init completes (unlikely), wait for the script's `load` event:
 
 ```html
-<script id="up-script" src="https://cdn.userplane.com/embed/script.js"></script>
+<script id="up-script" src="https://cdn.userplane.io/embed/script.js"></script>
 <script>
   document.getElementById('up-script').addEventListener('load', () => {
     window.userplane.set('userId', getCurrentUserId());
@@ -102,7 +102,7 @@ If you need to call SDK functions before auto-init completes (unlikely), wait fo
 `script.js` preserves its own CSP nonce when injecting the main module. If your page uses a CSP `script-src` with nonces:
 
 ```html
-<script src="https://cdn.userplane.com/embed/script.js" nonce="abc123"></script>
+<script src="https://cdn.userplane.io/embed/script.js" nonce="abc123"></script>
 ```
 
 The injected `main.{hash}.js` script element will automatically receive the same nonce.
@@ -110,8 +110,8 @@ The injected `main.{hash}.js` script element will automatically receive the same
 You'll also need to allow the CDN origin:
 
 ```
-Content-Security-Policy: script-src 'nonce-abc123' https://cdn.userplane.com;
-                         frame-src https://recorder.userplane.com;
+Content-Security-Policy: script-src 'nonce-abc123' https://cdn.userplane.io;
+                         frame-src https://recorder.userplane.io;
 ```
 
 ## CDN vs npm — When to Use Which

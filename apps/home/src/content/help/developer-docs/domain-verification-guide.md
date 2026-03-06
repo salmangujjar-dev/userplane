@@ -24,7 +24,7 @@ Paste the following into the `<head>` of your site:
 <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
 
 <!-- Loads Userplane screen recording script -->
-<script src="https://cdn.userplane.io/embed/script.js"></script>
+<script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
 ```
 
 Replace `YOUR_WORKSPACE_ID` with the workspace ID provided by your admin. You can also copy the exact snippet (with the workspace ID already filled in) from **Workspace Settings > Domains** in the Userplane dashboard.
