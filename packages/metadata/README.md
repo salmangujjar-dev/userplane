@@ -4,6 +4,11 @@
 
 <p>Attach custom metadata to Userplane recordings</p>
 
+<p>
+  <a href="https://userplane.io">Website</a> |
+  <a href="https://userplane.io/help">Docs</a>
+</p>
+
 </div>
 
 ---

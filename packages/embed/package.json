@@ -1,5 +1,6 @@
 {
   "name": "@userplane/embed",
+  "description": "Auto-initializing CDN embed script for the Userplane Recorder",
   "version": "0.0.1",
   "type": "module",
   "private": false,
