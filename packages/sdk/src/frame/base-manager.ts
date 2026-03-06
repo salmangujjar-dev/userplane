@@ -140,7 +140,6 @@ export abstract class BaseFrameManager implements IFrameManager {
       .withUrl(url.toString())
       .withOnLoad(() => {
         this.logger.debug('Frame loaded successfully');
-        this.establishBridge();
       })
       .withOnError(() => this.logger.error('Failed to load frame'))
       .build();
@@ -187,6 +186,7 @@ export abstract class BaseFrameManager implements IFrameManager {
         this.pendingMountListener = null;
         frame.iframe.focus();
         this.logger.debug('Frame mounted to DOM');
+        this.establishBridge();
       }
     };
 

@@ -130,7 +130,7 @@ If `window.name` is empty or doesn't start with `userplane_tab_`:
 
 In DevTools Network tab, filter by `userplane`:
 
-1. **Recorder iframe load** — look for a request to `recorder.userplane.com/r?...`
+1. **Recorder iframe load** — look for a request to `recorder.userplane.io/r?...`
    - Status 200 → iframe loaded OK
    - Status 4xx/5xx → recorder app error
    - No request → iframe src was never set (SDK issue)
@@ -159,7 +159,7 @@ window.__USERPLANE_DEBUG__ = true; // (if supported by your build)
 
 | Error | Meaning | Fix |
 |-------|---------|-----|
-| `Refused to load frame...` | CSP blocking iframe | Add `frame-src https://recorder.userplane.com` to CSP |
+| `Refused to load frame...` | CSP blocking iframe | Add `frame-src https://recorder.userplane.io` to CSP |
 | `postMessage failed...` | Cross-origin postMessage blocked | Verify `targetOrigin` matches recorder origin |
 | `initialize() called multiple times` | Warning from SDK (non-fatal) | Call `initialize()` only once |
 | `No workspace ID found` | Missing meta tag or workspaceId | Add workspace config |

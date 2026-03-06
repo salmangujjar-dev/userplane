@@ -120,12 +120,6 @@ function mountCaptureIfNeeded(): void {
     return;
   }
 
-  // Don't mount if main frame is already active
-  if (currentManager?.isMounted()) {
-    logger.debug('Skipping capture mount - main frame active');
-    return;
-  }
-
   // Don't remount if already mounted
   if (captureManager?.isMounted()) {
     return;
@@ -146,13 +140,14 @@ function mountCaptureIfNeeded(): void {
 
 /**
  * Unmount the capture iframe
+ * @deprecated No need to directly unmount the capture iframe
  */
-function unmountCapture(): void {
-  if (captureManager?.isMounted()) {
-    logger.info('Unmounting capture iframe');
-    captureManager.unmount();
-  }
-}
+// function unmountCapture(): void {
+//   if (captureManager?.isMounted()) {
+//     logger.info('Unmounting capture iframe');
+//     captureManager.unmount();
+//   }
+// }
 
 /**
  * Handle session ready event
@@ -177,8 +172,9 @@ function mountWithFactory(params: RecorderParams): boolean {
     return false;
   }
 
-  // Unmount capture iframe before mounting main frame
-  unmountCapture();
+  // Keep capture iframe alive — it's 1x1 hidden and doesn't conflict with
+  // the recorder overlay. Blur commands relay through: recorder → cross-tab
+  // → capture iframe → BlurManager on the host page.
 
   // Create the appropriate manager for this action
   currentManager = factory.create(params.action);

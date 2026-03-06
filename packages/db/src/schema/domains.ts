@@ -1,6 +1,6 @@
 import type { DomainStatus } from '@userplane/contract';
 import { relations, sql } from 'drizzle-orm';
-import { boolean, check, index, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core';
+import { boolean, check, index, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 import { DOMAIN_STATUS_VALUES } from '../constants';
 import { links } from './links';
@@ -44,7 +44,9 @@ export const domains = pgTable(
   (table) => [
     index('domains_workspace_status_idx').on(table.workspaceId, table.domainStatus),
     index('domains_domain_url_idx').on(table.domainUrl),
-    unique('domains_workspace_url_unique').on(table.workspaceId, table.domainUrl, table.isDeleted),
+    uniqueIndex('domains_active_workspace_url_unique')
+      .on(table.workspaceId, table.domainUrl)
+      .where(sql`${table.isDeleted} = false`),
     // Partial index for soft-delete filtering
     index('domains_active_workspace_created_idx')
       .on(table.workspaceId, table.createdAt)

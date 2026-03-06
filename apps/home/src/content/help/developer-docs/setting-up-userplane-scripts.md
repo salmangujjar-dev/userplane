@@ -16,7 +16,7 @@ Add the following to the `<head>` of every page where you want recordings to wor
 <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
 
 <!-- Loads Userplane screen recording script -->
-<script src="https://cdn.userplane.io/embed/script.js"></script>
+<script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
 ```
 
 Replace `YOUR_WORKSPACE_ID` with your workspace ID. You can copy the exact snippet with your ID pre-filled from **Workspace Settings > Domains** in the Userplane dashboard.
@@ -33,7 +33,7 @@ Avoid using `async` or `defer` attributes on the script tag, or loading it via a
 <!-- Recommended: load early in <head> -->
 <head>
   <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
-  <script src="https://cdn.userplane.io/embed/script.js"></script>
+  <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
   <!-- ... other tags -->
 </head>
 ```

@@ -29,6 +29,7 @@ import {
   getCrossTabCoordinator,
   type TabMetadata,
 } from '@/bridge';
+import { APP_BRIDGE_CONNECT_TIMEOUT_MS } from '@/bridge/constants';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('capture-app');
@@ -121,7 +122,23 @@ export default function CaptureApp() {
 
         bridgeRef.current = bridge;
 
-        await bridge.connect();
+        try {
+          await Promise.race([
+            bridge.connect(),
+            new Promise<never>((_, reject) =>
+              setTimeout(
+                () =>
+                  reject(
+                    new Error('Capture bridge connection timed out — parent SDK did not respond')
+                  ),
+                APP_BRIDGE_CONNECT_TIMEOUT_MS
+              )
+            ),
+          ]);
+        } catch (err) {
+          logger.error({ err }, 'capture bridge connection to parent SDK failed');
+          throw err;
+        }
 
         if (!mounted) return;
 
@@ -211,7 +228,12 @@ export default function CaptureApp() {
         // Register metadata extractor before connecting
         crossTab.setMetadataExtractor(extractMetadata);
 
-        await crossTab.connect(captureTabId);
+        try {
+          await crossTab.connect(captureTabId);
+        } catch (err) {
+          logger.error({ err, captureTabId }, 'capture cross-tab coordinator connection failed');
+          throw err;
+        }
 
         if (!mounted) return;
 

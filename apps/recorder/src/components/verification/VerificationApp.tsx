@@ -96,6 +96,22 @@ function VerificationAppContent() {
             crossTabLock.error ||
             'Another process is currently active. Only one process can be active at a time across all tabs.'
           }
+          primaryActionText="Reload"
+          onPrimaryAction={() => window.location.reload()}
+        />
+      );
+    }
+
+    if (crossTabLock.isError) {
+      return (
+        <VerificationErrorScreen
+          title="Connection Failed"
+          subtitle={
+            crossTabLock.error ||
+            'Could not connect to the parent page. Please reload and try again.'
+          }
+          primaryActionText="Try again"
+          onPrimaryAction={() => window.location.reload()}
         />
       );
     }

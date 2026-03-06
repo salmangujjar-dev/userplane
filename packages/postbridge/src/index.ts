@@ -148,5 +148,8 @@ import { withTransferable } from './rpc';
 // into bundlers that don't support the new URL() worker pattern (e.g. Turbopack).
 export { guest, host, withTransferable };
 
+// Export timeout/retry constants
+export * from './constants';
+
 // Export all types (Connection, Schema, etc.)
 export * from './types';

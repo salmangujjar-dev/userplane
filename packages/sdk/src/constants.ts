@@ -13,6 +13,12 @@ export const URL_PARAMS = {
 } as const;
 
 /**
+ * Array of all Userplane URL parameter names.
+ * Useful for excluding Userplane params from routing, analytics, etc.
+ */
+export const USERPLANE_URL_PARAMS: string[] = Object.values(URL_PARAMS);
+
+/**
  * Action values for the recorder/verification
  */
 export const ACTIONS = {
