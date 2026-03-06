@@ -6,6 +6,9 @@ import dts from 'vite-plugin-dts';
 // Build mode: 'cdn' for CDN distribution, undefined for npm package
 const optimizeMode = process.env.OPTIMIZE_MODE as 'cdn' | undefined;
 
+// CDN_ENTRY selects a single entry point ('script' or 'main') to avoid chunk splitting
+const cdnEntry = process.env.CDN_ENTRY as 'script' | 'main' | undefined;
+
 // CDN configuration - constructs base URL from CDN_DOMAIN + R2_CDN_PREFIX
 const cdnDomain = process.env.CDN_DOMAIN || 'https://cdn.userplane.io';
 const cdnPrefix = process.env.R2_CDN_PREFIX || 'embed';
@@ -66,18 +69,18 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    emptyOutDir: true,
+    emptyOutDir: isCdnBuild ? cdnEntry === 'script' : true,
     lib: isCdnBuild
       ? {
-          // CDN build: outputs script.js and main.js as ES modules
-          // (they're self-executing, so ES format works fine)
-          entry: {
-            script: resolve(__dirname, 'src/script.ts'),
-            main: resolve(__dirname, 'src/index.ts'),
-          },
+          // CDN build: single entry per invocation to prevent chunk splitting.
+          // Use CDN_ENTRY=script or CDN_ENTRY=main to select the entry point.
+          entry:
+            cdnEntry === 'main'
+              ? resolve(__dirname, 'src/index.ts')
+              : resolve(__dirname, 'src/script.ts'),
           name: 'UserplaneEmbed',
           formats: ['es'],
-          fileName: (_format, entryName) => `${entryName}.js`,
+          fileName: () => `${cdnEntry || 'script'}.js`,
         }
       : {
           // Standard npm build: outputs ES and CJS modules

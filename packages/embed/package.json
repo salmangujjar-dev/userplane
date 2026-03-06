@@ -20,7 +20,7 @@
   "scripts": {
     "dev": "vite build --watch",
     "build": "tsc && vite build",
-    "build:cdn": "tsc && OPTIMIZE_MODE=cdn vite build",
+    "build:cdn": "tsc && OPTIMIZE_MODE=cdn CDN_ENTRY=script vite build && OPTIMIZE_MODE=cdn CDN_ENTRY=main vite build",
     "upload:cdn": "bun run scripts/upload-cdn.ts",
     "deploy:cdn": "bun run build:cdn && bun run upload:cdn",
     "typecheck": "tsc --noEmit",

@@ -7,7 +7,7 @@
  *
  * Usage:
  * <meta name="userplane:workspace" content="ws_xxx" />
- * <script src="https://cdn.userplane.io/embed/script.js"></script>
+ * <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
  */
 
 import { createLogger } from '@userplane/console-logger';
