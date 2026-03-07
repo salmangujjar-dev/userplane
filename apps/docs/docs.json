@@ -1,0 +1,45 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Userplane Docs",
+  "logo": {
+    "dark": "/static/logo-dark.svg",
+    "light": "/static/logo-light.svg"
+  },
+  "favicon": "/static/favicon.svg",
+  "theme": "almond",
+  "colors": {
+    "primary": "#6366F1",
+    "light": "#818CF8",
+    "dark": "#4F46E5"
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://app.userplane.co"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://app.userplane.co"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": ["introduction", "quickstart"]
+      },
+      {
+        "group": "Recording",
+        "pages": ["recording/overview"]
+      },
+      {
+        "group": "Developer Guides",
+        "pages": ["developer/web-sdk"]
+      },
+      {
+        "group": "Integrations",
+        "pages": ["integrations/intercom"]
+      }
+    ]
+  }
+}
