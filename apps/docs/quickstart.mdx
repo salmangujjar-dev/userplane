@@ -1,0 +1,44 @@
+---
+title: Quickstart
+description: Get started with Userplane in minutes
+---
+
+# Quickstart
+
+Follow these steps to start recording user sessions with Userplane.
+
+## 1. Create an account
+
+Sign up at [app.userplane.co](https://app.userplane.co) and create your first project.
+
+## 2. Install the SDK
+
+<CodeGroup>
+```bash npm
+npm install @userplane/sdk
+```
+
+```bash yarn
+yarn add @userplane/sdk
+```
+
+```bash bun
+bun add @userplane/sdk
+```
+
+</CodeGroup>
+
+## 3. Initialize recording
+
+```javascript
+import { Userplane } from '@userplane/sdk';
+
+Userplane.init({
+  projectId: 'your-project-id',
+});
+```
+
+## Next steps
+
+- [Recording overview](/recording/overview) — learn how recording works under the hood
+- [Web SDK reference](/developer/web-sdk) — explore the full SDK API
