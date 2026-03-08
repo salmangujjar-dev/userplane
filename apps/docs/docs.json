@@ -52,14 +52,9 @@
             "pages": [
               "getting-started/workspace-setup",
               "getting-started/intercom-setup",
-              {
-                "group": "Guides by Role",
-                "pages": [
-                  "getting-started/for-support-agents",
-                  "getting-started/for-support-engineers",
-                  "getting-started/for-developers"
-                ]
-              }
+              "getting-started/for-support-agents",
+              "getting-started/for-support-engineers",
+              "getting-started/for-developers"
             ]
           },
           {

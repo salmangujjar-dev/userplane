@@ -65,6 +65,16 @@ All `userplane-` prefixed query parameters should be carried through:
 - `userplane-token` — the recording session token (required)
 - `userplane-action` — the action type, e.g. `recording` (required)
 - `userplane-workspace` — the workspace ID
+- `userplane-meta` — encoded metadata attached to the recording link
+
+To avoid keeping this list in sync manually, import `USERPLANE_URL_PARAMS` from the SDK — it exports the canonical array of all parameter names:
+
+```ts
+import { USERPLANE_URL_PARAMS } from '@userplane/sdk';
+
+// Use in a router allowlist, middleware, or analytics filter
+const ALLOWED_PARAMS = new Set(['search', 'sort', ...USERPLANE_URL_PARAMS]);
+```
 
 ### Example: preserving params through a login redirect
 
