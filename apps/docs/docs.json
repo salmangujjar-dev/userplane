@@ -160,6 +160,10 @@
             "pages": ["developer/installation", "developer/domain-verification"]
           },
           {
+            "group": "AI Agents",
+            "pages": ["integrations/agent-skills", "integrations/mcp"]
+          },
+          {
             "group": "SDK Reference",
             "pages": ["developer/sdk-overview", "developer/web-sdk", "developer/metadata-sdk"]
           },
@@ -186,6 +190,10 @@
       {
         "tab": "Integrations",
         "groups": [
+          {
+            "group": "AI Agents",
+            "pages": ["integrations/mcp", "integrations/agent-skills"]
+          },
           {
             "group": "Intercom",
             "pages": [
