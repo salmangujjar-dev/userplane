@@ -1,0 +1,64 @@
+---
+title: SDK Overview
+description: Understand the two ways to integrate Userplane — the embed script and the npm SDK — and when to use each
+---
+
+Userplane offers two integration paths depending on how much control you need. Most teams start with the embed script and add the npm SDK later if they need programmatic control.
+
+## Embed script (zero-code)
+
+The embed script is a single `<script>` tag you add to your site. It handles everything automatically — loading the recorder, parsing recording links, and managing cross-tab state.
+
+```html
+<script src="https://cdn.userplane.io/embed/script.js" data-workspace="ws_abc123" defer></script>
+```
+
+This is the recommended starting point. It works with any site and requires no build step. See [Installation](/developer/installation) for setup instructions.
+
+## npm SDK (programmatic)
+
+The `@userplane/sdk` package gives you a JavaScript API for full control over the recording lifecycle. Use it when you need to:
+
+- **Trigger recordings from your UI** — open the recorder from a button, menu, or support widget instead of relying on link clicks.
+- **Attach metadata** — send user IDs, account info, feature flags, or session context alongside recordings so your support team has full context.
+- **Query recording state** — check whether a recording is active, get the session ID, or read connection status to build custom UI.
+
+```javascript
+import { initialize, open } from '@userplane/sdk';
+import { setMetadata } from '@userplane/sdk/metadata';
+
+// Initialize once on page load
+initialize({ workspaceId: 'ws_abc123' });
+
+// Attach context for support
+setMetadata({
+  userId: user.id,
+  plan: user.plan,
+  appVersion: __APP_VERSION__,
+});
+
+// Open the recorder from a support button
+document.getElementById('help-btn').addEventListener('click', () => {
+  open();
+});
+```
+
+## Choosing the right path
+
+|                             | Embed script       | npm SDK                      |
+| --------------------------- | ------------------ | ---------------------------- |
+| **Setup**                   | One `<script>` tag | `npm install @userplane/sdk` |
+| **Recording links**         | Work automatically | Work automatically           |
+| **Programmatic open/close** | No                 | Yes                          |
+| **Custom metadata**         | No                 | Yes                          |
+| **Recording state queries** | No                 | Yes                          |
+| **Build step required**     | No                 | Yes                          |
+
+You can use both together. The embed script handles the baseline, and the SDK adds programmatic capabilities on top.
+
+## Next steps
+
+- [Web SDK Reference](/developer/web-sdk) — full API for initialization, recorder control, and state inspection.
+- [Metadata SDK Reference](/developer/metadata-sdk) — attach custom key-value data to recordings.
+- [Installation](/developer/installation) — set up the embed script.
+- [Framework Guides](/frameworks/react) — framework-specific integration instructions.
