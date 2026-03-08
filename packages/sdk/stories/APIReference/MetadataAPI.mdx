@@ -15,7 +15,7 @@ Set a static metadata key-value pair.
 ### Signature
 
 ```typescript
-function set(key: string, value: Serializable): void
+function set(key: string, value: Serializable): void;
 
 type Serializable = string | number | boolean | null | SerializableObject | Serializable[];
 type SerializableObject = { [key: string]: Serializable };
@@ -23,10 +23,10 @@ type SerializableObject = { [key: string]: Serializable };
 
 ### Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `key` | `string` | Metadata key. Convention: camelCase, no leading underscore (reserved for system keys). |
-| `value` | `Serializable` | JSON-serializable value. |
+| Parameter | Type           | Description                                                                            |
+| --------- | -------------- | -------------------------------------------------------------------------------------- |
+| `key`     | `string`       | Metadata key. Convention: camelCase, no leading underscore (reserved for system keys). |
+| `value`   | `Serializable` | JSON-serializable value.                                                               |
 
 ### Example
 
@@ -51,14 +51,14 @@ Register a dynamic metadata function, called on demand when the recorder request
 ```typescript
 type MetadataFunction = () => SerializableObject | Promise<SerializableObject>;
 
-function metadata(fn: MetadataFunction): void
+function metadata(fn: MetadataFunction): void;
 ```
 
 ### Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `fn` | `MetadataFunction` | A sync or async function returning a plain object of metadata. |
+| Parameter | Type               | Description                                                    |
+| --------- | ------------------ | -------------------------------------------------------------- |
+| `fn`      | `MetadataFunction` | A sync or async function returning a plain object of metadata. |
 
 ### Example
 
@@ -90,15 +90,15 @@ Clear metadata — specific key, all dynamic functions, or everything.
 ### Signature
 
 ```typescript
-function clearMetadata(keyOrType?: string): void
+function clearMetadata(keyOrType?: string): void;
 ```
 
 ### Behaviors
 
-| Call | Effect |
-|------|--------|
-| `clearMetadata()` | Clears all static keys AND all dynamic functions |
-| `clearMetadata('userId')` | Removes the static key `'userId'` only |
+| Call                        | Effect                                                     |
+| --------------------------- | ---------------------------------------------------------- |
+| `clearMetadata()`           | Clears all static keys AND all dynamic functions           |
+| `clearMetadata('userId')`   | Removes the static key `'userId'` only                     |
 | `clearMetadata('function')` | Removes all dynamic functions registered with `metadata()` |
 
 ### Example
@@ -125,7 +125,7 @@ Get the current tab's reference identifier.
 ### Signature
 
 ```typescript
-function getTabRef(): string | null
+function getTabRef(): string | null;
 ```
 
 ### Return Value
@@ -148,7 +148,7 @@ Remove the tab reference from `window.name`.
 ### Signature
 
 ```typescript
-function clearTabRef(): void
+function clearTabRef(): void;
 ```
 
 After calling `clearTabRef()`, the next `initialize()` will generate a new tab reference.
@@ -168,7 +168,7 @@ clearTabRef(); // removes from window.name
 Called by the recorder via the bridge to retrieve the current metadata:
 
 ```typescript
-function getCustomMetadata(): SerializableObject | null
+function getCustomMetadata(): SerializableObject | null;
 ```
 
 Collects all static keys and calls all dynamic functions, merges the results, and returns the combined object. Returns `null` if no metadata is registered.

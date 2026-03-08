@@ -15,18 +15,19 @@ Open the recorder. If a token is provided, opens with that token. Otherwise uses
 ### Signature
 
 ```typescript
-function open(token?: string): boolean
+function open(token?: string): boolean;
 ```
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `token` | `string` | No | Recording token (`tok_...`) or verification token (`vtok_...`) |
+| Parameter | Type     | Required | Description                                                    |
+| --------- | -------- | -------- | -------------------------------------------------------------- |
+| `token`   | `string` | No       | Recording token (`tok_...`) or verification token (`vtok_...`) |
 
 ### Return Value
 
 `true` if the recorder was successfully opened. `false` if:
+
 - SDK is not initialized
 - Recorder is already mounted
 - No token available (not provided and none in URL)
@@ -61,7 +62,7 @@ Close the recorder and remove it from the DOM.
 ### Signature
 
 ```typescript
-function unmount(): void
+function unmount(): void;
 ```
 
 ### Side Effects
@@ -97,7 +98,7 @@ Check if the recorder iframe is currently in the DOM.
 ### Signature
 
 ```typescript
-function isRecorderMounted(): boolean
+function isRecorderMounted(): boolean;
 ```
 
 ### Return Value
@@ -126,7 +127,7 @@ Check if the PostBridge RPC connection to the recorder is established.
 ### Signature
 
 ```typescript
-function isBridgeConnected(): boolean
+function isBridgeConnected(): boolean;
 ```
 
 ### Return Value
@@ -148,8 +149,8 @@ isRecorderMounted() = true              isBridgeConnected() = true
 import { isBridgeConnected, isRecorderMounted } from '@userplane/sdk';
 
 // Both true only after bridge is fully connected
-console.log(isRecorderMounted());   // true (iframe in DOM)
-console.log(isBridgeConnected());   // may be false (handshake not done yet)
+console.log(isRecorderMounted()); // true (iframe in DOM)
+console.log(isBridgeConnected()); // may be false (handshake not done yet)
 ```
 
 For most use cases, you don't need to wait for the bridge to connect — the SDK handles this internally.

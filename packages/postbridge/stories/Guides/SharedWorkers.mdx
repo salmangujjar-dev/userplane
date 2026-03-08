@@ -12,15 +12,16 @@ SharedWorkers are special workers that can be **shared across multiple browser t
 
 **Key differences from Web Workers:**
 
-| Feature | Web Worker | SharedWorker |
-|---------|------------|--------------|
-| **Scope** | Single page | Multiple pages/tabs |
-| **Instances** | One per page | One shared instance |
-| **Connection** | Direct | Via MessagePort |
-| **Use case** | CPU-intensive tasks | Shared state, broadcasting |
-| **Lifecycle** | Dies with page | Lives until all pages close |
+| Feature        | Web Worker          | SharedWorker                |
+| -------------- | ------------------- | --------------------------- |
+| **Scope**      | Single page         | Multiple pages/tabs         |
+| **Instances**  | One per page        | One shared instance         |
+| **Connection** | Direct              | Via MessagePort             |
+| **Use case**   | CPU-intensive tasks | Shared state, broadcasting  |
+| **Lifecycle**  | Dies with page      | Lives until all pages close |
 
 **Use cases:**
+
 - Shared application state across tabs
 - Broadcasting updates to all tabs
 - Centralized WebSocket connection
@@ -33,6 +34,7 @@ SharedWorkers are special workers that can be **shared across multiple browser t
 ### 1. Create the SharedWorker
 
 **shared-worker.js:**
+
 ```javascript
 import { guest } from '@userplane/postbridge';
 
@@ -48,80 +50,83 @@ self.onconnect = async (event) => {
   console.log(`New connection: ${tabId}`);
 
   // Connect this port
-  const connection = await guest.connect({
-    // Methods that tabs can call
-    registerTab: (tabInfo) => {
-      connections.set(tabId, { ...tabInfo, port });
-      console.log(`Registered ${tabId}:`, tabInfo);
+  const connection = await guest.connect(
+    {
+      // Methods that tabs can call
+      registerTab: (tabInfo) => {
+        connections.set(tabId, { ...tabInfo, port });
+        console.log(`Registered ${tabId}:`, tabInfo);
 
-      // Broadcast to all other tabs
-      broadcastToOthers(tabId, {
-        type: 'tab-joined',
-        tabId,
-        tabInfo
-      });
+        // Broadcast to all other tabs
+        broadcastToOthers(tabId, {
+          type: 'tab-joined',
+          tabId,
+          tabInfo,
+        });
 
-      return {
-        tabId,
-        totalTabs: connections.size,
-        tabs: Array.from(connections.entries()).map(([id, info]) => ({
+        return {
+          tabId,
+          totalTabs: connections.size,
+          tabs: Array.from(connections.entries()).map(([id, info]) => ({
+            id,
+            ...info,
+          })),
+        };
+      },
+
+      unregisterTab: () => {
+        connections.delete(tabId);
+        console.log(`Unregistered ${tabId}`);
+
+        broadcastToAll({
+          type: 'tab-left',
+          tabId,
+        });
+      },
+
+      broadcastMessage: (message) => {
+        broadcastToAll({
+          type: 'broadcast',
+          from: tabId,
+          message,
+        });
+      },
+
+      getConnectedTabs: () => {
+        return Array.from(connections.entries()).map(([id, info]) => ({
           id,
-          ...info
-        }))
-      };
+          url: info.url,
+          title: info.title,
+        }));
+      },
+
+      // Shared state
+      setState: (key, value) => {
+        sharedState.set(key, value);
+
+        // Notify all tabs
+        broadcastToAll({
+          type: 'state-updated',
+          key,
+          value,
+        });
+      },
+
+      getState: (key) => {
+        return sharedState.get(key);
+      },
     },
-
-    unregisterTab: () => {
-      connections.delete(tabId);
-      console.log(`Unregistered ${tabId}`);
-
-      broadcastToAll({
-        type: 'tab-left',
-        tabId
-      });
-    },
-
-    broadcastMessage: (message) => {
-      broadcastToAll({
-        type: 'broadcast',
-        from: tabId,
-        message
-      });
-    },
-
-    getConnectedTabs: () => {
-      return Array.from(connections.entries()).map(([id, info]) => ({
-        id,
-        url: info.url,
-        title: info.title
-      }));
-    },
-
-    // Shared state
-    setState: (key, value) => {
-      sharedState.set(key, value);
-
-      // Notify all tabs
-      broadcastToAll({
-        type: 'state-updated',
-        key,
-        value
-      });
-    },
-
-    getState: (key) => {
-      return sharedState.get(key);
+    {
+      hostTarget: port,
+      onConnectionSetup: async (remote) => {
+        // Store remote for this tab
+        connections.set(tabId, {
+          ...connections.get(tabId),
+          remote,
+        });
+      },
     }
-  }, {
-    hostTarget: port,
-    onConnectionSetup: async (remote) => {
-      // Store remote for this tab
-      connections.set(tabId, {
-        ...connections.get(tabId),
-        remote
-      });
-    }
-  });
+  );
 
   port.start();
 
@@ -130,7 +135,7 @@ self.onconnect = async (event) => {
     connections.delete(tabId);
     broadcastToAll({
       type: 'tab-left',
-      tabId
+      tabId,
     });
   };
 };
@@ -141,18 +146,14 @@ const sharedState = new Map();
 // Helper functions
 function broadcastToAll(message) {
   connections.forEach(({ remote }) => {
-    remote?.onBroadcast?.(message).catch(err =>
-      console.error('Broadcast error:', err)
-    );
+    remote?.onBroadcast?.(message).catch((err) => console.error('Broadcast error:', err));
   });
 }
 
 function broadcastToOthers(excludeTabId, message) {
   connections.forEach(({ remote }, tabId) => {
     if (tabId !== excludeTabId) {
-      remote?.onBroadcast?.(message).catch(err =>
-        console.error('Broadcast error:', err)
-      );
+      remote?.onBroadcast?.(message).catch((err) => console.error('Broadcast error:', err));
     }
   });
 }
@@ -163,52 +164,54 @@ console.log('SharedWorker initialized');
 ### 2. Connect from Multiple Tabs
 
 **page.html (each tab):**
+
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <title>SharedWorker Demo</title>
-</head>
-<body>
-  <h1>Multi-Tab Communication</h1>
+  <head>
+    <title>SharedWorker Demo</title>
+  </head>
+  <body>
+    <h1>Multi-Tab Communication</h1>
 
-  <div id="tab-info">
-    <h3>This Tab</h3>
-    <p>Tab ID: <span id="tab-id">Connecting...</span></p>
-    <p>Total Tabs: <span id="total-tabs">-</span></p>
-  </div>
+    <div id="tab-info">
+      <h3>This Tab</h3>
+      <p>Tab ID: <span id="tab-id">Connecting...</span></p>
+      <p>Total Tabs: <span id="total-tabs">-</span></p>
+    </div>
 
-  <div id="connected-tabs">
-    <h3>Connected Tabs</h3>
-    <ul id="tabs-list"></ul>
-  </div>
+    <div id="connected-tabs">
+      <h3>Connected Tabs</h3>
+      <ul id="tabs-list"></ul>
+    </div>
 
-  <div id="messaging">
-    <h3>Broadcast Message</h3>
-    <input type="text" id="message-input" placeholder="Type a message...">
-    <button id="send-btn">Send to All Tabs</button>
-  </div>
+    <div id="messaging">
+      <h3>Broadcast Message</h3>
+      <input type="text" id="message-input" placeholder="Type a message..." />
+      <button id="send-btn">Send to All Tabs</button>
+    </div>
 
-  <div id="messages">
-    <h3>Messages</h3>
-    <ul id="messages-list"></ul>
-  </div>
+    <div id="messages">
+      <h3>Messages</h3>
+      <ul id="messages-list"></ul>
+    </div>
 
-  <div id="shared-state">
-    <h3>Shared State</h3>
-    <input type="text" id="state-key" placeholder="Key">
-    <input type="text" id="state-value" placeholder="Value">
-    <button id="set-state-btn">Set State</button>
-    <button id="get-state-btn">Get State</button>
-    <pre id="state-display"></pre>
-  </div>
+    <div id="shared-state">
+      <h3>Shared State</h3>
+      <input type="text" id="state-key" placeholder="Key" />
+      <input type="text" id="state-value" placeholder="Value" />
+      <button id="set-state-btn">Set State</button>
+      <button id="get-state-btn">Get State</button>
+      <pre id="state-display"></pre>
+    </div>
 
-  <script type="module" src="app.js"></script>
-</body>
+    <script type="module" src="app.js"></script>
+  </body>
 </html>
 ```
 
 **app.js:**
+
 ```javascript
 import { host } from '@userplane/postbridge';
 
@@ -228,7 +231,7 @@ async function init() {
 
     log: (msg) => {
       console.log('[Worker]:', msg);
-    }
+    },
   });
 
   // Start the port
@@ -238,7 +241,7 @@ async function init() {
   const registration = await connection.remote.registerTab({
     url: window.location.href,
     title: document.title,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
 
   myTabId = registration.tabId;
@@ -304,7 +307,7 @@ function updateTabsList(tabs) {
   const list = document.getElementById('tabs-list');
   list.innerHTML = '';
 
-  tabs.forEach(tab => {
+  tabs.forEach((tab) => {
     const li = document.createElement('li');
     li.textContent = `${tab.id} - ${tab.title || tab.url}`;
     if (tab.id === myTabId) {
@@ -363,6 +366,7 @@ init().catch(console.error);
 ### Example 1: Shared WebSocket Connection
 
 **shared-worker.js:**
+
 ```javascript
 import { guest } from '@userplane/postbridge';
 
@@ -373,44 +377,53 @@ self.onconnect = async (event) => {
   const port = event.ports[0];
   const clientId = `client-${Date.now()}-${Math.random()}`;
 
-  const connection = await guest.connect({
-    subscribe: (channel) => {
-      if (!subscribers.has(channel)) {
-        subscribers.set(channel, new Set());
-      }
-      subscribers.get(channel).add(clientId);
+  const connection = await guest.connect(
+    {
+      subscribe: (channel) => {
+        if (!subscribers.has(channel)) {
+          subscribers.set(channel, new Set());
+        }
+        subscribers.get(channel).add(clientId);
 
-      // Initialize WebSocket if not connected
-      if (!websocket) {
-        initWebSocket();
-      }
+        // Initialize WebSocket if not connected
+        if (!websocket) {
+          initWebSocket();
+        }
 
-      // Send subscription to server
-      websocket?.send(JSON.stringify({
-        type: 'subscribe',
-        channel
-      }));
+        // Send subscription to server
+        websocket?.send(
+          JSON.stringify({
+            type: 'subscribe',
+            channel,
+          })
+        );
+      },
+
+      unsubscribe: (channel) => {
+        subscribers.get(channel)?.delete(clientId);
+
+        websocket?.send(
+          JSON.stringify({
+            type: 'unsubscribe',
+            channel,
+          })
+        );
+      },
+
+      sendMessage: (channel, message) => {
+        websocket?.send(
+          JSON.stringify({
+            type: 'message',
+            channel,
+            message,
+          })
+        );
+      },
     },
-
-    unsubscribe: (channel) => {
-      subscribers.get(channel)?.delete(clientId);
-
-      websocket?.send(JSON.stringify({
-        type: 'unsubscribe',
-        channel
-      }));
-    },
-
-    sendMessage: (channel, message) => {
-      websocket?.send(JSON.stringify({
-        type: 'message',
-        channel,
-        message
-      }));
+    {
+      hostTarget: port,
     }
-  }, {
-    hostTarget: port
-  });
+  );
 
   // Store connection for broadcasting
   subscribers.set(clientId, { connection, port });
@@ -436,7 +449,7 @@ function initWebSocket() {
     // Broadcast to subscribers
     const channelSubs = subscribers.get(data.channel);
     if (channelSubs) {
-      channelSubs.forEach(clientId => {
+      channelSubs.forEach((clientId) => {
         const client = subscribers.get(clientId);
         client?.connection?.remote?.onMessage?.(data);
       });
@@ -457,6 +470,7 @@ function initWebSocket() {
 ### Example 2: Shared Cache
 
 **cache-worker.js:**
+
 ```javascript
 import { guest } from '@userplane/postbridge';
 
@@ -466,53 +480,56 @@ const cacheTTL = new Map();
 self.onconnect = async (event) => {
   const port = event.ports[0];
 
-  await guest.connect({
-    get: (key) => {
-      // Check TTL
-      if (cacheTTL.has(key)) {
-        const ttl = cacheTTL.get(key);
-        if (Date.now() > ttl) {
-          cache.delete(key);
-          cacheTTL.delete(key);
-          return null;
+  await guest.connect(
+    {
+      get: (key) => {
+        // Check TTL
+        if (cacheTTL.has(key)) {
+          const ttl = cacheTTL.get(key);
+          if (Date.now() > ttl) {
+            cache.delete(key);
+            cacheTTL.delete(key);
+            return null;
+          }
         }
-      }
 
-      return cache.get(key);
+        return cache.get(key);
+      },
+
+      set: (key, value, ttlSeconds = 300) => {
+        cache.set(key, value);
+
+        if (ttlSeconds > 0) {
+          cacheTTL.set(key, Date.now() + ttlSeconds * 1000);
+        }
+
+        return true;
+      },
+
+      delete: (key) => {
+        cache.delete(key);
+        cacheTTL.delete(key);
+        return true;
+      },
+
+      clear: () => {
+        cache.clear();
+        cacheTTL.clear();
+        return true;
+      },
+
+      keys: () => {
+        return Array.from(cache.keys());
+      },
+
+      size: () => {
+        return cache.size;
+      },
     },
-
-    set: (key, value, ttlSeconds = 300) => {
-      cache.set(key, value);
-
-      if (ttlSeconds > 0) {
-        cacheTTL.set(key, Date.now() + (ttlSeconds * 1000));
-      }
-
-      return true;
-    },
-
-    delete: (key) => {
-      cache.delete(key);
-      cacheTTL.delete(key);
-      return true;
-    },
-
-    clear: () => {
-      cache.clear();
-      cacheTTL.clear();
-      return true;
-    },
-
-    keys: () => {
-      return Array.from(cache.keys());
-    },
-
-    size: () => {
-      return cache.size;
+    {
+      hostTarget: port,
     }
-  }, {
-    hostTarget: port
-  });
+  );
 
   port.start();
 };
@@ -530,6 +547,7 @@ setInterval(() => {
 ```
 
 **Usage in tabs:**
+
 ```javascript
 const worker = new SharedWorker('cache-worker.js', { type: 'module' });
 const connection = await host.connect(worker.port, {});
@@ -546,6 +564,7 @@ console.log(user); // { id: 1, name: 'Alice' }
 ### Example 3: Cross-Tab Notifications
 
 **notification-worker.js:**
+
 ```javascript
 import { guest } from '@userplane/postbridge';
 
@@ -555,23 +574,26 @@ self.onconnect = async (event) => {
   const port = event.ports[0];
   const tabId = `tab-${Date.now()}-${Math.random()}`;
 
-  const connection = await guest.connect({
-    notify: ({ title, body, icon }) => {
-      // Show notification to ALL tabs
-      tabs.forEach(({ remote }, id) => {
-        if (id !== tabId) {
-          remote?.showNotification?.({ title, body, icon });
-        }
-      });
-    },
+  const connection = await guest.connect(
+    {
+      notify: ({ title, body, icon }) => {
+        // Show notification to ALL tabs
+        tabs.forEach(({ remote }, id) => {
+          if (id !== tabId) {
+            remote?.showNotification?.({ title, body, icon });
+          }
+        });
+      },
 
-    register: (tabInfo) => {
-      tabs.set(tabId, { remote: connection.remote, info: tabInfo });
-      return { tabId };
+      register: (tabInfo) => {
+        tabs.set(tabId, { remote: connection.remote, info: tabInfo });
+        return { tabId };
+      },
+    },
+    {
+      hostTarget: port,
     }
-  }, {
-    hostTarget: port
-  });
+  );
 
   tabs.set(tabId, { connection });
 
@@ -585,27 +607,28 @@ self.onconnect = async (event) => {
 ```
 
 **Usage:**
+
 ```javascript
 const worker = new SharedWorker('notification-worker.js', { type: 'module' });
 const connection = await host.connect(worker.port, {
   showNotification: ({ title, body }) => {
     // Show notification in this tab
     new Notification(title, { body });
-  }
+  },
 });
 
 worker.port.start();
 
 // Register this tab
 await connection.remote.register({
-  url: window.location.href
+  url: window.location.href,
 });
 
 // Send notification to all other tabs
 await connection.remote.notify({
   title: 'New Message',
   body: 'You have a new message!',
-  icon: '/icon.png'
+  icon: '/icon.png',
 });
 ```
 
@@ -633,7 +656,7 @@ self.onconnect = async (event) => {
 
   // Create separate connection for this tab
   const connection = await guest.connect(schema, {
-    hostTarget: port // Important: specify the port!
+    hostTarget: port, // Important: specify the port!
   });
 
   port.start();
@@ -664,9 +687,12 @@ self.onconnect = async (event) => {
 
   const port = event.ports[0];
 
-  const connection = await guest.connect({
-    getTabCount: () => tabCount
-  }, { hostTarget: port });
+  const connection = await guest.connect(
+    {
+      getTabCount: () => tabCount,
+    },
+    { hostTarget: port }
+  );
 
   port.start();
 
@@ -685,19 +711,22 @@ let leaderPort = null;
 self.onconnect = async (event) => {
   const port = event.ports[0];
 
-  const connection = await guest.connect({
-    requestLeadership: () => {
-      if (!leaderPort) {
-        leaderPort = port;
-        return true;
-      }
-      return false;
-    },
+  const connection = await guest.connect(
+    {
+      requestLeadership: () => {
+        if (!leaderPort) {
+          leaderPort = port;
+          return true;
+        }
+        return false;
+      },
 
-    isLeader: () => {
-      return port === leaderPort;
-    }
-  }, { hostTarget: port });
+      isLeader: () => {
+        return port === leaderPort;
+      },
+    },
+    { hostTarget: port }
+  );
 
   port.start();
 
@@ -719,23 +748,26 @@ self.onconnect = async (event) => {
   const port = event.ports[0];
   const workerId = `worker-${Date.now()}`;
 
-  const connection = await guest.connect({
-    getNextTask: () => {
-      return taskQueue.shift();
-    },
+  const connection = await guest.connect(
+    {
+      getNextTask: () => {
+        return taskQueue.shift();
+      },
 
-    completeTask: (taskId, result) => {
-      console.log('Task completed:', taskId);
-      // Notify all tabs
-      broadcastToAll({ type: 'task-complete', taskId, result });
-    },
+      completeTask: (taskId, result) => {
+        console.log('Task completed:', taskId);
+        // Notify all tabs
+        broadcastToAll({ type: 'task-complete', taskId, result });
+      },
 
-    addTask: (task) => {
-      taskQueue.push(task);
-      // Notify all tabs
-      broadcastToAll({ type: 'task-added', task });
-    }
-  }, { hostTarget: port });
+      addTask: (task) => {
+        taskQueue.push(task);
+        // Notify all tabs
+        broadcastToAll({ type: 'task-added', task });
+      },
+    },
+    { hostTarget: port }
+  );
 
   workers.set(workerId, { connection, port });
   port.start();
@@ -749,11 +781,12 @@ self.onconnect = async (event) => {
 ## Browser Compatibility
 
 SharedWorkers are supported in:
--  Chrome 4+
--  Firefox 29+
--  Opera 10.6+
--  Safari (no support)
--  Edge 79+ (Chromium-based)
+
+- Chrome 4+
+- Firefox 29+
+- Opera 10.6+
+- Safari (no support)
+- Edge 79+ (Chromium-based)
 
 ### Feature Detection
 
@@ -791,6 +824,7 @@ console.log('Log from SharedWorker');
 ### Terminating SharedWorker
 
 SharedWorkers don't have a terminate() method. To stop:
+
 1. Close all tabs using the worker
 2. Or navigate to `chrome://inspect/#workers` and terminate manually
 
@@ -799,6 +833,7 @@ SharedWorkers don't have a terminate() method. To stop:
 ### Memory Usage
 
 SharedWorker memory is shared across all tabs:
+
 ```javascript
 // Single instance for all tabs
 const bigData = new Array(1000000); // Only one copy in memory
@@ -807,6 +842,7 @@ const bigData = new Array(1000000); // Only one copy in memory
 ### Connection Overhead
 
 Each tab has a separate connection:
+
 ```javascript
 // 5 tabs = 5 connections
 // Each connection has its own responseMap and handlers
@@ -847,6 +883,7 @@ await Promise.all([...]) // If you need to wait
 - **Not supported** in Safari
 
 **Next steps:**
+
 - [Web Workers Guide](?path=/docs/guides-web-workers--docs) - Dedicated workers
 - [Bidirectional RPC](?path=/docs/guides-bidirectional-rpc--docs) - Two-way communication
 - [Examples](?path=/docs/examples-workers--docs) - More patterns

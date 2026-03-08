@@ -8,15 +8,15 @@ Quick reference for diagnosing and fixing the most common problems with `@userpl
 
 ## Symptom → Cause → Fix
 
-| Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
-| `window.userplane` is `undefined` | Manifest fetch failed or main bundle not yet loaded | Check Network tab for failed requests; see below |
-| Recorder never opens on recording link | Missing `<meta>` workspace tag | Add `<meta name="userplane:workspace" content="ws_...">` |
-| CSP error blocking script injection | `script-src` policy missing nonce or CDN domain | Add CDN domain to `script-src`; or pass `nonce` attribute |
-| Old version still loading after deploy | Manifest still cached (5-min TTL) | Wait 5 minutes, or hard-refresh (`Ctrl+Shift+R`) |
-| `script.js` returns 404 | Wrong CDN URL in script tag | Verify the URL matches your `CDN_DOMAIN` + `R2_CDN_PREFIX` |
-| Deploy fails with auth error | Missing or incorrect R2 env vars | Run `--dry-run --manifest-only` to test credentials |
-| Auto-init fires before metadata is set | `initialize()` runs before your code | Call `initialize({ openImmediately: false })`, set metadata, then call `open()` |
+| Symptom                                | Likely Cause                                        | Fix                                                                             |
+| -------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `window.userplane` is `undefined`      | Manifest fetch failed or main bundle not yet loaded | Check Network tab for failed requests; see below                                |
+| Recorder never opens on recording link | Missing `<meta>` workspace tag                      | Add `<meta name="userplane:workspace" content="ws_...">`                        |
+| CSP error blocking script injection    | `script-src` policy missing nonce or CDN domain     | Add CDN domain to `script-src`; or pass `nonce` attribute                       |
+| Old version still loading after deploy | Manifest still cached (5-min TTL)                   | Wait 5 minutes, or hard-refresh (`Ctrl+Shift+R`)                                |
+| `script.js` returns 404                | Wrong CDN URL in script tag                         | Verify the URL matches your `CDN_DOMAIN` + `R2_CDN_PREFIX`                      |
+| Deploy fails with auth error           | Missing or incorrect R2 env vars                    | Run `--dry-run --manifest-only` to test credentials                             |
+| Auto-init fires before metadata is set | `initialize()` runs before your code                | Call `initialize({ openImmediately: false })`, set metadata, then call `open()` |
 
 ---
 
@@ -32,6 +32,7 @@ Quick reference for diagnosing and fixing the most common problems with `@userpl
 4. Look for `main.{hash}.js` — did it load with a 200 status?
 
 If `manifest.json` fails (404, CORS error, or network error), the bootstrap logs:
+
 ```
 [userplane] Failed to load manifest: 404
 ```
@@ -39,6 +40,7 @@ If `manifest.json` fails (404, CORS error, or network error), the bootstrap logs
 Check the Console tab for this message.
 
 **Common causes:**
+
 - Wrong CDN URL in `<script>` tag → `script.js` returns 404
 - R2 bucket not public or CDN misconfigured → manifest returns 403
 - The bundle is still loading (async) → try accessing `window.userplane` after a delay
@@ -50,11 +52,13 @@ Check the Console tab for this message.
 **Symptoms:** Visiting a recording link does nothing. No recorder UI appears.
 
 **Check:**
+
 1. Is `<meta name="userplane:workspace" content="ws_...">` in the `<head>`?
 2. Does `window.userplane.isInitialized()` return `true`?
 3. What does `window.userplane.getRecordingState()` return?
 
 **Missing meta tag:**
+
 ```html
 <!-- Add this to <head> -->
 <meta name="userplane:workspace" content="ws_your_workspace_id" />
@@ -67,6 +71,7 @@ Check the Console tab for this message.
 ## CSP Errors Blocking Script Injection
 
 **Symptoms:** Console shows CSP errors like:
+
 ```
 Refused to load script 'https://cdn.example.com/embed/main.abc.js'
 because it violates the Content Security Policy directive: "script-src 'self'"
@@ -81,11 +86,7 @@ Content-Security-Policy: script-src 'self' https://cdn.example.com;
 If you use nonces, pass the nonce to the bootstrap tag:
 
 ```html
-<script
-  src="https://cdn.example.com/embed/script.js"
-  nonce="your-page-nonce"
-  defer
-></script>
+<script src="https://cdn.example.com/embed/script.js" nonce="your-page-nonce" defer></script>
 ```
 
 The bootstrap will automatically pass the nonce to the injected `main.{hash}.js` script tag. Both scripts need the same nonce.
@@ -99,6 +100,7 @@ The bootstrap will automatically pass the nonce to the injected `main.{hash}.js`
 **Why this happens:** The manifest has a 5-minute HTTP cache (`max-age=300`). Users who loaded the manifest recently won't fetch the new one until their cache expires.
 
 **Fix options:**
+
 - **Wait:** Up to 5 minutes, all users will see the new version
 - **Hard refresh:** `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac) clears the browser cache
 - **Reduce TTL:** Change the manifest `Cache-Control` to a shorter TTL (e.g., `max-age=60`) at the cost of more CDN origin requests
@@ -108,12 +110,15 @@ The bootstrap will automatically pass the nonce to the injected `main.{hash}.js`
 ## Deploy Fails with Auth Error
 
 **Symptoms:** `bun run deploy:cdn` fails with:
+
 ```
 AccessDenied: Access denied
 ```
+
 or similar R2/S3 errors.
 
 **Diagnosis:**
+
 ```bash
 # Test credentials without uploading
 bun run upload:cdn --env=production --dry-run --verbose
@@ -123,6 +128,7 @@ bun run upload:cdn --env=production --manifest-only --dry-run
 ```
 
 **Check:**
+
 1. Are all 6 env vars set in `.env.production`? (see **[Environment Setup](../?path=/docs/deployment-environment-setup--docs)**)
 2. Is `R2_CDN_ACCOUNT_ID` correct? (found in Cloudflare dashboard)
 3. Does the R2 API token have **Object Read & Write** permissions on the bucket?

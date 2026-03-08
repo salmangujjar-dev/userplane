@@ -12,20 +12,20 @@ The recorder iframe uses HTML sandbox restrictions and feature policy permission
 sandbox="allow-same-origin allow-scripts allow-popups"
 ```
 
-| Token | What It Enables | Why It's Needed |
-|-------|----------------|-----------------|
+| Token               | What It Enables                                  | Why It's Needed                                                       |
+| ------------------- | ------------------------------------------------ | --------------------------------------------------------------------- |
 | `allow-same-origin` | Treat the iframe as same-origin for storage APIs | Required for `localStorage`, `IndexedDB`, cookies inside the recorder |
-| `allow-scripts` | Execute JavaScript | Required for the recorder application to run |
-| `allow-popups` | `window.open()`, `target="_blank"` | Required for OAuth popups and external links in the recorder UI |
+| `allow-scripts`     | Execute JavaScript                               | Required for the recorder application to run                          |
+| `allow-popups`      | `window.open()`, `target="_blank"`               | Required for OAuth popups and external links in the recorder UI       |
 
 ### What's Intentionally Excluded
 
-| Missing Token | What It Prevents |
-|--------------|-----------------|
-| `allow-forms` | Form submissions within the iframe |
-| `allow-top-navigation` | Iframe navigating the parent page |
-| `allow-pointer-lock` | Mouse pointer lock (not needed for recording) |
-| `allow-downloads` | Direct file downloads from the iframe |
+| Missing Token          | What It Prevents                              |
+| ---------------------- | --------------------------------------------- |
+| `allow-forms`          | Form submissions within the iframe            |
+| `allow-top-navigation` | Iframe navigating the parent page             |
+| `allow-pointer-lock`   | Mouse pointer lock (not needed for recording) |
+| `allow-downloads`      | Direct file downloads from the iframe         |
 
 ## Default `allow` Feature Policy
 
@@ -33,11 +33,11 @@ sandbox="allow-same-origin allow-scripts allow-popups"
 allow="microphone; camera; display-capture; screen-wake-lock"
 ```
 
-| Feature | Purpose |
-|---------|---------|
-| `microphone` | Audio recording from the user's microphone |
-| `camera` | Webcam recording (if enabled by workspace) |
-| `display-capture` | Screen / tab / window capture |
+| Feature            | Purpose                                                 |
+| ------------------ | ------------------------------------------------------- |
+| `microphone`       | Audio recording from the user's microphone              |
+| `camera`           | Webcam recording (if enabled by workspace)              |
+| `display-capture`  | Screen / tab / window capture                           |
 | `screen-wake-lock` | Prevent the screen from dimming during a long recording |
 
 ### Why These Are Pre-configured

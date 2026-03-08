@@ -32,7 +32,7 @@ Add these two tags to your HTML `<head>`:
     <meta name="userplane:workspace" content="ws_xxx" />
 
     <!-- Userplane embed script -->
-    <script type="module" src="https://cdn.userplane.io/embed.js"></script>
+    <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
   </head>
 </html>
 ```
@@ -87,7 +87,7 @@ For advanced use cases, control when the recorder opens:
 
 ```html
 <script type="module">
-  import * as userplane from 'https://cdn.userplane.io/embed.js';
+  import * as userplane from 'https://cdn.userplane.io/embed/script.js';
 
   // Initialize with manual control
   userplane.initialize({ openImmediately: false });

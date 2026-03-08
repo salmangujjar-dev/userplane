@@ -10,10 +10,10 @@ A **recording session** is a single screen-recording run. Each session has a uni
 
 Every session has two identifiers:
 
-| Identifier | Description | Example |
-|------------|-------------|---------|
-| `sessionId` | Unique ID for the recording itself | `sess_abc123` |
-| `linkId` | ID of the shareable link that triggered this session | `lnk_xyz789` |
+| Identifier  | Description                                          | Example       |
+| ----------- | ---------------------------------------------------- | ------------- |
+| `sessionId` | Unique ID for the recording itself                   | `sess_abc123` |
+| `linkId`    | ID of the shareable link that triggered this session | `lnk_xyz789`  |
 
 The `linkId` connects the recording to a sharing link in your Userplane workspace. Multiple sessions can originate from the same link.
 
@@ -23,7 +23,7 @@ Retrieve these with:
 import { getSessionId, getLinkId } from '@userplane/sdk';
 
 console.log(getSessionId()); // 'sess_abc123' or null
-console.log(getLinkId());    // 'lnk_xyz789' or null
+console.log(getLinkId()); // 'lnk_xyz789' or null
 ```
 
 Both return `null` when no session is active.
@@ -59,10 +59,10 @@ A session moves through three states:
                               └────────────────────────────────────┘
 ```
 
-| State | Meaning |
-|-------|---------|
-| `'inactive'` | No session exists. Recorder is idle or unmounted. |
-| `'active'` | A recording is actively in progress. |
+| State        | Meaning                                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `'inactive'` | No session exists. Recorder is idle or unmounted.                                                                                     |
+| `'active'`   | A recording is actively in progress.                                                                                                  |
 | `'retained'` | The recording was submitted or paused, but the recorder iframe is still mounted. The user can review the recording before dismissing. |
 
 ```typescript

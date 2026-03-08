@@ -23,6 +23,7 @@ calls   calls
 ```
 
 **Benefits:**
+
 - **Callbacks**: Guest can report progress to host
 - **Events**: Either side can notify the other
 - **Coordination**: Both sides work together
@@ -46,11 +47,12 @@ const schema = {
     await remote.log('Processing complete');
 
     return result;
-  }
+  },
 };
 ```
 
 **The `remote` object:**
+
 - Contains proxy functions for the other side's methods
 - Same as `connection.remote` but passed directly
 - Available in ALL methods automatically
@@ -78,7 +80,7 @@ const connection = await host.connect(worker, {
   requestPermission: async (action) => {
     // Host can make decisions
     return confirm(`Allow worker to ${action}?`);
-  }
+  },
 });
 
 // Host calls worker
@@ -116,7 +118,7 @@ const connection = await guest.connect({
     } else {
       throw new Error('Permission denied');
     }
-  }
+  },
 });
 ```
 
@@ -125,6 +127,7 @@ const connection = await guest.connect({
 ### Example 1: Progress Reporting
 
 **Host:**
+
 ```javascript
 const connection = await host.connect(worker, {
   onProgress: (percent) => {
@@ -134,13 +137,14 @@ const connection = await host.connect(worker, {
 
   onStatusChange: (status) => {
     statusText.textContent = status;
-  }
+  },
 });
 
 await connection.remote.processFiles(files);
 ```
 
 **Worker:**
+
 ```javascript
 const connection = await guest.connect({
   processFiles: async (files, remote) => {
@@ -156,18 +160,19 @@ const connection = await guest.connect({
     }
 
     await remote.onStatusChange('Complete!');
-  }
+  },
 });
 ```
 
 ### Example 2: Interactive Processing
 
 **Host:**
+
 ```javascript
 const connection = await host.connect(worker, {
   // Worker asks questions
   askQuestion: async (question, options) => {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const answer = prompt(`${question}\n\nOptions: ${options.join(', ')}`);
       resolve(answer);
     });
@@ -176,21 +181,23 @@ const connection = await host.connect(worker, {
   // Worker shows results
   showResult: (result) => {
     document.getElementById('result').textContent = JSON.stringify(result, null, 2);
-  }
+  },
 });
 
 await connection.remote.interactiveProcess(data);
 ```
 
 **Worker:**
+
 ```javascript
 const connection = await guest.connect({
   interactiveProcess: async (data, remote) => {
     // Ask user how to process
-    const method = await remote.askQuestion(
-      'How should we process this data?',
-      ['fast', 'accurate', 'balanced']
-    );
+    const method = await remote.askQuestion('How should we process this data?', [
+      'fast',
+      'accurate',
+      'balanced',
+    ]);
 
     // Process based on answer
     const result = processWithMethod(data, method);
@@ -199,13 +206,14 @@ const connection = await guest.connect({
     await remote.showResult(result);
 
     return result;
-  }
+  },
 });
 ```
 
 ### Example 3: Streaming Data
 
 **Host:**
+
 ```javascript
 const chunks = [];
 
@@ -220,13 +228,14 @@ const connection = await host.connect(worker, {
 
   onComplete: () => {
     console.log('All chunks received:', chunks.length);
-  }
+  },
 });
 
 await connection.remote.streamLargeDataset();
 ```
 
 **Worker:**
+
 ```javascript
 const connection = await guest.connect({
   streamLargeDataset: async (remote) => {
@@ -242,23 +251,24 @@ const connection = await guest.connect({
     }
 
     await remote.onComplete();
-  }
+  },
 });
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 ```
 
 ### Example 4: Bidirectional Event System
 
 **Host:**
+
 ```javascript
 const connection = await host.connect(worker, {
   // Host events
   onHostEvent: (event) => {
     console.log('Host event:', event);
-  }
+  },
 });
 
 // Trigger worker events
@@ -268,6 +278,7 @@ document.getElementById('btn').addEventListener('click', async () => {
 ```
 
 **Worker:**
+
 ```javascript
 const connection = await guest.connect({
   triggerEvent: async (eventName, data, remote) => {
@@ -277,15 +288,16 @@ const connection = await guest.connect({
     await remote.onHostEvent({
       name: 'worker-processed',
       original: eventName,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
-  }
+  },
 });
 ```
 
 ### Example 5: Coordinated Work
 
 **Host:**
+
 ```javascript
 let currentPhase = 'idle';
 
@@ -302,7 +314,7 @@ const connection = await host.connect(worker, {
     while (currentPhase !== targetPhase) {
       await sleep(100);
     }
-  }
+  },
 });
 
 // Start work
@@ -310,6 +322,7 @@ await connection.remote.doCoordinatedWork();
 ```
 
 **Worker:**
+
 ```javascript
 const connection = await guest.connect({
   doCoordinatedWork: async (remote) => {
@@ -332,7 +345,7 @@ const connection = await guest.connect({
     await remote.setPhase('complete');
 
     return result;
-  }
+  },
 });
 ```
 
@@ -341,6 +354,7 @@ const connection = await guest.connect({
 ### Pattern 1: Pub/Sub System
 
 **Host:**
+
 ```javascript
 const subscribers = new Map();
 
@@ -355,15 +369,16 @@ const connection = await host.connect(worker, {
   publish: (topic, data) => {
     const subs = subscribers.get(topic);
     if (subs) {
-      subs.forEach(callback => callback(data));
+      subs.forEach((callback) => callback(data));
     }
-  }
+  },
 });
 
 // Worker can subscribe and publish
 ```
 
 **Worker:**
+
 ```javascript
 const connection = await guest.connect({
   init: async (remote) => {
@@ -376,19 +391,20 @@ const connection = await guest.connect({
     setInterval(() => {
       remote.publish('worker-heartbeat', { timestamp: Date.now() });
     }, 1000);
-  }
+  },
 });
 ```
 
 ### Pattern 2: Request/Response Ping-Pong
 
 **Host:**
+
 ```javascript
 const connection = await host.connect(worker, {
   ping: () => {
     console.log('Received ping');
     return 'pong';
-  }
+  },
 });
 
 // Start ping-pong
@@ -397,6 +413,7 @@ console.log('Final response:', response);
 ```
 
 **Worker:**
+
 ```javascript
 const connection = await guest.connect({
   startPingPong: async (remote) => {
@@ -411,13 +428,14 @@ const connection = await guest.connect({
     }
 
     return 'Done!';
-  }
+  },
 });
 ```
 
 ### Pattern 3: Nested Callbacks
 
 **Host:**
+
 ```javascript
 const connection = await host.connect(worker, {
   processWithCallback: async (data, callback) => {
@@ -428,15 +446,16 @@ const connection = await host.connect(worker, {
     const transformed = await callback(result);
 
     return transformed;
-  }
+  },
 });
 
 const result = await connection.remote.needsCallback({
-  value: 42
+  value: 42,
 });
 ```
 
 **Worker:**
+
 ```javascript
 const connection = await guest.connect({
   needsCallback: async (data, remote) => {
@@ -445,13 +464,14 @@ const connection = await guest.connect({
       // This runs in worker, called by host!
       return processed * 2;
     });
-  }
+  },
 });
 ```
 
 ### Pattern 4: Mutual State Synchronization
 
 **Host:**
+
 ```javascript
 let hostState = { value: 0 };
 
@@ -472,7 +492,7 @@ const connection = await host.connect(worker, {
 
     // Send back to worker
     await connection.remote.setState(hostState);
-  }
+  },
 });
 
 // Sync periodically
@@ -482,6 +502,7 @@ setInterval(() => {
 ```
 
 **Worker:**
+
 ```javascript
 let workerState = { count: 0 };
 
@@ -502,7 +523,7 @@ const connection = await guest.connect({
 
     // Send back to host
     await remote.setState(workerState);
-  }
+  },
 });
 ```
 
@@ -518,7 +539,7 @@ const connection = await host.connect(worker, {
       throw new Error('Invalid data');
     }
     return process(data);
-  }
+  },
 });
 
 // Worker
@@ -532,7 +553,7 @@ const connection = await guest.connect({
       // Retry with corrected data
       return await remote.processWithValidation(correctData);
     }
-  }
+  },
 });
 ```
 
@@ -543,7 +564,7 @@ const connection = await guest.connect({
 const connection = await host.connect(worker, {
   save: async (data) => {
     throw new Error('Save failed');
-  }
+  },
 });
 
 // Worker
@@ -557,7 +578,7 @@ const connection = await guest.connect({
       // Host's error cascades to worker
       throw new Error(`Processing failed: ${error.message}`);
     }
-  }
+  },
 });
 
 // Host call
@@ -607,11 +628,7 @@ await remote.operation2();
 await remote.operation3();
 
 // Parallel (fast)
-await Promise.all([
-  remote.operation1(),
-  remote.operation2(),
-  remote.operation3()
-]);
+await Promise.all([remote.operation1(), remote.operation2(), remote.operation3()]);
 ```
 
 ## Debugging Tips
@@ -625,7 +642,7 @@ const connection = await guest.connect({
     const result = await remote.hostMethod(data);
     console.log('← Received result:', result);
     return result;
-  }
+  },
 });
 ```
 
@@ -645,7 +662,7 @@ const connection = await host.connect(worker, {
     callDepth--;
 
     return result;
-  }
+  },
 });
 ```
 
@@ -674,14 +691,14 @@ interface GuestSchema {
 const connection = await guest.connect<GuestSchema, HostSchema>({
   processData: async (data, remote) => {
     // remote is typed as HostSchema
-    await remote.log('Processing...'); // 
-    await remote.updateProgress(0, data.length); // 
+    await remote.log('Processing...'); //
+    await remote.updateProgress(0, data.length); //
 
     // TypeScript error:
     // await remote.nonExistent(); //  Error
 
-    return data.map(x => x * 2);
-  }
+    return data.map((x) => x * 2);
+  },
 });
 ```
 
@@ -694,6 +711,7 @@ const connection = await guest.connect<GuestSchema, HostSchema>({
 - **Type-safe** with TypeScript
 
 **Common patterns:**
+
 - Progress reporting
 - Interactive workflows
 - Streaming data
@@ -701,6 +719,7 @@ const connection = await guest.connect<GuestSchema, HostSchema>({
 - State synchronization
 
 **Next steps:**
+
 - [Error Handling Guide](?path=/docs/guides-error-handling--docs)
 - [Web Workers Guide](?path=/docs/guides-web-workers--docs)
 - [Examples](?path=/docs/examples-workers--docs) - Real-world patterns

@@ -20,13 +20,13 @@ initialize(options?: InitializeOptions): void
 
 Initialize or re-initialize the SDK. Called automatically by the embed package on load. Safe to call again to apply custom options.
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `workspaceId` | `string` | Override workspace ID (default: reads `<meta name="userplane:workspace">`) |
-| `openImmediately` | `boolean` | If `false`, recorder does not open on URL parameter detection |
-| `metadata` | `Record<string, unknown>` | Initial metadata key-value pairs |
-| `parseUserplaneData` | `(url: URL) => UserplaneData` | Custom URL parameter parser |
-| `applyUserplaneData` | `(data: UserplaneData) => void` | Custom data application logic |
+| Option               | Type                            | Description                                                                |
+| -------------------- | ------------------------------- | -------------------------------------------------------------------------- |
+| `workspaceId`        | `string`                        | Override workspace ID (default: reads `<meta name="userplane:workspace">`) |
+| `openImmediately`    | `boolean`                       | If `false`, recorder does not open on URL parameter detection              |
+| `metadata`           | `Record<string, unknown>`       | Initial metadata key-value pairs                                           |
+| `parseUserplaneData` | `(url: URL) => UserplaneData`   | Custom URL parameter parser                                                |
+| `applyUserplaneData` | `(data: UserplaneData) => void` | Custom data application logic                                              |
 
 ```javascript
 // Re-initialize with custom options after auto-init

@@ -43,14 +43,14 @@ Example: `userplane_tab_V1StGXR8_Z5jdHi6B-myT`
 
 ## `window.name` Properties
 
-| Property | Behavior |
-|----------|----------|
-| Persists across page reloads | ✓ Yes |
-| Shared across tabs | ✗ No — each tab has its own |
-| Shared across origins | ✗ No — reset when navigating cross-origin |
-| Shared via `window.open()` | Depends — target="_blank" starts with empty name |
-| Storage limit | Large (browser-dependent, usually no practical limit) |
-| Cleared by clearing site data | ✓ Yes |
+| Property                      | Behavior                                              |
+| ----------------------------- | ----------------------------------------------------- |
+| Persists across page reloads  | ✓ Yes                                                 |
+| Shared across tabs            | ✗ No — each tab has its own                           |
+| Shared across origins         | ✗ No — reset when navigating cross-origin             |
+| Shared via `window.open()`    | Depends — target="\_blank" starts with empty name     |
+| Storage limit                 | Large (browser-dependent, usually no practical limit) |
+| Cleared by clearing site data | ✓ Yes                                                 |
 
 ## Persistence Scenarios
 
@@ -98,6 +98,7 @@ clearTabRef();
 ### `getTabRef()`
 
 Returns the current tab reference, or `null` if:
+
 - The SDK has not been initialized
 - `clearTabRef()` was called
 - `window.name` was manually cleared

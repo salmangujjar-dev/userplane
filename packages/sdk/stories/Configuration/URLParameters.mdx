@@ -8,12 +8,12 @@ The SDK communicates with the Userplane platform through URL query parameters. U
 
 ## Recognized Parameters
 
-| Parameter | Purpose |
-|-----------|---------|
-| `userplane-token` | Authentication token for the action |
-| `userplane-action` | Which action to perform |
+| Parameter             | Purpose                                                      |
+| --------------------- | ------------------------------------------------------------ |
+| `userplane-token`     | Authentication token for the action                          |
+| `userplane-action`    | Which action to perform                                      |
 | `userplane-workspace` | Workspace ID override (appended by the SDK to recorder URLs) |
-| `userplane-meta` | Forwarded metadata (read by the recorder) |
+| `userplane-meta`      | Forwarded metadata (read by the recorder)                    |
 
 ## `userplane-token`
 
@@ -29,11 +29,11 @@ The SDK reads this on `initialize()` (when `openImmediately` is `true`) and uses
 
 Determines which type of iframe the SDK mounts:
 
-| Value | Behavior |
-|-------|----------|
-| `recording` | Mounts the recorder iframe — full screen recording UI |
-| `verify` | Mounts the verification iframe — domain verification flow |
-| `capture` | Mounts the capture iframe — cross-tab metadata capture |
+| Value       | Behavior                                                  |
+| ----------- | --------------------------------------------------------- |
+| `recording` | Mounts the recorder iframe — full screen recording UI     |
+| `verify`    | Mounts the verification iframe — domain verification flow |
+| `capture`   | Mounts the capture iframe — cross-tab metadata capture    |
 
 ```
 https://yourapp.com/?userplane-token=tok_abc&userplane-action=recording
@@ -86,7 +86,7 @@ initialize({
     const token = params.get('up-token');
     const action = params.get('up-action');
     if (!token) return null;
-    return { token, action: action as ActionType ?? 'recording' };
+    return { token, action: (action as ActionType) ?? 'recording' };
   },
 
   // Custom cleanup — remove from hash instead of query string
@@ -113,6 +113,7 @@ The SDK constructs recorder URLs in this format:
 ```
 
 Example:
+
 ```
 https://recorder.userplane.io/r
   ?userplane-token=tok_abc123

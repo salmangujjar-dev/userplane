@@ -18,10 +18,10 @@ type RecordingState = 'inactive' | 'active' | 'retained';
 const state = getRecordingState();
 ```
 
-| Value | Meaning |
-|-------|---------|
-| `'inactive'` | No active session. Recorder is closed or not yet opened. |
-| `'active'` | A recording is in progress. |
+| Value        | Meaning                                                            |
+| ------------ | ------------------------------------------------------------------ |
+| `'inactive'` | No active session. Recorder is closed or not yet opened.           |
+| `'active'`   | A recording is in progress.                                        |
 | `'retained'` | Recording submitted, but recorder UI still visible (review state). |
 
 ## `getRecordingContext()`
@@ -70,10 +70,11 @@ Shortcuts to the session identifiers:
 import { getSessionId, getLinkId } from '@userplane/sdk';
 
 const sessionId = getSessionId(); // 'sess_abc123' or null
-const linkId = getLinkId();       // 'lnk_xyz789' or null
+const linkId = getLinkId(); // 'lnk_xyz789' or null
 ```
 
 Both return `null` when:
+
 - No session is active
 - SDK is not initialized
 - The session hasn't started yet (bridge connecting)
@@ -83,9 +84,9 @@ Both return `null` when:
 ```typescript
 import { isInitialized, isRecorderMounted, isBridgeConnected } from '@userplane/sdk';
 
-isInitialized()     // true after initialize() has been called
-isRecorderMounted() // true when the recorder iframe is in the DOM
-isBridgeConnected() // true when PostBridge RPC is established
+isInitialized(); // true after initialize() has been called
+isRecorderMounted(); // true when the recorder iframe is in the DOM
+isBridgeConnected(); // true when PostBridge RPC is established
 ```
 
 These are ordered by phase:

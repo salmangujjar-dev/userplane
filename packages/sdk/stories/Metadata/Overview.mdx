@@ -30,10 +30,10 @@ initSession() called ───────────────────�
 
 The SDK automatically includes these keys in every session's metadata:
 
-| Key | Value | Source |
-|-----|-------|--------|
-| `_pageUrl` | `window.location.href` at session start | Automatic |
-| `_pageTitle` | `document.title` at session start | Automatic |
+| Key          | Value                                   | Source    |
+| ------------ | --------------------------------------- | --------- |
+| `_pageUrl`   | `window.location.href` at session start | Automatic |
+| `_pageTitle` | `document.title` at session start       | Automatic |
 
 These use an underscore prefix to distinguish them from your custom keys.
 
@@ -41,10 +41,10 @@ These use an underscore prefix to distinguish them from your custom keys.
 
 You define custom metadata using two methods:
 
-| Method | Description |
-|--------|-------------|
+| Method            | Description                                                                |
+| ----------------- | -------------------------------------------------------------------------- |
 | `set(key, value)` | Set a static key-value pair — value is captured once when you call `set()` |
-| `metadata(fn)` | Register a function — called on demand when the recorder requests metadata |
+| `metadata(fn)`    | Register a function — called on demand when the recorder requests metadata |
 
 The key difference: **static** values are set at a point in time; **dynamic** values are computed fresh each time metadata is requested.
 
@@ -57,8 +57,8 @@ When the recorder calls `getCustomMetadata()`, the SDK:
 3. Merges the results — **dynamic functions override static keys** of the same name
 
 ```typescript
-set('plan', 'free');                   // static
-metadata(() => ({ plan: 'pro' }));     // dynamic — overrides static
+set('plan', 'free'); // static
+metadata(() => ({ plan: 'pro' })); // dynamic — overrides static
 
 // Result: { plan: 'pro' }
 ```
@@ -100,8 +100,8 @@ metadata(() => ({
 ```typescript
 import { clearMetadata } from '@userplane/sdk';
 
-clearMetadata('userId');    // remove a specific static key
-clearMetadata();            // remove all static keys and dynamic functions
+clearMetadata('userId'); // remove a specific static key
+clearMetadata(); // remove all static keys and dynamic functions
 ```
 
 See [Static Metadata](?path=/docs/metadata-static-metadata--docs) and [Dynamic Metadata](?path=/docs/metadata-dynamic-metadata--docs) for full API details.

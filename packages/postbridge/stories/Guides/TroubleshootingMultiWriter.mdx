@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 **Playbook for fixing multi-writer race conditions in Bridge**
 
-##  Symptom: Values Changing Too Much
+## Symptom: Values Changing Too Much
 
 You implemented a counter with increment/decrement buttons. When you click once, the counter jumps by 2, 3, or more depending on how many tabs are open.
 
@@ -22,16 +22,16 @@ const schema = {
 };
 
 // Problem: Each tab executes the increment!
-// - Tab A: counter goes 0 → 1 
-// - Tab B receives broadcast: counter goes 1 → 2 
-// - Tab C receives broadcast: counter goes 2 → 3 
+// - Tab A: counter goes 0 → 1
+// - Tab B receives broadcast: counter goes 1 → 2
+// - Tab C receives broadcast: counter goes 2 → 3
 ```
 
 **Root Cause:** Bridge broadcasts function execution to ALL tabs. Each tab runs the same function, causing multiple mutations.
 
 ---
 
-##  Solution: "Single Source of Truth" Pattern
+## Solution: "Single Source of Truth" Pattern
 
 **Key Insight:** Don't mutate in the function. Pass the new value explicitly.
 
@@ -100,8 +100,8 @@ incrementBtn.onclick = () => {
 ```typescript
 // When any tab clicks increment:
 // - Caller: Reads counter=5, computes newValue=6, broadcasts setCounter(6)
-// - Tab B: Receives broadcast, executes setCounter(6), counter becomes 6 
-// - Tab C: Receives broadcast, executes setCounter(6), counter becomes 6 
+// - Tab B: Receives broadcast, executes setCounter(6), counter becomes 6
+// - Tab C: Receives broadcast, executes setCounter(6), counter becomes 6
 // - All tabs now have counter=6!
 ```
 
@@ -109,24 +109,24 @@ incrementBtn.onclick = () => {
 
 ---
 
-##  Quick Reference: Mutation Patterns
+## Quick Reference: Mutation Patterns
 
-|  Anti-Pattern (Mutations) |  Fixed (Explicit Values)                                             |
-| --------------------------- | ---------------------------------------------------------------------- |
-| `remote.count++`            | `remote.count = newValue`                                              |
-| `remote.count--`            | `remote.count = newValue`                                              |
-| `remote.items.push(item)`   | `remote.items = [...remote.items, item]`                               |
-| `remote.user.name = 'Bob'`  | `remote.user = { ...remote.user, name: 'Bob' }`                        |
-| `remote.scores[i]++`        | `remote.scores = remote.scores.map((s, idx) => idx === i ? s + 1 : s)` |
+| Anti-Pattern (Mutations)   | Fixed (Explicit Values)                                                |
+| -------------------------- | ---------------------------------------------------------------------- |
+| `remote.count++`           | `remote.count = newValue`                                              |
+| `remote.count--`           | `remote.count = newValue`                                              |
+| `remote.items.push(item)`  | `remote.items = [...remote.items, item]`                               |
+| `remote.user.name = 'Bob'` | `remote.user = { ...remote.user, name: 'Bob' }`                        |
+| `remote.scores[i]++`       | `remote.scores = remote.scores.map((s, idx) => idx === i ? s + 1 : s)` |
 
 **Rule of Thumb:** If it looks like `+=`, `-=`, `++`, `--`, `.push()`, `.splice()`, etc., you need to refactor.
 
 ---
 
-##  Complete Example: Counter App
+## Complete Example: Counter App
 
 ```typescript
-import { bridge } from "@userplane/postbridge";
+import { bridge } from '@userplane/postbridge';
 
 //  Schema with explicit value pattern
 const schema = {
@@ -136,7 +136,7 @@ const schema = {
   // Function takes explicit value (caller computes it)
   setCounter: (newValue, remote) => {
     remote.counter = newValue;
-    document.getElementById("counter").textContent = newValue;
+    document.getElementById('counter').textContent = newValue;
     return newValue;
   },
 };
@@ -145,27 +145,27 @@ const schema = {
 const connection = await bridge.connect(schema);
 
 // Initialize UI with current state (important for new tabs!)
-document.getElementById("counter").textContent = connection.remote.counter;
+document.getElementById('counter').textContent = connection.remote.counter;
 
 // Wire up buttons
-document.getElementById("increment").onclick = () => {
+document.getElementById('increment').onclick = () => {
   const newValue = connection.remote.counter + 1;
   connection.remote.setCounter(newValue);
 };
 
-document.getElementById("decrement").onclick = () => {
+document.getElementById('decrement').onclick = () => {
   const newValue = connection.remote.counter - 1;
   connection.remote.setCounter(newValue);
 };
 
-document.getElementById("reset").onclick = () => {
+document.getElementById('reset').onclick = () => {
   connection.remote.setCounter(0);
 };
 ```
 
 ---
 
-##  Testing Your Fix
+## Testing Your Fix
 
 1. **Build and serve:**
 
@@ -177,23 +177,21 @@ document.getElementById("reset").onclick = () => {
 2. **Open 3+ tabs** to the same URL
 
 3. **Click increment in Tab 1:**
-
    - Counter should go from 0 → 1 in ALL tabs
    - Should NOT jump to 2 or 3
 
 4. **Click increment in Tab 2:**
-
    - Counter should go from 1 → 2 in ALL tabs
 
 5. **Rapidly click in different tabs:**
    - Each click should increment by exactly 1
    - No matter how many tabs are open
 
- **If each click = +1 (not +N where N = tab count), you've fixed it!**
+**If each click = +1 (not +N where N = tab count), you've fixed it!**
 
 ---
 
-##  "But What If I WANT Mutations?"
+## "But What If I WANT Mutations?"
 
 ### Option 1: Use Compare-and-Swap (CAS) for Atomic Updates
 
@@ -204,7 +202,7 @@ const schema = {
   counter: 0,
   setCounter: (newValue, remote) => {
     remote.counter = newValue;
-    document.getElementById("counter").textContent = newValue;
+    document.getElementById('counter').textContent = newValue;
     return newValue;
   },
 };
@@ -215,13 +213,13 @@ const connection = await bridge.connect(schema);
 async function safeIncrement() {
   while (true) {
     // Read current value WITH version
-    const { value, version } = connection.getVersionedState<number>("counter");
+    const { value, version } = connection.getVersionedState<number>('counter');
 
     // Compute new value
     const newValue = value + 1;
 
     // Atomic update - only succeeds if version matches
-    const result = await connection.compareAndSwap("counter", version, newValue);
+    const result = await connection.compareAndSwap('counter', version, newValue);
 
     if (result.success) {
       // Broadcast to update UI in all tabs
@@ -275,7 +273,7 @@ const schema = {
 
   incrementOnServer: async (remote) => {
     // Send increment to server, get back new total
-    const response = await fetch("/api/counter/increment", { method: "POST" });
+    const response = await fetch('/api/counter/increment', { method: 'POST' });
     const { newValue } = await response.json();
 
     // Set all tabs to server's value
@@ -290,7 +288,7 @@ const schema = {
 Advanced: One tab owns mutations, others are read-only:
 
 ```typescript
-const isLeader = sessionStorage.getItem("leader") === "true";
+const isLeader = sessionStorage.getItem('leader') === 'true';
 
 const schema = {
   counter: 0,
@@ -305,7 +303,7 @@ if (isLeader) {
   };
 } else {
   incrementBtn.disabled = true;
-  incrementBtn.title = "Only leader tab can increment";
+  incrementBtn.title = 'Only leader tab can increment';
 }
 ```
 
@@ -320,7 +318,7 @@ if (isLeader) {
 
 ---
 
-##  Key Takeaways
+## Key Takeaways
 
 1. **Shared functions execute in ALL tabs** (not just the caller)
 2. **Mutations (`++`, `.push()`, etc.) cause double/triple/N-tuple changes**
@@ -329,4 +327,4 @@ if (isLeader) {
 5. **Caller computes, all tabs receive** the same value
 6. **Shared variables are perfect for** catching up new tabs to current state
 
-**Remember:** This isn't a bug - it's distributed systems! Bridge gives you the primitives; you choose the pattern. 
+**Remember:** This isn't a bug - it's distributed systems! Bridge gives you the primitives; you choose the pattern.

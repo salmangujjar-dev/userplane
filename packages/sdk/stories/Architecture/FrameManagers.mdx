@@ -30,12 +30,12 @@ interface IFrameManager {
 }
 ```
 
-| Method | Description |
-|--------|-------------|
-| `tryMount(params)` | Attempt to mount the iframe. Returns `true` if successful. |
-| `unmount()` | Remove the iframe from the DOM and disconnect the bridge. |
-| `isMounted()` | Returns `true` if the iframe is currently in the DOM. |
-| `getFrame()` | Returns `{ overlay, iframe }` or `null`. |
+| Method                | Description                                                 |
+| --------------------- | ----------------------------------------------------------- |
+| `tryMount(params)`    | Attempt to mount the iframe. Returns `true` if successful.  |
+| `unmount()`           | Remove the iframe from the DOM and disconnect the bridge.   |
+| `isMounted()`         | Returns `true` if the iframe is currently in the DOM.       |
+| `getFrame()`          | Returns `{ overlay, iframe }` or `null`.                    |
 | `isBridgeConnected()` | Returns `true` if the PostBridge connection is established. |
 
 ## `BaseFrameManager` (Abstract)
@@ -82,12 +82,14 @@ class RecordingFrameManager extends BaseFrameManager implements IRecordingFrameM
 ```
 
 Internally holds a `RecorderBridgeConnection` which:
+
 - Exposes `RecorderHostSchema` to the recorder
 - Tracks recording state transitions (`inactive` → `active` → `retained` → `inactive`)
 - Manages unload protection (`beforeunload` handler)
 - Cleans up URL parameters after session start
 
 **What makes it different:**
+
 - Creates a full-screen overlay + iframe (visible to the user)
 - Manages session state machine
 - Has the most complex bridge schema (both host and guest)
@@ -97,11 +99,13 @@ Internally holds a `RecorderBridgeConnection` which:
 Used for domain verification flows.
 
 Internally holds a `VerificationBridgeConnection` which:
+
 - Exposes `VerificationHostSchema` to the verification iframe
 - Makes the API call from the parent window context
 - Handles close requests from the verification UI
 
 **What makes it different:**
+
 - Also creates a full-screen overlay + iframe
 - No session state — verification is a one-shot flow
 - Bridge schema is simpler (two methods only)
@@ -120,12 +124,14 @@ class CaptureFrameManager extends BaseFrameManager implements ICaptureFrameManag
 ```
 
 Internally holds a `CaptureBridgeConnection` which:
+
 - Manages the hidden 1×1 iframe
 - Coordinates blur state via `BlurManager`
 - Exposes metadata extraction to the recorder
 - Tracks recording state updates from the main recording session
 
 **What makes it different:**
+
 - Creates a hidden 1×1 pixel iframe (no overlay, no visible UI)
 - Stays mounted for the entire page lifetime (not just during recording)
 - Has both capture-specific host and guest schemas
@@ -138,9 +144,12 @@ Creates the appropriate manager for a given action type:
 class FrameManagerFactory {
   create(action: ActionType): IFrameManager {
     switch (action) {
-      case 'recording': return this.createRecordingManager();
-      case 'verify':    return this.createVerificationManager();
-      case 'capture':   return this.createCaptureManager();
+      case 'recording':
+        return this.createRecordingManager();
+      case 'verify':
+        return this.createVerificationManager();
+      case 'capture':
+        return this.createCaptureManager();
     }
   }
 }
@@ -167,6 +176,6 @@ const config = new FrameConfigBuilder()
 // Capture: hidden, no overlay
 const captureConfig = new FrameConfigBuilder()
   .withUrl(captureUrl)
-  .withZIndex('-1')   // doesn't matter — it's hidden
-  .build();           // overlay not created for capture
+  .withZIndex('-1') // doesn't matter — it's hidden
+  .build(); // overlay not created for capture
 ```

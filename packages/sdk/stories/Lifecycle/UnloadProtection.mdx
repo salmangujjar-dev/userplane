@@ -27,10 +27,10 @@ This gives users a chance to finish or cancel their recording before navigating 
 Unload protection is enabled in **both active and retained states**:
 
 | Recording State | Unload Protection |
-|----------------|-------------------|
-| `'inactive'` | Disabled |
-| `'active'` | **Enabled** |
-| `'retained'` | **Enabled** |
+| --------------- | ----------------- |
+| `'inactive'`    | Disabled          |
+| `'active'`      | **Enabled**       |
+| `'retained'`    | **Enabled**       |
 
 It's active in `'retained'` because the user may still be reviewing their recording — navigating away at that point would close the recorder UI.
 
