@@ -1,5 +1,5 @@
 ---
-title: Guide for Developers
+title: Developer Onboarding
 description: Install the Userplane SDK, configure metadata, set up domain verification, and control what gets captured
 ---
 
@@ -17,27 +17,16 @@ Userplane works without any code — but the SDK unlocks richer session data, cu
 
 You can load Userplane via CDN snippet or install it as an npm package.
 
-### CDN (quickest)
+### Embed script (quickest)
 
-Add this to the `<head>` of your HTML:
+Add this to the `<head>` of every page where you want recordings to work:
 
 ```html
-<script>
-  (function (w, d, s, o, f, js, fjs) {
-    w['UserplaneObject'] = o;
-    w[o] =
-      w[o] ||
-      function () {
-        (w[o].q = w[o].q || []).push(arguments);
-      };
-    ((js = d.createElement(s)), (fjs = d.getElementsByTagName(s)[0]));
-    js.id = o;
-    js.src = f;
-    js.async = 1;
-    fjs.parentNode.insertBefore(js, fjs);
-  })(window, document, 'script', 'up', 'https://cdn.userplane.io/sdk/v1/userplane.js');
-  up('init', { workspaceId: 'YOUR_WORKSPACE_ID' });
-</script>
+<!-- Sets workspace ID for screen recording -->
+<meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+
+<!-- Loads Userplane screen recording script -->
+<script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
 ```
 
 ### npm
@@ -47,8 +36,8 @@ npm install @userplane/sdk
 ```
 
 ```ts
-import { init } from '@userplane/sdk';
-init({ workspaceId: 'YOUR_WORKSPACE_ID' });
+import { initialize } from '@userplane/sdk';
+initialize({ workspaceId: 'YOUR_WORKSPACE_ID' });
 ```
 
 Your `workspaceId` is in [Workspace Settings > General](https://dash.userplane.io/_/settings).
@@ -57,82 +46,90 @@ See [Web SDK Reference](/developer/web-sdk) for the full API and [Installation G
 
 ## Step 2: Verify your domain
 
-Domain verification is required before your support team can create branded recording links on your domain.
+Domain verification is required before your support team can create branded recording links on your domain. Userplane verifies ownership by checking that the embed script is present on your site.
 
 <Steps>
   <Step title="Add your domain in the dashboard">
     Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=domains) and click
     **Add Domain**.
   </Step>
-  <Step title="Add the DNS TXT record">
-    Copy the TXT record provided and add it to your DNS provider. This proves you control the
-    domain.
+  <Step title="Deploy the script">
+    The embed script from Step 1 is what Userplane checks for during verification. Make sure it is
+    deployed to a publicly accessible page — verification will fail if the page is behind a login
+    wall or not yet deployed.
   </Step>
   <Step title="Verify">
-    Click **Verify** in the dashboard. DNS propagation typically takes 1–5 minutes.
+    Click **Verify** in the dashboard (or ask your workspace admin to do it). Verification runs
+    immediately. The verification token expires after 5 minutes, so trigger it once the script is
+    live.
   </Step>
 </Steps>
 
-See [Domain Verification](/developer/domain-verification) for detailed instructions per DNS provider.
+See [Domain Verification](/developer/domain-verification) for full details and troubleshooting.
 
 ## Step 3: Attach metadata to recordings
 
 Metadata lets you attach user and account context to every recording so your support team sees who the customer is without having to ask.
 
 ```ts
-import { setMetadata } from '@userplane/sdk';
+import { set } from '@userplane/sdk';
 
 // Call after your user is authenticated
-setMetadata({
-  userId: user.id,
-  email: user.email,
-  name: user.name,
-  accountId: account.id,
-  plan: account.plan,
-});
+set('userId', user.id);
+set('email', user.email);
+set('name', user.name);
+set('accountId', account.id);
+set('plan', account.plan);
 ```
 
 Metadata appears in the **Info** tab of every recording from that user. See [Metadata SDK](/developer/metadata-sdk) for the full reference.
 
 ### Dynamic metadata
 
-You can call `setMetadata` multiple times — useful for SPAs where the user context changes without a page reload:
+Use `metadata()` to capture values at recording submission time — useful for SPAs where context changes without a page reload:
 
 ```ts
-// After login
-setMetadata({ userId: user.id, email: user.email });
+import { set, metadata } from '@userplane/sdk';
 
-// After account switch
-setMetadata({ accountId: newAccount.id, plan: newAccount.plan });
+// Static values set once at login
+set('userId', user.id);
+set('email', user.email);
+
+// Dynamic values captured fresh when the recording is submitted
+metadata(() => ({
+  accountId: getCurrentAccount().id,
+  plan: getCurrentAccount().plan,
+  page: window.location.pathname,
+}));
 ```
 
 ## Step 4: Configure sensitive data redaction
 
 Prevent sensitive data from appearing in recordings before you go to production.
 
-### Mask DOM elements
+### Blur DOM elements
 
-Add `data-userplane-mask` to any element you want blurred in the video:
+Add `data-userplane-blur` to any element you want blurred in the recording:
 
 ```html
-<input type="password" data-userplane-mask />
-<div class="credit-card-number" data-userplane-mask>4242 4242 4242 4242</div>
+<input type="password" data-userplane-blur />
+<div class="credit-card-number" data-userplane-blur>4242 4242 4242 4242</div>
 ```
+
+See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for the full list of privacy controls — including CSS class and meta tag approaches, and third-party selector compatibility.
 
 ### Exclude network requests
 
-Prevent specific URLs from being captured in network logs:
+Prevent specific URLs from being captured in network logs by passing `excludeCaptureEndpoints` to `initialize()`:
 
 ```ts
-init({
+initialize({
   workspaceId: 'YOUR_WORKSPACE_ID',
-  network: {
-    excludeUrls: ['/api/auth', '/api/payment', 'stripe.com'],
-  },
+  excludeCaptureEndpoints: ['/api/auth', '/api/payment', 'stripe.com'],
 });
 ```
 
-See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for the full list of privacy controls.
+These are merged with Userplane's internal excluded endpoints.
 
 ## Step 5: Choose your framework
 
@@ -155,28 +152,28 @@ Userplane works with any JavaScript framework. Check the guide for yours:
 Once the SDK is installed, you can control recording sessions programmatically:
 
 ```ts
-import { startRecording, stopRecording, getState } from '@userplane/sdk';
+import { open, unmount, getRecordingState } from '@userplane/sdk';
 
-// Trigger a recording from your own UI
-await startRecording();
+// Open the recording flow
+open();
 
-// Stop and submit
-await stopRecording();
+// Close the recorder
+unmount();
 
 // Check current state
-const state = getState(); // 'idle' | 'recording' | 'uploading'
+const state = getRecordingState(); // 'inactive' | 'active' | 'retained'
 ```
 
 See [Recorder Control API](/developer/web-sdk#recorder-control) for full details.
 
 ## Checklist before going live
 
-- [ ] SDK installed and `init()` called on every page
+- [ ] Embed script installed on every page (or `initialize()` called via the npm package)
 - [ ] `workspaceId` is set correctly (not hardcoded in the repo — use env vars)
 - [ ] Domain verified in the dashboard
-- [ ] `setMetadata()` called after user authentication
-- [ ] Sensitive fields masked with `data-userplane-mask`
-- [ ] Network exclusion list covers auth/payment endpoints
+- [ ] `set()` called after user authentication to attach metadata
+- [ ] Sensitive fields marked with `data-userplane-blur`
+- [ ] `excludeCaptureEndpoints` set in `initialize()` to exclude auth/payment URLs from network logs
 - [ ] Tested a recording end-to-end in a staging environment
 
 ## Next steps

@@ -1,5 +1,5 @@
 ---
-title: Guide for Support Engineers
+title: Support Engineer Onboarding
 description: Configure your workspace, set up domains, manage recording link settings, and keep sensitive data secure
 ---
 
@@ -53,18 +53,21 @@ See [Roles & Permissions](/workspace/roles-permissions) for a full breakdown of 
 
 ## Step 3: Verify your domain
 
-Domain verification enables first-party branded recording links — customers see your domain, not Userplane's.
+Domain verification enables first-party branded recording links — customers see your domain, not Userplane's. Userplane verifies ownership by checking that its embed script is present on your site.
 
 <Steps>
   <Step title="Add your domain">
     Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=domains) and click
     **Add Domain**.
   </Step>
-  <Step title="Add the DNS TXT record">
-    Copy the verification TXT record and add it to your DNS provider (Cloudflare, Route 53, etc.).
+  <Step title="Send install instructions to your developer">
+    Click **Send to Developer** to email the script install instructions to your engineering team.
+    They need to add the Userplane embed script to a publicly accessible page on the domain.
   </Step>
   <Step title="Verify">
-    Click **Verify** once the DNS record propagates. This typically takes a few minutes.
+    Once your developer confirms the script is deployed, click **Verify** in the dashboard.
+    Verification runs immediately. The verification token expires after 5 minutes, so coordinate
+    with your developer before clicking Verify.
   </Step>
   <Step title="Configure recording preferences">
     Once verified, set per-domain defaults: which data to capture (console, network, audio), link
@@ -117,7 +120,7 @@ See [Intercom Setup](/getting-started/intercom-setup) for full details.
 
 - **Monitor usage** — track recording volume and storage against your plan limits. See [Monitoring Usage](/billing/monitoring-usage).
 - **Manage recording link limits** — set per-link expiry and usage caps. See [Recording Link Limits](/recording-links/limits).
-- **Domain health** — re-verify if DNS changes cause domain verification to lapse. See [Domains](/workspace/domains).
+- **Domain health** — re-verify if the Userplane script is removed or the verification page becomes inaccessible. See [Domains](/workspace/domains).
 - **Workspace lifecycle** — archive or transfer ownership when team structures change. See [Workspace Lifecycle](/workspace/workspace-lifecycle).
 
 ## Next steps
