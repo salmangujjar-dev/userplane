@@ -1,0 +1,40 @@
+---
+title: Domains
+description: Add and verify domains for first-party branded recording links
+---
+
+Domains in Userplane represent the websites where your customers will use recording links. Adding and verifying a domain enables first-party branded links and unlocks per-domain recording preferences.
+
+## Why add a domain
+
+- **First-party branding** — recording links appear to come from your own domain rather than a generic Userplane URL.
+- **Per-domain preferences** — configure what data is captured (console logs, network activity, client actions) for each domain.
+- **Trust** — customers are more likely to engage with a recording link that matches your brand.
+
+## Domain statuses
+
+| Status       | Meaning                                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Pending**  | The domain has been added but verification is not complete. You cannot create branded links or configure preferences until verification succeeds. |
+| **Verified** | Domain ownership is confirmed. Branded links and per-domain recording preferences are active.                                                     |
+| **Revoked**  | Verification was revoked. The domain must be re-verified to use it.                                                                               |
+
+## Adding a domain
+
+<Steps>
+  <Step title="Open Domain settings">
+    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general).
+  </Step>
+  <Step title="Add the domain">
+    Click **Add Domain** and enter your domain (e.g. `app.example.com`).
+  </Step>
+  <Step title="Verify ownership">
+    Follow the [domain verification](/workspace/domain-verification) process to confirm ownership.
+  </Step>
+</Steps>
+
+## Related articles
+
+- [Domain Verification](/workspace/domain-verification) — verify your domain with a token-based flow.
+- [Managing Domains](/workspace/domain-management) — sort, edit, and delete domains.
+- [Domain Recording Preferences](/recording-links/domain-preferences) — configure capture settings per domain.

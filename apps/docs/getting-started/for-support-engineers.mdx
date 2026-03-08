@@ -1,0 +1,142 @@
+---
+title: Guide for Support Engineers
+description: Configure your workspace, set up domains, manage recording link settings, and keep sensitive data secure
+---
+
+You're the one who gets things set up so the rest of the support team can work effectively. This guide covers workspace configuration, domain setup, recording link management, and sensitive data controls.
+
+## What you'll own
+
+- Workspace and team configuration
+- Domain verification and branding
+- Recording link defaults and limits
+- Sensitive data redaction rules
+
+## Step 1: Create and configure your workspace
+
+<Steps>
+  <Step title="Create a workspace">
+    Sign in and click [Create Workspace](https://dash.userplane.io/workspace/create). Enter your company URL to get started.
+  </Step>
+  <Step title="Set your invite policy">
+    Go to [Workspace Settings > Invite Policy](https://dash.userplane.io/_/settings?tab=team). Choose the right policy for your org:
+
+    | Policy | Behavior |
+    | --- | --- |
+    | **Private** | Only explicitly invited users can join |
+    | **Whitelisted** | Anyone with a matching email domain joins automatically |
+    | **Protected** | Matching domain users can request access, you approve |
+
+    Whitelist your company email domain so teammates can join without individual invites.
+
+  </Step>
+  <Step title="Invite your team">
+    Go to [Team Settings](https://dash.userplane.io/_/recordings?invite=true) and invite teammates. Assign roles based on what each person needs to do.
+  </Step>
+</Steps>
+
+See [Roles & Permissions](/workspace/roles-permissions) for a full breakdown of what each role can access.
+
+## Step 2: Set up roles and projects
+
+<Steps>
+  <Step title="Assign roles">
+    Review the default roles (**Owner**, **Admin**, **Member**, **Viewer**) and assign them to
+    teammates. Admins can manage integrations and settings; Members can create links and review
+    recordings.
+  </Step>
+  <Step title="Create projects">
+    Go to [Projects](https://dash.userplane.io/_/projects) and create projects for each product
+    area, customer segment, or team. Projects keep recordings organized and make filtering easy.
+  </Step>
+</Steps>
+
+## Step 3: Verify your domain
+
+Domain verification enables first-party branded recording links — customers see your domain, not Userplane's.
+
+<Steps>
+  <Step title="Add your domain">
+    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=domains) and click
+    **Add Domain**.
+  </Step>
+  <Step title="Add the DNS TXT record">
+    Copy the verification TXT record and add it to your DNS provider (Cloudflare, Route 53, etc.).
+  </Step>
+  <Step title="Verify">
+    Click **Verify** once the DNS record propagates. This typically takes a few minutes.
+  </Step>
+  <Step title="Configure recording preferences">
+    Once verified, set per-domain defaults: which data to capture (console, network, audio), link
+    expiry, and branding.
+  </Step>
+</Steps>
+
+See [Domain Management](/workspace/domain-management) and [Recording Link Domain Preferences](/recording-links/domain-preferences).
+
+## Step 4: Configure sensitive data redaction
+
+Before going live, make sure sensitive customer data doesn't appear in recordings.
+
+<Steps>
+  <Step title="Review what gets captured">
+    By default, recordings include screen video, console logs, and network requests. Network request
+    bodies may contain tokens, PII, or internal data.
+  </Step>
+  <Step title="Set up redaction rules">
+    Go to [Recording Link Settings](/recording-links/sensitive-data-redaction) and configure: -
+    **URL patterns** to exclude from network capture - **Request header redaction** for auth tokens
+    - **CSS selector masking** to blur sensitive DOM elements in the video
+  </Step>
+  <Step title="Coordinate with your engineering team">
+    For deeper redaction (e.g., redacting specific fields in API responses), your engineering team
+    can use the SDK's privacy controls. Point them to the [Developer
+    guide](/getting-started/for-developers).
+  </Step>
+</Steps>
+
+## Step 5: Connect Intercom
+
+<Steps>
+  <Step title="Go to Integrations settings">
+    Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations)
+    and click **Connect Intercom**.
+  </Step>
+  <Step title="Authorize">
+    Complete the OAuth flow. Userplane will appear in your team's Intercom inbox as a sidebar app.
+  </Step>
+  <Step title="Invite Intercom users">
+    After connecting, invite your Intercom teammates to the workspace so they can use Userplane
+    inside Intercom.
+  </Step>
+</Steps>
+
+See [Intercom Setup](/getting-started/intercom-setup) for full details.
+
+## Ongoing management
+
+- **Monitor usage** — track recording volume and storage against your plan limits. See [Monitoring Usage](/billing/monitoring-usage).
+- **Manage recording link limits** — set per-link expiry and usage caps. See [Recording Link Limits](/recording-links/limits).
+- **Domain health** — re-verify if DNS changes cause domain verification to lapse. See [Domains](/workspace/domains).
+- **Workspace lifecycle** — archive or transfer ownership when team structures change. See [Workspace Lifecycle](/workspace/workspace-lifecycle).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Roles & Permissions" icon="shield" href="/workspace/roles-permissions">
+    Full breakdown of what each role can do
+  </Card>
+  <Card title="Domain Management" icon="globe" href="/workspace/domain-management">
+    Manage, verify, and configure multiple domains
+  </Card>
+  <Card
+    title="Sensitive Data Redaction"
+    icon="eye-slash"
+    href="/recording-links/sensitive-data-redaction"
+  >
+    Configure what data gets masked or excluded
+  </Card>
+  <Card title="Billing & Usage" icon="chart-bar" href="/billing/monitoring-usage">
+    Monitor recording volume and plan limits
+  </Card>
+</CardGroup>

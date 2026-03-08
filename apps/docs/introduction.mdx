@@ -5,19 +5,75 @@ description: Welcome to Userplane documentation
 
 # Welcome to Userplane
 
-Userplane helps you understand how users interact with your product through session recording and replay.
+Userplane helps your support team request screen recordings from customers in seconds. Instead of asking customers to describe what went wrong, send them a simple link and get a full video of the issue — complete with console logs, network activity, and more.
+
+## How it works
+
+<Steps>
+  <Step title="Send a recording link">
+    Create a recording link from your dashboard or directly inside an Intercom conversation. Share
+    it with your customer via chat, email, or any support channel.
+  </Step>
+  <Step title="Customer records their screen">
+    The customer clicks the link, records their screen in one click — no installs, no sign-up
+    required. Audio and browser activity are captured automatically.
+  </Step>
+  <Step title="Review the full session">
+    Watch the video alongside synchronized console logs, network requests, and user actions. Use the
+    Issue Analyzer to surface root causes instantly.
+  </Step>
+</Steps>
+
+## Jump in
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Get up and running in minutes
+    Create your first recording link and start capturing issues in minutes
   </Card>
-  <Card title="Recording" icon="circle-dot" href="/recording/overview">
-    Learn how session recording works
+  <Card title="Recordings" icon="circle-dot" href="/recording/requesting">
+    Request, review, and share session recordings with your team
   </Card>
   <Card title="Web SDK" icon="code" href="/developer/web-sdk">
-    Integrate Userplane into your app
+    Integrate Userplane programmatically into your app
   </Card>
   <Card title="Integrations" icon="plug" href="/integrations/intercom">
-    Connect with your existing tools
+    Connect Userplane with Intercom and your support tools
+  </Card>
+</CardGroup>
+
+## Explore by role
+
+<CardGroup cols={3}>
+  <Card title="Support Agents" icon="headset" href="/getting-started/for-support-agents">
+    Send recording links via Intercom, review sessions, and use shortcuts and macros
+  </Card>
+  <Card title="Support Engineers" icon="gear" href="/getting-started/for-support-engineers">
+    Configure your workspace, verify domains, manage permissions, and set up redaction
+  </Card>
+  <Card title="Developers" icon="terminal" href="/getting-started/for-developers">
+    Install the SDK, attach metadata, configure redaction, and integrate with your framework
+  </Card>
+</CardGroup>
+
+## What gets captured
+
+<CardGroup cols={2}>
+  <Card title="Screen Video" icon="video">
+    Full screen recording of the customer's browser session, exactly as they experienced it
+  </Card>
+  <Card title="Console Logs" icon="rectangle-terminal">
+    JavaScript errors, warnings, and log output captured in sync with the video timeline
+  </Card>
+  <Card title="Network Activity" icon="network-wired">
+    HTTP requests and responses, including status codes, headers, and timing
+  </Card>
+  <Card title="User Actions" icon="cursor-arrow-rays">
+    Clicks, scrolls, navigation events, and form interactions annotated on the timeline
+  </Card>
+  <Card title="Audio" icon="microphone">
+    Optional microphone capture so customers can narrate the issue as they record
+  </Card>
+  <Card title="Custom Metadata" icon="tag">
+    Attach user IDs, account data, and app state via the SDK for richer context
   </Card>
 </CardGroup>

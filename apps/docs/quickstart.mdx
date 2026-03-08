@@ -1,44 +1,74 @@
 ---
 title: Quickstart
-description: Get started with Userplane in minutes
+description: Get up and running with Userplane — create a recording link, send it to a customer, and see exactly what went wrong.
 ---
 
-# Quickstart
+Userplane helps your support team request screen recordings from customers in just a few seconds. Instead of asking customers to describe what went wrong, you can send them a simple link and get a full video of the issue, complete with console logs, network activity, and more.
 
-Follow these steps to start recording user sessions with Userplane.
+## How it works
 
-## 1. Create an account
+1. **Create a recording link** — pick a project, domain, and optional reference, then share the link with your customer.
+2. **Customer records** — your customer opens the link in their browser and records their screen. No installs or extensions needed.
+3. **Review the recording** — watch the video and inspect console errors, network requests, client actions, and any custom metadata.
 
-Sign up at [app.userplane.co](https://app.userplane.co) and create your first project.
+## Create your first recording link
 
-## 2. Install the SDK
+<Steps>
+  <Step title="Open the Create Link dialog">
+    Click [Create Link](https://dash.userplane.io/_/recordings?create_link=true) in the top right of
+    the navbar.
+  </Step>
+  <Step title="Fill in the link details">
+    - **Project** — choose which project this recording belongs to. - **Domain** — select a verified
+    domain to brand the link with your site's identity (optional but recommended). - **Reference** —
+    add an external reference like a ticket number or URL (e.g. `JIRA-456`). - **Reusable** — toggle
+    whether the link can be used once or multiple times.
+  </Step>
+  <Step title="Share the link">
+    Click **Create** and copy the link. Send it to your customer through chat, email, or an Intercom
+    macro.
+  </Step>
+</Steps>
 
-<CodeGroup>
-```bash npm
-npm install @userplane/sdk
-```
+## Review a recording
 
-```bash yarn
-yarn add @userplane/sdk
-```
+<Steps>
+  <Step title="Open the Recordings page">
+    Go to [Recordings](https://dash.userplane.io/_/recordings) from the sidebar.
+  </Step>
+  <Step title="Find the recording">
+    Browse recordings in the grid view, or filter by project, member, or link.
+  </Step>
+  <Step title="Inspect the details">
+    Click a recording to open the detail view. Use the right-hand tabs to dig into:
 
-```bash bun
-bun add @userplane/sdk
-```
+    | Tab | What it shows |
+    | --- | ------------- |
+    | **Info** | Link details, customer notes, system metadata, and custom metadata |
+    | **Console** | Browser console logs including errors, warnings, and messages |
+    | **Network** | HTTP requests with timing and status codes |
+    | **Actions** | Clicks, inputs, and page navigations |
+    | **Backend** | Server-side logs if you've configured them |
 
-</CodeGroup>
+  </Step>
+</Steps>
 
-## 3. Initialize recording
+## What gets captured
 
-```javascript
-import { Userplane } from '@userplane/sdk';
+Every recording includes a video of your customer's screen. Depending on your [domain recording preferences](/recording-links/domain-preferences), you can also capture:
 
-Userplane.init({
-  projectId: 'your-project-id',
-});
-```
+- Browser console logs
+- Network request and response data
+- Client-side actions (clicks, inputs, navigation)
+- Server-side and backend logs
+- Voice and device audio (when enabled)
+- Customer notes
+- System metadata (browser, OS, page URL)
+
+Sensitive data can be automatically redacted to keep things secure. See [Sensitive Data Redaction](/recording-links/sensitive-data-redaction) for more details.
 
 ## Next steps
 
-- [Recording overview](/recording/overview) — learn how recording works under the hood
-- [Web SDK reference](/developer/web-sdk) — explore the full SDK API
+- [Set up your workspace](/getting-started/workspace-setup) — invite your teammates and configure settings.
+- [Connect Intercom](/getting-started/intercom-setup) — request recordings directly from Intercom conversations.
+- [Customize your recording links](/recording-links/overview) — add your branding and configure what gets captured.

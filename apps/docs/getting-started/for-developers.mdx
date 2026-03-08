@@ -1,0 +1,201 @@
+---
+title: Guide for Developers
+description: Install the Userplane SDK, configure metadata, set up domain verification, and control what gets captured
+---
+
+Userplane works without any code — but the SDK unlocks richer session data, custom metadata, and programmatic recording controls. This guide covers everything you need to integrate Userplane into your app.
+
+## What you'll set up
+
+- Script or npm package installation
+- Domain verification (required for branded recording links)
+- Custom metadata to attach user/account context to recordings
+- Sensitive data redaction for compliance
+- Framework-specific configuration
+
+## Step 1: Install the SDK
+
+You can load Userplane via CDN snippet or install it as an npm package.
+
+### CDN (quickest)
+
+Add this to the `<head>` of your HTML:
+
+```html
+<script>
+  (function (w, d, s, o, f, js, fjs) {
+    w['UserplaneObject'] = o;
+    w[o] =
+      w[o] ||
+      function () {
+        (w[o].q = w[o].q || []).push(arguments);
+      };
+    ((js = d.createElement(s)), (fjs = d.getElementsByTagName(s)[0]));
+    js.id = o;
+    js.src = f;
+    js.async = 1;
+    fjs.parentNode.insertBefore(js, fjs);
+  })(window, document, 'script', 'up', 'https://cdn.userplane.io/sdk/v1/userplane.js');
+  up('init', { workspaceId: 'YOUR_WORKSPACE_ID' });
+</script>
+```
+
+### npm
+
+```bash
+npm install @userplane/sdk
+```
+
+```ts
+import { init } from '@userplane/sdk';
+init({ workspaceId: 'YOUR_WORKSPACE_ID' });
+```
+
+Your `workspaceId` is in [Workspace Settings > General](https://dash.userplane.io/_/settings).
+
+See [Web SDK Reference](/developer/web-sdk) for the full API and [Installation Guide](/developer/installation) for platform-specific notes.
+
+## Step 2: Verify your domain
+
+Domain verification is required before your support team can create branded recording links on your domain.
+
+<Steps>
+  <Step title="Add your domain in the dashboard">
+    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=domains) and click
+    **Add Domain**.
+  </Step>
+  <Step title="Add the DNS TXT record">
+    Copy the TXT record provided and add it to your DNS provider. This proves you control the
+    domain.
+  </Step>
+  <Step title="Verify">
+    Click **Verify** in the dashboard. DNS propagation typically takes 1–5 minutes.
+  </Step>
+</Steps>
+
+See [Domain Verification](/developer/domain-verification) for detailed instructions per DNS provider.
+
+## Step 3: Attach metadata to recordings
+
+Metadata lets you attach user and account context to every recording so your support team sees who the customer is without having to ask.
+
+```ts
+import { setMetadata } from '@userplane/sdk';
+
+// Call after your user is authenticated
+setMetadata({
+  userId: user.id,
+  email: user.email,
+  name: user.name,
+  accountId: account.id,
+  plan: account.plan,
+});
+```
+
+Metadata appears in the **Info** tab of every recording from that user. See [Metadata SDK](/developer/metadata-sdk) for the full reference.
+
+### Dynamic metadata
+
+You can call `setMetadata` multiple times — useful for SPAs where the user context changes without a page reload:
+
+```ts
+// After login
+setMetadata({ userId: user.id, email: user.email });
+
+// After account switch
+setMetadata({ accountId: newAccount.id, plan: newAccount.plan });
+```
+
+## Step 4: Configure sensitive data redaction
+
+Prevent sensitive data from appearing in recordings before you go to production.
+
+### Mask DOM elements
+
+Add `data-userplane-mask` to any element you want blurred in the video:
+
+```html
+<input type="password" data-userplane-mask />
+<div class="credit-card-number" data-userplane-mask>4242 4242 4242 4242</div>
+```
+
+### Exclude network requests
+
+Prevent specific URLs from being captured in network logs:
+
+```ts
+init({
+  workspaceId: 'YOUR_WORKSPACE_ID',
+  network: {
+    excludeUrls: ['/api/auth', '/api/payment', 'stripe.com'],
+  },
+});
+```
+
+See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for the full list of privacy controls.
+
+## Step 5: Choose your framework
+
+Userplane works with any JavaScript framework. Check the guide for yours:
+
+<CardGroup cols={3}>
+  <Card title="React" icon="react" href="/frameworks/react" />
+  <Card title="Next.js" icon="react" href="/frameworks/nextjs" />
+  <Card title="Vue" icon="vuejs" href="/frameworks/vue" />
+  <Card title="Nuxt" icon="vuejs" href="/frameworks/nuxt" />
+  <Card title="Angular" icon="angular" href="/frameworks/angular" />
+  <Card title="SvelteKit" icon="js" href="/frameworks/sveltekit" />
+  <Card title="Astro" icon="js" href="/frameworks/astro" />
+  <Card title="TanStack Start" icon="js" href="/frameworks/tanstack-start" />
+  <Card title="Static HTML" icon="html5" href="/frameworks/static-html" />
+</CardGroup>
+
+## Programmatic recording controls
+
+Once the SDK is installed, you can control recording sessions programmatically:
+
+```ts
+import { startRecording, stopRecording, getState } from '@userplane/sdk';
+
+// Trigger a recording from your own UI
+await startRecording();
+
+// Stop and submit
+await stopRecording();
+
+// Check current state
+const state = getState(); // 'idle' | 'recording' | 'uploading'
+```
+
+See [Recorder Control API](/developer/web-sdk#recorder-control) for full details.
+
+## Checklist before going live
+
+- [ ] SDK installed and `init()` called on every page
+- [ ] `workspaceId` is set correctly (not hardcoded in the repo — use env vars)
+- [ ] Domain verified in the dashboard
+- [ ] `setMetadata()` called after user authentication
+- [ ] Sensitive fields masked with `data-userplane-mask`
+- [ ] Network exclusion list covers auth/payment endpoints
+- [ ] Tested a recording end-to-end in a staging environment
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Web SDK Reference" icon="code" href="/developer/web-sdk">
+    Full API reference for initialization, controls, and events
+  </Card>
+  <Card title="Metadata SDK" icon="tag" href="/developer/metadata-sdk">
+    Attach user and account context to every recording
+  </Card>
+  <Card
+    title="Sensitive Data Redaction"
+    icon="eye-slash"
+    href="/developer/sensitive-data-redaction"
+  >
+    Full privacy controls — masking, exclusions, and redaction
+  </Card>
+  <Card title="Recording Data Reference" icon="database" href="/developer/recording-data-reference">
+    What data is collected and how it's stored
+  </Card>
+</CardGroup>
