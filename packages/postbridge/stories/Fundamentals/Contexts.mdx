@@ -9,6 +9,7 @@ JavaScript can run in multiple **isolated execution contexts**. Understanding th
 ## What is an Execution Context?
 
 An **execution context** is an isolated JavaScript environment with:
+
 - Its own global scope
 - Its own memory space
 - Its own event loop (sometimes)
@@ -21,63 +22,70 @@ Contexts **cannot directly access each other's memory or variables**. They must 
 ### 1. Main Thread (Browser)
 
 **What it is:**
+
 - The primary JavaScript execution environment in a web page
 - Where your main application code runs
 - Has full access to the DOM and browser APIs
 
 **Characteristics:**
+
 ```javascript
 // Available in main thread
-window           //  Global window object
-document         //  DOM access
-localStorage     //  Storage APIs
-fetch()          //  Network requests
-setTimeout()     //  Timers
+window; //  Global window object
+document; //  DOM access
+localStorage; //  Storage APIs
+fetch(); //  Network requests
+setTimeout(); //  Timers
 ```
 
 **Responsibilities:**
+
 - Rendering the UI
 - Handling user interactions
 - Updating the DOM
 - Coordinating with workers/iframes
 
 **Limitations:**
+
 - Single-threaded (CPU-intensive work blocks UI)
 - Can't do parallel computation
 - Long tasks freeze the page
 
 **Example:**
+
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <script>
-    // This runs in the main thread
-    console.log('Main thread!');
-    console.log(window); //  Available
-    console.log(document.body); //  Available
+  <head>
+    <script>
+      // This runs in the main thread
+      console.log('Main thread!');
+      console.log(window); //  Available
+      console.log(document.body); //  Available
 
-    // CPU-intensive work blocks UI
-    for (let i = 0; i < 1000000000; i++) {
-      // UI is frozen during this loop!
-    }
-  </script>
-</head>
-<body>
-  <button>Click me</button>
-  <!-- Button won't respond during loop -->
-</body>
+      // CPU-intensive work blocks UI
+      for (let i = 0; i < 1000000000; i++) {
+        // UI is frozen during this loop!
+      }
+    </script>
+  </head>
+  <body>
+    <button>Click me</button>
+    <!-- Button won't respond during loop -->
+  </body>
 </html>
 ```
 
 ### 2. Web Workers
 
 **What it is:**
+
 - Background threads for CPU-intensive tasks
 - Completely isolated from main thread
 - No DOM access
 
 **Characteristics:**
+
 ```javascript
 // Available in Web Worker
 self             //  Global worker object
@@ -93,6 +101,7 @@ DOM methods      //  None
 ```
 
 **When to use:**
+
 - Image/video processing
 - Data parsing and transformation
 - Cryptographic operations
@@ -100,6 +109,7 @@ DOM methods      //  None
 - Any CPU-intensive work
 
 **Example:**
+
 ```javascript
 // main.js (main thread)
 const worker = new Worker('worker.js');
@@ -122,24 +132,30 @@ self.addEventListener('message', (event) => {
 **Types of Web Workers:**
 
 **a) Dedicated Worker**
+
 - Owned by a single page
 - Dies when page is closed
+
 ```javascript
 const worker = new Worker('worker.js');
 ```
 
 **b) Shared Worker**
+
 - Shared across multiple pages/tabs from same origin
 - Lives until all pages are closed
+
 ```javascript
 const worker = new SharedWorker('worker.js');
 worker.port.postMessage('hello');
 ```
 
 **c) Service Worker**
+
 - Acts as network proxy
 - Enables offline functionality
 - Different lifecycle (persists across page loads)
+
 ```javascript
 navigator.serviceWorker.register('/sw.js');
 ```
@@ -147,20 +163,23 @@ navigator.serviceWorker.register('/sw.js');
 ### 3. iframes
 
 **What it is:**
+
 - Embedded document within another document
 - Can be same-origin or cross-origin
 - Sandboxed execution environment
 
 **Characteristics:**
+
 ```javascript
 // Available in iframe
-window           //  Its own window object
-document         //  Its own DOM
-parent           //  Reference to parent window
-top              //  Reference to top window
+window; //  Its own window object
+document; //  Its own DOM
+parent; //  Reference to parent window
+top; //  Reference to top window
 ```
 
 **Same-origin iframe:**
+
 ```html
 <!-- Parent: https://example.com -->
 <iframe src="https://example.com/child.html"></iframe>
@@ -177,6 +196,7 @@ top              //  Reference to top window
 ```
 
 **Cross-origin iframe:**
+
 ```html
 <!-- Parent: https://example.com -->
 <iframe src="https://other-domain.com/child.html"></iframe>
@@ -196,6 +216,7 @@ top              //  Reference to top window
 ```
 
 **When to use iframes:**
+
 - Embedding third-party content
 - Sandboxing untrusted code
 - Isolating CSS/JavaScript
@@ -203,12 +224,10 @@ top              //  Reference to top window
 - Content from different origins
 
 **Security: The sandbox attribute**
+
 ```html
 <!-- Restrict iframe capabilities -->
-<iframe
-  src="untrusted.html"
-  sandbox="allow-scripts allow-same-origin"
-></iframe>
+<iframe src="untrusted.html" sandbox="allow-scripts allow-same-origin"></iframe>
 
 <!-- No scripts allowed -->
 <iframe src="untrusted.html" sandbox></iframe>
@@ -217,26 +236,29 @@ top              //  Reference to top window
 ### 4. Node.js Main Thread
 
 **What it is:**
+
 - Primary execution context in Node.js applications
 - Has access to all Node.js APIs
 - Single-threaded event loop
 
 **Characteristics:**
+
 ```javascript
 // Available in Node.js main thread
-global           //  Global object
-process          //  Process information
-require()        //  Module loading
-fs               //  File system
-http             //  HTTP server
-child_process    //  Spawn processes
+global; //  Global object
+process; //  Process information
+require(); //  Module loading
+fs; //  File system
+http; //  HTTP server
+child_process; //  Spawn processes
 
 // NOT available
-window           //  undefined
-document         //  undefined
+window; //  undefined
+document; //  undefined
 ```
 
 **Example:**
+
 ```javascript
 // main.js
 const { Worker } = require('worker_threads');
@@ -253,41 +275,48 @@ worker.on('message', (data) => {
 ### 5. Node.js Worker Threads
 
 **What it is:**
+
 - Background threads in Node.js for CPU-intensive tasks
 - Similar to Web Workers but for Node.js
 - Shares some memory via SharedArrayBuffer
 
 **Characteristics:**
+
 ```javascript
 // Available in Worker thread
-global           //  Global object
-require()        //  Module loading
-fs               //  File system (isolated)
-parentPort       //  Communication with main
+global; //  Global object
+require(); //  Module loading
+fs; //  File system (isolated)
+parentPort; //  Communication with main
 
 // Isolated
-process.env      //  But changes don't affect main
+process.env; //  But changes don't affect main
 ```
 
 **When to use:**
+
 - CPU-intensive computations in Node.js
 - Parallel data processing
 - Video/image processing server-side
 - Cryptographic operations
 
 **Example:**
+
 ```javascript
 // main.js
 const { Worker } = require('worker_threads');
 
-const worker = new Worker(`
+const worker = new Worker(
+  `
   const { parentPort } = require('worker_threads');
 
   parentPort.on('message', (data) => {
     const result = data.map(x => x * 2);
     parentPort.postMessage(result);
   });
-`, { eval: true });
+`,
+  { eval: true }
+);
 
 worker.postMessage([1, 2, 3]);
 
@@ -298,21 +327,23 @@ worker.on('message', (result) => {
 
 ## Context Comparison
 
-| Feature | Main Thread | Web Worker | iframe | Node.js Main | Node.js Worker |
-|---------|-------------|------------|--------|--------------|----------------|
-| **DOM Access** |  Yes |  No |  Yes (own) |  No |  No |
-| **window** |  Yes |  No |  Yes (own) |  No |  No |
-| **File System** |  No |  No |  No |  Yes |  Yes |
-| **Network** |  Yes |  Yes |  Yes |  Yes |  Yes |
-| **Parallel Execution** |  No |  Yes |  No |  No |  Yes |
-| **SharedArrayBuffer** |  Yes |  Yes |  Yes |  Yes |  Yes |
-| **Message Passing** |  postMessage |  postMessage |  postMessage |  postMessage |  parentPort |
-| **Use Case** | UI | Computation | Embedding | Server | Computation |
+| Feature                | Main Thread | Web Worker  | iframe      | Node.js Main | Node.js Worker |
+| ---------------------- | ----------- | ----------- | ----------- | ------------ | -------------- |
+| **DOM Access**         | Yes         | No          | Yes (own)   | No           | No             |
+| **window**             | Yes         | No          | Yes (own)   | No           | No             |
+| **File System**        | No          | No          | No          | Yes          | Yes            |
+| **Network**            | Yes         | Yes         | Yes         | Yes          | Yes            |
+| **Parallel Execution** | No          | Yes         | No          | No           | Yes            |
+| **SharedArrayBuffer**  | Yes         | Yes         | Yes         | Yes          | Yes            |
+| **Message Passing**    | postMessage | postMessage | postMessage | postMessage  | parentPort     |
+| **Use Case**           | UI          | Computation | Embedding   | Server       | Computation    |
 
 ## Context Isolation Benefits
 
 ### 1. Security
+
 Different origins can't access each other's data:
+
 ```html
 <!-- Parent: https://mysite.com -->
 <iframe src="https://evil.com/malicious.html"></iframe>
@@ -326,7 +357,9 @@ Different origins can't access each other's data:
 ```
 
 ### 2. Stability
+
 Worker crash doesn't crash main thread:
+
 ```javascript
 // worker.js
 throw new Error('Worker crashed!');
@@ -339,7 +372,9 @@ worker.addEventListener('error', (error) => {
 ```
 
 ### 3. Performance
+
 CPU work doesn't block UI:
+
 ```javascript
 //  Bad: Blocks UI
 function processBigData(data) {
@@ -356,6 +391,7 @@ worker.postMessage(data);
 ## Context Limitations
 
 ### 1. No Direct Function Calls
+
 ```javascript
 //  Can't do this across contexts
 worker.someFunction();
@@ -365,6 +401,7 @@ worker.postMessage({ action: 'someFunction' });
 ```
 
 ### 2. No Shared Variables
+
 ```javascript
 // Main thread
 let counter = 0;
@@ -380,6 +417,7 @@ self.addEventListener('message', (event) => {
 ```
 
 ### 3. Serialization Required
+
 ```javascript
 //  Can't send functions
 worker.postMessage({ callback: () => {} }); // Error!
@@ -396,12 +434,7 @@ worker.postMessage({ data: [1, 2, 3] }); // OK
 postbridge provides helpers to detect the current context:
 
 ```javascript
-import {
-  isWorker,
-  isIframe,
-  isNodeEnv,
-  isNodeWorker
-} from 'postbridge/helpers';
+import { isWorker, isIframe, isNodeEnv, isNodeWorker } from 'postbridge/helpers';
 
 if (isWorker()) {
   console.log('Running in Web Worker');
@@ -423,6 +456,7 @@ if (isNodeEnv()) {
 ## Context-Specific APIs
 
 ### Main Thread Only
+
 ```javascript
 // Browser main thread
 document.getElementById('button');
@@ -432,6 +466,7 @@ navigator.geolocation.getCurrentPosition();
 ```
 
 ### Worker Only
+
 ```javascript
 // Web Worker
 importScripts('lib.js');
@@ -443,6 +478,7 @@ parentPort.postMessage('hello');
 ```
 
 ### iframe Specific
+
 ```javascript
 // iframe
 window.parent.postMessage('hello', '*');
@@ -454,6 +490,7 @@ window.top.location; // Top window location
 postbridge **automatically detects** the current context and adapts:
 
 ### Auto-detection in Guest
+
 ```javascript
 // In any context (worker, iframe, etc.)
 import { guest } from '@userplane/postbridge';
@@ -463,6 +500,7 @@ const connection = await guest.connect(schema);
 ```
 
 **Behind the scenes:**
+
 ```javascript
 function getTargetHost() {
   if (isNodeWorker()) {
@@ -479,7 +517,9 @@ function getTargetHost() {
 ```
 
 ### Unified API Across Contexts
+
 Same code works everywhere:
+
 ```javascript
 // Works in Web Worker
 const connection = await guest.connect(schema);
@@ -496,22 +536,26 @@ const connection = await guest.connect(schema);
 ### 1. Choose the Right Context
 
 **Use Main Thread for:**
+
 - DOM manipulation
 - User interactions
 - Simple, fast operations
 
 **Use Web Workers for:**
+
 - Image/video processing
 - Data parsing
 - Complex calculations
 - Long-running tasks
 
 **Use iframes for:**
+
 - Third-party content
 - Untrusted code
 - Cross-origin embeds
 
 **Use Node.js Workers for:**
+
 - Server-side computation
 - Parallel data processing
 - CPU-intensive APIs
@@ -542,24 +586,28 @@ const dataWorker = new Worker('data-parser.js');
 ## Summary
 
 **JavaScript Contexts:**
+
 - Isolated execution environments
 - Cannot directly access each other
 - Must communicate via postMessage
 - Each has different capabilities
 
 **Main Types:**
+
 - Main Thread (DOM, UI)
 - Web Workers (computation)
 - iframes (embedding)
 - Node.js Main/Worker (server-side)
 
 **postbridge Benefits:**
+
 - Auto-detects context
 - Unified API across all contexts
 - Abstracts context differences
 - Makes communication feel natural
 
 **Next steps:**
+
 - Learn about [Security Model](?path=/docs/fundamentals-security--docs) - Keeping contexts safe
 - Review [Architecture](?path=/docs/architecture-overview--docs) - How postbridge connects contexts
 - Check out [Guides](?path=/docs/guides-web-workers--docs) - Platform-specific patterns

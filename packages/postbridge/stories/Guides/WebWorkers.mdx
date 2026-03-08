@@ -11,11 +11,13 @@ Complete guide to using postbridge with Web Workers for parallel processing in t
 Web Workers are background threads in browsers that allow you to run JavaScript in parallel with the main thread without blocking the UI.
 
 **Benefits:**
+
 - **Non-blocking:** CPU-intensive work doesn't freeze the UI
 - **Parallel processing:** True multi-threading in the browser
 - **Isolation:** Separate global scope, can't access DOM
 
 **Use cases:**
+
 - Image/video processing
 - Data parsing and transformation
 - Complex calculations
@@ -27,6 +29,7 @@ Web Workers are background threads in browsers that allow you to run JavaScript 
 ### 1. Create Worker File
 
 **worker.js:**
+
 ```javascript
 import { guest } from '@userplane/postbridge';
 
@@ -43,7 +46,7 @@ const connection = await guest.connect({
       if (isPrime(i)) primes.push(i);
     }
     return primes;
-  }
+  },
 });
 
 function isPrime(n) {
@@ -57,6 +60,7 @@ function isPrime(n) {
 ### 2. Create Main Thread Code
 
 **main.js:**
+
 ```javascript
 import { host } from '@userplane/postbridge';
 
@@ -67,7 +71,7 @@ const worker = new Worker('worker.js', { type: 'module' });
 const connection = await host.connect(worker, {
   updateProgress: (percent) => {
     console.log(`Progress: ${percent}%`);
-  }
+  },
 });
 
 // Call worker methods
@@ -83,6 +87,7 @@ connection.close();
 ### Example 1: Image Processing
 
 **main.js:**
+
 ```javascript
 import { host, withTransferable } from '@userplane/postbridge';
 
@@ -96,10 +101,10 @@ const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
 // Process in worker (transfer for efficiency)
 const processed = await connection.remote.applyFilter(
-  withTransferable(t => ({
+  withTransferable((t) => ({
     data: t(imageData.data.buffer),
     width: canvas.width,
-    height: canvas.height
+    height: canvas.height,
   }))
 );
 
@@ -113,6 +118,7 @@ ctx.putImageData(newImageData, 0, 0);
 ```
 
 **image-worker.js:**
+
 ```javascript
 import { guest } from '@userplane/postbridge';
 
@@ -123,7 +129,7 @@ const connection = await guest.connect({
     // Apply grayscale filter
     for (let i = 0; i < pixels.length; i += 4) {
       const avg = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
-      pixels[i] = avg;     // R
+      pixels[i] = avg; // R
       pixels[i + 1] = avg; // G
       pixels[i + 2] = avg; // B
       // pixels[i + 3] is alpha (unchanged)
@@ -132,15 +138,16 @@ const connection = await guest.connect({
     return {
       data: pixels.buffer,
       width,
-      height
+      height,
     };
-  }
+  },
 });
 ```
 
 ### Example 2: Data Processing with Progress
 
 **main.js:**
+
 ```javascript
 const worker = new Worker('data-worker.js', { type: 'module' });
 
@@ -149,7 +156,7 @@ const connection = await host.connect(worker, {
     const percent = ((current / total) * 100).toFixed(1);
     progressBar.style.width = `${percent}%`;
     progressBar.textContent = `${percent}%`;
-  }
+  },
 });
 
 // Process large dataset
@@ -158,6 +165,7 @@ console.log('Processing complete:', results);
 ```
 
 **data-worker.js:**
+
 ```javascript
 import { guest } from '@userplane/postbridge';
 
@@ -180,13 +188,14 @@ const connection = await guest.connect({
     await remote.onProgress(total, total);
 
     return results;
-  }
+  },
 });
 ```
 
 ### Example 3: Worker Pool
 
 **worker-pool.js:**
+
 ```javascript
 import { host } from '@userplane/postbridge';
 
@@ -205,7 +214,7 @@ export class WorkerPool {
 
     for (let i = 0; i < this.poolSize; i++) {
       const worker = new Worker(this.workerScript, { type: 'module' });
-      const promise = host.connect(worker, this.schema).then(conn => {
+      const promise = host.connect(worker, this.schema).then((conn) => {
         this.connections.push(conn);
         this.available.push(conn);
         return conn;
@@ -221,7 +230,7 @@ export class WorkerPool {
 
     // Wait for available connection
     while (this.available.length === 0) {
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
 
     const conn = this.available.pop();
@@ -235,16 +244,20 @@ export class WorkerPool {
 
   async close() {
     await this.initialized;
-    this.connections.forEach(conn => conn.close());
+    this.connections.forEach((conn) => conn.close());
     this.connections = [];
     this.available = [];
   }
 }
 
 // Usage:
-const pool = new WorkerPool('worker.js', {
-  log: (msg) => console.log(msg)
-}, 4);
+const pool = new WorkerPool(
+  'worker.js',
+  {
+    log: (msg) => console.log(msg),
+  },
+  4
+);
 
 // Execute tasks in parallel
 const results = await Promise.all([
@@ -304,27 +317,30 @@ Initialize worker with configuration:
 const connection = await host.connect(worker, {
   getConfig: () => ({
     apiKey: 'abc123',
-    endpoint: 'https://api.example.com'
-  })
+    endpoint: 'https://api.example.com',
+  }),
 });
 
 // worker.js
 let config;
 
-const connection = await guest.connect({
-  process: async (data) => {
-    // Use config loaded during setup
-    const response = await fetch(config.endpoint, {
-      headers: { 'Authorization': config.apiKey }
-    });
-    return response.json();
+const connection = await guest.connect(
+  {
+    process: async (data) => {
+      // Use config loaded during setup
+      const response = await fetch(config.endpoint, {
+        headers: { Authorization: config.apiKey },
+      });
+      return response.json();
+    },
+  },
+  {
+    onConnectionSetup: async (remote) => {
+      // Load config during handshake
+      config = await remote.getConfig();
+    },
   }
-}, {
-  onConnectionSetup: async (remote) => {
-    // Load config during handshake
-    config = await remote.getConfig();
-  }
-});
+);
 ```
 
 ## Performance Tips
@@ -337,9 +353,7 @@ const buffer = new ArrayBuffer(10 * 1024 * 1024);
 await connection.remote.process({ buffer });
 
 //  Fast: Transfers 10MB (zero-copy)
-await connection.remote.process(
-  withTransferable(t => t(buffer))
-);
+await connection.remote.process(withTransferable((t) => t(buffer)));
 ```
 
 ### 2. Batch Operations
@@ -359,9 +373,7 @@ await connection.remote.processBatch(items);
 ```javascript
 // Process 100 items across 4 workers
 const pool = new WorkerPool('worker.js', {}, 4);
-const results = await Promise.all(
-  items.map(item => pool.execute('process', item))
-);
+const results = await Promise.all(items.map((item) => pool.execute('process', item)));
 ```
 
 ## Debugging Workers
@@ -414,12 +426,14 @@ Web Workers are supported in all modern browsers:
 - Opera 10.6+
 
 **Module workers (`type: 'module'`):**
+
 - Chrome 80+
 - Firefox 114+
 - Safari 15+
 - Edge 80+
 
 **Fallback for older browsers:**
+
 ```javascript
 if (typeof Worker !== 'undefined') {
   // Use Web Workers
@@ -428,7 +442,7 @@ if (typeof Worker !== 'undefined') {
 } else {
   // Fallback to main thread
   console.warn('Web Workers not supported, running in main thread');
-  import('./worker-logic.js').then(module => {
+  import('./worker-logic.js').then((module) => {
     // Run directly
   });
 }
@@ -450,6 +464,7 @@ if (typeof Worker !== 'undefined') {
 - Always close connections to free resources
 
 **Next steps:**
+
 - [iframes Guide](?path=/docs/guides-iframes--docs) for cross-frame communication
 - [Transferables Guide](?path=/docs/guides-transferables--docs) for efficient data transfer
 - [Examples](?path=/docs/examples-workers--docs) for more real-world patterns

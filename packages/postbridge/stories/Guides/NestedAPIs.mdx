@@ -33,6 +33,7 @@ Nested APIs allow you to organize methods into **namespaced hierarchies** rather
 ```
 
 **Benefits:**
+
 - **Organization**: Logical grouping of related methods
 - **Clarity**: Clear API structure
 - **Scalability**: Easy to add new namespaces
@@ -43,6 +44,7 @@ Nested APIs allow you to organize methods into **namespaced hierarchies** rather
 ### Simple Nesting
 
 **Guest:**
+
 ```javascript
 import { guest } from '@userplane/postbridge';
 
@@ -54,18 +56,19 @@ const connection = await guest.connect({
     divide: (a, b) => {
       if (b === 0) throw new Error('Division by zero');
       return a / b;
-    }
+    },
   },
 
   string: {
     uppercase: (s) => s.toUpperCase(),
     lowercase: (s) => s.toLowerCase(),
-    reverse: (s) => s.split('').reverse().join('')
-  }
+    reverse: (s) => s.split('').reverse().join(''),
+  },
 });
 ```
 
 **Host:**
+
 ```javascript
 import { host } from '@userplane/postbridge';
 
@@ -96,19 +99,19 @@ const connection = await guest.connect({
       get: (id) => database.users.findById(id),
       create: (data) => database.users.create(data),
       update: (id, data) => database.users.update(id, data),
-      delete: (id) => database.users.delete(id)
+      delete: (id) => database.users.delete(id),
     },
 
     posts: {
       list: () => database.posts.findAll(),
       get: (id) => database.posts.findById(id),
-      byAuthor: (authorId) => database.posts.findByAuthor(authorId)
+      byAuthor: (authorId) => database.posts.findByAuthor(authorId),
     },
 
     comments: {
-      byPost: (postId) => database.comments.findByPost(postId)
-    }
-  }
+      byPost: (postId) => database.comments.findByPost(postId),
+    },
+  },
 });
 
 // Usage
@@ -130,23 +133,23 @@ const connection = await guest.connect({
       create: (data) => users.create(data),
       update: (id, data) => users.update(id, data),
       delete: (id) => users.delete(id),
-      count: () => users.count()
+      count: () => users.count(),
     },
 
     products: {
       find: (query) => products.find(query),
       findOne: (id) => products.findOne(id),
       search: (term) => products.search(term),
-      inStock: () => products.find({ stock: { $gt: 0 } })
+      inStock: () => products.find({ stock: { $gt: 0 } }),
     },
 
     orders: {
       find: (query) => orders.find(query),
       findOne: (id) => orders.findOne(id),
       create: (order) => orders.create(order),
-      byUser: (userId) => orders.find({ userId })
-    }
-  }
+      byUser: (userId) => orders.find({ userId }),
+    },
+  },
 });
 
 // Usage
@@ -164,7 +167,7 @@ const connection = await guest.connect({
       grayscale: (imageData) => applyGrayscale(imageData),
       sepia: (imageData) => applySepia(imageData),
       invert: (imageData) => applyInvert(imageData),
-      blur: (imageData, radius) => applyBlur(imageData, radius)
+      blur: (imageData, radius) => applyBlur(imageData, radius),
     },
 
     transforms: {
@@ -173,16 +176,16 @@ const connection = await guest.connect({
       rotate: (imageData, degrees) => rotate(imageData, degrees),
       flip: {
         horizontal: (imageData) => flipHorizontal(imageData),
-        vertical: (imageData) => flipVertical(imageData)
-      }
+        vertical: (imageData) => flipVertical(imageData),
+      },
     },
 
     analyze: {
       histogram: (imageData) => calculateHistogram(imageData),
       dominantColors: (imageData) => findDominantColors(imageData),
-      brightness: (imageData) => calculateBrightness(imageData)
-    }
-  }
+      brightness: (imageData) => calculateBrightness(imageData),
+    },
+  },
 });
 
 // Usage
@@ -204,13 +207,13 @@ const connection = await guest.connect({
       file: (filepath) => fs.readFile(filepath, 'utf8'),
       json: async (filepath) => JSON.parse(await fs.readFile(filepath, 'utf8')),
       binary: (filepath) => fs.readFile(filepath),
-      dir: (dirpath) => fs.readdir(dirpath)
+      dir: (dirpath) => fs.readdir(dirpath),
     },
 
     write: {
       file: (filepath, content) => fs.writeFile(filepath, content),
       json: (filepath, obj) => fs.writeFile(filepath, JSON.stringify(obj, null, 2)),
-      binary: (filepath, buffer) => fs.writeFile(filepath, buffer)
+      binary: (filepath, buffer) => fs.writeFile(filepath, buffer),
     },
 
     info: {
@@ -223,16 +226,16 @@ const connection = await guest.connect({
         }
       },
       stats: (filepath) => fs.stat(filepath),
-      size: async (filepath) => (await fs.stat(filepath)).size
+      size: async (filepath) => (await fs.stat(filepath)).size,
     },
 
     operations: {
       copy: (src, dest) => fs.copyFile(src, dest),
       move: (src, dest) => fs.rename(src, dest),
       delete: (filepath) => fs.unlink(filepath),
-      mkdir: (dirpath) => fs.mkdir(dirpath, { recursive: true })
-    }
-  }
+      mkdir: (dirpath) => fs.mkdir(dirpath, { recursive: true }),
+    },
+  },
 });
 
 // Usage
@@ -257,37 +260,37 @@ const connection = await guest.connect({
         }
         return chunks;
       },
-      shuffle: (arr) => arr.sort(() => Math.random() - 0.5)
+      shuffle: (arr) => arr.sort(() => Math.random() - 0.5),
     },
 
     object: {
       pick: (obj, keys) => {
         const result = {};
-        keys.forEach(key => {
+        keys.forEach((key) => {
           if (key in obj) result[key] = obj[key];
         });
         return result;
       },
       omit: (obj, keys) => {
         const result = { ...obj };
-        keys.forEach(key => delete result[key]);
+        keys.forEach((key) => delete result[key]);
         return result;
       },
-      merge: (...objects) => Object.assign({}, ...objects)
+      merge: (...objects) => Object.assign({}, ...objects),
     },
 
     string: {
       capitalize: (s) => s.charAt(0).toUpperCase() + s.slice(1),
       slugify: (s) => s.toLowerCase().replace(/\s+/g, '-'),
-      truncate: (s, length) => s.length > length ? s.slice(0, length) + '...' : s
+      truncate: (s, length) => (s.length > length ? s.slice(0, length) + '...' : s),
     },
 
     date: {
       format: (date, format) => formatDate(date, format),
       addDays: (date, days) => new Date(date.getTime() + days * 86400000),
-      diffDays: (date1, date2) => Math.floor((date2 - date1) / 86400000)
-    }
-  }
+      diffDays: (date1, date2) => Math.floor((date2 - date1) / 86400000),
+    },
+  },
 });
 
 // Usage
@@ -309,13 +312,13 @@ const connection = await guest.connect({
   // Nested methods
   data: {
     get: (key) => storage.get(key),
-    set: (key, value) => storage.set(key, value)
+    set: (key, value) => storage.set(key, value),
   },
 
   compute: {
     sum: (numbers) => numbers.reduce((a, b) => a + b, 0),
-    average: (numbers) => numbers.reduce((a, b) => a + b, 0) / numbers.length
-  }
+    average: (numbers) => numbers.reduce((a, b) => a + b, 0) / numbers.length,
+  },
 });
 
 // Usage
@@ -333,13 +336,13 @@ Both host and guest can have nested APIs:
 const connection = await host.connect(worker, {
   ui: {
     showMessage: (msg) => alert(msg),
-    updateProgress: (percent) => progressBar.value = percent
+    updateProgress: (percent) => (progressBar.value = percent),
   },
 
   storage: {
     save: (key, value) => localStorage.setItem(key, value),
-    load: (key) => localStorage.getItem(key)
-  }
+    load: (key) => localStorage.getItem(key),
+  },
 });
 
 // Worker with nested API
@@ -358,8 +361,8 @@ const connection = await guest.connect({
         // Process frame...
       }
       return processedVideo;
-    }
-  }
+    },
+  },
 });
 
 // Both sides use nested calls
@@ -385,17 +388,17 @@ interface GuestSchema {
 const connection = await guest.connect<GuestSchema, HostSchema>({
   math: {
     add: (a, b) => a + b,
-    subtract: (a, b) => a - b
+    subtract: (a, b) => a - b,
   },
   string: {
     uppercase: (s) => s.toUpperCase(),
-    lowercase: (s) => s.toLowerCase()
-  }
+    lowercase: (s) => s.toLowerCase(),
+  },
 });
 
 // Type-safe calls
-const sum: number = await connection.remote.math.add(5, 3); // 
-const upper: string = await connection.remote.string.uppercase('hello'); // 
+const sum: number = await connection.remote.math.add(5, 3); //
+const upper: string = await connection.remote.string.uppercase('hello'); //
 
 // TypeScript errors
 await connection.remote.math.add('5', '3'); //  Wrong types
@@ -459,13 +462,13 @@ While there's no hard limit, very deep nesting can impact performance:
 
 ```javascript
 //  Good: 2-3 levels
-api.users.get(id)
+api.users.get(id);
 
 // ️ Okay: 4-5 levels
-api.v1.resources.users.profiles.get(id)
+api.v1.resources.users.profiles.get(id);
 
 //  Avoid: Too deep
-api.v1.endpoints.resources.users.data.profiles.info.get(id)
+api.v1.endpoints.resources.users.data.profiles.info.get(id);
 ```
 
 ### Method Name Conflicts
@@ -475,17 +478,17 @@ Avoid using reserved words or conflicting names:
 ```javascript
 //  Bad: 'constructor' is reserved
 {
-  constructor: () => {} // Error!
+  constructor: () => {}; // Error!
 }
 
 //  Bad: Conflicts with properties
 {
-  toString: () => {} // May cause issues
+  toString: () => {}; // May cause issues
 }
 
 //  Good: Clear, non-conflicting names
 {
-  build: () => {}
+  build: () => {};
 }
 ```
 
@@ -557,6 +560,7 @@ Support both during transition:
 - **Works with**: Bidirectional RPC, all contexts
 
 **Next steps:**
+
 - [Bidirectional RPC](?path=/docs/guides-bidirectional-rpc--docs)
 - [Error Handling](?path=/docs/guides-error-handling--docs)
 - [API Reference](?path=/docs/apireference-hostapi--docs)

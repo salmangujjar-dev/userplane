@@ -76,14 +76,13 @@ Even with auto-init, you can call `window.userplane.initialize()` again to custo
 
 ```javascript
 // Wait for the embed script to load
-document.querySelector('script[src*="script.js"]')
-  .addEventListener('load', () => {
-    // wait for the async main bundle load
-    window.userplane.initialize({
-      openImmediately: false,
-      metadata: { plan: 'enterprise' },
-    });
+document.querySelector('script[src*="script.js"]').addEventListener('load', () => {
+  // wait for the async main bundle load
+  window.userplane.initialize({
+    openImmediately: false,
+    metadata: { plan: 'enterprise' },
   });
+});
 ```
 
 Note: `initialize()` is idempotent — calling it multiple times is safe. The second call re-applies options but does not re-mount the recorder.

@@ -116,13 +116,13 @@ const conn = await bridge.connect({
 // App 1: Counter
 const counterConn = await bridge.connect(
   { counter: 0, increment: (remote) => remote.counter++ },
-  { channel: "counter-app" },
+  { channel: 'counter-app' }
 );
 
 // App 2: Todos (completely isolated)
 const todoConn = await bridge.connect(
   { todos: [], addTodo: (todo, remote) => [...remote.todos, todo] },
-  { channel: "todo-app" },
+  { channel: 'todo-app' }
 );
 ```
 
@@ -168,12 +168,12 @@ const schema = {
   // Namespace methods with prefixes or parameters
   setCounterApp1: (value, remote) => {
     remote.counter.app1 = value;
-    if (currentApp === "app1") updateUI(value);
+    if (currentApp === 'app1') updateUI(value);
   },
 
   setCounterApp2: (value, remote) => {
     remote.counter.app2 = value;
-    if (currentApp === "app2") updateUI(value);
+    if (currentApp === 'app2') updateUI(value);
   },
 
   // Or use a parameter-based approach
@@ -185,7 +185,7 @@ const schema = {
 
 // Usage
 const conn = await bridge.connect(schema);
-conn.remote.setCounter("app1", 42);
+conn.remote.setCounter('app1', 42);
 ```
 
 **Tradeoffs:**
@@ -202,11 +202,11 @@ A future enhancement could add explicit channels or namespaces:
 ```typescript
 // Hypothetical future API
 const conn1 = await bridge.connect(schema1, {
-  channel: "counter-app",
+  channel: 'counter-app',
 });
 
 const conn2 = await bridge.connect(schema2, {
-  channel: "todo-app",
+  channel: 'todo-app',
 });
 
 // These would use isolated state spaces within the same worker
@@ -220,11 +220,11 @@ const conn2 = await bridge.connect(schema2, {
    ```typescript
    // Worker would maintain:
    const channels = new Map();
-   channels.set("counter-app", {
+   channels.set('counter-app', {
      connectedTabs: new Map(),
      sharedState: { counter: 0 },
    });
-   channels.set("todo-app", {
+   channels.set('todo-app', {
      connectedTabs: new Map(),
      sharedState: { todos: [] },
    });
@@ -255,7 +255,7 @@ export const globalSchema = {
 };
 
 // Every component/tab uses this
-import { globalSchema } from "./shared-schema";
+import { globalSchema } from './shared-schema';
 const conn = await bridge.connect(globalSchema);
 ```
 
@@ -307,7 +307,7 @@ If different tabs need different behavior for the same broadcast:
 
 ```typescript
 const schema = {
-  theme: "light",
+  theme: 'light',
 
   setTheme: (newTheme, remote) => {
     remote.theme = newTheme;
@@ -321,7 +321,7 @@ const schema = {
 
 // Tab A might apply, Tab B might ignore
 function shouldApplyTheme() {
-  return document.getElementById("theme-sensitive") !== null;
+  return document.getElementById('theme-sensitive') !== null;
 }
 ```
 
@@ -339,7 +339,7 @@ bridge.connect = async (...args) => {
     console.warn(
       `Multiple Bridge connections detected (${connectionCount}). ` +
         `This may cause unexpected behavior. ` +
-        `See: docs/guides/multiple-connections.md`,
+        `See: docs/guides/multiple-connections.md`
     );
   }
   return originalConnect(...args);
@@ -352,16 +352,16 @@ bridge.connect = async (...args) => {
 const conn = await bridge.connect(schema);
 
 // After connection, you can inspect what's in shared state
-console.log("Shared state keys:", Object.keys(conn.remote));
+console.log('Shared state keys:', Object.keys(conn.remote));
 
 // Check if unexpected keys exist
-const expectedKeys = Object.keys(schema).filter((k) => typeof schema[k] !== "function");
-const actualKeys = Object.keys(conn.remote).filter((k) => typeof conn.remote[k] !== "function");
+const expectedKeys = Object.keys(schema).filter((k) => typeof schema[k] !== 'function');
+const actualKeys = Object.keys(conn.remote).filter((k) => typeof conn.remote[k] !== 'function');
 const unexpected = actualKeys.filter((k) => !expectedKeys.includes(k));
 
 if (unexpected.length > 0) {
-  console.warn("Unexpected shared state keys:", unexpected);
-  console.warn("Another schema may have been used in a different tab");
+  console.warn('Unexpected shared state keys:', unexpected);
+  console.warn('Another schema may have been used in a different tab');
 }
 ```
 
@@ -379,8 +379,8 @@ if (unexpected.length > 0) {
 1. **Multiple independent apps**: Use different channels
 
    ```typescript
-   const app1 = await bridge.connect(schema1, { channel: "app1" });
-   const app2 = await bridge.connect(schema2, { channel: "app2" });
+   const app1 = await bridge.connect(schema1, { channel: 'app1' });
+   const app2 = await bridge.connect(schema2, { channel: 'app2' });
    ```
 
 2. **Single app**: Use one consistent schema (no channel needed)

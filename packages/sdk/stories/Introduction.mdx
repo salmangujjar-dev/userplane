@@ -32,15 +32,15 @@ The SDK acts as the **host** in a PostBridge RPC pair. The recorder runs in a sa
 
 ## Key Features
 
-| Feature | Description |
-|---------|-------------|
-| **SSR-safe** | No `window`/`document` access on import — safe to import in Next.js, Nuxt, SvelteKit |
-| **Tree-shakeable** | `"sideEffects": false` — unused exports are dropped by bundlers |
-| **Zero import side effects** | Nothing executes until you call `initialize()` |
-| **TypeScript** | Full type definitions exported — no `@types/` package needed |
-| **Cross-tab coordination** | Hidden capture iframe tracks recorder state across tabs |
-| **Privacy blur** | Integrates with `@userplane/blurr` for sensitive field masking |
-| **Metadata** | Static and dynamic key-value pairs attached to each recording |
+| Feature                      | Description                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------ |
+| **SSR-safe**                 | No `window`/`document` access on import — safe to import in Next.js, Nuxt, SvelteKit |
+| **Tree-shakeable**           | `"sideEffects": false` — unused exports are dropped by bundlers                      |
+| **Zero import side effects** | Nothing executes until you call `initialize()`                                       |
+| **TypeScript**               | Full type definitions exported — no `@types/` package needed                         |
+| **Cross-tab coordination**   | Hidden capture iframe tracks recorder state across tabs                              |
+| **Privacy blur**             | Integrates with `@userplane/blurr` for sensitive field masking                       |
+| **Metadata**                 | Static and dynamic key-value pairs attached to each recording                        |
 
 ## Simplest Possible Setup
 
@@ -60,17 +60,17 @@ initialize();
 
 ## How This Documentation Is Organized
 
-| Section | What You'll Find |
-|---------|-----------------|
-| **Getting Started** | Installation, CDN usage, framework-specific guides |
-| **Concepts** | Mental models for sessions, workspace IDs, tab identity, iframe isolation |
-| **Configuration** | Every `initialize()` option, open modes, URL parameter handling |
-| **Lifecycle** | Full flowchart of the session lifecycle, state tracking, unload protection |
-| **Metadata** | Attaching static and dynamic data to recordings |
-| **Privacy** | Blur integration, domain verification, sandbox permissions |
-| **Cross-Tab** | How the capture iframe and tab references work |
-| **Architecture** | Internal module design, frame managers, bridge integration |
-| **API Reference** | Complete function signatures, types, and parameter docs |
-| **Troubleshooting** | Common issues, debugging techniques |
+| Section             | What You'll Find                                                           |
+| ------------------- | -------------------------------------------------------------------------- |
+| **Getting Started** | Installation, CDN usage, framework-specific guides                         |
+| **Concepts**        | Mental models for sessions, workspace IDs, tab identity, iframe isolation  |
+| **Configuration**   | Every `initialize()` option, open modes, URL parameter handling            |
+| **Lifecycle**       | Full flowchart of the session lifecycle, state tracking, unload protection |
+| **Metadata**        | Attaching static and dynamic data to recordings                            |
+| **Privacy**         | Blur integration, domain verification, sandbox permissions                 |
+| **Cross-Tab**       | How the capture iframe and tab references work                             |
+| **Architecture**    | Internal module design, frame managers, bridge integration                 |
+| **API Reference**   | Complete function signatures, types, and parameter docs                    |
+| **Troubleshooting** | Common issues, debugging techniques                                        |
 
 Start with **Getting Started → Quick Start** if you're new, or jump directly to **API Reference** for a function lookup.

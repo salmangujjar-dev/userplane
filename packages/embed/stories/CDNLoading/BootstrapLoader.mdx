@@ -54,6 +54,7 @@ const manifest = await response.json();
 The `?t={Date.now()}` query parameter makes every manifest request unique, so browsers never serve a cached manifest. The HTTP cache on the CDN side still applies (`max-age=300`) — the `?t=` param bypasses the **browser** cache only.
 
 This ensures:
+
 - New manifests are always fetched fresh by the browser
 - The CDN can still cache manifest responses for 5 minutes (reducing origin load)
 
@@ -84,11 +85,7 @@ if (nonce) {
 Usage in HTML:
 
 ```html
-<script
-  src="https://cdn.example.com/embed/script.js"
-  nonce="abc123"
-  defer
-></script>
+<script src="https://cdn.example.com/embed/script.js" nonce="abc123" defer></script>
 ```
 
 The injected `main.{hash}.js` script tag will also carry `nonce="abc123"`, satisfying the CSP `script-src 'nonce-abc123'` directive.

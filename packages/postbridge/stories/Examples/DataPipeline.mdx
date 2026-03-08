@@ -9,6 +9,7 @@ This example demonstrates building a multi-stage data processing pipeline using 
 ## Overview
 
 **What it does:**
+
 - Processes CSV files through multiple transformation stages
 - Uses worker pools for parallel processing
 - Reports progress at each stage
@@ -16,6 +17,7 @@ This example demonstrates building a multi-stage data processing pipeline using 
 - Achieves 10x speedup with parallelization
 
 **Architecture:**
+
 ```
 Input CSV → Extract → Transform → Validate → Aggregate → Output JSON
              ↓          ↓           ↓           ↓
@@ -67,7 +69,7 @@ class WorkerPool {
     for (let i = 0; i < this.size; i++) {
       const worker = new Worker(this.workerScript);
 
-      const promise = host.connect(worker, this.schema).then(conn => {
+      const promise = host.connect(worker, this.schema).then((conn) => {
         this.connections.push(conn);
         this.available.push(conn);
         return conn;
@@ -114,7 +116,7 @@ class WorkerPool {
 
   async close() {
     console.log('Closing worker pool...');
-    this.connections.forEach(conn => conn.close());
+    this.connections.forEach((conn) => conn.close());
     this.connections = [];
     this.available = [];
     this.queue = [];
@@ -128,7 +130,7 @@ class DataPipeline {
       processed: 0,
       errors: 0,
       startTime: null,
-      endTime: null
+      endTime: null,
     };
   }
 
@@ -194,26 +196,25 @@ class DataPipeline {
 
       console.log(' Stage 3: Validating data...');
       const validationResults = await Promise.all(
-        transformedData.map(record =>
-          validatePool.execute('validate', record).catch(error => ({
+        transformedData.map((record) =>
+          validatePool.execute('validate', record).catch((error) => ({
             valid: false,
             errors: [error.message],
-            record
+            record,
           }))
         )
       );
 
-      const validRecords = validationResults.filter(r => r.valid);
-      const invalidRecords = validationResults.filter(r => !r.valid);
+      const validRecords = validationResults.filter((r) => r.valid);
+      const invalidRecords = validationResults.filter((r) => !r.valid);
 
       console.log(`   Valid: ${validRecords.length}, Invalid: ${invalidRecords.length}\n`);
 
       if (invalidRecords.length > 0) {
-        await fs.writeFile(
-          'invalid-records.json',
-          JSON.stringify(invalidRecords, null, 2)
+        await fs.writeFile('invalid-records.json', JSON.stringify(invalidRecords, null, 2));
+        console.log(
+          `   ️  Saved ${invalidRecords.length} invalid records to invalid-records.json\n`
         );
-        console.log(`   ️  Saved ${invalidRecords.length} invalid records to invalid-records.json\n`);
       }
 
       await validatePool.close();
@@ -227,7 +228,10 @@ class DataPipeline {
       await aggregatePool.init();
 
       console.log(' Stage 4: Aggregating results...');
-      const aggregated = await aggregatePool.execute('aggregate', validRecords.map(r => r.record));
+      const aggregated = await aggregatePool.execute(
+        'aggregate',
+        validRecords.map((r) => r.record)
+      );
       console.log(`   Generated ${Object.keys(aggregated).length} aggregations\n`);
 
       await aggregatePool.close();
@@ -290,7 +294,7 @@ const connection = await guest.connect({
     const data = lines.slice(1);
 
     // Parse CSV
-    return data.map(line => {
+    return data.map((line) => {
       const values = line.split(',');
       const record = {};
 
@@ -300,7 +304,7 @@ const connection = await guest.connect({
 
       return record;
     });
-  }
+  },
 });
 
 console.log('Extract worker ready');
@@ -313,7 +317,7 @@ import { guest } from '@userplane/postbridge';
 
 const connection = await guest.connect({
   transform: async (records) => {
-    return records.map(record => ({
+    return records.map((record) => ({
       // Clean and normalize data
       id: parseInt(record.id) || 0,
       date: new Date(record.date).toISOString(),
@@ -326,9 +330,9 @@ const connection = await guest.connect({
       // Add derived fields
       month: new Date(record.date).toISOString().slice(0, 7),
       quarter: `Q${Math.ceil((new Date(record.date).getMonth() + 1) / 3)}`,
-      year: new Date(record.date).getFullYear()
+      year: new Date(record.date).getFullYear(),
     }));
-  }
+  },
 });
 
 console.log('Transform worker ready');
@@ -373,7 +377,7 @@ const connection = await guest.connect({
     }
 
     return { valid: true, record };
-  }
+  },
 });
 
 console.log('Validate worker ready');
@@ -393,28 +397,34 @@ const connection = await guest.connect({
         totalQuantity: 0,
         dateRange: {
           start: null,
-          end: null
-        }
+          end: null,
+        },
       },
       byCustomer: {},
       byProduct: {},
       byMonth: {},
       byQuarter: {},
       topCustomers: [],
-      topProducts: []
+      topProducts: [],
     };
 
     // Calculate aggregations
-    records.forEach(record => {
+    records.forEach((record) => {
       // Summary
       aggregations.summary.totalRevenue += record.total;
       aggregations.summary.totalQuantity += record.quantity;
 
       const date = new Date(record.date);
-      if (!aggregations.summary.dateRange.start || date < new Date(aggregations.summary.dateRange.start)) {
+      if (
+        !aggregations.summary.dateRange.start ||
+        date < new Date(aggregations.summary.dateRange.start)
+      ) {
         aggregations.summary.dateRange.start = record.date;
       }
-      if (!aggregations.summary.dateRange.end || date > new Date(aggregations.summary.dateRange.end)) {
+      if (
+        !aggregations.summary.dateRange.end ||
+        date > new Date(aggregations.summary.dateRange.end)
+      ) {
         aggregations.summary.dateRange.end = record.date;
       }
 
@@ -423,7 +433,7 @@ const connection = await guest.connect({
         aggregations.byCustomer[record.customer] = {
           revenue: 0,
           orders: 0,
-          quantity: 0
+          quantity: 0,
         };
       }
       aggregations.byCustomer[record.customer].revenue += record.total;
@@ -435,7 +445,7 @@ const connection = await guest.connect({
         aggregations.byProduct[record.product] = {
           revenue: 0,
           quantity: 0,
-          orders: 0
+          orders: 0,
         };
       }
       aggregations.byProduct[record.product].revenue += record.total;
@@ -446,7 +456,7 @@ const connection = await guest.connect({
       if (!aggregations.byMonth[record.month]) {
         aggregations.byMonth[record.month] = {
           revenue: 0,
-          orders: 0
+          orders: 0,
         };
       }
       aggregations.byMonth[record.month].revenue += record.total;
@@ -457,7 +467,7 @@ const connection = await guest.connect({
       if (!aggregations.byQuarter[quarterKey]) {
         aggregations.byQuarter[quarterKey] = {
           revenue: 0,
-          orders: 0
+          orders: 0,
         };
       }
       aggregations.byQuarter[quarterKey].revenue += record.total;
@@ -477,7 +487,7 @@ const connection = await guest.connect({
       .map(([name, data]) => ({ name, ...data }));
 
     return aggregations;
-  }
+  },
 });
 
 console.log('Aggregate worker ready');
@@ -507,6 +517,7 @@ await pool.execute('process', data);
 ```
 
 **Benefits:**
+
 - Reuses workers (no creation overhead)
 - Automatic load balancing
 - Parallel processing
@@ -535,26 +546,24 @@ for (let i = 0; i < data.length; i += chunkSize) {
   chunks.push(data.slice(i, i + chunkSize));
 }
 
-const results = await Promise.all(
-  chunks.map(chunk => pool.execute('transform', chunk))
-);
+const results = await Promise.all(chunks.map((chunk) => pool.execute('transform', chunk)));
 ```
 
 ### 4. Error Handling
 
 ```javascript
 const results = await Promise.all(
-  data.map(item =>
-    pool.execute('validate', item).catch(error => ({
+  data.map((item) =>
+    pool.execute('validate', item).catch((error) => ({
       valid: false,
       errors: [error.message],
-      item
+      item,
     }))
   )
 );
 
-const valid = results.filter(r => r.valid);
-const invalid = results.filter(r => !r.valid);
+const valid = results.filter((r) => r.valid);
+const invalid = results.filter((r) => !r.valid);
 ```
 
 ## Performance Results
@@ -562,6 +571,7 @@ const invalid = results.filter(r => !r.valid);
 **Test data:** 100,000 records
 
 ### Sequential Processing
+
 ```
 Extract:    2.5s
 Transform:  15.3s
@@ -572,6 +582,7 @@ Total:      29.7s
 ```
 
 ### Parallel Processing (8 cores)
+
 ```
 Extract:    2.5s
 Transform:  2.1s (7.3x speedup!)
@@ -590,8 +601,8 @@ pipeline
   .addStage('extract', './extract-worker.js')
   .addStage('transform', './transform-worker.js')
   .addStage('validate', './validate-worker.js')
-  .addStage('enrich', './enrich-worker.js')     // ← New stage
-  .addStage('dedupe', './dedupe-worker.js')     // ← New stage
+  .addStage('enrich', './enrich-worker.js') // ← New stage
+  .addStage('dedupe', './dedupe-worker.js') // ← New stage
   .addStage('aggregate', './aggregate-worker.js');
 ```
 
@@ -603,7 +614,7 @@ import { createInterface } from 'readline';
 
 const rl = createInterface({
   input: createReadStream('large-file.csv'),
-  crlfDelay: Infinity
+  crlfDelay: Infinity,
 });
 
 const batch = [];
@@ -635,17 +646,18 @@ const results = await Promise.all(
 
 ## Key Concepts Demonstrated
 
--  Worker pools for efficiency
--  Parallel processing with chunking
--  Multi-stage data pipeline
--  Error handling and validation
--  Progress reporting
--  Performance optimization
--  Resource management
+- Worker pools for efficiency
+- Parallel processing with chunking
+- Multi-stage data pipeline
+- Error handling and validation
+- Progress reporting
+- Performance optimization
+- Resource management
 
 ## Summary
 
 This example shows:
+
 - Building a production-ready data pipeline
 - Using worker pools for parallel processing
 - Achieving significant performance gains (3-7x speedup)
@@ -653,6 +665,7 @@ This example shows:
 - Processing large datasets efficiently
 
 **Real-world applications:**
+
 - ETL (Extract, Transform, Load) pipelines
 - Log processing
 - Report generation

@@ -28,11 +28,13 @@ Bridge, by contrast, operates in an N:N model: any number of tabs can connect to
 In Bridge's architecture, the SharedWorker serves as a coordination point, not a computation engine. It holds shared state and relays messages between tabs but does not execute application logic. This design choice keeps business logic in the tabs where it can be easily debugged, hot-reloaded, and tested.
 
 The SharedWorker maintains:
+
 - A registry of connected tabs and their MessagePorts
 - The current values of shared state variables
 - A relay mechanism for broadcasting function calls
 
 Each tab maintains:
+
 - Its own local copy of the schema (functions)
 - A cached copy of shared state (synchronized with the worker)
 - Event listeners for reacting to broadcasts from other tabs
@@ -48,11 +50,11 @@ Consider a simple increment operation:
 ```typescript
 const schema = {
   counter: 0,
-  
+
   increment: (remote) => {
     remote.counter++;
     return remote.counter;
-  }
+  },
 };
 ```
 
@@ -63,18 +65,15 @@ At first glance, this appears reasonable. However, let us trace the execution wh
    - Increments to 1
    - Updates its local cache to 1
    - Broadcasts "increment" to SharedWorker
-   
 2. **SharedWorker relay (t=5ms)**:
    - Receives broadcast from Tab A
    - Updates its own `counter` to 1
    - Relays the increment call to all other tabs
-   
 3. **Tab B execution (t=10ms)**:
    - Receives "execute increment()" message
    - Reads `remote.counter` (value: 1, from state sync)
    - Increments to 2
    - Updates its local cache to 2
-   
 4. **Tab C execution (t=12ms)**:
    - Receives "execute increment()" message
    - Reads `remote.counter` (value: 2, from Tab B's update)
@@ -106,6 +105,7 @@ This is not a flaw in the design—it is an inherent property of distributed sys
 **Concept**: Shared variables serve as a source of truth that all tabs read but do not mutate through broadcast functions.
 
 **When to use**:
+
 - Application configuration that is set once and read by all tabs
 - User profile information loaded at startup
 - Feature flags or A/B test assignments
@@ -119,21 +119,19 @@ const schema = {
   currentUser: { name: 'Alice', id: 123, role: 'admin' },
   appConfig: { theme: 'dark', locale: 'en-US' },
   featureFlags: { enableBetaFeature: true },
-  
+
   // Functions read but do not mutate shared state
   displayWelcome: (remote) => {
     const message = `Welcome back, ${remote.currentUser.name}`;
     document.getElementById('welcome').textContent = message;
     return message;
   },
-  
-  checkFeatureAccess: (featureName, remote) => {
-    const hasAccess = remote.currentUser.role === 'admin' 
 
-      || remote.featureFlags[featureName];
+  checkFeatureAccess: (featureName, remote) => {
+    const hasAccess = remote.currentUser.role === 'admin' || remote.featureFlags[featureName];
 
     return hasAccess;
-  }
+  },
 };
 ```
 
@@ -151,11 +149,13 @@ const canUseFeature = await connection.remote.checkFeatureAccess('beta');
 ```
 
 **Benefits**:
+
 - No race conditions (no concurrent writes)
 - New tabs automatically synchronize to current state
 - Simple mental model: shared variables are constants from any tab's perspective
 
 **Considerations**:
+
 - If state needs to change, it should change rarely and through a coordinated mechanism
 - Consider using Pattern 2 if updates are needed
 
@@ -164,6 +164,7 @@ const canUseFeature = await connection.remote.checkFeatureAccess('beta');
 **Concept**: Functions accept explicit values rather than computing them based on current state. The calling tab decides the new state, and all other tabs adopt it.
 
 **When to use**:
+
 - Counters, scores, or numeric state that needs synchronization
 - Form state where one tab's input should sync to others
 - Selected items or active states
@@ -175,25 +176,25 @@ const canUseFeature = await connection.remote.checkFeatureAccess('beta');
 const schema = {
   score: 0,
   selectedItem: null,
-  
+
   // Functions take explicit new values
   setScore: (newScore, remote) => {
     remote.score = newScore;
     document.getElementById('score').textContent = newScore;
     return newScore;
   },
-  
+
   selectItem: (itemId, remote) => {
     remote.selectedItem = itemId;
     highlightItem(itemId);
     return itemId;
   },
-  
+
   clearSelection: (remote) => {
     remote.selectedItem = null;
     clearAllHighlights();
     return null;
-  }
+  },
 };
 ```
 
@@ -218,6 +219,7 @@ itemElement.onclick = () => {
 **Why this works**:
 
 When Tab A calls `setScore(42)`:
+
 1. Tab A executes `setScore(42)`, setting its local state to 42
 2. SharedWorker broadcasts `setScore(42)` to all other tabs
 3. Tab B executes `setScore(42)`, setting its local state to 42
@@ -227,11 +229,13 @@ When Tab A calls `setScore(42)`:
 Unlike the increment problem, every tab receives the same explicit value, ensuring consistency.
 
 **Benefits**:
+
 - Deterministic state across all tabs
 - No accumulation of mutations
 - Clear semantics: the calling tab's value becomes everyone's value
 
 **Considerations**:
+
 - The calling tab must compute the new value based on its current state
 - If two tabs simultaneously compute and broadcast, the last message wins
 - For true atomic operations, consider using a server or Pattern 4
@@ -241,6 +245,7 @@ Unlike the increment problem, every tab receives the same explicit value, ensuri
 **Concept**: Functions broadcast events without maintaining shared state. Each tab maintains its own local state and reacts to events independently.
 
 **When to use**:
+
 - Notifications or alerts that should appear in all tabs
 - Logging events that each tab handles independently
 - User actions that trigger independent local state updates
@@ -251,25 +256,25 @@ Unlike the increment problem, every tab receives the same explicit value, ensuri
 ```typescript
 const schema = {
   // No shared state variables
-  
+
   userLoggedIn: (userId, timestamp, remote) => {
     console.log(`User ${userId} logged in at ${timestamp}`);
     fetchUserData(userId);
     initializeUserSession(userId);
     updateAnalytics('login', { userId, timestamp });
   },
-  
+
   notificationReceived: (title, message, remote) => {
     showNotification(title, message);
     playNotificationSound();
     incrementLocalNotificationCount();
   },
-  
+
   tabClosing: (tabId, remote) => {
     console.log(`Tab ${tabId} is closing`);
     // Each tab might update its local connection count
     updateLocalTabCount(-1);
-  }
+  },
 };
 ```
 
@@ -289,12 +294,14 @@ connection.remote.userLoggedIn(userId, Date.now());
 ```
 
 **Benefits**:
+
 - Simplest pattern: no shared state to manage
 - No race conditions possible
 - Each tab maintains autonomy
 - Natural fit for side effects (logging, analytics, notifications)
 
 **Considerations**:
+
 - Tabs do not share state, only events
 - If you need state consistency, use Pattern 1 or 2 instead
 - Good for loosely-coupled tab coordination
@@ -304,6 +311,7 @@ connection.remote.userLoggedIn(userId, Date.now());
 **Concept**: Multiple tabs can write to shared state, but conflicts are resolved using timestamps, version numbers, or other metadata.
 
 **When to use**:
+
 - Collaborative editing scenarios
 - Applications where eventual consistency is acceptable
 - Situations where you cannot prevent concurrent writes
@@ -313,19 +321,19 @@ connection.remote.userLoggedIn(userId, Date.now());
 
 ```typescript
 const schema = {
-  document: { 
-    text: '', 
-    lastModified: 0, 
-    modifiedBy: null 
+  document: {
+    text: '',
+    lastModified: 0,
+    modifiedBy: null,
   },
-  
+
   updateDocument: (text, timestamp, userId, remote) => {
     // Only accept if timestamp is newer
     if (timestamp > remote.document.lastModified) {
       remote.document = {
         text,
         lastModified: timestamp,
-        modifiedBy: userId
+        modifiedBy: userId,
       };
       renderDocument(text);
       return { accepted: true, timestamp };
@@ -334,10 +342,10 @@ const schema = {
       return { accepted: false, reason: 'stale' };
     }
   },
-  
+
   // Version-based conflict resolution
   selections: new Map(),
-  
+
   setSelection: (userId, selection, version, remote) => {
     const existing = remote.selections.get(userId);
     if (!existing || version > existing.version) {
@@ -346,7 +354,7 @@ const schema = {
       return { accepted: true };
     }
     return { accepted: false };
-  }
+  },
 };
 ```
 
@@ -361,29 +369,28 @@ textEditor.addEventListener('input', () => {
   localVersion++;
   const text = textEditor.value;
   const timestamp = Date.now();
-  
-  connection.remote.updateDocument(
-    text, 
-    timestamp, 
-    currentUserId
-  );
+
+  connection.remote.updateDocument(text, timestamp, currentUserId);
 });
 ```
 
 **Why this works**:
 
 When two tabs simultaneously edit:
+
 1. Tab A updates at t=100, broadcasts `updateDocument(text_a, 100, user_a)`
 2. Tab B updates at t=105, broadcasts `updateDocument(text_b, 105, user_b)`
 3. All tabs receive both messages (order may vary)
 4. The timestamp check ensures Tab B's version (105 > 100) wins everywhere
 
 **Benefits**:
+
 - Handles concurrent writes gracefully
 - Eventual consistency across all tabs
 - Useful for collaborative scenarios
 
 **Considerations**:
+
 - Requires careful design of conflict resolution logic
 - Clock skew can cause issues (consider logical clocks)
 - More complex than other patterns
@@ -395,6 +402,7 @@ When two tabs simultaneously edit:
 **Concept**: Use version-based atomic operations to ensure updates are applied only when the state hasn't changed since you read it.
 
 **When to use**:
+
 - Atomic counters that must not lose increments
 - Inventory management where overselling must be prevented
 - Toggle operations that need guaranteed single-execution
@@ -406,18 +414,18 @@ When two tabs simultaneously edit:
 const schema = {
   counter: 0,
   inventory: { widgets: 100 },
-  
+
   setCounter: (newValue, remote) => {
     remote.counter = newValue;
     updateCounterUI(newValue);
     return newValue;
   },
-  
+
   setInventory: (inventory, remote) => {
     remote.inventory = inventory;
     updateInventoryUI(inventory);
     return inventory;
-  }
+  },
 };
 
 const connection = await bridge.connect(schema);
@@ -427,9 +435,9 @@ async function safeIncrement() {
   while (true) {
     const { value, version } = connection.getVersionedState<number>('counter');
     const newValue = value + 1;
-    
+
     const result = await connection.compareAndSwap('counter', version, newValue);
-    
+
     if (result.success) {
       await connection.remote.setCounter(result.value);
       return result.value;
@@ -441,15 +449,15 @@ async function safeIncrement() {
 // Safe inventory decrement (prevents overselling)
 async function reserveWidget(quantity: number) {
   while (true) {
-    const { value, version } = connection.getVersionedState<{widgets: number}>('inventory');
-    
+    const { value, version } = connection.getVersionedState<{ widgets: number }>('inventory');
+
     if (value.widgets < quantity) {
       throw new Error('Insufficient inventory');
     }
-    
+
     const newInventory = { ...value, widgets: value.widgets - quantity };
     const result = await connection.compareAndSwap('inventory', version, newInventory);
-    
+
     if (result.success) {
       await connection.remote.setInventory(result.value);
       return result.value;
@@ -467,12 +475,14 @@ async function reserveWidget(quantity: number) {
 4. This guarantees no lost updates even with concurrent writers
 
 **Benefits**:
+
 - True atomic operations without server roundtrips
 - Automatic conflict detection
 - Explicit retry logic gives full control over failure handling
 - Works with any value type (numbers, objects, arrays)
 
 **Considerations**:
+
 - Retry loops are needed for conflict handling
 - High contention scenarios may need backoff strategies
 - More complex than simple set operations
@@ -489,16 +499,17 @@ const schema = {
   counter: 0,
   items: [],
   user: { name: 'Alice', score: 0 },
-  
+
   // These all mutate in place
   increment: (remote) => remote.counter++,
   addItem: (item, remote) => remote.items.push(item),
   incrementScore: (remote) => remote.user.score++,
-  updateName: (name, remote) => remote.user.name = name
+  updateName: (name, remote) => (remote.user.name = name),
 };
 ```
 
 **Why it fails**: Each tab executes the mutation operation. If three tabs are open:
+
 - `increment()` increases the counter by 3 instead of 1
 - `addItem('x')` adds the item three times
 - `incrementScore()` increases the score by 3
@@ -511,12 +522,12 @@ const schema = {
   counter: 0,
   items: [],
   user: { name: 'Alice', score: 0 },
-  
+
   // Use explicit values
-  setCounter: (newValue, remote) => remote.counter = newValue,
-  setItems: (newItems, remote) => remote.items = newItems,
-  setUserScore: (newScore, remote) => remote.user = { ...remote.user, score: newScore },
-  setUserName: (name, remote) => remote.user = { ...remote.user, name }
+  setCounter: (newValue, remote) => (remote.counter = newValue),
+  setItems: (newItems, remote) => (remote.items = newItems),
+  setUserScore: (newScore, remote) => (remote.user = { ...remote.user, score: newScore }),
+  setUserName: (name, remote) => (remote.user = { ...remote.user, name }),
 };
 ```
 
@@ -529,18 +540,19 @@ const schema = {
 ```typescript
 const schema = {
   todos: [],
-  
+
   addTodo: (todo, remote) => {
-    remote.todos.push(todo);  // Each tab pushes
+    remote.todos.push(todo); // Each tab pushes
   },
-  
+
   removeTodo: (index, remote) => {
-    remote.todos.splice(index, 1);  // Each tab removes at that index
-  }
+    remote.todos.splice(index, 1); // Each tab removes at that index
+  },
 };
 ```
 
-**Why it fails**: 
+**Why it fails**:
+
 - If 3 tabs are open and you add a todo, it gets pushed three times
 - Removing by index is especially problematic because the array length changes after each tab's removal
 
@@ -549,11 +561,11 @@ const schema = {
 ```typescript
 const schema = {
   todos: [],
-  
+
   setTodos: (newTodos, remote) => {
     remote.todos = newTodos;
     renderTodoList(newTodos);
-  }
+  },
 };
 
 // Usage
@@ -575,16 +587,16 @@ removeButton.onclick = (index) => {
 ```typescript
 const schema = {
   todos: new Map(),
-  
+
   setTodo: (id, todo, remote) => {
-    remote.todos.set(id, todo);  // Idempotent!
+    remote.todos.set(id, todo); // Idempotent!
     renderTodoList(remote.todos);
   },
-  
+
   removeTodo: (id, remote) => {
-    remote.todos.delete(id);  // Idempotent!
+    remote.todos.delete(id); // Idempotent!
     renderTodoList(remote.todos);
-  }
+  },
 };
 ```
 
@@ -597,14 +609,15 @@ This works because Map operations with specific IDs are idempotent—executing t
 ```typescript
 const schema = {
   user: { name: 'Alice', preferences: { theme: 'light', notifications: true } },
-  
+
   toggleNotifications: (remote) => {
     remote.user.preferences.notifications = !remote.user.preferences.notifications;
-  }
+  },
 };
 ```
 
 **Why it fails**: Each tab reads the current value and toggles it. If it starts as `true`:
+
 - Tab A toggles: `true -> false`
 - Tab B sees `false` and toggles: `false -> true`
 - Tab C sees `true` and toggles: `true -> false`
@@ -614,14 +627,14 @@ const schema = {
 ```typescript
 const schema = {
   user: { name: 'Alice', preferences: { theme: 'light', notifications: true } },
-  
+
   setUserPreferences: (preferences, remote) => {
-    remote.user = { 
-      ...remote.user, 
-      preferences 
+    remote.user = {
+      ...remote.user,
+      preferences,
     };
     applyPreferences(preferences);
-  }
+  },
 };
 
 // Usage
@@ -629,7 +642,7 @@ toggleButton.onclick = () => {
   const current = connection.remote.user.preferences.notifications;
   const newPreferences = {
     ...connection.remote.user.preferences,
-    notifications: !current
+    notifications: !current,
   };
   connection.remote.setUserPreferences(newPreferences);
 };
@@ -646,7 +659,7 @@ const schema = {
   // Read-only shared state (Pattern 1)
   currentUser: { id: 'trader_123', permissions: ['trade', 'view'] },
   marketData: { timestamp: 0, prices: {} },
-  
+
   // Event broadcasting (Pattern 3)
   marketDataUpdated: (data, remote) => {
     remote.marketData = data;
@@ -654,24 +667,25 @@ const schema = {
       updateChart('BTC', data.prices.BTC);
     }
   },
-  
+
   // Single source of truth (Pattern 2)
   selectedInstrument: 'BTC',
   setSelectedInstrument: (instrument, remote) => {
     remote.selectedInstrument = instrument;
     loadInstrumentData(instrument);
   },
-  
+
   // Event notification (Pattern 3)
   tradeExecuted: (tradeDetails, remote) => {
     showTradeNotification(tradeDetails);
     refreshPortfolio();
     logTradeEvent(tradeDetails);
-  }
+  },
 };
 ```
 
 This combines multiple patterns:
+
 - User data is read-only shared state
 - Market data updates broadcast to all tabs
 - Selected instrument syncs across tabs
@@ -686,12 +700,9 @@ Some state should remain local to each tab:
 const schema = {
   globalNotifications: [],
   broadcastNotification: (notification, remote) => {
-    remote.globalNotifications = [
-      ...remote.globalNotifications, 
-      notification
-    ];
+    remote.globalNotifications = [...remote.globalNotifications, notification];
     showGlobalNotification(notification);
-  }
+  },
 };
 
 // Local state per tab
@@ -714,7 +725,7 @@ For operations that must execute only once, implement leader election:
 ```typescript
 const schema = {
   leaderId: null,
-  
+
   claimLeadership: (tabId, timestamp, remote) => {
     if (!remote.leaderId || timestamp < getLeaderLastSeen()) {
       remote.leaderId = tabId;
@@ -725,12 +736,12 @@ const schema = {
       }
     }
   },
-  
+
   leaderHeartbeat: (tabId, timestamp, remote) => {
     if (tabId === remote.leaderId) {
       updateLeaderLastSeen(timestamp);
     }
-  }
+  },
 };
 
 // Each tab attempts to claim leadership on connect
@@ -745,6 +756,7 @@ if (isLeader) {
 ```
 
 This pattern is useful for tasks like:
+
 - Maintaining a WebSocket connection (only one needed)
 - Polling an API (avoid redundant requests)
 - Managing a shared resource that shouldn't be duplicated
@@ -754,30 +766,37 @@ This pattern is useful for tasks like:
 When designing a Bridge application, ask these questions:
 
 **1. Does this state need to be shared?**
+
 - No: Keep it local to each tab
 - Yes: Continue to question 2
 
 **2. How often does this state change?**
+
 - Never/rarely: Use Pattern 1 (Read-Only)
 - Frequently: Continue to question 3
 
 **3. Can multiple tabs write to this state simultaneously?**
+
 - No (one tab owns it): Use Pattern 2 (Single Source of Truth)
 - Yes: Continue to question 4
 
 **4. Do you need state consistency or just event notification?**
+
 - Just events: Use Pattern 3 (Event Broadcasting)
 - Need consistency: Continue to question 5
 
 **5. Can you use explicit values instead of mutations?**
+
 - Yes: Use Pattern 2 (Single Source of Truth)
 - No: Continue to question 6
 
 **6. Do you need atomic guarantees (no lost updates)?**
+
 - Yes: Use Pattern 5 (CAS) with retry loops
 - No: Use Pattern 4 (Last-Writer-Wins) for eventual consistency
 
 **7. Is eventual consistency acceptable?**
+
 - Yes: Use Pattern 4 with timestamps
 - No: Use Pattern 5 (CAS) or a server as the authoritative source
 
@@ -785,16 +804,16 @@ When designing a Bridge application, ask these questions:
 
 Understanding the differences helps avoid incorrect mental models:
 
-| Aspect | PostBridge (1:1) | Bridge (N:N) |
-|--------|---------------|-------------------|
-| Communication model | Host to guest, guest to host | Any tab to all tabs |
-| Function execution | One side executes, other receives result | All tabs execute the same function |
-| State ownership | Clear (host state vs guest state) | Shared (all tabs access same state) |
-| Mutation safety | Safe (single writer per state) | Unsafe (multiple writers) |
-| Consistency model | Immediate | Eventual |
-| Race conditions | Rare (isolated contexts) | Common (distributed contexts) |
-| Best practices | Bidirectional calls, nested APIs | Explicit values, event broadcasting |
-| Mental model | Client-server RPC | Distributed pub-sub system |
+| Aspect              | PostBridge (1:1)                         | Bridge (N:N)                        |
+| ------------------- | ---------------------------------------- | ----------------------------------- |
+| Communication model | Host to guest, guest to host             | Any tab to all tabs                 |
+| Function execution  | One side executes, other receives result | All tabs execute the same function  |
+| State ownership     | Clear (host state vs guest state)        | Shared (all tabs access same state) |
+| Mutation safety     | Safe (single writer per state)           | Unsafe (multiple writers)           |
+| Consistency model   | Immediate                                | Eventual                            |
+| Race conditions     | Rare (isolated contexts)                 | Common (distributed contexts)       |
+| Best practices      | Bidirectional calls, nested APIs         | Explicit values, event broadcasting |
+| Mental model        | Client-server RPC                        | Distributed pub-sub system          |
 
 ## Conclusion
 
@@ -815,4 +834,3 @@ The key insights are:
 6. **Not everything is shared**: Keep local UI state and temporary data in each tab's local scope.
 
 By following these patterns and understanding the underlying mechanics, you can build robust, consistent multi-tab applications that leverage Bridge's capabilities without falling into common traps. The shared state model is not a limitation but a design choice with specific tradeoffs—understanding those tradeoffs is the key to successful implementation.
-

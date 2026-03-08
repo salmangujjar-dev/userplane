@@ -23,6 +23,7 @@ Add a `<meta>` tag to your page's `<head>`:
 The SDK reads this tag on initialization via CSS selector `meta[name="userplane:workspace"]`. The `content` attribute value becomes the workspace ID.
 
 **Why the meta tag approach?**
+
 - Framework-agnostic — works in plain HTML, React, Vue, Svelte, etc.
 - Separated from your JS bundle (easy to template by environment)
 - Easy to verify in DevTools
@@ -100,6 +101,6 @@ initialize({ workspaceId: getCurrentUserWorkspaceId() });
 Use browser DevTools to confirm the meta tag is present:
 
 ```javascript
-document.querySelector('meta[name="userplane:workspace"]')?.content
+document.querySelector('meta[name="userplane:workspace"]')?.content;
 // Should return your workspace ID string
 ```

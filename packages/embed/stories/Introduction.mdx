@@ -11,14 +11,14 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 ## Two-Package Model
 
-| | `@userplane/embed` | `@userplane/sdk` |
-|---|---|---|
-| **Delivery** | CDN `<script>` tag | npm package |
-| **Initialization** | Automatic on load | Manual `initialize()` call |
-| **Global** | `window.userplane` | No global |
-| **Target** | Plain HTML, no bundler | React, Next.js, Vite, etc. |
-| **SSR-safe** | No (script tag) | Yes |
-| **TypeScript types** | Via window augmentation | Direct imports |
+|                      | `@userplane/embed`      | `@userplane/sdk`           |
+| -------------------- | ----------------------- | -------------------------- |
+| **Delivery**         | CDN `<script>` tag      | npm package                |
+| **Initialization**   | Automatic on load       | Manual `initialize()` call |
+| **Global**           | `window.userplane`      | No global                  |
+| **Target**           | Plain HTML, no bundler  | React, Next.js, Vite, etc. |
+| **SSR-safe**         | No (script tag)         | Yes                        |
+| **TypeScript types** | Via window augmentation | Direct imports             |
 
 ## How Loading Works
 
@@ -57,14 +57,14 @@ After the script loads, `window.userplane` is available and the SDK is initializ
 
 ## Documentation Guide
 
-| Section | What You'll Find |
-|---------|-----------------|
-| **Getting Started** | Step-by-step setup, embed vs SDK comparison |
-| **CDN Loading** | Two-stage bootstrap, manifest caching, cache strategy |
+| Section                 | What You'll Find                                               |
+| ----------------------- | -------------------------------------------------------------- |
+| **Getting Started**     | Step-by-step setup, embed vs SDK comparison                    |
+| **CDN Loading**         | Two-stage bootstrap, manifest caching, cache strategy          |
 | **Auto-Initialization** | How auto-init works, URL parameters, `window.userplane` global |
-| **Build System** | Dual-mode build (CDN vs NPM), build commands, env vars |
-| **Deployment** | R2 upload script, environment setup, deploy commands |
-| **API Reference** | Complete `window.userplane` function reference |
-| **Troubleshooting** | Common issues, symptoms, and fixes |
+| **Build System**        | Dual-mode build (CDN vs NPM), build commands, env vars         |
+| **Deployment**          | R2 upload script, environment setup, deploy commands           |
+| **API Reference**       | Complete `window.userplane` function reference                 |
+| **Troubleshooting**     | Common issues, symptoms, and fixes                             |
 
 Start with **Getting Started → Quick Start** for a working example, or jump to **API Reference → window.userplane API** for function signatures.

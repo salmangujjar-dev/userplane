@@ -8,18 +8,18 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 ## Side-by-Side Comparison
 
-| | `@userplane/embed` | `@userplane/sdk` |
-|---|---|---|
-| **Delivery** | CDN `<script>` tag | npm package |
-| **Initialization** | Automatic on script load | Manual `initialize()` call |
-| **SSR-safe** | No — runs in browser only | Yes — safe to import in Next.js, Nuxt, SvelteKit |
-| **TypeScript types** | Via `window` augmentation | Direct named imports |
-| **Tree-shaking** | Not applicable (full bundle) | Yes — unused exports dropped |
-| **`window.userplane` global** | Yes — always set | No — opt-in via your own code |
-| **Control over options** | Limited — via `initialize()` after load | Full — pass options to `initialize()` |
-| **Bundle size impact** | Zero — external script | Adds to your bundle |
-| **Caching** | Long-term via content hash | Bundled with your app |
-| **Updates** | Instant — new manifest on deploy | Requires app re-deploy |
+|                               | `@userplane/embed`                      | `@userplane/sdk`                                 |
+| ----------------------------- | --------------------------------------- | ------------------------------------------------ |
+| **Delivery**                  | CDN `<script>` tag                      | npm package                                      |
+| **Initialization**            | Automatic on script load                | Manual `initialize()` call                       |
+| **SSR-safe**                  | No — runs in browser only               | Yes — safe to import in Next.js, Nuxt, SvelteKit |
+| **TypeScript types**          | Via `window` augmentation               | Direct named imports                             |
+| **Tree-shaking**              | Not applicable (full bundle)            | Yes — unused exports dropped                     |
+| **`window.userplane` global** | Yes — always set                        | No — opt-in via your own code                    |
+| **Control over options**      | Limited — via `initialize()` after load | Full — pass options to `initialize()`            |
+| **Bundle size impact**        | Zero — external script                  | Adds to your bundle                              |
+| **Caching**                   | Long-term via content hash              | Bundled with your app                            |
+| **Updates**                   | Instant — new manifest on deploy        | Requires app re-deploy                           |
 
 ## When to Use `@userplane/embed`
 

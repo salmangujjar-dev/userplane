@@ -84,10 +84,7 @@ The connection is established when the iframe fires the `load` event. PostBridge
 
 ```typescript
 interface VerificationHostSchema {
-  requestVerification: (
-    token: string,
-    workspaceIds: string[]
-  ) => Promise<VerificationResult>;
+  requestVerification: (token: string, workspaceIds: string[]) => Promise<VerificationResult>;
 
   requestClose: () => void;
 }
@@ -134,13 +131,14 @@ Each bridge connection is named with a prefix + tab reference to avoid channel c
 
 ```typescript
 const CONNECTION_PREFIXES = {
-  RECORDER: 'rec',       // → 'rec_userplane_tab_AAA'
-  VERIFICATION: 'vrd',   // → 'vrd_userplane_tab_AAA'
-  CAPTURE: 'cap',        // → 'cap_userplane_tab_AAA'
+  RECORDER: 'rec', // → 'rec_userplane_tab_AAA'
+  VERIFICATION: 'vrd', // → 'vrd_userplane_tab_AAA'
+  CAPTURE: 'cap', // → 'cap_userplane_tab_AAA'
 };
 ```
 
 If the same app is open in two tabs:
+
 - Tab A's recorder bridge: `rec_userplane_tab_AAA`
 - Tab B's recorder bridge: `rec_userplane_tab_BBB`
 
@@ -149,11 +147,13 @@ These are different channels — they don't interfere even though both postMessa
 ## Error Handling
 
 PostBridge connections handle errors at the RPC layer. If a call to a guest method fails:
+
 - The rejection is caught and logged
 - The bridge connection state remains unchanged
 - The SDK does not crash
 
 If the iframe becomes unresponsive (navigated away, crashed):
+
 - The bridge detects the disconnect via the `disconnect` event
 - The `CaptureBridgeConnection.onDisconnected` callback fires
 - The frame manager reacts (e.g., attempting to remount the capture iframe)

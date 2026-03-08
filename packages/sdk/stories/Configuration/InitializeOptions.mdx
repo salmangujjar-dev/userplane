@@ -9,7 +9,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 ## Full Type Signature
 
 ```typescript
-function initialize(options?: InitializeOptions): void
+function initialize(options?: InitializeOptions): void;
 
 interface InitializeOptions {
   workspaceId?: string | string[];
@@ -26,9 +26,9 @@ interface InitializeOptions {
 
 ### `workspaceId`
 
-| | |
-|---|---|
-| **Type** | `string \| string[]` |
+|             |                                               |
+| ----------- | --------------------------------------------- |
+| **Type**    | `string \| string[]`                          |
 | **Default** | Read from `<meta name="userplane:workspace">` |
 
 Your Userplane workspace ID(s). Can be a single ID, a comma-separated string, or an array.
@@ -48,9 +48,9 @@ If omitted, the SDK reads from `<meta name="userplane:workspace" content="...">`
 
 ### `recorderBaseUrl`
 
-| | |
-|---|---|
-| **Type** | `string` |
+|             |                                   |
+| ----------- | --------------------------------- |
+| **Type**    | `string`                          |
 | **Default** | `'https://recorder.userplane.io'` |
 
 Base URL for the recorder application. Override for self-hosted or staging environments:
@@ -65,9 +65,9 @@ initialize({
 
 ### `verificationBaseUrl`
 
-| | |
-|---|---|
-| **Type** | `string` |
+|             |                              |
+| ----------- | ---------------------------- |
+| **Type**    | `string`                     |
 | **Default** | `'https://api.userplane.io'` |
 
 Base URL for the domain verification API endpoint. Override for self-hosted setups:
@@ -82,10 +82,10 @@ initialize({
 
 ### `openImmediately`
 
-| | |
-|---|---|
-| **Type** | `boolean \| string` |
-| **Default** | `true` |
+|             |                     |
+| ----------- | ------------------- |
+| **Type**    | `boolean \| string` |
+| **Default** | `true`              |
 
 Controls when the recorder opens after initialization. See [Open Modes](?path=/docs/configuration-open-modes--docs) for the full decision tree.
 
@@ -104,10 +104,10 @@ initialize({ openImmediately: 'tok_abc123' });
 
 ### `captureEnabled`
 
-| | |
-|---|---|
-| **Type** | `boolean` |
-| **Default** | `true` |
+|             |           |
+| ----------- | --------- |
+| **Type**    | `boolean` |
+| **Default** | `true`    |
 
 Whether to mount the hidden capture iframe. The capture iframe enables cross-tab recorder state tracking and metadata extraction. Disable if you don't need cross-tab features:
 
@@ -119,10 +119,10 @@ initialize({ captureEnabled: false });
 
 ### `parseUserplaneData`
 
-| | |
-|---|---|
-| **Type** | `(href: string) => SerializableUserplaneData \| null` |
-| **Default** | Built-in URL parameter parser |
+|             |                                                       |
+| ----------- | ----------------------------------------------------- |
+| **Type**    | `(href: string) => SerializableUserplaneData \| null` |
+| **Default** | Built-in URL parameter parser                         |
 
 Custom function for extracting `token` and `action` from a URL. Override if your app uses a non-standard URL scheme or encodes the token differently:
 
@@ -143,10 +143,10 @@ The function receives the full `window.location.href` and must return `{ token: 
 
 ### `applyUserplaneData`
 
-| | |
-|---|---|
-| **Type** | `(data: SerializableUserplaneData) => string` |
-| **Default** | Built-in URL cleaner |
+|             |                                               |
+| ----------- | --------------------------------------------- |
+| **Type**    | `(data: SerializableUserplaneData) => string` |
+| **Default** | Built-in URL cleaner                          |
 
 Custom function for modifying the URL after the SDK consumes the userplane parameters. By default, the SDK strips `userplane-token` and `userplane-action` from the URL using `history.replaceState`. Override to customize this behavior:
 

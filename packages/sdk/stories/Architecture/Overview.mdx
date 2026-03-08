@@ -45,19 +45,19 @@ packages/sdk/src/
 
 ## Module Responsibilities
 
-| Module | Responsibility |
-|--------|---------------|
-| `sdk.ts` | Public function implementations, state management, orchestration |
-| `frame/factory.ts` | Creates the correct frame manager for a given action type |
-| `frame/base-manager.ts` | Abstract lifecycle: mount, unmount, bridge connect/disconnect |
-| `frame/recording-manager.ts` | Recording-specific: session state, unload protection |
-| `frame/verification-manager.ts` | Verification-specific: API verification flow |
-| `frame/capture-manager.ts` | Capture-specific: hidden iframe, cross-tab state |
-| `bridge/*-connection.ts` | Typed RPC wrappers over `@userplane/postbridge` |
-| `config/builder.ts` | Fluent API for constructing `FrameConfig` objects |
-| `utils/tab.ts` | `window.name`-based tab identity |
-| `utils/meta.ts` | CSS selector reads of workspace meta tags |
-| `utils/url.ts` | URL parameter extraction and validation |
+| Module                          | Responsibility                                                   |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `sdk.ts`                        | Public function implementations, state management, orchestration |
+| `frame/factory.ts`              | Creates the correct frame manager for a given action type        |
+| `frame/base-manager.ts`         | Abstract lifecycle: mount, unmount, bridge connect/disconnect    |
+| `frame/recording-manager.ts`    | Recording-specific: session state, unload protection             |
+| `frame/verification-manager.ts` | Verification-specific: API verification flow                     |
+| `frame/capture-manager.ts`      | Capture-specific: hidden iframe, cross-tab state                 |
+| `bridge/*-connection.ts`        | Typed RPC wrappers over `@userplane/postbridge`                  |
+| `config/builder.ts`             | Fluent API for constructing `FrameConfig` objects                |
+| `utils/tab.ts`                  | `window.name`-based tab identity                                 |
+| `utils/meta.ts`                 | CSS selector reads of workspace meta tags                        |
+| `utils/url.ts`                  | URL parameter extraction and validation                          |
 
 ## Data Flow
 
@@ -114,7 +114,7 @@ sdk.ts
 
 ```typescript
 let factory: FrameManagerFactory | null = null;
-let currentManager: IFrameManager | null = null;  // recording/verification frame
+let currentManager: IFrameManager | null = null; // recording/verification frame
 let captureManager: ICaptureFrameManager | null = null; // hidden capture frame
 let initialized: boolean = false;
 let pendingParams: RecorderParams | null = null;

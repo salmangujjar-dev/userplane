@@ -104,7 +104,7 @@ window.userplane.set('key', 'value');
 const state = window.userplane.getRecordingState();
 ```
 
-## window.__userplaneTabRef
+## window.\_\_userplaneTabRef
 
 In addition to `window.userplane`, the embed package sets `window.__userplaneTabRef`:
 
@@ -120,42 +120,42 @@ Functions are grouped by purpose:
 
 ### Initialization
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `initialize` | `(options?: InitializeOptions) => void` | Initialize or re-initialize the SDK |
-| `isInitialized` | `() => boolean` | Returns true if `initialize()` has been called |
+| Function        | Signature                               | Description                                    |
+| --------------- | --------------------------------------- | ---------------------------------------------- |
+| `initialize`    | `(options?: InitializeOptions) => void` | Initialize or re-initialize the SDK            |
+| `isInitialized` | `() => boolean`                         | Returns true if `initialize()` has been called |
 
 ### Recorder Control
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `open` | `(token?: string) => Promise<void>` | Open the recorder (optionally with a session token) |
-| `unmount` | `() => void` | Close and remove the recorder iframe |
-| `isRecorderMounted` | `() => boolean` | True if the recorder iframe is in the DOM |
-| `isBridgeConnected` | `() => boolean` | True if the PostBridge RPC connection is established |
+| Function            | Signature                           | Description                                          |
+| ------------------- | ----------------------------------- | ---------------------------------------------------- |
+| `open`              | `(token?: string) => Promise<void>` | Open the recorder (optionally with a session token)  |
+| `unmount`           | `() => void`                        | Close and remove the recorder iframe                 |
+| `isRecorderMounted` | `() => boolean`                     | True if the recorder iframe is in the DOM            |
+| `isBridgeConnected` | `() => boolean`                     | True if the PostBridge RPC connection is established |
 
 ### State
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `getRecordingState` | `() => RecordingState` | Current state of the recording session |
-| `getRecordingContext` | `() => RecordingContext \| null` | Full context object for the active session |
-| `getSessionId` | `() => string \| null` | Active session ID, or null if not recording |
-| `getLinkId` | `() => string \| null` | Link ID from the recording URL token |
+| Function              | Signature                        | Description                                 |
+| --------------------- | -------------------------------- | ------------------------------------------- |
+| `getRecordingState`   | `() => RecordingState`           | Current state of the recording session      |
+| `getRecordingContext` | `() => RecordingContext \| null` | Full context object for the active session  |
+| `getSessionId`        | `() => string \| null`           | Active session ID, or null if not recording |
+| `getLinkId`           | `() => string \| null`           | Link ID from the recording URL token        |
 
 ### Metadata
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `set` | `(key: string, value: unknown) => void` | Set a metadata key-value pair |
-| `metadata` | `() => Record<string, unknown>` | Get all current metadata |
-| `clearMetadata` | `() => void` | Clear all metadata |
+| Function        | Signature                               | Description                   |
+| --------------- | --------------------------------------- | ----------------------------- |
+| `set`           | `(key: string, value: unknown) => void` | Set a metadata key-value pair |
+| `metadata`      | `() => Record<string, unknown>`         | Get all current metadata      |
+| `clearMetadata` | `() => void`                            | Clear all metadata            |
 
 ### Tab Identity
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `getTabRef` | `() => TabRef` | Get the current tab's reference object |
-| `clearTabRef` | `() => void` | Clear the tab reference (rarely needed) |
+| Function      | Signature      | Description                             |
+| ------------- | -------------- | --------------------------------------- |
+| `getTabRef`   | `() => TabRef` | Get the current tab's reference object  |
+| `clearTabRef` | `() => void`   | Clear the tab reference (rarely needed) |
 
 See **[API Reference → window.userplane API](../?path=/docs/api-reference-window-userplane-api--docs)** for complete signatures and examples.

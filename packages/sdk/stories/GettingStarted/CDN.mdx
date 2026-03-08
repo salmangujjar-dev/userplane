@@ -15,16 +15,16 @@ CDN distribution is handled by `@userplane/embed`, which wraps the SDK in a two-
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <!-- 1. Declare your workspace ID -->
-  <meta name="userplane:workspace" content="ws_your_workspace_id" />
+  <head>
+    <!-- 1. Declare your workspace ID -->
+    <meta name="userplane:workspace" content="ws_your_workspace_id" />
 
-  <!-- 2. Load the bootstrap loader -->
-  <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
-</head>
-<body>
-  <!-- SDK auto-initializes — no extra JS needed -->
-</body>
+    <!-- 2. Load the bootstrap loader -->
+    <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
+  </head>
+  <body>
+    <!-- SDK auto-initializes — no extra JS needed -->
+  </body>
 </html>
 ```
 
@@ -49,10 +49,10 @@ main.a1b2c3d4.js executes (1-year immutable cache)
 SDK auto-initializes → window.userplane available
 ```
 
-| File | URL | Cache-Control |
-|------|-----|---------------|
-| Bootstrap | `cdn.userplane.io/embed/script.js` | `public, max-age=300` (5 min) |
-| Manifest | `cdn.userplane.io/embed/manifest.json` | `public, max-age=300` (5 min) |
+| File        | URL                                     | Cache-Control                                  |
+| ----------- | --------------------------------------- | ---------------------------------------------- |
+| Bootstrap   | `cdn.userplane.io/embed/script.js`      | `public, max-age=300` (5 min)                  |
+| Manifest    | `cdn.userplane.io/embed/manifest.json`  | `public, max-age=300` (5 min)                  |
 | Main bundle | `cdn.userplane.io/embed/main.{hash}.js` | `public, max-age=31536000, immutable` (1 year) |
 
 **Why this design?**
@@ -70,9 +70,9 @@ After the script loads, all SDK functions are available under `window.userplane`
 window.userplane.open('tok_abc123');
 
 // State inspection
-window.userplane.isInitialized();      // true
-window.userplane.isRecorderMounted();  // true if recorder is open
-window.userplane.getRecordingState();  // 'inactive' | 'active' | 'retained'
+window.userplane.isInitialized(); // true
+window.userplane.isRecorderMounted(); // true if recorder is open
+window.userplane.getRecordingState(); // 'inactive' | 'active' | 'retained'
 
 // Metadata
 window.userplane.set('userId', 'user_123');
@@ -116,13 +116,13 @@ Content-Security-Policy: script-src 'nonce-abc123' https://cdn.userplane.io;
 
 ## CDN vs npm — When to Use Which
 
-| Situation | Recommendation |
-|-----------|---------------|
-| Static site / no build step | CDN |
-| CMS (WordPress, Webflow, Framer, etc.) | CDN |
-| App with its own bundler (Vite, webpack, etc.) | npm |
-| Next.js / Nuxt / SvelteKit | npm |
-| Need TypeScript types | npm |
-| Need tree-shaking | npm |
+| Situation                                      | Recommendation |
+| ---------------------------------------------- | -------------- |
+| Static site / no build step                    | CDN            |
+| CMS (WordPress, Webflow, Framer, etc.)         | CDN            |
+| App with its own bundler (Vite, webpack, etc.) | npm            |
+| Next.js / Nuxt / SvelteKit                     | npm            |
+| Need TypeScript types                          | npm            |
+| Need tree-shaking                              | npm            |
 
 The npm package (`@userplane/sdk`) gives you full TypeScript types, tree-shaking, and control over initialization. The CDN embed (`script.js`) gives you zero-config drop-in integration with automatic cache busting.

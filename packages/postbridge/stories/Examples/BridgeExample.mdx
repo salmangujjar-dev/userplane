@@ -22,11 +22,13 @@ These examples demonstrate Bridge's cross-tab broadcasting and direct messaging 
 ## Try It Out
 
 1. Build the library:
+
    ```bash
    npm run build
    ```
 
 2. Serve the example (from project root):
+
    ```bash
    npx serve .
    ```
@@ -38,6 +40,7 @@ These examples demonstrate Bridge's cross-tab broadcasting and direct messaging 
 ## Key Features Demonstrated
 
 ### Single Schema Definition
+
 ```javascript
 const schema = {
   increment: () => {
@@ -49,6 +52,7 @@ const schema = {
 ```
 
 ### Broadcast Execution
+
 ```javascript
 // Calling remote method executes locally AND broadcasts
 const result = await connection.remote.increment();
@@ -65,12 +69,14 @@ const schema = {
     counter++;
     updateUI(counter); // This runs in ALL tabs automatically
     return counter;
-  }
+  },
 };
 ```
 
 ### No Echo
+
 Notice that when you click a button, you see:
+
 - **Local** log entry (your action)
 - **Broadcast** log entries in OTHER tabs only
 
@@ -79,9 +85,10 @@ This is the "no echo" feature - you don't receive your own broadcasts.
 ## Browser Support
 
 This example requires SharedWorker support:
--  Chrome/Edge
--  Firefox
--  Safari (not supported)
+
+- Chrome/Edge
+- Firefox
+- Safari (not supported)
 
 ## Code Structure
 
@@ -96,23 +103,29 @@ index.html
 ## New Features
 
 ### Direct Messaging
+
 Send messages to specific tabs instead of broadcasting to all:
+
 ```javascript
 const tabs = await connection.getConnectedTabs();
 await connection.remote(targetTabID).increment();
 ```
 
 ### Custom Tab IDs
+
 Use your own identifiers for tabs:
+
 ```javascript
 const connection = await bridge.connect(schema, {
   tabID: 'my-custom-id',
-  channel: 'my-app'
+  channel: 'my-app',
 });
 ```
 
 ### Tab Discovery
+
 Get list of all connected tabs:
+
 ```javascript
 const tabIDs = await connection.getConnectedTabs();
 console.log(`${tabIDs.length} tabs connected`);
@@ -123,4 +136,3 @@ console.log(`${tabIDs.length} tabs connected`);
 - [Bridge Guide](?path=/docs/guides-bridge--docs) - Complete documentation
 - [Channel Isolation Guide](?path=/docs/guides-channel-isolation--docs) - Multi-channel patterns
 - [Multi-Writer Troubleshooting](?path=/docs/guides-troubleshooting-multi-writer--docs) - Common issues
-

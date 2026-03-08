@@ -6,7 +6,7 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 Bridge is PostBridge's built-in feature for cross-tab broadcasting. It brings type-safe pub/sub RPC to SharedWorker contexts, enabling automatic state synchronization across browser tabs without requiring developers to write SharedWorker boilerplate.
 
-##  Core Concept
+## Core Concept
 
 **Problem**: You want multiple browser tabs to stay synchronized, but coordinating state across tabs is complex.
 
@@ -29,7 +29,7 @@ await conn.remote.updateCount(42);
 // No listeners needed - just like PostBridge!
 ```
 
-##  Key Features
+## Key Features
 
 | Feature                      | Description                                           |
 | ---------------------------- | ----------------------------------------------------- |
@@ -58,12 +58,12 @@ await conn.remote.updateCount(42);
 - **[Shared State Patterns Guide](?path=/docs/guides-shared-state-patterns--docs)** - Quick reference for patterns
 - **[Multiple Connections and Namespaces](?path=/docs/guides-multiple-connections--docs)** - Can I have multiple connections? (Limitations and workarounds)
 
-##  Quick Start
+## Quick Start
 
 ### Basic Usage
 
 ```typescript
-import { bridge } from "@userplane/postbridge";
+import { bridge } from '@userplane/postbridge';
 
 // Define your schema (same code in all tabs)
 const schema = {
@@ -84,16 +84,16 @@ const schema = {
 const conn = await bridge.connect(schema);
 
 // Or specify a custom channel for isolation
-const conn = await bridge.connect(schema, { channel: "my-app" });
+const conn = await bridge.connect(schema, { channel: 'my-app' });
 
 // Or use a custom tab identifier
 const conn = await bridge.connect(schema, {
-  channel: "my-app",
-  tabID: "session-abc123", // Useful for session management or debugging
+  channel: 'my-app',
+  tabID: 'session-abc123', // Useful for session management or debugging
 });
 
 // Get your tab's unique ID
-console.log("My tab ID:", conn.id);
+console.log('My tab ID:', conn.id);
 
 // Broadcast to all other tabs on the same channel
 const result = await conn.remote.updateCount(42);
@@ -124,7 +124,7 @@ const counterConn = await bridge.connect(
       updateCounterUI(remote.counter); // Runs in all tabs!
     },
   },
-  { channel: "counter-app" },
+  { channel: 'counter-app' }
 );
 
 // App 2: Chat (channel: 'chat-app')
@@ -136,7 +136,7 @@ const chatConn = await bridge.connect(
       updateChatUI(remote.messages); // Runs in all tabs!
     },
   },
-  { channel: "chat-app" },
+  { channel: 'chat-app' }
 );
 
 // These apps are completely isolated:
@@ -147,7 +147,7 @@ const chatConn = await bridge.connect(
 
 **Live Demo**: See `examples/multi-channel/` in the repository for a working multi-channel demonstration with two independent counters.
 
-##  Direct Messaging
+## Direct Messaging
 
 **Live Demo**: See `examples/tab-messaging/` for a complete message relay system demonstrating both broadcast and direct messaging!
 
@@ -157,12 +157,12 @@ Bridge supports both broadcast and direct messaging:
 const conn = await bridge.connect(schema);
 
 // Broadcast: Send to ALL tabs
-await conn.remote.notifyAll("Hello everyone!");
+await conn.remote.notifyAll('Hello everyone!');
 
 // Direct Message: Send to SPECIFIC tab only
 const tabs = await conn.getConnectedTabs();
 const targetTab = tabs[1]; // Pick a specific tab
-await conn.remote(targetTab).sendPrivateMessage("Hello just you!");
+await conn.remote(targetTab).sendPrivateMessage('Hello just you!');
 ```
 
 **When to use broadcasts vs direct messages:**
@@ -176,7 +176,7 @@ await conn.remote(targetTab).sendPrivateMessage("Hello just you!");
 | Task delegation to specific tab    |           |                |
 | Private notifications              |           |                |
 
-##  How It Works
+## How It Works
 
 ### Architecture
 
@@ -212,7 +212,7 @@ await conn.remote(targetTab).sendPrivateMessage("Hello just you!");
    - Execute `updateCount(42)` locally
    - Fire registered listeners with result
 
-##  Examples
+## Examples
 
 ### Example 1: Shopping Cart Sync
 
@@ -250,8 +250,8 @@ const conn = await bridge.connect(schema);
 
 // Broadcast changes
 await conn.remote.addItem({
-  id: "123",
-  name: "Widget",
+  id: '123',
+  name: 'Widget',
   quantity: 1,
 });
 ```
@@ -291,9 +291,9 @@ Synchronize theme across tabs:
 
 ```typescript
 const schema = {
-  setTheme: (theme: "light" | "dark") => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+  setTheme: (theme: 'light' | 'dark') => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
     return theme;
   },
 };
@@ -304,9 +304,9 @@ const conn = await bridge.connect(schema);
 // No separate listener needed!
 
 // Switch theme (applies to all tabs)
-document.getElementById("theme-toggle")?.addEventListener("click", () => {
-  const current = document.documentElement.getAttribute("data-theme");
-  const next = current === "dark" ? "light" : "dark";
+document.getElementById('theme-toggle')?.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
   conn.remote.setTheme(next);
 });
 ```
@@ -319,7 +319,7 @@ Broadcast notifications to all tabs:
 interface Notification {
   id: string;
   message: string;
-  type: "info" | "success" | "error";
+  type: 'info' | 'success' | 'error';
   timestamp: number;
 }
 
@@ -343,8 +343,8 @@ const conn = await bridge.connect(schema);
 // Trigger notification (shows in all tabs)
 await conn.remote.showNotification({
   id: crypto.randomUUID(),
-  message: "Your order has shipped!",
-  type: "success",
+  message: 'Your order has shipped!',
+  type: 'success',
   timestamp: Date.now(),
 });
 ```
@@ -410,7 +410,7 @@ async function electLeader() {
   // Check if I'm the leader
   const isLeader = leaderID === conn.id;
   if (isLeader) {
-    console.log("I am the leader!");
+    console.log('I am the leader!');
     // Perform leader-only tasks
     scheduleBackgroundSync();
   }
@@ -457,7 +457,7 @@ async function distributeTasks(tasks: string[]) {
 // It executes in all tabs but only processes if assigned to this tab
 
 // Use it
-distributeTasks(["task-1", "task-2", "task-3", "task-4"]);
+distributeTasks(['task-1', 'task-2', 'task-3', 'task-4']);
 ```
 
 ### Example 8: Atomic Counter with Compare-and-Swap
@@ -483,13 +483,13 @@ async function safeIncrement() {
 
   while (retries < maxRetries) {
     // Read current value with version
-    const { value, version } = conn.getVersionedState<number>("counter");
+    const { value, version } = conn.getVersionedState<number>('counter');
 
     // Compute new value
     const newValue = value + 1;
 
     // Atomic update - only succeeds if no one else updated
-    const result = await conn.compareAndSwap("counter", version, newValue);
+    const result = await conn.compareAndSwap('counter', version, newValue);
 
     if (result.success) {
       // Success! Broadcast to update UI in all tabs
@@ -502,7 +502,7 @@ async function safeIncrement() {
     console.log(`CAS conflict, retry ${retries}/${maxRetries}`);
   }
 
-  throw new Error("Max retries exceeded");
+  throw new Error('Max retries exceeded');
 }
 
 // Wire up button
@@ -511,13 +511,13 @@ incrementBtn.onclick = () => safeIncrement();
 
 **When to use CAS:**
 
-| Scenario                    | Use CAS? | Why                                         |
-| --------------------------- | -------- | ------------------------------------------- |
-| Counter increment           | Yes      | Prevents lost updates from race conditions  |
-| Atomic inventory decrement  | Yes      | Ensures no overselling                      |
-| Toggle boolean              | Yes      | Prevents toggle-toggle-toggle chaos         |
-| Set user preference         | No       | Last-write-wins is usually fine             |
-| Broadcast notification      | No       | No conflict possible                        |
+| Scenario                   | Use CAS? | Why                                        |
+| -------------------------- | -------- | ------------------------------------------ |
+| Counter increment          | Yes      | Prevents lost updates from race conditions |
+| Atomic inventory decrement | Yes      | Ensures no overselling                     |
+| Toggle boolean             | Yes      | Prevents toggle-toggle-toggle chaos        |
+| Set user preference        | No       | Last-write-wins is usually fine            |
+| Broadcast notification     | No       | No conflict possible                       |
 
 **Live Demo**: See `examples/cas-counter/` for a working demonstration of CAS with conflict detection and retry loops.
 
@@ -548,12 +548,12 @@ const tabs = await conn.getConnectedTabs();
 tabs.forEach((tabID) => {
   if (tabID !== conn.id) {
     // Add chat button for this tab
-    addChatButton(tabID, () => sendPrivateMessage(tabID, "Hello!"));
+    addChatButton(tabID, () => sendPrivateMessage(tabID, 'Hello!'));
   }
 });
 ```
 
-##  API Reference
+## API Reference
 
 ### bridge.connect(schema, options?)
 
@@ -579,9 +579,9 @@ const conn = await bridge.connect({
 
 // With options
 const conn = await bridge.connect(schema, {
-  channel: "my-app", // Namespace for isolation
-  tabID: "session-abc123", // Custom identifier
-  workerURL: "/worker.js", // Custom worker URL
+  channel: 'my-app', // Namespace for isolation
+  tabID: 'session-abc123', // Custom identifier
+  workerURL: '/worker.js', // Custom worker URL
   casTimeout: 10000, // CAS timeout in ms (default: 5000)
 });
 ```
@@ -638,11 +638,11 @@ const schema = {
   counter: 0,
   broadcastUpdate: (value, remote) => {
     remote.counter = value;
-    console.log("Broadcast to all");
+    console.log('Broadcast to all');
   },
   privateUpdate: (value, remote) => {
     remote.counter = value;
-    console.log("Direct message");
+    console.log('Direct message');
   },
 };
 
@@ -673,12 +673,11 @@ Register a listener for broadcasts from other tabs.
 **Returns:** Unsubscribe function
 
 ```typescript
-
 // Later: stop listening
 unsubscribe();
 ```
 
-```
+````
 
 ##### `getConnectedTabs(): Promise<string[]>`
 
@@ -699,7 +698,7 @@ if (tabIDs.includes("tab-abc")) {
 
 // Count connected tabs
 console.log(`${tabIDs.length} tabs connected`);
-```
+````
 
 **Use Cases:**
 
@@ -730,19 +729,19 @@ Atomic compare-and-swap operation on shared state. Only updates if `expectedVers
 
 ```typescript
 // Read current state with version
-const { value, version } = conn.getVersionedState<number>("counter");
+const { value, version } = conn.getVersionedState<number>('counter');
 
 // Compute new value
 const newCount = value + 1;
 
 // Atomic update - only succeeds if no one else updated
-const result = await conn.compareAndSwap("counter", version, newCount);
+const result = await conn.compareAndSwap('counter', version, newCount);
 
 if (result.success) {
-  console.log("Updated to", result.value, "at version", result.version);
+  console.log('Updated to', result.value, 'at version', result.version);
 } else {
   // Conflict - someone else updated first
-  console.log("Conflict! Current:", result.value, "v" + result.version);
+  console.log('Conflict! Current:', result.value, 'v' + result.version);
   // Retry with the new version...
 }
 ```
@@ -761,7 +760,7 @@ Get state value with its current version for use with `compareAndSwap`.
 - `version: number`: The current version number
 
 ```typescript
-const { value, version } = conn.getVersionedState<number>("counter");
+const { value, version } = conn.getVersionedState<number>('counter');
 console.log(`Counter is ${value} at version ${version}`);
 ```
 
@@ -774,7 +773,7 @@ Disconnect from SharedWorker and clean up all listeners.
 conn.close();
 ```
 
-##  Type Safety
+## Type Safety
 
 Bridge is fully type-safe with TypeScript:
 
@@ -797,11 +796,11 @@ const schema = {
 const conn = await bridge.connect(schema);
 
 //  Type-safe calls
-await conn.remote.updateUser({ id: 1, name: "Alice", email: "alice@example.com" });
+await conn.remote.updateUser({ id: 1, name: 'Alice', email: 'alice@example.com' });
 const count = await conn.remote.getCount();
 
 //  Type errors
-await conn.remote.updateUser({ id: "1" }); // Error: id should be number
+await conn.remote.updateUser({ id: '1' }); // Error: id should be number
 await conn.remote.nonExistent(); // Error: method doesn't exist
 
 //  Type-safe listeners
@@ -814,7 +813,6 @@ await conn.remote.nonExistent(); // Error: method doesn't exist
 Register multiple listeners for the same method:
 
 ```typescript
-
 
 ```
 
@@ -851,7 +849,7 @@ Errors in local execution are:
 const schema = {
   riskyOperation: (value: number) => {
     if (value < 0) {
-      throw new Error("Value must be positive");
+      throw new Error('Value must be positive');
     }
     return value * 2;
   },
@@ -863,7 +861,7 @@ const conn = await bridge.connect(schema);
 try {
   await conn.remote.riskyOperation(-5);
 } catch (error) {
-  console.error("Failed:", error);
+  console.error('Failed:', error);
 }
 
 // Other tabs also get error info
@@ -874,6 +872,7 @@ try {
 Only execute in listeners under certain conditions:
 
 ```typescript
+
 ```
 
 ### Custom Tab Identifiers
@@ -885,7 +884,7 @@ Use custom tab IDs for session management, debugging, or external system coordin
 const sessionId = getOrCreateSessionId(); // e.g., from localStorage
 const conn = await bridge.connect(schema, {
   tabID: sessionId,
-  channel: "user-workspace",
+  channel: 'user-workspace',
 });
 
 // Tab ID persists across page reloads
@@ -902,7 +901,7 @@ const conn = await bridge.connect(schema, {
 });
 
 // Now external logging/monitoring can reference this exact tab
-analytics.logTabActivity(conn.id, "connected");
+analytics.logTabActivity(conn.id, 'connected');
 ```
 
 **When to use custom tabID:**
@@ -930,15 +929,15 @@ If a tabID is already in use on a channel, Bridge automatically:
 ```typescript
 // Tab 1: Connects with custom ID
 const conn1 = await bridge.connect(schema, {
-  tabID: "session-123",
-  channel: "app",
+  tabID: 'session-123',
+  channel: 'app',
 });
 //  Connected successfully
 
 // Tab 2: Tries to connect with same ID on same channel
 const conn2 = await bridge.connect(schema, {
-  tabID: "session-123", // Same ID
-  channel: "app", // Same channel
+  tabID: 'session-123', // Same ID
+  channel: 'app', // Same channel
 });
 //  Tab 2 connects successfully
 //  Tab 1's connection is automatically closed
@@ -956,20 +955,20 @@ This behavior is useful for:
 ```typescript
 // These work fine simultaneously - different channels
 const connA = await bridge.connect(schema, {
-  tabID: "my-id",
-  channel: "channel-a",
+  tabID: 'my-id',
+  channel: 'channel-a',
 });
 
 const connB = await bridge.connect(schema, {
-  tabID: "my-id", // Same tabID, different channel
-  channel: "channel-b",
+  tabID: 'my-id', // Same tabID, different channel
+  channel: 'channel-b',
 });
 //  Both connections work independently
 ```
 
 ## 🆚 Bridge vs PostBridge RPC
 
-| Feature       | PostBridge RPC                 | Bridge          |
+| Feature       | PostBridge RPC              | Bridge                |
 | ------------- | --------------------------- | --------------------- |
 | Communication | 1:1 (host ↔ guest)         | 1:N (tab ↔ all tabs) |
 | Use Case      | Worker/iframe communication | Cross-tab sync        |
@@ -983,9 +982,9 @@ const connB = await bridge.connect(schema, {
 
 Bridge requires [SharedWorker support](https://caniuse.com/sharedworkers):
 
--  Chrome/Edge
--  Firefox
--  Safari (SharedWorker not supported)
+- Chrome/Edge
+- Firefox
+- Safari (SharedWorker not supported)
 
 For Safari, consider:
 
@@ -1004,7 +1003,7 @@ const debouncedUpdate = debounce((value) => {
   conn.remote.updateValue(value);
 }, 300);
 
-input.addEventListener("input", (e) => {
+input.addEventListener('input', (e) => {
   debouncedUpdate(e.target.value);
 });
 ```
@@ -1017,7 +1016,7 @@ input.addEventListener("input", (e) => {
 - Don't broadcast sensitive data (tokens, passwords)
 - Validate data in listeners (other tabs could be compromised)
 
-##  Debugging
+## Debugging
 
 ### Enable Logging
 
@@ -1026,12 +1025,11 @@ Add console.logs to methods to trace execution:
 ```typescript
 const schema = {
   updateCount: (count: number) => {
-    console.log("[Bridge] updateCount called with:", count);
+    console.log('[Bridge] updateCount called with:', count);
     state.count = count;
     return count;
   },
 };
-
 ```
 
 ### Check Tab ID
@@ -1040,8 +1038,7 @@ Identify which tab is which:
 
 ```typescript
 const conn = await bridge.connect(schema);
-console.log("My tab ID:", conn.id);
-
+console.log('My tab ID:', conn.id);
 ```
 
 ### Duplicate Tab ID Detection
@@ -1084,8 +1081,8 @@ const conn = await bridge.connect(schema, { tabID });
 
 ```typescript
 // Same ID across page refreshes (intended behavior)
-const sessionID = localStorage.getItem("sessionID") || crypto.randomUUID();
-localStorage.setItem("sessionID", sessionID);
+const sessionID = localStorage.getItem('sessionID') || crypto.randomUUID();
+localStorage.setItem('sessionID', sessionID);
 const conn = await bridge.connect(schema, { tabID: sessionID });
 // Old connection (if any) is replaced
 ```
@@ -1100,7 +1097,7 @@ In Chrome DevTools:
 2. Find your SharedWorker
 3. Click "inspect" to see worker console
 
-##  Best Practices
+## Best Practices
 
 ### 1. Keep Methods Pure
 
@@ -1110,7 +1107,7 @@ Methods should be idempotent (safe to call multiple times):
 //  Good: Idempotent
 const schema = {
   setTheme: (theme) => {
-    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute('data-theme', theme);
     return theme;
   },
 };
@@ -1143,13 +1140,13 @@ Remove listeners when components unmount:
 ```typescript
 // React example
 useEffect(() => {
-  const unsubscribe = 
+  const unsubscribe =
   return () => unsubscribe(); // Cleanup
 }, []);
 
 // Vue example
 onMounted(() => {
-  const unsubscribe = 
+  const unsubscribe =
   onUnmounted(() => unsubscribe());
 });
 ```
@@ -1159,12 +1156,12 @@ onMounted(() => {
 Close connection when page unloads:
 
 ```typescript
-window.addEventListener("beforeunload", () => {
+window.addEventListener('beforeunload', () => {
   conn.close();
 });
 ```
 
-##  Bundle Size
+## Bundle Size
 
 Bridge adds minimal overhead:
 
@@ -1172,18 +1169,18 @@ Bridge adds minimal overhead:
 - Worker code (embedded): ~1KB gzipped
 - Total: ~4KB gzipped
 
-##  Migration from BroadcastChannel
+## Migration from BroadcastChannel
 
 If you're using `BroadcastChannel`:
 
 ```typescript
 // Before (BroadcastChannel)
-const channel = new BroadcastChannel("my-channel");
+const channel = new BroadcastChannel('my-channel');
 
-channel.postMessage({ type: "UPDATE", data: 42 });
+channel.postMessage({ type: 'UPDATE', data: 42 });
 
 channel.onmessage = (event) => {
-  if (event.data.type === "UPDATE") {
+  if (event.data.type === 'UPDATE') {
     handleUpdate(event.data.data);
   }
 };
@@ -1196,7 +1193,6 @@ const conn = await bridge.connect({
   },
 });
 
-
 await conn.remote.update(42);
 ```
 
@@ -1207,7 +1203,7 @@ Benefits:
 - No manual message type handling
 - Symmetric API (broadcast = call, receive = execute)
 
-##  See Also
+## See Also
 
 - [PostBridge RPC Guide](?path=/docs/guides-web-workers--docs) - 1:1 communication with workers
 - [SharedWorker MDN](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker)

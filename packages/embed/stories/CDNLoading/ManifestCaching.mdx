@@ -17,12 +17,12 @@ The manifest is the link between the stable bootstrap URL and the content-hashed
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `main` | Filename of the current bundle (relative to CDN prefix) |
-| `version` | Package version from `package.json` |
-| `timestamp` | Unix ms timestamp of the build |
-| `contentHash` | SHA-256 of `main.js`, first 16 hex chars |
+| Field         | Description                                             |
+| ------------- | ------------------------------------------------------- |
+| `main`        | Filename of the current bundle (relative to CDN prefix) |
+| `version`     | Package version from `package.json`                     |
+| `timestamp`   | Unix ms timestamp of the build                          |
+| `contentHash` | SHA-256 of `main.js`, first 16 hex chars                |
 
 ### Content Hash
 
@@ -31,15 +31,13 @@ The content hash is derived from the bundle contents:
 ```typescript
 import { createHash } from 'crypto';
 
-const hash = createHash('sha256')
-  .update(mainFileContents)
-  .digest('hex')
-  .slice(0, 16);
+const hash = createHash('sha256').update(mainFileContents).digest('hex').slice(0, 16);
 
 const hashedFilename = `main.${hash}.js`;
 ```
 
 This means:
+
 - Same code → same hash → CDN returns cached file (no re-download)
 - Any code change → new hash → new filename → browser fetches fresh (bypasses all caches)
 
@@ -90,11 +88,11 @@ After deploy (t=6 min, new manifest on CDN):
 
 Worst-case timeline for updates to reach all users after a deploy:
 
-| Scenario | Wait Time |
-|----------|-----------|
-| User has no cached files | Immediate (next page load) |
-| User has manifest cached | Up to 5 minutes |
-| User has `script.js` cached | Up to 5 minutes |
+| Scenario                             | Wait Time                                |
+| ------------------------------------ | ---------------------------------------- |
+| User has no cached files             | Immediate (next page load)               |
+| User has manifest cached             | Up to 5 minutes                          |
+| User has `script.js` cached          | Up to 5 minutes                          |
 | User has old `main.{hash}.js` cached | Irrelevant — new bundle has new filename |
 
 **Maximum propagation time: 5 minutes.**
@@ -108,11 +106,13 @@ A hard refresh (`Ctrl+Shift+R` / `Cmd+Shift+R`) bypasses the browser cache. User
 ## Old Bundles in Cache
 
 Users who loaded `main.{oldhash}.js` before a deploy continue using it until:
+
 1. Their 1-year browser cache for that file expires, OR
 2. They hard-refresh the page (cache cleared), OR
 3. They visit on a different device/browser
 
 This is acceptable because:
+
 - Old bundles are still valid, working code
 - The next page load after the 5-min manifest TTL expires will load the new bundle
 - Users on the new bundle get it immediately on next load

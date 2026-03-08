@@ -60,17 +60,18 @@ The bootstrap file itself has a stable URL — it never changes its filename. It
 The main bundle contains the full SDK. Its filename includes a content hash (first 16 hex chars of SHA-256 of the file). Because the hash changes whenever the file changes, the CDN can serve it with a 1-year immutable cache.
 
 When you deploy a new version:
+
 1. A new `main.{newhash}.js` is uploaded
 2. `manifest.json` is updated to point to the new filename
 3. Within 5 minutes, all users fetch the new manifest and load the new bundle
 
 ## Cache Strategy Per File
 
-| File | Cache-Control | TTL | Why |
-|------|--------------|-----|-----|
-| `script.js` | `public, max-age=300` | 5 min | Stable URL, short cache so bootstrap updates propagate |
-| `manifest.json` | `public, max-age=300` | 5 min | Pointer to latest bundle; `?t=` param bypasses HTTP cache on load |
-| `main.{hash}.js` | `public, max-age=31536000, immutable` | 1 year | Content-addressed — hash changes = new file |
+| File             | Cache-Control                         | TTL    | Why                                                               |
+| ---------------- | ------------------------------------- | ------ | ----------------------------------------------------------------- |
+| `script.js`      | `public, max-age=300`                 | 5 min  | Stable URL, short cache so bootstrap updates propagate            |
+| `manifest.json`  | `public, max-age=300`                 | 5 min  | Pointer to latest bundle; `?t=` param bypasses HTTP cache on load |
+| `main.{hash}.js` | `public, max-age=31536000, immutable` | 1 year | Content-addressed — hash changes = new file                       |
 
 ## Why Not `/v1.2.3/script.js`?
 

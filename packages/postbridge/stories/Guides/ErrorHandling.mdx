@@ -54,7 +54,7 @@ const connection = await guest.connect({
       throw new Error('Division by zero');
     }
     return a / b;
-  }
+  },
 });
 
 // When called from host:
@@ -77,7 +77,7 @@ const connection = await guest.connect({
       throw new Error('Data is required');
     }
     return true;
-  }
+  },
 });
 
 // Host call
@@ -102,7 +102,7 @@ const connection = await guest.connect({
     }
 
     return response.json();
-  }
+  },
 });
 
 // Host call
@@ -123,7 +123,7 @@ const connection = await host.connect(worker, {
       throw new Error('Validation failed');
     }
     return true;
-  }
+  },
 });
 
 // Worker
@@ -137,7 +137,7 @@ const connection = await guest.connect({
       console.error('Host validation failed:', error.message);
       throw new Error('Cannot process invalid data');
     }
-  }
+  },
 });
 
 // Host calls worker
@@ -192,7 +192,7 @@ const connection = await guest.connect({
     }
 
     return process(file);
-  }
+  },
 });
 
 // Host
@@ -234,15 +234,13 @@ async function callWithRetry(fn, maxRetries = 3) {
 
 // Usage
 try {
-  const result = await callWithRetry(() =>
-    connection.remote.unreliableOperation()
-  );
+  const result = await callWithRetry(() => connection.remote.unreliableOperation());
 } catch (error) {
   console.error('All retries failed:', error);
 }
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 ```
 
@@ -262,19 +260,18 @@ async function getDataWithFallback(id) {
 ### Pattern 5: Error Aggregation
 
 ```javascript
-const results = await Promise.allSettled(
-  items.map(item =>
-    connection.remote.processItem(item)
-  )
-);
+const results = await Promise.allSettled(items.map((item) => connection.remote.processItem(item)));
 
-const successful = results.filter(r => r.status === 'fulfilled');
-const failed = results.filter(r => r.status === 'rejected');
+const successful = results.filter((r) => r.status === 'fulfilled');
+const failed = results.filter((r) => r.status === 'rejected');
 
 console.log(`Processed: ${successful.length}, Failed: ${failed.length}`);
 
 if (failed.length > 0) {
-  console.error('Errors:', failed.map(r => r.reason.message));
+  console.error(
+    'Errors:',
+    failed.map((r) => r.reason.message)
+  );
 }
 ```
 
@@ -326,9 +323,7 @@ class CircuitBreaker {
 const breaker = new CircuitBreaker();
 
 try {
-  const result = await breaker.call(() =>
-    connection.remote.unreliableService()
-  );
+  const result = await breaker.call(() => connection.remote.unreliableService());
 } catch (error) {
   console.error('Call failed:', error);
 }
@@ -346,7 +341,7 @@ worker.addEventListener('error', (event) => {
     message: event.message,
     filename: event.filename,
     lineno: event.lineno,
-    colno: event.colno
+    colno: event.colno,
   });
 });
 
@@ -397,7 +392,7 @@ const connection = await guest.connect({
   riskyOperation: async () => {
     // If this throws and isn't caught, triggers unhandledRejection
     await someAsyncOperation();
-  }
+  },
 });
 ```
 
@@ -510,12 +505,10 @@ class ErrorBoundary {
 // Usage
 const boundary = new ErrorBoundary((error) => ({
   success: false,
-  error: error.message
+  error: error.message,
 }));
 
-const result = await boundary.try(() =>
-  connection.remote.riskyOperation()
-);
+const result = await boundary.try(() => connection.remote.riskyOperation());
 
 if (boundary.hasError()) {
   console.log('Operation failed, using fallback result:', result);
@@ -547,7 +540,7 @@ const connection = await guest.connect({
     }
 
     return processUser(user);
-  }
+  },
 });
 ```
 
@@ -559,7 +552,7 @@ import { z } from 'zod';
 const UserSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
-  age: z.number().positive().optional()
+  age: z.number().positive().optional(),
 });
 
 const connection = await guest.connect({
@@ -570,11 +563,11 @@ const connection = await guest.connect({
       return processUser(validated);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        throw new Error(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`);
+        throw new Error(`Validation failed: ${error.errors.map((e) => e.message).join(', ')}`);
       }
       throw error;
     }
-  }
+  },
 });
 ```
 
@@ -589,7 +582,7 @@ function logError(error, context = {}) {
     stack: error.stack,
     code: error.code,
     timestamp: new Date().toISOString(),
-    ...context
+    ...context,
   });
 
   // Send to error tracking service
@@ -602,7 +595,7 @@ try {
   logError(error, {
     operation: 'processData',
     dataSize: data.length,
-    workerId: connection.id
+    workerId: connection.id,
   });
   throw error;
 }
@@ -614,7 +607,7 @@ try {
 const errorMetrics = {
   total: 0,
   byType: {},
-  byMethod: {}
+  byMethod: {},
 };
 
 async function callWithMetrics(method, ...args) {
@@ -640,14 +633,20 @@ console.log('Error metrics:', errorMetrics);
 ```typescript
 // Define error types
 class ValidationError extends Error {
-  constructor(message: string, public field: string) {
+  constructor(
+    message: string,
+    public field: string
+  ) {
     super(message);
     this.name = 'ValidationError';
   }
 }
 
 class NotFoundError extends Error {
-  constructor(message: string, public id: string) {
+  constructor(
+    message: string,
+    public id: string
+  ) {
     super(message);
     this.name = 'NotFoundError';
   }
@@ -667,7 +666,7 @@ const connection = await guest.connect({
     }
 
     return user;
-  }
+  },
 });
 
 // Host with type guards
@@ -700,11 +699,13 @@ try {
 ## Summary
 
 **Error types:**
+
 - Connection errors
 - RPC call errors
 - Method execution errors
 
 **Error patterns:**
+
 - Try-catch with cleanup
 - Error codes
 - Retry with backoff
@@ -712,11 +713,13 @@ try {
 - Circuit breaker
 
 **Recovery strategies:**
+
 - Graceful degradation
 - Worker recreation
 - Error boundaries
 
 **Next steps:**
+
 - [Bidirectional RPC](?path=/docs/guides-bidirectional-rpc--docs)
 - [Web Workers Guide](?path=/docs/guides-web-workers--docs)
 - [Examples](?path=/docs/examples-workers--docs)
