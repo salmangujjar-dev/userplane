@@ -61,9 +61,9 @@ The capture iframe tracks the recording state of the current tab:
 
 ```typescript
 interface CaptureRecorderState {
-  recorderTabId: string | null;     // tabRef of the recording tab (null if none)
-  recorderState: RecordingState;    // 'inactive' | 'active' | 'retained'
-  lastStateUpdate: number;          // Unix timestamp of last state change
+  recorderTabId: string | null; // tabRef of the recording tab (null if none)
+  recorderState: RecordingState; // 'inactive' | 'active' | 'retained'
+  lastStateUpdate: number; // Unix timestamp of last state change
 }
 ```
 
@@ -73,22 +73,22 @@ The `CaptureBridgeConnection` exposes these RPC methods:
 
 ### Host → Guest (SDK calls these on the capture iframe)
 
-| Method | Parameters | Description |
-|--------|------------|-------------|
-| `ping()` | none | Health check — returns `true` if capture is alive |
-| `extractMetadata()` | none | Request current tab's metadata |
-| `updateRecorderState(state)` | `CaptureRecorderState` | Push recorder state updates |
-| `startBlurr()` | none | Activate blur on marked elements |
-| `stopBlurr()` | none | Deactivate blur |
-| `getBlurrState()` | none | Query current blur state |
+| Method                       | Parameters             | Description                                       |
+| ---------------------------- | ---------------------- | ------------------------------------------------- |
+| `ping()`                     | none                   | Health check — returns `true` if capture is alive |
+| `extractMetadata()`          | none                   | Request current tab's metadata                    |
+| `updateRecorderState(state)` | `CaptureRecorderState` | Push recorder state updates                       |
+| `startBlurr()`               | none                   | Activate blur on marked elements                  |
+| `stopBlurr()`                | none                   | Deactivate blur                                   |
+| `getBlurrState()`            | none                   | Query current blur state                          |
 
 ### Guest → Host (Capture iframe calls these on the SDK)
 
-| Method | Description |
-|--------|-------------|
-| `getTabRef()` | Get this tab's reference |
-| `getPageUrl()` | Get current page URL |
-| `getPageTitle()` | Get current page title |
+| Method              | Description                      |
+| ------------------- | -------------------------------- |
+| `getTabRef()`       | Get this tab's reference         |
+| `getPageUrl()`      | Get current page URL             |
+| `getPageTitle()`    | Get current page title           |
 | `extractMetadata()` | Get custom metadata for this tab |
 
 ## `TabMetadata`
@@ -97,8 +97,8 @@ When `extractMetadata()` is called, the capture iframe returns:
 
 ```typescript
 interface TabMetadata {
-  _pageUrl: string;     // window.location.href
-  _pageTitle: string;   // document.title
+  _pageUrl: string; // window.location.href
+  _pageTitle: string; // document.title
   [key: string]: unknown; // custom metadata from set() and metadata()
 }
 ```

@@ -27,12 +27,12 @@ const schema = {
 };
 
 // Tab A calls increment() when counter = 0
-// → Tab A: counter becomes 1 
+// → Tab A: counter becomes 1
 // → Tab A broadcasts to other tabs
 
 // Tab B receives broadcast and executes increment()
 // → Tab B reads counter = 1 (from state sync)
-// → Tab B executes remote.counter++ → counter becomes 2 
+// → Tab B executes remote.counter++ → counter becomes 2
 // → Now tabs are out of sync!
 ```
 
@@ -54,8 +54,8 @@ This is a **known limitation** of multi-writer scenarios, not a bug. It's how di
 ```typescript
 const schema = {
   //  Shared variables: Read-only or set by external source
-  currentUser: { name: "Alice", id: 123 },
-  settings: { theme: "dark", notifications: true },
+  currentUser: { name: 'Alice', id: 123 },
+  settings: { theme: 'dark', notifications: true },
 
   //  Functions operate on LOCAL state, not shared state
   displayWelcome: (remote) => {
@@ -139,7 +139,7 @@ const schema = {
 
 ```typescript
 const schema = {
-  document: { text: "", lastModified: 0 },
+  document: { text: '', lastModified: 0 },
 
   //  Include timestamps for conflict resolution
   updateDocument: (text, timestamp, remote) => {
@@ -151,7 +151,7 @@ const schema = {
 };
 
 // Each tab includes timestamp
-await conn.remote.updateDocument("new text", Date.now());
+await conn.remote.updateDocument('new text', Date.now());
 ```
 
 **When this works:**
@@ -185,8 +185,8 @@ const conn = await bridge.connect(schema);
 // Safe increment with CAS retry loop
 async function safeIncrement() {
   while (true) {
-    const { value, version } = conn.getVersionedState<number>("counter");
-    const result = await conn.compareAndSwap("counter", version, value + 1);
+    const { value, version } = conn.getVersionedState<number>('counter');
+    const result = await conn.compareAndSwap('counter', version, value + 1);
 
     if (result.success) {
       await conn.remote.setCounter(result.value);
@@ -199,14 +199,14 @@ async function safeIncrement() {
 // Safe inventory decrement (prevents overselling)
 async function decrementInventory(item: string, amount: number) {
   while (true) {
-    const { value, version } = conn.getVersionedState<Record<string, number>>("inventory");
+    const { value, version } = conn.getVersionedState<Record<string, number>>('inventory');
     const current = value[item] ?? 0;
 
     if (current < amount) {
-      throw new Error("Insufficient inventory");
+      throw new Error('Insufficient inventory');
     }
 
-    const result = await conn.compareAndSwap("inventory", version, {
+    const result = await conn.compareAndSwap('inventory', version, {
       ...value,
       [item]: current - amount,
     });
@@ -238,7 +238,7 @@ async function decrementInventory(item: string, amount: number) {
 
 ## Anti-Patterns to Avoid
 
-###  Increment/Decrement on Shared State
+### Increment/Decrement on Shared State
 
 ```typescript
 // BAD: Each tab will execute the increment
@@ -270,7 +270,7 @@ const schema = {
 
 ---
 
-###  Shared Arrays/Objects Without Ownership
+### Shared Arrays/Objects Without Ownership
 
 ```typescript
 // BAD: Multiple tabs pushing to the same array
@@ -314,7 +314,7 @@ const schema = {
 | One tab controls state         | Pattern 2 (Single Source)      | Clear ownership                    |
 | Just notify tabs of events     | Pattern 3 (Event Broadcasting) | Simplest, no race conditions       |
 | Collaborative editing          | Pattern 4 (Last-Writer-Wins)   | Requires conflict resolution       |
-| Counter/accumulator            |  Use Local State             | Or use a server as source of truth |
+| Counter/accumulator            | Use Local State                | Or use a server as source of truth |
 | Atomic counter/accumulator     | Pattern 5 (CAS)                | Race-free increments with retry    |
 | Inventory/stock management     | Pattern 5 (CAS)                | Prevents overselling               |
 | Toggle with guarantee          | Pattern 5 (CAS)                | Ensures one toggle per click       |
@@ -323,12 +323,12 @@ const schema = {
 
 ## Comparison: 1:1 vs 1:N Communication Patterns
 
-| Aspect              | 1:1 Pattern (host/guest)    | 1:N Pattern (cross-tab)        |
-| ------------------- | --------------------------- | ------------------------------- |
-| **Use Case**        | iframe/worker communication | SharedWorker multi-tab sync     |
-| **Writers**         | 1:1 (host ↔ guest)         | N:N (all tabs)                  |
-| **Mutations**       |  Safe (single writer)      | Race conditions possible     |
-| **State sync**      | Bidirectional               | Broadcast to all                |
+| Aspect              | 1:1 Pattern (host/guest)    | 1:N Pattern (cross-tab)             |
+| ------------------- | --------------------------- | ----------------------------------- |
+| **Use Case**        | iframe/worker communication | SharedWorker multi-tab sync         |
+| **Writers**         | 1:1 (host ↔ guest)         | N:N (all tabs)                      |
+| **Mutations**       | Safe (single writer)        | Race conditions possible            |
+| **State sync**      | Bidirectional               | Broadcast to all                    |
 | **Recommended for** | Bidirectional RPC           | Event broadcasting, read-only state |
 
 ---

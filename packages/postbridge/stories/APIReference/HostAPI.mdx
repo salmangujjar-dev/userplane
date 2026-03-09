@@ -16,29 +16,30 @@ Establishes a connection from a host (parent context) to a guest (worker, iframe
 function connect<HostSchema, GuestSchema>(
   guest: Guest,
   schema?: HostSchema
-): Promise<Connection<GuestSchema>>
+): Promise<Connection<GuestSchema>>;
 ```
 
 ### Parameters
 
 #### `guest` (required)
+
 The guest context to connect to.
 
 **Type:** `Guest`
 
 **Supported types:**
+
 ```typescript
 type Guest =
-
-  | Worker              // Web Worker
-  | SharedWorker        // Shared Worker
-  | HTMLIFrameElement   // iframe element
-  | MessagePort         // Message port
-  | NodeWorker          // Node.js Worker (worker_threads)
-
+  | Worker // Web Worker
+  | SharedWorker // Shared Worker
+  | HTMLIFrameElement // iframe element
+  | MessagePort // Message port
+  | NodeWorker; // Node.js Worker (worker_threads)
 ```
 
 **Examples:**
+
 ```javascript
 // Web Worker
 const worker = new Worker('worker.js', { type: 'module' });
@@ -59,6 +60,7 @@ await host.connect(worker, schema);
 ```
 
 #### `schema` (optional)
+
 Object defining methods and data to expose to the guest.
 
 **Type:** `Schema = Record<string, any>`
@@ -66,6 +68,7 @@ Object defining methods and data to expose to the guest.
 **Default:** `{}`
 
 **Structure:**
+
 ```typescript
 interface Schema {
   // Functions: Exposed as callable methods
@@ -79,6 +82,7 @@ interface NestedSchema {
 ```
 
 **Examples:**
+
 ```javascript
 // Simple schema
 {
@@ -152,6 +156,7 @@ interface Connection<RemoteSchema = any> {
 **Fields:**
 
 ##### `id: string`
+
 Unique identifier for this connection.
 
 ```javascript
@@ -160,6 +165,7 @@ console.log(connection.id); // "1699901234567-k2j5h3g8f"
 ```
 
 ##### `remote: RemoteSchema`
+
 Proxy object containing guest's methods. Each method returns a `Promise`.
 
 ```javascript
@@ -178,7 +184,7 @@ await connection.remote.math.add(5, 3);
 ```javascript
 // Guest exposes sync method
 const guestSchema = {
-  add: (a, b) => a + b // Synchronous
+  add: (a, b) => a + b, // Synchronous
 };
 
 // Host must await
@@ -186,6 +192,7 @@ const result = await connection.remote.add(5, 3); // Must await!
 ```
 
 ##### `close: () => void`
+
 Closes the connection and cleans up resources.
 
 ```javascript
@@ -199,6 +206,7 @@ connection.close();
 ```
 
 **What close() does:**
+
 1. Removes connection from global connections map
 2. Removes all event listeners
 3. Clears RPC handlers
@@ -242,7 +250,7 @@ interface GuestSchema {
 const worker = new Worker('worker.js', { type: 'module' });
 const connection = await host.connect<HostSchema, GuestSchema>(worker, {
   log: (msg) => console.log(msg),
-  getData: async () => ({ value: 42 })
+  getData: async () => ({ value: 42 }),
 });
 
 // Type-safe remote calls
@@ -253,7 +261,7 @@ const sum = await connection.remote.calculateSum([1, 2, 3]); // number
 await connection.remote.unknownMethod();
 
 //  TypeScript error: wrong argument type
-await connection.remote.processData("not an array");
+await connection.remote.processData('not an array');
 ```
 
 ### Examples
@@ -269,8 +277,8 @@ const connection = await host.connect(worker, {
   log: (message) => console.log('[Worker]:', message),
   getConfig: () => ({
     apiKey: process.env.API_KEY,
-    debug: true
-  })
+    debug: true,
+  }),
 });
 
 // Use connection
@@ -313,7 +321,7 @@ const connection = await host.connect(iframe, {
   config: { theme: 'dark' },
   notifyUser: (message) => {
     alert(message);
-  }
+  },
 });
 
 // Call iframe methods
@@ -352,9 +360,7 @@ const connection = await host.connect(worker, {});
 
 // Transfer large buffer
 const buffer = new ArrayBuffer(10 * 1024 * 1024);
-const result = await connection.remote.processBuffer(
-  withTransferable(t => t(buffer))
-);
+const result = await connection.remote.processBuffer(withTransferable((t) => t(buffer)));
 
 // buffer is now detached
 console.log(buffer.byteLength); // 0
@@ -378,10 +384,7 @@ const timeout = new Promise((_, reject) =>
   setTimeout(() => reject(new Error('Connection timeout')), 5000)
 );
 
-const connection = await Promise.race([
-  host.connect(worker, {}),
-  timeout
-]);
+const connection = await Promise.race([host.connect(worker, {}), timeout]);
 ```
 
 #### Invalid Guest
@@ -418,6 +421,7 @@ const connection = await host.connect(iframe, {});
 ### Best Practices
 
 1. **Always close connections:**
+
 ```javascript
 try {
   await connection.remote.doWork();
@@ -427,16 +431,19 @@ try {
 ```
 
 2. **Handle worker errors:**
+
 ```javascript
 worker.addEventListener('error', handleError);
 ```
 
 3. **Use TypeScript for type safety:**
+
 ```typescript
 const connection = await host.connect<HostSchema, GuestSchema>(worker, schema);
 ```
 
 4. **Validate guest exists:**
+
 ```javascript
 if (!worker) {
   throw new Error('Worker not available');
@@ -445,6 +452,7 @@ const connection = await host.connect(worker, schema);
 ```
 
 5. **Clean up on page unload:**
+
 ```javascript
 window.addEventListener('beforeunload', () => {
   connection.close();

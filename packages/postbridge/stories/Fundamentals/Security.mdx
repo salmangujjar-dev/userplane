@@ -47,6 +47,7 @@ const connection = await host.connect(iframe, schema);
 ```
 
 **Behind the scenes:**
+
 ```javascript
 function isValidTarget(guest, event) {
   const iframe = guest;
@@ -86,6 +87,7 @@ Your Page (https://mysite.com)
 Workers don't need origin validation because they're **inherently secure**:
 
 **Why workers are safe:**
+
 - Created from your own code
 - Can't be created by other origins
 - Browser enforces isolation
@@ -115,6 +117,7 @@ const conn2 = await host.connect(worker2, schema); // ID: "def456"
 ```
 
 **Attack prevented:**
+
 - Worker1 can't intercept Worker2's messages
 - Each connection is cryptographically isolated
 
@@ -152,7 +155,7 @@ const connection = await host.connect(iframe, {
 
   updateDOM: (html) => {
     document.body.innerHTML = html; // XSS RISK!
-  }
+  },
 });
 
 //  GOOD: Validates and sanitizes
@@ -170,7 +173,7 @@ const connection = await host.connect(iframe, {
     // Sanitize HTML before inserting
     const sanitized = DOMPurify.sanitize(html);
     document.getElementById('content').innerHTML = sanitized;
-  }
+  },
 });
 ```
 
@@ -187,18 +190,15 @@ interface HostAPI {
 }
 
 // Type-safe connection
-const connection = await host.connect<HostAPI, GuestAPI>(
-  worker,
-  {
-    logMessage: (msg: string) => console.log(msg)
-  }
-);
+const connection = await host.connect<HostAPI, GuestAPI>(worker, {
+  logMessage: (msg: string) => console.log(msg),
+});
 
 //  TypeScript ensures correctness
 await connection.remote.processData([1, 2, 3]);
 
 //  TypeScript error
-await connection.remote.processData("invalid");
+await connection.remote.processData('invalid');
 ```
 
 ### 3. Limit Exposed API Surface
@@ -221,7 +221,7 @@ const connection = await host.connect(iframe, {
     // Validate and sanitize
     if (!isValid(data)) throw new Error('Invalid data');
     return database.save(sanitize(data));
-  }
+  },
 });
 ```
 
@@ -239,6 +239,7 @@ Restrict what iframes can do:
 ```
 
 **sandbox attributes:**
+
 - `allow-scripts` - Allow JavaScript
 - `allow-same-origin` - Treat as same origin (dangerous!)
 - `allow-forms` - Allow form submission
@@ -262,7 +263,7 @@ const connection = await host.connect(iframe, {
     }
 
     return performOperation(data);
-  }
+  },
 });
 ```
 
@@ -299,43 +300,49 @@ function postMessageToTarget(target, message, origin) {
 ### Workers (Web & Node.js): LOW RISK
 
 **Why safe:**
+
 - Created from your own code
 - Browser-enforced isolation
 - Can't be spoofed
 - No cross-origin concerns
 
 **Recommendations:**
--  No special precautions needed
--  Can trust worker messages
+
+- No special precautions needed
+- Can trust worker messages
 - ️ Still validate data (general best practice)
 
 ### Same-Origin iframes: MEDIUM RISK
 
 **Risks:**
+
 - Can access parent DOM (if not sandboxed)
 - Shares cookies and storage
 - Could contain vulnerabilities
 
 **Recommendations:**
+
 - ️ Validate input
 - ️ Use sandbox attribute
 - ️ Limit API surface
--  Origin validation automatic
+- Origin validation automatic
 
 ### Cross-Origin iframes: HIGH RISK
 
 **Risks:**
+
 - Runs code you don't control
 - Could be malicious
 - Could change behavior without warning
 - Message spoofing attempts
 
 **Recommendations:**
+
 - ️️ Strict input validation
 - ️️ Minimal API surface
 - ️️ Sandbox with strict CSP
 - ️️ Never expose sensitive data/functions
--  Origin validation automatic
+- Origin validation automatic
 
 ## Common Security Pitfalls
 
@@ -349,7 +356,7 @@ const connection = await host.connect(iframe, {
   // Database access
   db: database,
   // All user data
-  userData: currentUser
+  userData: currentUser,
 });
 
 //  SAFE
@@ -359,7 +366,7 @@ const connection = await host.connect(iframe, {
   updateProfile: (data) => {
     if (!validate(data)) throw new Error('Invalid');
     return updateUserProfile(sanitize(data));
-  }
+  },
 });
 ```
 
@@ -376,7 +383,7 @@ const connection = await host.connect(iframe, {
     const script = document.createElement('script');
     script.src = src; // Could load malicious script!
     document.body.appendChild(script);
-  }
+  },
 });
 
 //  SAFE
@@ -406,7 +413,7 @@ const connection = await host.connect(iframe, {
       // Leaks database structure!
     }
     // ...
-  }
+  },
 });
 
 //  SAFE: Generic error messages
@@ -418,7 +425,7 @@ const connection = await host.connect(iframe, {
       // Generic, no info leaked
     }
     // ...
-  }
+  },
 });
 ```
 
@@ -431,9 +438,9 @@ const connection = await host.connect(iframe, {
     // What if user is null, undefined, or not an object?
     return database.save({
       name: user.name.toUpperCase(), // CRASH if user.name is undefined!
-      age: user.age
+      age: user.age,
     });
-  }
+  },
 });
 
 //  SAFE: Validates structure
@@ -452,9 +459,9 @@ const connection = await host.connect(iframe, {
     // Now safe to process
     return database.save({
       name: user.name.toUpperCase(),
-      age: user.age
+      age: user.age,
     });
-  }
+  },
 });
 ```
 
@@ -503,7 +510,7 @@ interface MyAPI {
 // Validation schemas
 const SafeDataSchema = z.object({
   title: z.string().max(100),
-  count: z.number().min(0).max(1000)
+  count: z.number().min(0).max(1000),
 });
 
 const iframe = document.createElement('iframe');
@@ -516,7 +523,7 @@ const connection = await host.connect<MyAPI, ThirdPartyAPI>(iframe, {
     // Only return safe, non-sensitive data
     return {
       title: 'Public Data',
-      count: 42
+      count: 42,
     };
   },
 
@@ -528,7 +535,7 @@ const connection = await host.connect<MyAPI, ThirdPartyAPI>(iframe, {
       // Sanitize strings
       const sanitized = {
         title: DOMPurify.sanitize(validated.title),
-        count: validated.count
+        count: validated.count,
       };
 
       // Save to database
@@ -539,7 +546,7 @@ const connection = await host.connect<MyAPI, ThirdPartyAPI>(iframe, {
       console.error('Validation failed:', error);
       throw new Error('Invalid data format');
     }
-  }
+  },
 });
 
 // Use the connection safely
@@ -549,12 +556,14 @@ await connection.remote.render({ content: 'Hello' });
 ## Summary
 
 **postbridge Security Features:**
--  Automatic origin validation for iframes
--  Connection ID isolation
--  Worker isolation (trusted by default)
--  TypeScript type safety
+
+- Automatic origin validation for iframes
+- Connection ID isolation
+- Worker isolation (trusted by default)
+- TypeScript type safety
 
 **Your Responsibilities:**
+
 - ️ Validate all input data
 - ️ Sanitize output (especially HTML)
 - ️ Limit API surface
@@ -563,11 +572,13 @@ await connection.remote.render({ content: 'Hello' });
 - ️ Don't expose sensitive data
 
 **Security by Context:**
+
 - Workers: Low risk (trusted)
 - Same-origin iframes: Medium risk (validate)
 - Cross-origin iframes: High risk (strict validation)
 
 **Next steps:**
+
 - Review [Architecture](?path=/docs/architecture-overview--docs) - How security is implemented
 - Check [iframes Guide](?path=/docs/guides-iframes--docs) - iframe-specific security
 - Read [Error Handling](?path=/docs/guides-error-handling--docs) - Secure error management

@@ -1,0 +1,18 @@
+{
+  "name": "docs",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "fnm exec --using=22 mintlify dev --port 3003",
+    "build": "echo 'Mintlify builds are handled by Mintlify hosting'",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "echo 'No typecheck needed for Mintlify docs'"
+  },
+  "devDependencies": {
+    "mintlify": "^4.2.415",
+    "@userplane/eslint-config": "*",
+    "eslint": "^9.32.0"
+  }
+}

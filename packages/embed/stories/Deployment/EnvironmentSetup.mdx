@@ -8,14 +8,14 @@ The CDN build and deploy pipeline requires six environment variables. These cont
 
 ## Required Variables
 
-| Variable | Example | Description |
-|----------|---------|-------------|
-| `R2_CDN_ACCOUNT_ID` | `abc123def456` | Cloudflare account ID |
-| `R2_CDN_ACCESS_KEY_ID` | `AKIAXXXXXXXX` | R2 API access key ID |
-| `R2_CDN_SECRET_ACCESS_KEY` | `xxxxxxxxxxxxx` | R2 API secret key |
-| `R2_CDN_BUCKET_NAME` | `my-cdn-bucket` | R2 bucket name |
-| `CDN_DOMAIN` | `cdn.example.com` | CDN domain (no `https://`) |
-| `R2_CDN_PREFIX` | `embed` | Path prefix inside the bucket |
+| Variable                   | Example           | Description                   |
+| -------------------------- | ----------------- | ----------------------------- |
+| `R2_CDN_ACCOUNT_ID`        | `abc123def456`    | Cloudflare account ID         |
+| `R2_CDN_ACCESS_KEY_ID`     | `AKIAXXXXXXXX`    | R2 API access key ID          |
+| `R2_CDN_SECRET_ACCESS_KEY` | `xxxxxxxxxxxxx`   | R2 API secret key             |
+| `R2_CDN_BUCKET_NAME`       | `my-cdn-bucket`   | R2 bucket name                |
+| `CDN_DOMAIN`               | `cdn.example.com` | CDN domain (no `https://`)    |
+| `R2_CDN_PREFIX`            | `embed`           | Path prefix inside the bucket |
 
 ## Where Env Files Are Loaded
 
@@ -34,10 +34,10 @@ bun run deploy:cdn --env=production
 
 ## Supported Environments
 
-| Environment | `.env` File | Use Case |
-|-------------|-----------|---------|
+| Environment   | `.env` File        | Use Case               |
+| ------------- | ------------------ | ---------------------- |
 | `development` | `.env.development` | Local dev, staging CDN |
-| `production` | `.env.production` | Live production CDN |
+| `production`  | `.env.production`  | Live production CDN    |
 
 ## Example `.env.production`
 
@@ -102,6 +102,7 @@ bun run upload:cdn --env=production --manifest-only
 ```
 
 A successful dry-run confirms that:
+
 - All environment variables are set
 - R2 credentials are valid
 - The bucket exists and is accessible

@@ -1,0 +1,70 @@
+---
+title: Intercom Setup
+description: Connect Userplane to Intercom so your team can request recordings from inside conversations
+---
+
+Userplane integrates with Intercom through OAuth, so your support agents can create recording links and view recordings without ever leaving the Intercom inbox.
+
+## Connect Intercom
+
+<Steps>
+  <Step title="Open Integrations settings">
+    Go to [Workspace Settings >
+    Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+  </Step>
+  <Step title="Click Connect Intercom">
+    Click **Connect Intercom**. You'll be redirected to Intercom to authorize the connection.
+  </Step>
+  <Step title="Authorize">
+    Userplane requests permissions to read conversations and manage the inbox sidebar app.
+  </Step>
+  <Step title="Done">
+    After authorizing, you'll be redirected back to Userplane and the connection is active.
+  </Step>
+</Steps>
+
+<Note>Only workspace **owners** and **admins** can manage the Intercom integration.</Note>
+
+## What happens when you connect
+
+- Userplane is installed in your **Intercom inbox**. Your agents can create recording links and view recordings directly from conversations.
+- **Intercom shortcuts** are added to your workspace, so agents can request screen recordings from customers in just a couple of clicks directly inside Intercom.
+- If Userplane isn't pinned to your sidebar, be sure to add it so it's easy to access. To do so, go to your Intercom inbox, select **Edit app**, and pin Userplane.
+
+## Invite Intercom admins
+
+Once connected, you'll be prompted to invite your Intercom admins as workspace members so they can use Userplane inside Intercom:
+
+<Steps>
+  <Step title="Select members to invite">
+    Select which Intercom members you want to invite and click [Invite
+    Member](https://dash.userplane.io/_/recordings?invite=true).
+  </Step>
+  <Step title="Enter email addresses">
+    You can also enter the email addresses of your workspace members directly.
+  </Step>
+  <Step title="Send invitations">
+    Invited users will receive an email invitation to join your workspace.
+  </Step>
+  <Step title="Optionally whitelist domains">
+    Whitelist specific email domains to enable org-wide access. Approved users can request and
+    review customer recordings without you having to invite each person individually.
+  </Step>
+</Steps>
+
+## Disconnect Intercom
+
+1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+2. Click **Disconnect** next to the Intercom integration.
+
+<Note>
+  Disconnecting will make Userplane inoperable within Intercom. Your existing recordings and links
+  won't be affected.
+</Note>
+
+## Learn more
+
+- [Intercom Integration](/integrations/intercom) — a detailed overview of the integration.
+- [Using Userplane in Intercom](/integrations/intercom-inbox) — learn how to use the sidebar app.
+- [Intercom Shortcuts](/integrations/intercom-shortcuts) — create links fast with Cmd+K.
+- [Intercom Macros](/integrations/intercom-macros) — use reusable links in macros for quick insertion.

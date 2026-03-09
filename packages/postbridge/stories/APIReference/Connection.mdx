@@ -31,6 +31,7 @@ Unique identifier for this connection.
 **Format:** `"{timestamp}-{random}"` (e.g., `"1699901234567-k2j5h3g8f"`)
 
 **Examples:**
+
 ```javascript
 const connection = await host.connect(worker, {});
 console.log(connection.id); // "1699901234567-k2j5h3g8f"
@@ -44,12 +45,14 @@ connections.set(connection.id, connection);
 ```
 
 **Use cases:**
+
 - Logging and debugging
 - Tracking multiple connections
 - Identifying connections in errors
 - Connection pooling
 
 **Uniqueness:**
+
 - Unique per connection
 - Different for each `connect()` call
 - Even same worker gets new ID if reconnected
@@ -101,7 +104,7 @@ const sum: number = await connection.remote.calculateSum([1, 2, 3]);
 
 // TypeScript errors
 await connection.remote.unknownMethod(); //  Error
-await connection.remote.processData("string"); //  Error
+await connection.remote.processData('string'); //  Error
 ```
 
 #### Nested Methods
@@ -133,7 +136,7 @@ try {
 const [result1, result2, result3] = await Promise.all([
   connection.remote.operation1(),
   connection.remote.operation2(),
-  connection.remote.operation3()
+  connection.remote.operation3(),
 ]);
 ```
 
@@ -148,6 +151,7 @@ console.log('Message sent (not waiting for completion)');
 ```
 
 **Important:**
+
 - Always `await` remote calls
 - Handle errors with try-catch
 - Methods may take longer than expected (network/processing latency)
@@ -162,6 +166,7 @@ Closes the connection and cleans up all resources.
 **Returns:** `void` (nothing)
 
 **What it does:**
+
 1. Removes connection from global connections map (host-side)
 2. Removes all event listeners (handshake + RPC)
 3. Clears response map (pending calls)
@@ -244,7 +249,7 @@ for (let i = 0; i < 4; i++) {
 }
 
 // Close all
-connections.forEach(conn => conn.close());
+connections.forEach((conn) => conn.close());
 connections.length = 0;
 ```
 
@@ -268,6 +273,7 @@ await promise; // Unpredictable
 ```
 
 **Best practices:**
+
 1. Always call `close()` when done
 2. Use try-finally to ensure cleanup
 3. Close on page unload
@@ -275,6 +281,7 @@ await promise; // Unpredictable
 5. Don't use connection after closing
 
 **Performance impact:**
+
 - Instant (no async work)
 - Frees memory immediately
 - Worker termination is async but non-blocking
@@ -370,7 +377,7 @@ class ConnectionPool {
   }
 
   close() {
-    this.all.forEach(conn => conn.close());
+    this.all.forEach((conn) => conn.close());
     this.all = [];
     this.available = [];
   }
@@ -410,14 +417,14 @@ class ConnectionRegistry {
   }
 
   closeAll() {
-    this.connections.forEach(conn => conn.close());
+    this.connections.forEach((conn) => conn.close());
     this.connections.clear();
   }
 
   list() {
     return Array.from(this.connections.entries()).map(([name, conn]) => ({
       name,
-      id: conn.id
+      id: conn.id,
     }));
   }
 }
@@ -475,13 +482,10 @@ interface HostMethods {
   updateProgress: (percent: number) => void;
 }
 
-const connection: Connection<GuestMethods> = await host.connect<HostMethods, GuestMethods>(
-  worker,
-  {
-    log: (message) => console.log(message),
-    updateProgress: (percent) => console.log(`${percent}%`)
-  }
-);
+const connection: Connection<GuestMethods> = await host.connect<HostMethods, GuestMethods>(worker, {
+  log: (message) => console.log(message),
+  updateProgress: (percent) => console.log(`${percent}%`),
+});
 
 // Type-safe remote calls
 const result: number[] = await connection.remote.processData([1, 2, 3]);

@@ -91,6 +91,7 @@ User Code: await connection.remote.calculate(5, 3)
 ```
 
 **Fields:**
+
 - `action`: Message type identifier
 - `connectionID`: Routes to correct connection
 - `callID`: Unique identifier for this call (matches request with response)
@@ -114,6 +115,7 @@ User Code: await connection.remote.calculate(5, 3)
 ```
 
 **Fields:**
+
 - `action`: Response type (success)
 - `connectionID`: Routes to correct connection
 - `callID`: Matches the request's callID
@@ -134,6 +136,7 @@ User Code: await connection.remote.calculate(5, 3)
 ```
 
 **Fields:**
+
 - `action`: Response type (error)
 - `connectionID`: Routes to correct connection
 - `callID`: Matches the request's callID
@@ -153,8 +156,12 @@ const responseMap = new Map();
 
 // Example:
 responseMap.set('call-456', {
-  resolve: (result) => { /* resolve promise */ },
-  reject: (error) => { /* reject promise */ }
+  resolve: (result) => {
+    /* resolve promise */
+  },
+  reject: (error) => {
+    /* reject promise */
+  },
 });
 ```
 
@@ -175,7 +182,7 @@ const promise = new Promise((resolve, reject) => {
     connectionID,
     callID,
     method: 'calculate',
-    args: [5, 3]
+    args: [5, 3],
   });
 });
 
@@ -213,17 +220,17 @@ Multiple RPC calls can be in flight simultaneously:
 ```javascript
 // All three calls happen concurrently
 const [result1, result2, result3] = await Promise.all([
-  connection.remote.calculate(5, 3),    // callID: 'a'
-  connection.remote.processData([1,2]), // callID: 'b'
-  connection.remote.fetchData('key')    // callID: 'c'
+  connection.remote.calculate(5, 3), // callID: 'a'
+  connection.remote.processData([1, 2]), // callID: 'b'
+  connection.remote.fetchData('key'), // callID: 'c'
 ]);
 
 // responseMap state during calls:
 responseMap = {
-  'a': { resolve, reject },
-  'b': { resolve, reject },
-  'c': { resolve, reject }
-}
+  a: { resolve, reject },
+  b: { resolve, reject },
+  c: { resolve, reject },
+};
 
 // Responses can arrive in any order:
 // - Response for 'b' arrives first → resolves promise 2
@@ -310,7 +317,7 @@ const schema = {
       throw new Error('Division by zero');
     }
     return a / b;
-  }
+  },
 };
 
 // Host calls
@@ -323,6 +330,7 @@ try {
 ```
 
 **Message Flow:**
+
 ```
 Host                                Guest
   │                                  │
@@ -352,6 +360,7 @@ try {
 ```
 
 **Handler code:**
+
 ```javascript
 function handleRequest(event) {
   const data = event.data;
@@ -363,7 +372,7 @@ function handleRequest(event) {
       action: 'RPC_REJECT',
       connectionID: data.connectionID,
       callID: data.callID,
-      error: `Method ${data.method} not found`
+      error: `Method ${data.method} not found`,
     });
     return;
   }
@@ -385,7 +394,7 @@ const schema = {
       throw new Error('Fetch failed');
     }
     return response.json();
-  }
+  },
 };
 
 // Host calls
@@ -412,6 +421,7 @@ console.log(buffer.byteLength); // 10485760 (still has data)
 ```
 
 **Message:**
+
 ```javascript
 {
   action: 'RPC_REQUEST',
@@ -431,15 +441,14 @@ import { withTransferable } from '@userplane/postbridge';
 const buffer = new ArrayBuffer(10 * 1024 * 1024);
 
 // Send (transfers ownership, zero-copy)
-await connection.remote.processBuffer(
-  withTransferable(t => t(buffer))
-);
+await connection.remote.processBuffer(withTransferable((t) => t(buffer)));
 
 // buffer is now detached (empty)
 console.log(buffer.byteLength); // 0 (no data)
 ```
 
 **Message:**
+
 ```javascript
 {
   action: 'RPC_REQUEST',
@@ -475,21 +484,22 @@ export const withTransferable = (cb) => {
 };
 
 // Usage:
-const data = withTransferable(t => ({
+const data = withTransferable((t) => ({
   buffer1: t(new ArrayBuffer(1024)),
   buffer2: t(new ArrayBuffer(2048)),
-  regularData: 'not transferred'
+  regularData: 'not transferred',
 }));
 
 // data._transferables = [ArrayBuffer, ArrayBuffer]
 ```
 
 **Detection in proxy:**
+
 ```javascript
 function proxyFunction(...args) {
   // Check for transferables
   const transferables = [];
-  args.forEach(arg => {
+  args.forEach((arg) => {
     if (arg && arg._transferables) {
       transferables.push(...arg._transferables);
       delete arg._transferables; // Clean up marker
@@ -525,6 +535,7 @@ function handleRequest(event) {
 ```
 
 **Why filtering is important:**
+
 - Multiple connections can exist (host with multiple workers)
 - All connections listen on the same channel
 - connectionID routes messages to correct handlers
@@ -536,7 +547,7 @@ function handleRequest(event) {
 ```javascript
 //  Large message (slow)
 await connection.remote.process({
-  data: new Array(1000000).fill({ a: 1, b: 2, c: 3 })
+  data: new Array(1000000).fill({ a: 1, b: 2, c: 3 }),
 });
 // Serializing 1M objects is slow!
 
@@ -571,7 +582,7 @@ const r3 = await connection.remote.task3();
 const [r1, r2, r3] = await Promise.all([
   connection.remote.task1(),
   connection.remote.task2(),
-  connection.remote.task3()
+  connection.remote.task3(),
 ]);
 ```
 
@@ -629,6 +640,7 @@ function proxyFunction(...args) {
 ```
 
 **Output:**
+
 ```
 [RPC] Calling calculate with callID xyz
 [RPC] Resolved calculate callID xyz result 8
@@ -640,17 +652,18 @@ function proxyFunction(...args) {
 // Add to window/global for debugging
 window._postbridgeDebug = {
   responseMap,
-  connectionID
+  connectionID,
 };
 
 // In console:
-_postbridgeDebug.responseMap
+_postbridgeDebug.responseMap;
 // Map(2) { 'xyz' => {...}, 'abc' => {...} }
 ```
 
 ## Summary
 
 **Message Flow:**
+
 1. Proxy invoked → Generate callID
 2. Store promise resolver in responseMap
 3. Send RPC_REQUEST with callID
@@ -659,6 +672,7 @@ _postbridgeDebug.responseMap
 6. Match callID in responseMap → Resolve/reject promise
 
 **Key Concepts:**
+
 - **callID:** Matches requests with responses
 - **connectionID:** Routes to correct connection
 - **responseMap:** Stores pending promises
@@ -667,6 +681,7 @@ _postbridgeDebug.responseMap
 - **Transferables:** Zero-copy for large binary data
 
 **Next steps:**
+
 - Review [Connection Lifecycle](./lifecycle.md) for complete lifecycle
 - Check [RPC Engine](?path=/docs/introduction--docs) for implementation details
 - See [Transferables Guide](?path=/docs/guides-transferables--docs) for efficient data transfer

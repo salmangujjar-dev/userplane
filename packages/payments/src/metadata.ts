@@ -67,6 +67,7 @@ export const GATE_METADATA_KEYS = {
   customizeRecordingLink: 'customize_recording_link_enabled',
   customizeRetentionPolicy: 'customize_retention_policy_enabled',
   sendOutboundEmails: 'send_outbound_emails_enabled',
+  samlSso: 'saml_sso_enabled',
 } as const satisfies Record<FeatureGate, string>;
 
 /**

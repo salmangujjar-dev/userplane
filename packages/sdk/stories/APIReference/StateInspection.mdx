@@ -15,7 +15,7 @@ Check if the SDK has been initialized.
 ### Signature
 
 ```typescript
-function isInitialized(): boolean
+function isInitialized(): boolean;
 ```
 
 ### Return Value
@@ -40,17 +40,17 @@ Get the current recording state.
 ### Signature
 
 ```typescript
-function getRecordingState(): RecordingState
+function getRecordingState(): RecordingState;
 
 type RecordingState = 'inactive' | 'active' | 'retained';
 ```
 
 ### Return Value
 
-| Value | Meaning |
-|-------|---------|
-| `'inactive'` | No active session. SDK is idle. |
-| `'active'` | Recording is in progress. |
+| Value        | Meaning                                                        |
+| ------------ | -------------------------------------------------------------- |
+| `'inactive'` | No active session. SDK is idle.                                |
+| `'active'`   | Recording is in progress.                                      |
 | `'retained'` | Recording submitted but recorder UI still open (review state). |
 
 Returns `'inactive'` if the SDK is not initialized.
@@ -73,7 +73,7 @@ Get the full recording context, including session info and unload state.
 ### Signature
 
 ```typescript
-function getRecordingContext(): RecordingContext | null
+function getRecordingContext(): RecordingContext | null;
 ```
 
 ### Return Value
@@ -118,7 +118,7 @@ Get the current session ID.
 ### Signature
 
 ```typescript
-function getSessionId(): string | null
+function getSessionId(): string | null;
 ```
 
 ### Return Value
@@ -145,7 +145,7 @@ Get the link ID for the current session.
 ### Signature
 
 ```typescript
-function getLinkId(): string | null
+function getLinkId(): string | null;
 ```
 
 ### Return Value

@@ -10,13 +10,13 @@ The Userplane recorder runs in a fully isolated `<iframe>`. This page explains w
 
 The recorder is a complete application — it manages media streams (microphone, screen capture), WebSocket connections, large binary uploads, and its own UI. Running it in an iframe provides:
 
-| Benefit | Explanation |
-|---------|-------------|
-| **Origin isolation** | Recorder scripts cannot access the host page's DOM, cookies, or localStorage |
-| **CSS isolation** | Recorder UI styles cannot leak into (or be broken by) the host page's CSS |
-| **JS sandboxing** | Recorder JS errors don't propagate to the host page |
-| **Permission isolation** | Camera/microphone permissions are granted to the recorder origin, not the host |
-| **Independent lifecycle** | The recorder can reload or crash without affecting the host page |
+| Benefit                   | Explanation                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| **Origin isolation**      | Recorder scripts cannot access the host page's DOM, cookies, or localStorage   |
+| **CSS isolation**         | Recorder UI styles cannot leak into (or be broken by) the host page's CSS      |
+| **JS sandboxing**         | Recorder JS errors don't propagate to the host page                            |
+| **Permission isolation**  | Camera/microphone permissions are granted to the recorder origin, not the host |
+| **Independent lifecycle** | The recorder can reload or crash without affecting the host page               |
 
 ## DOM Structure
 
@@ -25,14 +25,17 @@ When the recorder is open, the SDK injects two elements into `document.body`:
 ```html
 <body>
   <!-- Your app's existing content -->
-  <div id="userplane-overlay" style="
+  <div
+    id="userplane-overlay"
+    style="
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
     z-index: 2147483647;
     background: rgba(0,0,0,0.5);
     backdrop-filter: blur(4px);
-  ">
+  "
+  >
     <iframe
       src="https://recorder.userplane.io/r?userplane-token=tok_...&..."
       sandbox="allow-same-origin allow-scripts allow-popups"
@@ -81,15 +84,15 @@ sandbox="allow-same-origin allow-scripts allow-popups"
 allow="microphone; camera; display-capture; screen-wake-lock"
 ```
 
-| Attribute | Value | Purpose |
-|-----------|-------|---------|
+| Attribute | Value               | Purpose                                               |
+| --------- | ------------------- | ----------------------------------------------------- |
 | `sandbox` | `allow-same-origin` | Enables `localStorage`, `IndexedDB` inside the iframe |
-| `sandbox` | `allow-scripts` | Allows JavaScript to run |
-| `sandbox` | `allow-popups` | Allows `window.open()` (used for OAuth flows) |
-| `allow` | `microphone` | Grants microphone access |
-| `allow` | `camera` | Grants camera access (optional) |
-| `allow` | `display-capture` | Grants screen/tab capture access |
-| `allow` | `screen-wake-lock` | Prevents screen dimming during recording |
+| `sandbox` | `allow-scripts`     | Allows JavaScript to run                              |
+| `sandbox` | `allow-popups`      | Allows `window.open()` (used for OAuth flows)         |
+| `allow`   | `microphone`        | Grants microphone access                              |
+| `allow`   | `camera`            | Grants camera access (optional)                       |
+| `allow`   | `display-capture`   | Grants screen/tab capture access                      |
+| `allow`   | `screen-wake-lock`  | Prevents screen dimming during recording              |
 
 See [Sandbox & Permissions](?path=/docs/privacy-sandbox-permissions--docs) for a complete reference.
 

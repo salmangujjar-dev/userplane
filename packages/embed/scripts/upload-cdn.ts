@@ -25,7 +25,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';

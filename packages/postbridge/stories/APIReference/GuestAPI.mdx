@@ -16,12 +16,13 @@ Establishes a connection from a guest (child context) to its host (parent contex
 function connect<GuestSchema, HostSchema>(
   schema?: GuestSchema,
   options?: GuestConnectOptions
-): Promise<Connection<HostSchema>>
+): Promise<Connection<HostSchema>>;
 ```
 
 ### Parameters
 
 #### `schema` (optional)
+
 Object defining methods and data to expose to the host.
 
 **Type:** `Schema = Record<string, any>`
@@ -29,6 +30,7 @@ Object defining methods and data to expose to the host.
 **Default:** `{}`
 
 **Structure:**
+
 ```typescript
 interface Schema {
   // Functions: Exposed as callable methods
@@ -37,6 +39,7 @@ interface Schema {
 ```
 
 **Examples:**
+
 ```javascript
 // Simple methods
 {
@@ -87,6 +90,7 @@ interface Schema {
 ```
 
 #### `options` (optional)
+
 Configuration options for the connection.
 
 **Type:** `GuestConnectOptions`
@@ -104,24 +108,28 @@ interface GuestConnectOptions {
 **Fields:**
 
 ##### `hostTarget` (optional)
+
 Override automatic host detection. Rarely needed.
 
 **Type:** `Target`
 
 **Default:** Auto-detected based on context
+
 - Web Worker → `self`
 - iframe → `window.parent`
 - Node.js Worker → `parentPort`
 
 **Example:**
+
 ```javascript
 // Manual target (advanced use case)
 const connection = await guest.connect(schema, {
-  hostTarget: customTarget
+  hostTarget: customTarget,
 });
 ```
 
 ##### `onConnectionSetup` (optional)
+
 Async callback executed during handshake, before connection resolves.
 
 **Type:** `(remote: HostSchema) => Promise<void> | void`
@@ -129,11 +137,13 @@ Async callback executed during handshake, before connection resolves.
 **When it runs:** After receiving HANDSHAKE_REPLY, before sending confirmation
 
 **Use cases:**
+
 - Load initial data from host
 - Initialize worker state
 - Validate configuration
 
 **Example:**
+
 ```javascript
 let config;
 
@@ -148,7 +158,7 @@ const connection = await guest.connect(schema, {
 
     // Notify host
     await remote.log('Worker initialized');
-  }
+  },
 });
 
 // Connection resolves after setup completes
@@ -176,6 +186,7 @@ interface Connection<RemoteSchema = any> {
 **Fields:**
 
 ##### `id: string`
+
 Unique connection identifier assigned by host.
 
 ```javascript
@@ -184,6 +195,7 @@ console.log(connection.id); // "1699901234567-k2j5h3g8f"
 ```
 
 ##### `remote: RemoteSchema`
+
 Proxy object for calling host methods.
 
 ```javascript
@@ -200,6 +212,7 @@ const sum = await connection.remote.math.add(5, 3);
 **Note:** All methods are async and return Promises.
 
 ##### `close: () => void`
+
 Closes the connection and cleans up resources.
 
 ```javascript
@@ -213,6 +226,7 @@ connection.close();
 ```
 
 **What close() does:**
+
 1. Removes all event listeners
 2. Clears RPC handlers
 3. Frees memory
@@ -237,12 +251,12 @@ interface HostSchema {
 
 // Type-safe connection
 const connection = await guest.connect<GuestSchema, HostSchema>({
-  processData: async (data) => data.map(x => x * 2),
-  calculateSum: async (numbers) => numbers.reduce((a, b) => a + b, 0)
+  processData: async (data) => data.map((x) => x * 2),
+  calculateSum: async (numbers) => numbers.reduce((a, b) => a + b, 0),
 });
 
 // Type-safe remote calls
-await connection.remote.log('Hello'); // 
+await connection.remote.log('Hello'); //
 const config = await connection.remote.getConfig(); // { apiKey: string }
 
 //  TypeScript errors
@@ -261,12 +275,12 @@ import { guest } from '@userplane/postbridge';
 const connection = await guest.connect({
   // Expose methods to host
   processData: (data) => {
-    return data.map(x => x * 2);
+    return data.map((x) => x * 2);
   },
 
   calculateAverage: (numbers) => {
     return numbers.reduce((a, b) => a + b, 0) / numbers.length;
-  }
+  },
 });
 
 console.log('Worker ready, connection ID:', connection.id);
@@ -281,29 +295,32 @@ import { guest } from '@userplane/postbridge';
 let apiKey;
 let database;
 
-const connection = await guest.connect({
-  fetchData: async (id) => {
-    const response = await fetch(`https://api.example.com/data/${id}`, {
-      headers: { 'Authorization': apiKey }
-    });
-    return response.json();
+const connection = await guest.connect(
+  {
+    fetchData: async (id) => {
+      const response = await fetch(`https://api.example.com/data/${id}`, {
+        headers: { Authorization: apiKey },
+      });
+      return response.json();
+    },
+
+    saveData: async (data) => {
+      return database.save(data);
+    },
   },
+  {
+    onConnectionSetup: async (remote) => {
+      // Get API key from host
+      apiKey = await remote.getApiKey();
 
-  saveData: async (data) => {
-    return database.save(data);
+      // Initialize database
+      database = await initDatabase();
+
+      // Notify host
+      await remote.log('Worker initialized with API key');
+    },
   }
-}, {
-  onConnectionSetup: async (remote) => {
-    // Get API key from host
-    apiKey = await remote.getApiKey();
-
-    // Initialize database
-    database = await initDatabase();
-
-    // Notify host
-    await remote.log('Worker initialized with API key');
-  }
-});
+);
 
 console.log('Worker ready!');
 ```
@@ -334,7 +351,7 @@ const connection = await guest.connect({
     await remote.updateProgress(total, total);
 
     return results;
-  }
+  },
 });
 ```
 
@@ -353,9 +370,9 @@ const connection = await guest.connect({
     return {
       width: window.innerWidth,
       height: window.innerHeight,
-      url: window.location.href
+      url: window.location.href,
     };
-  }
+  },
 });
 
 // Call parent methods
@@ -379,7 +396,7 @@ const connection = await guest.connect({
   generateReport: async (params) => {
     // CPU-intensive report generation
     return generateReport(params);
-  }
+  },
 });
 
 console.log('Worker thread ready');
@@ -401,11 +418,11 @@ const connection = await guest.connect({
     }
 
     // Return with transfer
-    return withTransferable(t => ({
+    return withTransferable((t) => ({
       result: t(buffer.buffer),
-      processed: buffer.length
+      processed: buffer.length,
     }));
-  }
+  },
 });
 ```
 
@@ -420,7 +437,7 @@ const connection = await guest.connect({
       throw new Error('Division by zero');
     }
     return a / b;
-  }
+  },
 });
 
 // Error is sent to host as RPC_REJECT
@@ -437,7 +454,7 @@ const connection = await guest.connect({
       throw new Error(`HTTP ${response.status}`);
     }
     return response.json();
-  }
+  },
 });
 
 // Async errors are caught and sent to host
@@ -468,7 +485,7 @@ try {
 //  Good: Expose specific methods
 const connection = await guest.connect({
   processData: (data) => process(data),
-  calculate: (x) => x * 2
+  calculate: (x) => x * 2,
 });
 
 //  Bad: Export entire object (includes internals)
@@ -482,7 +499,7 @@ const connection = await guest.connect(myObject);
 const connection = await guest.connect(schema, {
   onConnectionSetup: async (remote) => {
     config = await remote.getConfig();
-  }
+  },
 });
 
 //  Bad: Load config after connection
@@ -500,8 +517,8 @@ const connection = await guest.connect({
       throw new Error('Data must be an array');
     }
 
-    return data.map(x => x * 2);
-  }
+    return data.map((x) => x * 2);
+  },
 });
 ```
 
@@ -519,7 +536,7 @@ const connection = await guest.connect({
       // Return meaningful error to host
       throw new Error(`Failed to fetch from ${url}`);
     }
-  }
+  },
 });
 ```
 
@@ -535,7 +552,7 @@ interface HostSchema {
 }
 
 const connection = await guest.connect<GuestSchema, HostSchema>({
-  processData: async (data) => data.map(x => x * 2)
+  processData: async (data) => data.map((x) => x * 2),
 });
 ```
 
@@ -548,12 +565,12 @@ const connection = await guest.connect<GuestSchema, HostSchema>({
 onConnectionSetup: async (remote) => {
   await loadLargeDataset(); // Delays connection
   await initializeEverything(); // Takes long time
-}
+};
 
 //  Fast: Only essential initialization
 onConnectionSetup: async (remote) => {
   config = await remote.getConfig(); // Quick
-}
+};
 ```
 
 #### 2. Batch Host Calls
@@ -576,8 +593,8 @@ const connection = await guest.connect({
     // Process...
 
     // Return with transfer
-    return withTransferable(t => t(result.buffer));
-  }
+    return withTransferable((t) => t(result.buffer));
+  },
 });
 ```
 
@@ -601,18 +618,19 @@ const connection = await guest.connect(schema);
 
 ### Comparison: guest.connect() vs host.connect()
 
-| Aspect | guest.connect() | host.connect() |
-|--------|----------------|----------------|
-| **Who calls** | Child context | Parent context |
-| **Who initiates** | Guest sends request | Host waits for request |
-| **Parameters** | schema, options | guest, schema |
-| **Auto-detect** | Auto-detects host | Receives guest explicitly |
-| **Connection ID** | Assigned by host | Generated by host |
-| **Multiple connections** | One per guest | Many guests |
+| Aspect                   | guest.connect()     | host.connect()            |
+| ------------------------ | ------------------- | ------------------------- |
+| **Who calls**            | Child context       | Parent context            |
+| **Who initiates**        | Guest sends request | Host waits for request    |
+| **Parameters**           | schema, options     | guest, schema             |
+| **Auto-detect**          | Auto-detects host   | Receives guest explicitly |
+| **Connection ID**        | Assigned by host    | Generated by host         |
+| **Multiple connections** | One per guest       | Many guests               |
 
 ### Summary
 
 **guest.connect():**
+
 - Called by guest (worker, iframe) to connect to host
 - Auto-detects host target
 - Supports `onConnectionSetup` for initialization
@@ -620,6 +638,7 @@ const connection = await guest.connect(schema);
 - Always call `close()` when done
 
 **Key features:**
+
 - Simple one-line connection
 - Bidirectional RPC support
 - Type-safe with TypeScript
@@ -627,6 +646,7 @@ const connection = await guest.connect(schema);
 - Initialization hook
 
 **Next steps:**
+
 - [host.connect()](?path=/docs/api-reference-host-api--docs) - Host-side connection
 - [Connection Object](?path=/docs/api-reference-connection--docs) - Connection details
 - [Web Workers Guide](?path=/docs/guides-web-workers--docs) - Worker patterns

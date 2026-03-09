@@ -45,3 +45,6 @@ bun.lockb
 # Misc
 coverage
 .nyc_output
+
+# Mintlify
+.mintlify

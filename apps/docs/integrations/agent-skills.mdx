@@ -1,0 +1,41 @@
+---
+title: Agent Skills
+description: Install Userplane Agent Skills to give AI agents built-in expertise for working with Userplane
+---
+
+Userplane publishes an Agent Skills package that gives AI agents built-in knowledge of Userplane's APIs, SDKs, and workflows. Once installed, agents load the relevant context automatically — no manual prompting required.
+
+## Install
+
+```bash
+npx skills add wizenheimer/userplane-agent-skills
+```
+
+<Note>
+  The `skills` CLI is maintained by Vercel Labs. See the [skills.sh
+  documentation](https://skills.sh/docs) for more details.
+</Note>
+
+## Verify
+
+```bash
+npx skills list
+```
+
+You should see `userplane-agent-skills` in the output.
+
+## What Agent Skills do
+
+Agent Skills are modular capabilities that extend AI agents with domain-specific context. They use a three-level loading system that keeps costs low while making the right knowledge available when needed:
+
+| Level            | When loaded                  | What's included                               |
+| ---------------- | ---------------------------- | --------------------------------------------- |
+| **Metadata**     | Always (at startup)          | Skill name and description — minimal overhead |
+| **Instructions** | When triggered by your query | Full instructions from the Skill              |
+| **Resources**    | As needed                    | Bundled files, scripts, and references        |
+
+The agent only loads what's relevant to your current task.
+
+## Which AI agents support skills?
+
+Skills work with popular AI coding agents including Claude Code, Cursor, Windsurf, and others. Check each skill's documentation for specific compatibility information.

@@ -1,0 +1,45 @@
+---
+title: Project Lifecycle
+description: Delete and restore projects, and understand what happens to associated data
+---
+
+Projects can be deleted when they are no longer needed. Userplane uses a soft-delete system with a restoration window so you can recover from accidental deletions.
+
+## Deleting a project
+
+<Steps>
+  <Step title="Open Projects settings">
+    Go to [Workspace Settings > Projects](https://dash.userplane.io/_/settings?tab=general).
+  </Step>
+  <Step title="Delete">Select the project you want to delete, then click **Delete**.</Step>
+</Steps>
+
+When a project is deleted:
+
+- The project and all associated **recordings** and **links** are soft-deleted.
+- Deleted data is not visible in the workspace but is retained temporarily for restoration.
+
+<Warning>The **default project** cannot be deleted.</Warning>
+
+## Restoration windows
+
+After deleting a project, you have a limited time to restore it:
+
+| Time since deletion | Restoration type                                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| **0–3 days**        | **Full restoration** — the project, all recordings, and all links are fully restored.                    |
+| **3–30 days**       | **Partial restoration** — the project is restored but some associated data may no longer be recoverable. |
+| **30+ days**        | **No restoration** — the project and its data are permanently removed.                                   |
+
+## Restoring a project
+
+If a project was recently deleted and is within the restoration window:
+
+1. Go to [Workspace Settings > Projects](https://dash.userplane.io/_/settings?tab=general).
+2. Look for the deleted project in the deleted items section.
+3. Click **Restore**.
+
+## Related articles
+
+- [Projects](/workspace/projects) — creating and using projects.
+- [Workspace Lifecycle](/workspace/workspace-lifecycle) — deletion and restoration for the workspace itself.

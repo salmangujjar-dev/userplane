@@ -22,12 +22,13 @@
     "request_screenshots_enabled": "false",
     "request_files_enabled": "false",
     "redact_sensitive_data_enabled": "true",
-    "capture_console_log_enabled": "false",
-    "capture_network_activity_enabled": "false",
-    "capture_user_actions_enabled": "false",
+    "capture_console_log_enabled": "true",
+    "capture_network_activity_enabled": "true",
+    "capture_user_actions_enabled": "true",
     "capture_server_logs_enabled": "false",
     "customize_recording_link_enabled": "true",
     "customize_retention_policy_enabled": "true",
-    "send_outbound_emails_enabled": "true"
+    "send_outbound_emails_enabled": "true",
+    "saml_sso_enabled": "false"
   }
 }

@@ -1,0 +1,54 @@
+---
+title: Domain Verification
+description: Verify domain ownership using a token-based flow with CORS validation
+---
+
+Domain verification confirms that you own or control a domain before Userplane enables branded recording links and per-domain preferences for it.
+
+## How verification works
+
+Userplane uses a **token-based verification** process:
+
+1. Userplane generates a unique verification token (JWT) for your domain.
+2. You add a script tag with the token to your website.
+3. Userplane makes a CORS-validated request to your domain to check for the token.
+4. If the token is found and valid, the domain status changes to **verified**.
+
+## Verification steps
+
+<Steps>
+  <Step title="Open Domain settings">
+    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) and
+    select the domain you want to verify.
+  </Step>
+  <Step title="Start verification">
+    Click **Verify**. You can also send these instructions to a developer via email using the **Send
+    to Developer** button.
+  </Step>
+  <Step title="Add the script to your site">
+    Copy the provided script tag and add it to your website's HTML.
+  </Step>
+  <Step title="Trigger the check">Click **Verify** in Userplane to trigger the check.</Step>
+</Steps>
+
+## Time limit
+
+The verification token expires after **5 minutes**. If the token expires before verification completes, generate a new one and try again.
+
+## CORS requirements
+
+Your domain must allow CORS requests from Userplane during the verification process. The verification request will fail if CORS is blocked. See the [Domain Verification Guide](/developer/domain-verification) for technical details and troubleshooting.
+
+## After verification
+
+Once verified:
+
+- The domain status changes to **Verified**.
+- You can create branded recording links using this domain.
+- [Domain recording preferences](/recording-links/domain-preferences) become active.
+- You can remove the verification script tag from your website.
+
+## Related articles
+
+- [Domains](/workspace/domains) — why domains matter.
+- [Domain Verification Guide](/developer/domain-verification) — detailed technical guide for developers.

@@ -29,12 +29,12 @@ dist/
 
 ## Build Commands
 
-| Command | Mode | Description |
-|---------|------|-------------|
-| `bun run build` | NPM | Compile TS + Vite bundle for npm distribution |
-| `bun run build:cdn` | CDN | Compile TS + Vite bundle with `OPTIMIZE_MODE=cdn` |
-| `bun run deploy:cdn` | CDN | Build CDN output + upload to R2 in one step |
-| `bun run upload:cdn` | — | Upload existing CDN build to R2 (no rebuild) |
+| Command              | Mode | Description                                       |
+| -------------------- | ---- | ------------------------------------------------- |
+| `bun run build`      | NPM  | Compile TS + Vite bundle for npm distribution     |
+| `bun run build:cdn`  | CDN  | Compile TS + Vite bundle with `OPTIMIZE_MODE=cdn` |
+| `bun run deploy:cdn` | CDN  | Build CDN output + upload to R2 in one step       |
+| `bun run upload:cdn` | —    | Upload existing CDN build to R2 (no rebuild)      |
 
 ## The OPTIMIZE_MODE Environment Variable
 
@@ -70,10 +70,10 @@ export default defineConfig({
 
 The CDN base URL is baked into the bootstrap at build time. It is constructed from two environment variables:
 
-| Variable | Example | Description |
-|----------|---------|-------------|
-| `CDN_DOMAIN` | `cdn.example.com` | Your CDN domain (no protocol) |
-| `R2_CDN_PREFIX` | `embed` | Path prefix in the R2 bucket |
+| Variable        | Example           | Description                   |
+| --------------- | ----------------- | ----------------------------- |
+| `CDN_DOMAIN`    | `cdn.example.com` | Your CDN domain (no protocol) |
+| `R2_CDN_PREFIX` | `embed`           | Path prefix in the R2 bucket  |
 
 Result: `__CDN_BASE_URL__ = "https://cdn.example.com/embed"`
 

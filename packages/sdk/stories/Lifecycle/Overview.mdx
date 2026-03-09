@@ -90,6 +90,7 @@ A complete walkthrough of everything that happens from `initialize()` to recorde
 ### Phase 1 — Initialize
 
 `initialize()` is the entry point. It:
+
 - Sets up the `FrameManagerFactory` (strategy pattern for frame creation)
 - Restores or creates the `tabRef` from `window.name`
 - Optionally mounts the hidden capture iframe
@@ -98,6 +99,7 @@ A complete walkthrough of everything that happens from `initialize()` to recorde
 ### Phase 2 — Open
 
 `open(token?)` can be called:
+
 - Automatically by `initialize()` when a URL token is found
 - Manually by your code
 - Never, if `openImmediately: false` and no manual call is made

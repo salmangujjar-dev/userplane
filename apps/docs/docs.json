@@ -1,0 +1,205 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Userplane Docs",
+  "logo": {
+    "dark": "/static/logo-dark.svg",
+    "light": "/static/logo-light.svg"
+  },
+  "favicon": "/static/favicon.svg",
+  "theme": "almond",
+  "colors": {
+    "primary": "#6366F1",
+    "light": "#818CF8",
+    "dark": "#4F46E5"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Talk to Us",
+        "href": "/support/contact"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://app.userplane.io"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/recording/reusable-links",
+      "destination": "/recording-links/reusable"
+    }
+  ],
+  "navigation": {
+    "anchors": [
+      {
+        "anchor": "Contact Support",
+        "icon": "life-ring",
+        "href": "support/contact"
+      }
+    ],
+    "tabs": [
+      {
+        "tab": "Guide",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Setup & Onboarding",
+            "pages": [
+              "getting-started/workspace-setup",
+              "getting-started/intercom-setup",
+              "getting-started/for-support-agents",
+              "getting-started/for-support-engineers",
+              "getting-started/for-developers"
+            ]
+          },
+          {
+            "group": "Recordings",
+            "pages": [
+              {
+                "group": "Capture",
+                "pages": [
+                  "recording/requesting",
+                  "recording-links/reusable",
+                  "recording/link-reference",
+                  "recording/domains"
+                ]
+              },
+              {
+                "group": "Review",
+                "pages": [
+                  "recording/reviewing",
+                  "recording/playback",
+                  "recording/issue-analyzer",
+                  "recording/sharing",
+                  "recording/expiry",
+                  "recording/projects"
+                ]
+              },
+              {
+                "group": "Link Settings",
+                "pages": [
+                  "recording-links/managing",
+                  "recording-links/overview",
+                  "recording-links/branding",
+                  "recording-links/domain-preferences",
+                  "recording-links/limits",
+                  "recording-links/sensitive-data-redaction"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Workspace",
+            "pages": [
+              {
+                "group": "Team & Access",
+                "pages": [
+                  "workspace/team-management",
+                  "workspace/roles-permissions",
+                  "workspace/invite-policies",
+                  "workspace/access-management"
+                ]
+              },
+              {
+                "group": "Projects",
+                "pages": ["workspace/projects", "workspace/project-lifecycle"]
+              },
+              {
+                "group": "Domains",
+                "pages": [
+                  "workspace/domains",
+                  "workspace/domain-management",
+                  "workspace/domain-verification"
+                ]
+              },
+              "workspace/workspace-lifecycle"
+            ]
+          },
+          {
+            "group": "Account",
+            "pages": ["account/profile", "account/notifications", "account/leaving-workspace"]
+          },
+          {
+            "group": "Billing",
+            "pages": [
+              "billing/overview",
+              "billing/trial",
+              {
+                "group": "Plans & Usage",
+                "pages": [
+                  "billing/usage-limits",
+                  "billing/monitoring-usage",
+                  "billing/upgrading",
+                  "billing/downgrading",
+                  "billing/seat-add-ons"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Support",
+            "pages": ["support/contact", "support/data-governance"]
+          }
+        ]
+      },
+      {
+        "tab": "Developer",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["developer/installation", "developer/domain-verification"]
+          },
+          {
+            "group": "AI Agents",
+            "pages": ["integrations/agent-skills", "integrations/mcp"]
+          },
+          {
+            "group": "SDK Reference",
+            "pages": ["developer/sdk-overview", "developer/web-sdk", "developer/metadata-sdk"]
+          },
+          {
+            "group": "Framework Guides",
+            "pages": [
+              "frameworks/react",
+              "frameworks/nextjs",
+              "frameworks/vue",
+              "frameworks/angular",
+              "frameworks/nuxt",
+              "frameworks/sveltekit",
+              "frameworks/astro",
+              "frameworks/tanstack-start",
+              "frameworks/static-html"
+            ]
+          },
+          {
+            "group": "Privacy & Data",
+            "pages": ["developer/sensitive-data-redaction", "developer/recording-data-reference"]
+          }
+        ]
+      },
+      {
+        "tab": "Integrations",
+        "groups": [
+          {
+            "group": "AI Agents",
+            "pages": ["integrations/mcp", "integrations/agent-skills"]
+          },
+          {
+            "group": "Intercom",
+            "pages": [
+              "integrations/intercom",
+              "integrations/intercom-inbox",
+              "integrations/intercom-shortcuts",
+              "integrations/intercom-macros"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

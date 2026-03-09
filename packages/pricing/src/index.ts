@@ -314,6 +314,7 @@ export const CATEGORY_FEATURE_DEFINITIONS: Record<FeatureCategory, CategoryFeatu
     { name: 'Issue trackers (Jira, Linear)', key: 'issueTrackers' },
     { name: 'Automation (Zapier, n8n)', key: 'automation' },
     { name: 'API access', key: 'apiAccess' },
+    { name: 'SAML SSO (Okta, Microsoft, etc.)', key: 'samlSso' },
   ],
   support: [
     { name: 'Email support', key: 'emailSupport' },
@@ -371,6 +372,7 @@ const ESSENTIAL_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     issueTrackers: false,
     automation: false,
     apiAccess: false,
+    samlSso: false,
   },
   support: {
     emailSupport: true,
@@ -408,7 +410,7 @@ const ESSENTIAL_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     included: true,
     subFeatures: [
       {
-        text: 'Mask confidential fields and sensitive data from customer recordings',
+        text: 'Mask confidential fields and sensitive customer data',
         included: true,
       },
     ],
@@ -443,10 +445,10 @@ const STARTER_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     byos: false,
   },
   logsDebugging: {
-    consoleLogs: false,
-    networkActivity: false,
+    consoleLogs: true,
+    networkActivity: true,
     serverLogs: false,
-    actionReplay: false,
+    actionReplay: true,
   },
   customization: {
     customLogo: true,
@@ -464,6 +466,7 @@ const STARTER_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     issueTrackers: false,
     automation: false,
     apiAccess: false,
+    samlSso: false,
   },
   support: {
     emailSupport: true,
@@ -497,11 +500,21 @@ const STARTER_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     ],
   },
   {
+    text: 'Console & Network Logs Debugging',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Capture console logs, network requests & session data',
+        included: true,
+      },
+    ],
+  },
+  {
     text: 'Redact Sensitive Customer Data',
     included: true,
     subFeatures: [
       {
-        text: 'Mask confidential fields and sensitive data from customer recordings',
+        text: 'Mask confidential fields and sensitive customer data',
         included: true,
       },
     ],
@@ -526,8 +539,8 @@ const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     byos: false,
   },
   screenshots: {
-    screenshots: false,
-    screenshotAnnotation: false,
+    screenshots: 'Unlimited',
+    screenshotAnnotation: true,
     byos: false,
   },
   files: {
@@ -536,10 +549,10 @@ const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     byos: false,
   },
   logsDebugging: {
-    consoleLogs: false,
-    networkActivity: false,
+    consoleLogs: true,
+    networkActivity: true,
     serverLogs: false,
-    actionReplay: false,
+    actionReplay: true,
   },
   customization: {
     customLogo: true,
@@ -557,6 +570,7 @@ const SCALE_UP_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     issueTrackers: true,
     automation: true,
     apiAccess: false,
+    samlSso: false,
   },
   support: {
     emailSupport: true,
@@ -590,11 +604,31 @@ const SCALE_UP_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     ],
   },
   {
+    text: 'Console & Network Logs Debugging',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Capture console logs, network requests & session data',
+        included: true,
+      },
+    ],
+  },
+  {
     text: 'Redact Sensitive Customer Data',
     included: true,
     subFeatures: [
       {
-        text: 'Mask confidential fields and sensitive data from customer recordings',
+        text: 'Mask confidential fields and sensitive customer data',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'Unlimited Screenshot Requests',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Capture and annotate unlimited screenshots for any customer issue',
         included: true,
       },
     ],
@@ -650,6 +684,7 @@ const ENTERPRISE_CATEGORY_FEATURES: PlanAllCategoryFeatures = {
     issueTrackers: true,
     automation: true,
     apiAccess: true,
+    samlSso: true,
   },
   support: {
     emailSupport: true,
@@ -697,7 +732,17 @@ const ENTERPRISE_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     included: true,
     subFeatures: [
       {
-        text: 'Mask confidential fields and sensitive data from customer recordings',
+        text: 'Mask confidential fields and sensitive customer data',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'SAML SSO (Okta, Microsoft Entra, etc.)',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Enterprise-grade single sign-on with your identity provider',
         included: true,
       },
     ],
@@ -745,7 +790,8 @@ export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
     'Everything in Essential',
     'Up to 20 seats in workspace',
     'Request unlimited recordings',
-    'Unlimited recording links',
+    // 'Unlimited recording links',
+    'Console logs, network activity & action replay',
     'Customize Userplane workspace branding',
     'Custom data retention policies',
   ],
@@ -753,6 +799,8 @@ export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
     'Everything in Starter',
     'Up to 30 seats in workspace',
     'Request unlimited recordings',
+    'Unlimited screenshots & annotation',
+    'Console logs, network activity & action replay',
     'Customize Userplane workspace branding',
     'Custom data retention policies',
     'Priority support',
@@ -764,7 +812,7 @@ export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
     'Request unlimited recordings',
     'Bring your own storage (BYOS) for recordings, screenshots & files',
     'Console & server logs debugging',
-    'API access',
+    'SAML SSO (Okta, Microsoft Entra, etc.)',
     'Data residency (US/EU)',
     'Dedicated support',
   ],
@@ -1045,6 +1093,7 @@ export const FEATURE_GATE_KEYS = [
   'customizeRecordingLink',
   'customizeRetentionPolicy',
   'sendOutboundEmails',
+  'samlSso',
 ] as const;
 
 export type FeatureGate = (typeof FEATURE_GATE_KEYS)[number];
@@ -1065,6 +1114,7 @@ export const FEATURE_GATE_LABELS: Record<FeatureGate, string> = {
   customizeRecordingLink: 'Customize Recording Link',
   customizeRetentionPolicy: 'Custom Retention Policy',
   sendOutboundEmails: 'Send Outbound Emails',
+  samlSso: 'SAML SSO',
 };
 
 /**
@@ -1099,13 +1149,14 @@ export const FREE_PLAN_FEATURE_GATES: PlanFeatureGates = {
   requestScreenshots: false,
   requestFiles: false,
   redactSensitiveData: true,
-  captureConsoleLog: false,
-  captureNetworkActivity: false,
-  captureUserActions: false,
+  captureConsoleLog: true,
+  captureNetworkActivity: true,
+  captureUserActions: true,
   captureServerLogs: false,
   customizeRecordingLink: false,
   customizeRetentionPolicy: false,
   sendOutboundEmails: false,
+  samlSso: false,
 };
 
 // ============================================================================
