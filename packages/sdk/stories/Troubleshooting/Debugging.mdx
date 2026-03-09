@@ -12,7 +12,7 @@ In DevTools console:
 
 ```javascript
 // Check if initialize() has been called
-window.__userplane?.isInitialized?.() // works if window.userplane is set
+window.__userplane?.isInitialized?.(); // works if window.userplane is set
 
 // Or import in your code and check:
 import { isInitialized } from '@userplane/sdk';
@@ -22,6 +22,7 @@ console.log('Initialized:', isInitialized());
 Expected: `true` after `initialize()` runs.
 
 If `false`, check:
+
 - Is `initialize()` being called at all? Add `console.log('calling initialize')` before it.
 - Is it guarded by an SSR check that never evaluates to `true`?
 - Is it in a `useEffect` that hasn't run yet?
@@ -32,11 +33,12 @@ If `false`, check:
 
 ```javascript
 // Inspect the meta tag
-document.querySelector('meta[name="userplane:workspace"]')?.content
+document.querySelector('meta[name="userplane:workspace"]')?.content;
 // Expected: 'ws_your_workspace_id'
 ```
 
 If `undefined`:
+
 - Meta tag is missing or has incorrect `name` attribute
 - Meta tag is added by JavaScript after `initialize()` runs
 - Typo in the `name` value (`userplane:workspace` not `userplane-workspace`)
@@ -47,11 +49,12 @@ If `undefined`:
 
 ```javascript
 // Inspect current URL parameters
-new URL(window.location.href).searchParams.get('userplane-token')
-new URL(window.location.href).searchParams.get('userplane-action')
+new URL(window.location.href).searchParams.get('userplane-token');
+new URL(window.location.href).searchParams.get('userplane-action');
 ```
 
 If `null` when you expect a token:
+
 - The URL params were already consumed and cleaned by the SDK (expected behavior after `initialize()`)
 - The URL never had them — check the link you're testing with
 
@@ -61,14 +64,15 @@ If `null` when you expect a token:
 
 ```javascript
 // Check if recorder iframe is mounted
-document.querySelector('iframe[src*="userplane"]')
+document.querySelector('iframe[src*="userplane"]');
 // Expected: an <iframe> element when recorder is open
 
 // Check if overlay is mounted
-document.querySelector('#userplane-overlay')
+document.querySelector('#userplane-overlay');
 ```
 
 If the iframe is in the DOM but invisible, check:
+
 - Is the overlay behind another element with a higher z-index?
 - Is the iframe hidden by CSS on the overlay? (`visibility: hidden`, `opacity: 0`)
 
@@ -84,6 +88,7 @@ console.log('Bridge connected:', isBridgeConnected());
 ```
 
 If `isRecorderMounted()` is `true` but `isBridgeConnected()` is `false`:
+
 - The iframe loaded but PostBridge handshake failed
 - Check for Content Security Policy errors in the console (`Refused to load frame...`)
 - Check if the recorder app at `recorderBaseUrl` is reachable
@@ -120,6 +125,7 @@ console.log(window.name);
 ```
 
 If `window.name` is empty or doesn't start with `userplane_tab_`:
+
 - `initialize()` hasn't been called
 - `clearTabRef()` was called
 - `window.name` was set by something else (check for conflicts)
@@ -157,9 +163,9 @@ window.__USERPLANE_DEBUG__ = true; // (if supported by your build)
 
 ## Common Console Errors
 
-| Error | Meaning | Fix |
-|-------|---------|-----|
-| `Refused to load frame...` | CSP blocking iframe | Add `frame-src https://recorder.userplane.io` to CSP |
-| `postMessage failed...` | Cross-origin postMessage blocked | Verify `targetOrigin` matches recorder origin |
-| `initialize() called multiple times` | Warning from SDK (non-fatal) | Call `initialize()` only once |
-| `No workspace ID found` | Missing meta tag or workspaceId | Add workspace config |
+| Error                                | Meaning                          | Fix                                                  |
+| ------------------------------------ | -------------------------------- | ---------------------------------------------------- |
+| `Refused to load frame...`           | CSP blocking iframe              | Add `frame-src https://recorder.userplane.io` to CSP |
+| `postMessage failed...`              | Cross-origin postMessage blocked | Verify `targetOrigin` matches recorder origin        |
+| `initialize() called multiple times` | Warning from SDK (non-fatal)     | Call `initialize()` only once                        |
+| `No workspace ID found`              | Missing meta tag or workspaceId  | Add workspace config                                 |

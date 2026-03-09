@@ -28,6 +28,7 @@ It is generated once per tab using [nanoid](https://github.com/ai/nanoid) and st
 - **Survives navigation** to different origins within the same tab
 
 This makes it the ideal per-tab storage for an identifier that must:
+
 1. Survive React hot reloads and page refreshes
 2. Be unique per tab (not shared across tabs)
 3. Not require `localStorage` (which is shared across tabs of the same origin)
@@ -60,13 +61,13 @@ clearTabRef();
 
 ## Lifecycle
 
-| Event | Tab Reference Behavior |
-|-------|----------------------|
-| SDK initialized (first time) | Generated and stored in `window.name` |
-| Page reload | Persists — read back from `window.name` |
-| Navigate to different URL | Persists within same tab |
-| New tab opened | New reference generated (different tab) |
-| `clearTabRef()` called | Removed from `window.name` |
+| Event                          | Tab Reference Behavior                                      |
+| ------------------------------ | ----------------------------------------------------------- |
+| SDK initialized (first time)   | Generated and stored in `window.name`                       |
+| Page reload                    | Persists — read back from `window.name`                     |
+| Navigate to different URL      | Persists within same tab                                    |
+| New tab opened                 | New reference generated (different tab)                     |
+| `clearTabRef()` called         | Removed from `window.name`                                  |
 | `window.name` manually cleared | Reference is gone; new one generated on next `initialize()` |
 
 ## Internal Usage
@@ -75,7 +76,7 @@ The tab reference is sent to the recorder as part of the bridge connection:
 
 ```typescript
 // SDK exposes this to the recorder via the host schema
-getTabRef: () => string
+getTabRef: () => string;
 ```
 
 The recorder uses it to identify which tab initiated the session, enabling cross-tab state synchronization.

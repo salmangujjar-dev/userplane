@@ -92,6 +92,8 @@ apps/api/localhost
 !CLAUDE.md
 !AGENTS.md
 !apps/home/src/content/**/*.md
+!apps/docs/**/*.md
+!apps/docs/**/*.mdx
 
 
 

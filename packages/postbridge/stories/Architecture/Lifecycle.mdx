@@ -65,7 +65,7 @@ const worker = new Worker('worker.js');
 // Call host.connect()
 const connectionPromise = host.connect(worker, {
   log: (msg) => console.log('[Worker]:', msg),
-  getData: () => ({ value: 42 })
+  getData: () => ({ value: 42 }),
 });
 
 // At this point:
@@ -76,12 +76,14 @@ const connectionPromise = host.connect(worker, {
 ```
 
 **State:**
+
 - connectionID: Generated
 - Connection object: Not yet created
 - Handlers: Handshake listeners only
 - Promise: Pending
 
 **Resources allocated:**
+
 - Message event listener for handshake
 - connectionID entry in connections map (will be created)
 
@@ -92,7 +94,7 @@ const connectionPromise = host.connect(worker, {
 import { guest } from '@userplane/postbridge';
 
 const connectionPromise = guest.connect({
-  processData: (data) => data.map(x => x * 2)
+  processData: (data) => data.map((x) => x * 2),
 });
 
 // At this point:
@@ -104,6 +106,7 @@ const connectionPromise = guest.connect({
 ```
 
 **State:**
+
 - Methods: Extracted from schema
 - sendTo/listenTo: Auto-detected
 - Handlers: Handshake listener only
@@ -118,7 +121,9 @@ const connectionPromise = guest.connect({
 postMessageToTarget(sendTo, {
   action: 'POSTBRIDGE/HANDSHAKE_REQUEST',
   methodNames: ['processData'],
-  schema: { /* config */ }
+  schema: {
+    /* config */
+  },
 });
 ```
 
@@ -164,6 +169,7 @@ function handleHandshake(event) {
 ```
 
 **Host state after this step:**
+
 - Connection object: Created
 - Handlers: Handshake + RPC handlers registered
 - connections map: Entry added
@@ -207,6 +213,7 @@ async function handleHandshakeResponse(event) {
 ```
 
 **Guest state after this step:**
+
 - Connection object: Created
 - Handlers: RPC handlers registered
 - Promise: Resolved
@@ -233,6 +240,7 @@ function handleHandshakeReply(event) {
 ```
 
 **Host state after this step:**
+
 - Promise: Resolved
 - Status: ACTIVE
 
@@ -260,7 +268,7 @@ const connection = {
     // Unregister event listeners
     // Clear RPC handlers
     // Terminate worker (if applicable)
-  }
+  },
 };
 ```
 
@@ -277,31 +285,34 @@ const schema = {
     // Call host
     await remote.log('Processing started');
 
-    const result = data.map(x => x * 2);
+    const result = data.map((x) => x * 2);
 
     // Call host again
     await remote.log('Processing complete');
 
     return result;
-  }
+  },
 };
 ```
 
 ### Active State Characteristics
 
 **Resources allocated:**
+
 - Event listeners for RPC messages
 - responseMap for pending calls
 - Connection object in memory
 - Entry in connections map (host-side)
 
 **Operations allowed:**
+
 - Making RPC calls
 - Receiving RPC calls
 - Concurrent calls
 - Bidirectional communication
 
 **Memory usage:**
+
 - Connection object: ~1KB
 - Event listeners: ~100 bytes each
 - responseMap entries: ~100 bytes per pending call
@@ -327,6 +338,7 @@ window.addEventListener('beforeunload', () => {
 ### Close Implementation
 
 **Host:**
+
 ```javascript
 const close = () => {
   // 1. Remove from connections map
@@ -348,6 +360,7 @@ const close = () => {
 ```
 
 **Guest:**
+
 ```javascript
 const close = () => {
   // 1. Remove handshake listener
@@ -355,13 +368,14 @@ const close = () => {
 
   // 2. Unregister RPC handlers
   unregisterRemote(); // Removes response listeners
-  unregisterLocal();  // Removes request listeners
+  unregisterLocal(); // Removes request listeners
 };
 ```
 
 ### Cleanup Details
 
 **unregisterRemote:**
+
 ```javascript
 function unregisterRemote() {
   // Remove response listener
@@ -376,6 +390,7 @@ function unregisterRemote() {
 ```
 
 **unregisterLocal:**
+
 ```javascript
 function unregisterLocal() {
   // Remove request listener
@@ -392,12 +407,14 @@ After close() completes:
 ### State
 
 **Host:**
+
 - Connection object: Removed from connections map
 - Handlers: All removed
 - Worker: Terminated (if applicable)
 - Promise: Original promise still resolved (doesn't change)
 
 **Guest:**
+
 - Handlers: All removed
 - Worker: May be terminated by host
 - Promise: Original promise still resolved
@@ -467,33 +484,34 @@ conn3.close(); // All closed now
 ```
 
 **connections map evolution:**
+
 ```javascript
 // After conn1 connected
 connections = {
-  'id1': conn1
-}
+  id1: conn1,
+};
 
 // After conn2 connected
 connections = {
-  'id1': conn1,
-  'id2': conn2
-}
+  id1: conn1,
+  id2: conn2,
+};
 
 // After conn3 connected
 connections = {
-  'id1': conn1,
-  'id2': conn2,
-  'id3': conn3
-}
+  id1: conn1,
+  id2: conn2,
+  id3: conn3,
+};
 
 // After conn1.close()
 connections = {
-  'id2': conn2,
-  'id3': conn3
-}
+  id2: conn2,
+  id3: conn3,
+};
 
 // After all closed
-connections = {}
+connections = {};
 ```
 
 ## Lifecycle Events
@@ -535,10 +553,7 @@ const timeoutPromise = new Promise((_, reject) =>
   setTimeout(() => reject(new Error('Handshake timeout')), 5000)
 );
 
-const connection = await Promise.race([
-  host.connect(worker, schema),
-  timeoutPromise
-]);
+const connection = await Promise.race([host.connect(worker, schema), timeoutPromise]);
 ```
 
 ### Worker Crash During Active Phase
@@ -641,7 +656,7 @@ class WorkerPool {
     // Create pool
     for (let i = 0; i < size; i++) {
       const worker = new Worker(workerScript);
-      host.connect(worker, schema).then(conn => {
+      host.connect(worker, schema).then((conn) => {
         this.connections.push(conn);
         this.available.push(conn);
       });
@@ -662,7 +677,7 @@ class WorkerPool {
   }
 
   close() {
-    this.connections.forEach(conn => conn.close());
+    this.connections.forEach((conn) => conn.close());
   }
 }
 
@@ -718,6 +733,7 @@ T=1001ms Connection fully closed
 ## Summary
 
 **Lifecycle Phases:**
+
 1. **Initialization** - connect() called, promise pending
 2. **Handshake** - 3-message protocol, method registration
 3. **Active** - RPC calls work, bidirectional communication
@@ -726,6 +742,7 @@ T=1001ms Connection fully closed
 6. **GC** - JavaScript cleans up memory
 
 **Key Points:**
+
 - Always call close() to prevent leaks
 - Handle worker errors
 - Clean up on page unload
@@ -733,6 +750,7 @@ T=1001ms Connection fully closed
 - Multiple connections can coexist
 
 **Next steps:**
+
 - Review [Core Components](?path=/docs/introduction--docs) for implementation details
 - Check [Guides](?path=/docs/guides-web-workers--docs) for practical patterns
 - See [Error Handling Guide](?path=/docs/guides-error-handling--docs)

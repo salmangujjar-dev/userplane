@@ -60,8 +60,8 @@ const schemaA = {
 
 // Connect to Channel A
 const connectionA = await bridge.connect(schemaA, {
-  workerURL: "/lib/bridge-worker.js",
-  channel: "counter-a", // ← Channel name
+  workerURL: '/lib/bridge-worker.js',
+  channel: 'counter-a', // ← Channel name
 });
 ```
 
@@ -87,8 +87,8 @@ const schemaB = {
 
 // Connect to Channel B
 const connectionB = await bridge.connect(schemaB, {
-  workerURL: "/lib/bridge-worker.js",
-  channel: "counter-b", // ← Different channel name
+  workerURL: '/lib/bridge-worker.js',
+  channel: 'counter-b', // ← Different channel name
 });
 ```
 
@@ -270,17 +270,17 @@ Use different channels for different features in your application:
 ```javascript
 // Chat feature
 const chatConn = await bridge.connect(chatSchema, {
-  channel: "app-chat",
+  channel: 'app-chat',
 });
 
 // Notifications feature
 const notifConn = await bridge.connect(notifSchema, {
-  channel: "app-notifications",
+  channel: 'app-notifications',
 });
 
 // Dashboard feature
 const dashConn = await bridge.connect(dashSchema, {
-  channel: "app-dashboard",
+  channel: 'app-dashboard',
 });
 ```
 
@@ -293,7 +293,7 @@ Use custom tabIDs for session management or debugging:
 const sessionId = getUserSessionId(); // e.g., 'session-abc123'
 const conn = await bridge.connect(schema, {
   tabID: sessionId,
-  channel: "user-workspace",
+  channel: 'user-workspace',
 });
 
 // Now other systems can reference this specific tab
@@ -372,10 +372,10 @@ if (channel.tabs.size === 0) {
 
 ```javascript
 // In browser console
-console.log("Channel A:", connectionA.id);
-console.log("Channel B:", connectionB.id);
-console.log("Channel A state:", connectionA.remote.counter);
-console.log("Channel B state:", connectionB.remote.counter);
+console.log('Channel A:', connectionA.id);
+console.log('Channel B:', connectionB.id);
+console.log('Channel A state:', connectionA.remote.counter);
+console.log('Channel B state:', connectionB.remote.counter);
 ```
 
 ### Monitor Broadcasts
@@ -395,8 +395,8 @@ Test that Channel A doesn't affect Channel B:
 
 ```javascript
 // Should not see any cross-channel updates
-connectionA.on("setCounter", (result) => {
-  console.log("Channel A updated:", result);
+connectionA.on('setCounter', (result) => {
+  console.log('Channel A updated:', result);
   // This should NEVER fire when Channel B updates
 });
 
@@ -415,12 +415,12 @@ connectionB.remote.setCounter(42); // Should not trigger Channel A listener
 
 ```javascript
 // Wrong - both use same channel
-const connA = await bridge.connect(schemaA, { channel: "counter" });
-const connB = await bridge.connect(schemaB, { channel: "counter" });
+const connA = await bridge.connect(schemaA, { channel: 'counter' });
+const connB = await bridge.connect(schemaB, { channel: 'counter' });
 
 // Right - different channels
-const connA = await bridge.connect(schemaA, { channel: "counter-a" });
-const connB = await bridge.connect(schemaB, { channel: "counter-b" });
+const connA = await bridge.connect(schemaA, { channel: 'counter-a' });
+const connB = await bridge.connect(schemaB, { channel: 'counter-b' });
 ```
 
 ### Problem: Updates Not Syncing
@@ -449,10 +449,10 @@ The multi-channel example demonstrates:
 
 **Core Concepts:**
 
--  Channel-based state isolation
--  Independent broadcast groups
--  Same SharedWorker, different channels
--  No cross-channel interference
+- Channel-based state isolation
+- Independent broadcast groups
+- Same SharedWorker, different channels
+- No cross-channel interference
 
 **Best Practices:**
 

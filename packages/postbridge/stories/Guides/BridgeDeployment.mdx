@@ -28,11 +28,12 @@ Provide your own worker URL for full control:
 import { bridge } from '@userplane/postbridge';
 
 const conn = await bridge.connect(schema, {
-  workerURL: '/workers/bridge-worker.js'
+  workerURL: '/workers/bridge-worker.js',
 });
 ```
 
 **Benefits:**
+
 - Full control over worker location
 - Can use CDN for worker file
 - Explicit and predictable
@@ -43,15 +44,16 @@ const conn = await bridge.connect(schema, {
 When using Vite, Webpack, or similar bundlers, Bridge automatically uses:
 
 ```typescript
-new SharedWorker(
-  new URL('./bridge-worker.ts', import.meta.url),
-  { type: 'module', name: 'bridge-worker' }
-);
+new SharedWorker(new URL('./bridge-worker.ts', import.meta.url), {
+  type: 'module',
+  name: 'bridge-worker',
+});
 ```
 
 This is handled automatically by your bundler during build.
 
 **Benefits:**
+
 - Zero configuration
 - Type-safe worker code
 - Lintable worker source
@@ -62,8 +64,9 @@ This is handled automatically by your bundler during build.
 Bridge will **throw an error**. This is intentional.
 
 **Why?**
+
 - Fail fast during development
-- No silent degradation in production  
+- No silent degradation in production
 - Forces proper configuration
 - Prevents mysterious bugs
 
@@ -83,11 +86,12 @@ const conn = await bridge.connect({
   updateCount: (count) => {
     state.count = count;
     return count;
-  }
+  },
 });
 ```
 
 Vite will:
+
 1. Bundle the worker separately
 2. Generate proper worker URLs
 3. Handle module loading
@@ -124,7 +128,7 @@ Build the worker separately and provide the URL:
 
 ```typescript
 const conn = await bridge.connect(schema, {
-  workerURL: '/static/workers/bridge-worker.js'
+  workerURL: '/static/workers/bridge-worker.js',
 });
 ```
 
@@ -138,26 +142,31 @@ import { bridge } from '@userplane/postbridge';
 
 function MyPage() {
   useEffect(() => {
-    bridge.connect(schema, {
-      workerURL: '/workers/bridge-worker.js'
-    }).then(conn => {
-      // Use connection
-    });
+    bridge
+      .connect(schema, {
+        workerURL: '/workers/bridge-worker.js',
+      })
+      .then((conn) => {
+        // Use connection
+      });
   }, []);
 }
 ```
 
 **Setup:**
+
 1. Copy worker file to `public/workers/`:
+
    ```bash
    cp node_modules/postbridge/lib/bridge-worker.js public/workers/
    ```
 
 2. Or build it yourself:
+
    ```bash
    # Copy source
    cp node_modules/postbridge/src/bridge-worker.ts src/workers/
-   
+
    # Build with your tools
    tsc src/workers/bridge-worker.ts --outDir public/workers
    ```
@@ -169,11 +178,12 @@ CRA doesn't support worker imports. Use the public folder approach:
 ```typescript
 // src/App.tsx
 const conn = await bridge.connect(schema, {
-  workerURL: process.env.PUBLIC_URL + '/bridge-worker.js'
+  workerURL: process.env.PUBLIC_URL + '/bridge-worker.js',
 });
 ```
 
 **Setup:**
+
 ```bash
 # Copy worker to public folder
 cp node_modules/postbridge/lib/bridge-worker.js public/
@@ -188,7 +198,7 @@ When using Bridge from a CDN, provide the worker URL:
   import { bridge } from 'https://unpkg.com/postbridge';
 
   const conn = await bridge.connect(schema, {
-    workerURL: 'https://unpkg.com/postbridge/lib/bridge-worker.js'
+    workerURL: 'https://unpkg.com/postbridge/lib/bridge-worker.js',
   });
 </script>
 ```
@@ -200,31 +210,31 @@ For static HTML sites:
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <script type="module">
-    import { bridge } from './node_modules/postbridge/lib/postbridge.js';
+  <head>
+    <script type="module">
+      import { bridge } from './node_modules/postbridge/lib/postbridge.js';
 
-    const schema = {
-      updateCount: (count) => {
-        document.getElementById('count').textContent = count;
-        return count;
-      }
-    };
+      const schema = {
+        updateCount: (count) => {
+          document.getElementById('count').textContent = count;
+          return count;
+        },
+      };
 
-    const conn = await bridge.connect(schema, {
-      workerURL: './node_modules/postbridge/lib/bridge-worker.js'
-    });
-  </script>
-</head>
-<body>
-  <div id="count">0</div>
-</body>
+      const conn = await bridge.connect(schema, {
+        workerURL: './node_modules/postbridge/lib/bridge-worker.js',
+      });
+    </script>
+  </head>
+  <body>
+    <div id="count">0</div>
+  </body>
 </html>
 ```
 
 ## Production Checklist
 
-###  Verify Worker Loading
+### Verify Worker Loading
 
 Open DevTools Console. If you see errors about worker loading:
 
@@ -236,11 +246,11 @@ Open DevTools Console. If you see errors about worker loading:
 
 ```typescript
 const conn = await bridge.connect(schema, {
-  workerURL: '/workers/bridge-worker.js'
+  workerURL: '/workers/bridge-worker.js',
 });
 ```
 
-###  Check SharedWorker Support
+### Check SharedWorker Support
 
 ```typescript
 if (typeof SharedWorker === 'undefined') {
@@ -249,25 +259,26 @@ if (typeof SharedWorker === 'undefined') {
 }
 ```
 
-###  Test Cross-Origin
+### Test Cross-Origin
 
 If your app is served from a different origin than your workers:
 
 ```typescript
 // Worker must be same-origin or have proper CORS headers
 const conn = await bridge.connect(schema, {
-  workerURL: 'https://your-cdn.com/bridge-worker.js'
+  workerURL: 'https://your-cdn.com/bridge-worker.js',
   // Worker must be served with proper headers
 });
 ```
 
 **Required worker headers:**
+
 ```
 Content-Type: application/javascript
 Access-Control-Allow-Origin: *
 ```
 
-###  Bundle Size
+### Bundle Size
 
 Check your bundle includes only what you need:
 
@@ -280,6 +291,7 @@ npx webpack-bundle-analyzer dist/stats.json
 ```
 
 Bridge adds:
+
 - Core: ~3KB gzipped
 - Worker (inline fallback): ~1KB gzipped
 - **Total: ~4KB gzipped**
@@ -293,11 +305,12 @@ If you provide a separate worker file, the inline fallback is not used.
 **Symptom:** Error constructing SharedWorker
 
 **Solution:**
+
 1. **For Vite projects:** Should work automatically (verify `vite.config.ts` has worker config)
 2. **For other bundlers:** Provide explicit `workerURL`:
    ```typescript
    const conn = await bridge.connect(schema, {
-     workerURL: '/workers/bridge-worker.js'
+     workerURL: '/workers/bridge-worker.js',
    });
    ```
 3. Verify worker file exists at the specified path
@@ -308,6 +321,7 @@ If you provide a separate worker file, the inline fallback is not used.
 **Symptom:** Error loading worker from CDN
 
 **Solution:**
+
 - Serve worker from same origin, OR
 - Configure CDN to send CORS headers
 
@@ -316,6 +330,7 @@ If you provide a separate worker file, the inline fallback is not used.
 **Symptom:** `typeof SharedWorker === 'undefined'`
 
 **Solution:**
+
 - Use BroadcastChannel API instead
 - Use localStorage + storage events
 - Use server-side synchronization
@@ -324,15 +339,16 @@ See [Browser Compatibility](#browser-compatibility) below.
 
 ## Browser Compatibility
 
-| Browser | SharedWorker Support |
-|---------|---------------------|
-| Chrome |  Yes |
-| Edge |  Yes |
-| Firefox |  Yes |
-| Safari |  No |
-| Safari iOS |  No |
+| Browser    | SharedWorker Support |
+| ---------- | -------------------- |
+| Chrome     | Yes                  |
+| Edge       | Yes                  |
+| Firefox    | Yes                  |
+| Safari     | No                   |
+| Safari iOS | No                   |
 
 For Safari, consider alternative approaches:
+
 - [BroadcastChannel API](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API)
 - [Storage Events](https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event)
 - Server-side synchronization (WebSockets, SSE)
@@ -342,6 +358,7 @@ For Safari, consider alternative approaches:
 If you want to customize the worker:
 
 1. Copy the source:
+
    ```bash
    cp node_modules/postbridge/src/bridge-worker.ts src/
    ```
@@ -351,7 +368,7 @@ If you want to customize the worker:
 3. Build and provide URL:
    ```typescript
    const conn = await bridge.connect(schema, {
-     workerURL: '/my-custom-worker.js'
+     workerURL: '/my-custom-worker.js',
    });
    ```
 
@@ -406,4 +423,3 @@ self.addEventListener('fetch', (event) => {
 - [Bridge Guide](?path=/docs/guides-bridge--docs)
 - [SharedWorker MDN](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker)
 - [Vite Worker Documentation](https://vitejs.dev/guide/features.html#web-workers)
-

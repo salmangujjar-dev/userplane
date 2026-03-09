@@ -1,0 +1,48 @@
+---
+title: Domain Recording Preferences
+description: Control what data is captured per domain — console logs, network activity, client actions, and more
+---
+
+Each verified domain in your workspace can have its own recording preferences. These settings control what data is captured alongside the video when a customer records on that domain.
+
+## Available preferences
+
+| Preference                         | Description                                                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Hide sensitive fields**          | Automatically blur sensitive form fields and inputs during recording. See [Sensitive Data Redaction](/recording-links/sensitive-data-redaction). |
+| **Capture console logs**           | Record browser console output (errors, warnings, messages).                                                                                      |
+| **Capture client actions**         | Record user interactions (clicks, inputs, navigation).                                                                                           |
+| **Capture network logs**           | Record HTTP requests and responses (URLs, status codes, timing).                                                                                 |
+| **Capture backend logs**           | Record server-side logs forwarded during the session.                                                                                            |
+| **Capture voice and device audio** | Record the user's voice and device system audio alongside the video.                                                                             |
+
+## Configuring preferences
+
+<Steps>
+  <Step title="Open Domain settings">
+    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general).
+  </Step>
+  <Step title="Select a verified domain">Select a **verified** domain.</Step>
+  <Step title="Toggle preferences">
+    Toggle the preferences you want to enable or disable. Changes take effect immediately for new
+    recordings.
+  </Step>
+</Steps>
+
+## Requirements
+
+<Note>
+  Domain recording preferences are only available for **verified** domains. If a domain is in
+  **pending** or **revoked** status, you must complete [domain
+  verification](/workspace/domain-verification) first.
+</Note>
+
+## Defaults
+
+All capture preferences are enabled by default when a domain is first verified, except voice and device audio capture, which is disabled by default. You can toggle any preference to match your use case.
+
+## Related articles
+
+- [Customizing Recording Links](/recording-links/overview) — overview of branding and preferences.
+- [Sensitive Data Redaction](/recording-links/sensitive-data-redaction) — how sensitive data is automatically hidden.
+- [Domain Verification](/workspace/domain-verification) — verify your domain to unlock preferences.

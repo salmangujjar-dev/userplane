@@ -33,3 +33,13 @@ The right panel contains several tabs, each showing a different type of data:
 | **Backend** | Server-side logs, if configured. See [Actions & Backend Panels](/help/recording/actions-and-backend-panels).                                         |
 
 Not all panels appear for every recording. The available panels depend on which data types were captured, which is determined by your [domain recording preferences](/help/recording-links/domain-recording-preferences).
+
+## Navigation bar actions
+
+The top navigation bar provides quick actions for working with the recording:
+
+- **Copy link** — copies a direct link to the recording.
+- **Share** — opens the share modal to generate a shareable link.
+- **⋮ (more options)** — additional actions including **Issue Analyzer**, **Edit Recording**, and **Delete Recording**.
+
+Use **Issue Analyzer** to generate a structured prompt from the recording's session data — console logs, network requests, user actions, and metadata — ready to paste into any AI assistant to explain or debug the issue. See [Issue Analyzer](/help/recording/issue-analyzer) for details.

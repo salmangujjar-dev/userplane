@@ -1,6 +1,17 @@
-# @userplane/embed
+<div align="center">
 
-Auto-initializing embed script for CDN/script tag usage. The recorder iframe auto-mounts when users visit recording links.
+<h1>@userplane/embed</h1>
+
+<p>Auto-initializing CDN embed script for the Userplane Recorder</p>
+
+<p>
+  <a href="https://userplane.io">Website</a> |
+  <a href="https://userplane.io/help">Docs</a>
+</p>
+
+</div>
+
+---
 
 ## Package Overview
 
@@ -21,7 +32,7 @@ Add these two tags to your HTML `<head>`:
     <meta name="userplane:workspace" content="ws_xxx" />
 
     <!-- Userplane embed script -->
-    <script type="module" src="https://cdn.userplane.io/embed.js"></script>
+    <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
   </head>
 </html>
 ```
@@ -76,7 +87,7 @@ For advanced use cases, control when the recorder opens:
 
 ```html
 <script type="module">
-  import * as userplane from 'https://cdn.userplane.io/embed.js';
+  import * as userplane from 'https://cdn.userplane.io/embed/script.js';
 
   // Initialize with manual control
   userplane.initialize({ openImmediately: false });

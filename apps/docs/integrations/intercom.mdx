@@ -1,0 +1,55 @@
+---
+title: Intercom Integration
+description: Connect Userplane to Intercom for in-conversation screen recording requests
+---
+
+The Intercom integration lets your support team request and review screen recordings directly from Intercom conversations. Agents can create recording links, view recordings, and link them to conversations without switching tools.
+
+## What the integration does
+
+- Installs a **sidebar app** in the Intercom inbox for creating links and viewing recordings.
+- Adds a **Cmd+K shortcut** so agents can type "Userplane" in the action menu to create recording links without navigating away from a conversation.
+- Associates recordings with Intercom conversations automatically.
+- Supports using [reusable recording links](/recording-links/reusable) in [Intercom macros](/integrations/intercom-macros).
+
+## Connecting Intercom
+
+<Steps>
+  <Step title="Open Integrations settings">
+    Go to [Workspace Settings >
+    Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+  </Step>
+  <Step title="Click Connect Intercom">Click **Connect Intercom**.</Step>
+  <Step title="Authorize">
+    Authorize the connection in Intercom. Userplane requests permissions to read conversations and
+    manage the inbox sidebar app.
+  </Step>
+  <Step title="Done">
+    After authorization, the sidebar app is installed in your Intercom inbox.
+  </Step>
+</Steps>
+
+<Note>Only workspace **owners** and **admins** can connect the integration.</Note>
+
+## Permissions granted
+
+When you authorize the Intercom connection, Userplane receives the following permissions:
+
+- Read conversation data to associate recordings with conversations.
+- Install and manage the inbox sidebar app.
+
+## Disconnecting Intercom
+
+1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+2. Click **Disconnect** next to Intercom.
+
+<Note>
+  Disconnecting removes the sidebar app from Intercom. Existing recordings and links are preserved.
+</Note>
+
+## Related articles
+
+- [Intercom Setup](/getting-started/intercom-setup) — quick setup guide.
+- [Using Userplane in Intercom](/integrations/intercom-inbox) — how the sidebar app works.
+- [Intercom Shortcuts](/integrations/intercom-shortcuts) — use Cmd+K to create links fast.
+- [Intercom Macros](/integrations/intercom-macros) — use reusable links in macros.

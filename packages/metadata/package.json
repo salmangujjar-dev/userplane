@@ -1,5 +1,6 @@
 {
   "name": "@userplane/metadata",
+  "description": "Attach custom metadata to Userplane recordings",
   "version": "0.0.1",
   "type": "module",
   "private": false,

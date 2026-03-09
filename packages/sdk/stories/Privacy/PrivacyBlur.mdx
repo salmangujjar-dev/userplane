@@ -54,11 +54,11 @@ The specific selector used depends on your Userplane workspace's privacy configu
 
 The SDK manages blur state through these bridge methods on the capture connection:
 
-| Method | Direction | Description |
-|--------|-----------|-------------|
-| `startBlurr()` | Host → Guest | Activate blur on marked elements |
-| `stopBlurr()` | Host → Guest | Deactivate blur |
-| `getBlurrState()` | Host → Guest | Get current blur state |
+| Method            | Direction    | Description                      |
+| ----------------- | ------------ | -------------------------------- |
+| `startBlurr()`    | Host → Guest | Activate blur on marked elements |
+| `stopBlurr()`     | Host → Guest | Deactivate blur                  |
+| `getBlurrState()` | Host → Guest | Get current blur state           |
 
 These are internal bridge methods — they're not exposed in the public SDK API. The SDK orchestrates them automatically based on recording state.
 

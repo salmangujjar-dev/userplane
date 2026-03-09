@@ -149,12 +149,12 @@ clearMetadata(); // clears everything
 
 ## Static vs Dynamic — When to Use Which
 
-| Use Case | Static `set()` | Dynamic `metadata()` |
-|----------|----------------|---------------------|
-| User ID set at login | ✓ | |
-| Current page URL | | ✓ (changes on navigation) |
-| App version | ✓ | |
-| Active experiment | | ✓ (may change during session) |
-| Async API data | | ✓ |
-| Data that never changes | ✓ | |
-| Data that changes frequently | | ✓ |
+| Use Case                     | Static `set()` | Dynamic `metadata()`          |
+| ---------------------------- | -------------- | ----------------------------- |
+| User ID set at login         | ✓              |                               |
+| Current page URL             |                | ✓ (changes on navigation)     |
+| App version                  | ✓              |                               |
+| Active experiment            |                | ✓ (may change during session) |
+| Async API data               |                | ✓                             |
+| Data that never changes      | ✓              |                               |
+| Data that changes frequently |                | ✓                             |

@@ -27,7 +27,7 @@ The CDN build produces ES module output (`type: 'module'`). No CommonJS build is
 
 Source maps are disabled in CDN builds to keep the bundle size minimal and avoid exposing source to end users. For debugging CDN issues, use a development CDN build with source maps enabled.
 
-### __DEV__ set to false
+### **DEV** set to false
 
 The `__DEV__` flag is set to `false` in CDN builds:
 
@@ -74,7 +74,7 @@ dist/
 
 **Important:** `main.js` does not have a hash in its filename yet. The hash (`main.a1b2c3d4.js`) is added during the upload step when the upload script computes `SHA-256(main.js)`. This design keeps the build reproducible and independent of deployment infrastructure.
 
-## __CDN_BASE_URL__ Substitution
+## **CDN_BASE_URL** Substitution
 
 The bootstrap loader references the CDN base URL at runtime. During the CDN build, this constant is substituted:
 
@@ -83,7 +83,7 @@ The bootstrap loader references the CDN base URL at runtime. During the CDN buil
 const baseUrl = __CDN_BASE_URL__;
 
 // After substitution (in dist/script.js)
-const baseUrl = "https://cdn.example.com/embed";
+const baseUrl = 'https://cdn.example.com/embed';
 ```
 
 The URL is computed from env vars at build time:

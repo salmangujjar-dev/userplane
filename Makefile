@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:zendesk build build\:web build\:home build\:api build\:share build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:zendesk dev\:docs build build\:web build\:home build\:api build\:share build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -63,6 +63,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:ramp$(WHITE)                      ║$(RESET) Run ramp app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:home$(WHITE)                      ║$(RESET) Run home app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:zendesk$(WHITE)                   ║$(RESET) Run Zendesk app only                                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:docs$(WHITE)                      ║$(RESET) Run docs app only (Mintlify)                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -198,6 +199,10 @@ dev\:home: ## Run home app only
 dev\:zendesk: ## Run Zendesk app only
 	@echo "$(MAGENTA)Starting Zendesk app...$(RESET)"
 	@cd apps/zendesk && bun dev
+
+dev\:docs: ## Run docs app only (Mintlify)
+	@echo "$(MAGENTA)Starting Docs app (Mintlify on port 3003)...$(RESET)"
+	@cd apps/docs && fnm exec --using=22 bun dev
 
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"

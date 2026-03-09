@@ -20,16 +20,14 @@ await connection.remote.process({ buffer });
 
 //  With transferables: TRANSFERS 100MB (instant, 100MB total)
 const buffer = new ArrayBuffer(100 * 1024 * 1024);
-await connection.remote.process(
-  withTransferable(t => t(buffer))
-);
+await connection.remote.process(withTransferable((t) => t(buffer)));
 // Takes ~1ms, buffer now detached (empty)
 ```
 
 ## Performance Comparison
 
 | Data Size | Copy (ms) | Transfer (ms) | Speedup |
-|-----------|-----------|---------------|---------|
+| --------- | --------- | ------------- | ------- |
 | 1 MB      | 5         | < 1           | 5x      |
 | 10 MB     | 50        | < 1           | 50x     |
 | 100 MB    | 500       | < 1           | 500x    |
@@ -39,34 +37,34 @@ await connection.remote.process(
 
 Only certain types can be transferred:
 
-###  Transferable
+### Transferable
 
 ```javascript
 // ArrayBuffer and views
-new ArrayBuffer(1024)
-new Uint8Array(100)
-new Float64Array(100)
-new DataView(buffer)
+new ArrayBuffer(1024);
+new Uint8Array(100);
+new Float64Array(100);
+new DataView(buffer);
 
 // Streams
-new ReadableStream()
-new WritableStream()
-new TransformStream()
+new ReadableStream();
+new WritableStream();
+new TransformStream();
 
 // Message channels
-new MessageChannel().port1
-new MessageChannel().port2
+new MessageChannel().port1;
+new MessageChannel().port2;
 
 // Media
-new ImageBitmap()
-new VideoFrame()
-new AudioData()
+new ImageBitmap();
+new VideoFrame();
+new AudioData();
 
 // Canvas (with some browsers)
-new OffscreenCanvas(100, 100)
+new OffscreenCanvas(100, 100);
 ```
 
-###  Not Transferable
+### Not Transferable
 
 ```javascript
 // Regular objects
@@ -92,9 +90,7 @@ import { withTransferable } from '@userplane/postbridge';
 const buffer = new ArrayBuffer(1024);
 
 // Mark buffer as transferable
-await connection.remote.process(
-  withTransferable(t => t(buffer))
-);
+await connection.remote.process(withTransferable((t) => t(buffer)));
 
 // buffer is now detached
 console.log(buffer.byteLength); // 0
@@ -108,10 +104,10 @@ const buffer2 = new ArrayBuffer(2048);
 
 // Transfer both
 await connection.remote.process(
-  withTransferable(t => ({
+  withTransferable((t) => ({
     data1: t(buffer1),
     data2: t(buffer2),
-    metadata: 'not transferred'
+    metadata: 'not transferred',
   }))
 );
 
@@ -123,19 +119,13 @@ console.log(buffer2.byteLength); // 0
 ### Nested Transferables
 
 ```javascript
-const buffers = [
-  new ArrayBuffer(1024),
-  new ArrayBuffer(2048),
-  new ArrayBuffer(4096)
-];
+const buffers = [new ArrayBuffer(1024), new ArrayBuffer(2048), new ArrayBuffer(4096)];
 
 // Transfer array of buffers
-await connection.remote.processMultiple(
-  withTransferable(t => buffers.map(b => t(b)))
-);
+await connection.remote.processMultiple(withTransferable((t) => buffers.map((b) => t(b))));
 
 // All detached
-buffers.forEach(b => console.log(b.byteLength)); // 0, 0, 0
+buffers.forEach((b) => console.log(b.byteLength)); // 0, 0, 0
 ```
 
 ### Mixed Data
@@ -143,14 +133,14 @@ buffers.forEach(b => console.log(b.byteLength)); // 0, 0, 0
 ```javascript
 // Some data transferred, some copied
 await connection.remote.process(
-  withTransferable(t => ({
+  withTransferable((t) => ({
     // Transferred
     imageData: t(imageBuffer),
     audioData: t(audioBuffer),
 
     // Copied (not marked with t())
     metadata: { width: 1920, height: 1080 },
-    timestamp: Date.now()
+    timestamp: Date.now(),
   }))
 );
 ```
@@ -172,19 +162,15 @@ const worker = new Worker('image-worker.js', { type: 'module' });
 const connection = await host.connect(worker, {});
 
 const result = await connection.remote.processImage(
-  withTransferable(t => ({
+  withTransferable((t) => ({
     data: t(imageData.data.buffer),
     width: canvas.width,
-    height: canvas.height
+    height: canvas.height,
   }))
 );
 
 // Receive processed image (also transferred back)
-const processed = new ImageData(
-  new Uint8ClampedArray(result.data),
-  result.width,
-  result.height
-);
+const processed = new ImageData(new Uint8ClampedArray(result.data), result.width, result.height);
 ctx.putImageData(processed, 0, 0);
 ```
 
@@ -198,18 +184,18 @@ const connection = await guest.connect({
 
     // Apply filter
     for (let i = 0; i < pixels.length; i += 4) {
-      pixels[i] = 255 - pixels[i];     // Invert R
+      pixels[i] = 255 - pixels[i]; // Invert R
       pixels[i + 1] = 255 - pixels[i + 1]; // Invert G
       pixels[i + 2] = 255 - pixels[i + 2]; // Invert B
     }
 
     // Transfer back to main thread
-    return withTransferable(t => ({
+    return withTransferable((t) => ({
       data: t(pixels.buffer),
       width,
-      height
+      height,
     }));
-  }
+  },
 });
 ```
 
@@ -225,10 +211,10 @@ async function processFile(file) {
 
   try {
     const result = await connection.remote.processFile(
-      withTransferable(t => ({
+      withTransferable((t) => ({
         data: t(buffer),
         name: file.name,
-        type: file.type
+        type: file.type,
       }))
     );
 
@@ -264,9 +250,9 @@ const connection = await guest.connect({
       type,
       originalSize: bytes.length,
       compressedSize: compressed.length,
-      checksum
+      checksum,
     };
-  }
+  },
 });
 
 function calculateChecksum(bytes) {
@@ -305,9 +291,7 @@ processor.onaudioprocess = async (e) => {
   );
 
   // Process in worker (transfer for efficiency)
-  const processed = await connection.remote.processAudio(
-    withTransferable(t => t(buffer))
-  );
+  const processed = await connection.remote.processAudio(withTransferable((t) => t(buffer)));
 
   // Apply to output
   const outputData = e.outputBuffer.getChannelData(0);
@@ -331,8 +315,8 @@ const connection = await guest.connect({
     // ... fill result ...
 
     // Transfer result back
-    return withTransferable(t => t(result));
-  }
+    return withTransferable((t) => t(result));
+  },
 });
 
 // Main thread receives transferred data
@@ -349,9 +333,7 @@ Both directions can use transferables:
 const buffer = new ArrayBuffer(1024);
 
 // Send with transfer
-const result = await connection.remote.process(
-  withTransferable(t => t(buffer))
-);
+const result = await connection.remote.process(withTransferable((t) => t(buffer)));
 
 // Receive with transfer (if worker used withTransferable)
 console.log(result); // ArrayBuffer (transferred back)
@@ -364,9 +346,7 @@ console.log(result); // ArrayBuffer (transferred back)
 ```javascript
 const buffer = new ArrayBuffer(1024);
 
-await connection.remote.process(
-  withTransferable(t => t(buffer))
-);
+await connection.remote.process(withTransferable((t) => t(buffer)));
 
 //  Error: buffer is detached
 const view = new Uint8Array(buffer);
@@ -374,13 +354,12 @@ const view = new Uint8Array(buffer);
 ```
 
 **Solution:** Don't use the buffer after transferring
+
 ```javascript
 const buffer = new ArrayBuffer(1024);
 const copy = buffer.slice(); // Make copy if needed
 
-await connection.remote.process(
-  withTransferable(t => t(buffer))
-);
+await connection.remote.process(withTransferable((t) => t(buffer)));
 
 //  Use copy instead
 const view = new Uint8Array(copy);
@@ -395,9 +374,7 @@ await connection.remote.process({ buffer });
 // Slow! Copies 100MB
 
 //  Correctly marked - data is TRANSFERRED
-await connection.remote.process(
-  withTransferable(t => t(buffer))
-);
+await connection.remote.process(withTransferable((t) => t(buffer)));
 // Fast! Transfers 100MB
 ```
 
@@ -406,28 +383,24 @@ await connection.remote.process(
 ```javascript
 //  Error: Blob is not transferable
 const blob = new Blob(['data']);
-await connection.remote.process(
-  withTransferable(t => t(blob))
-);
+await connection.remote.process(withTransferable((t) => t(blob)));
 // DataCloneError
 
 //  Convert to ArrayBuffer first
 const buffer = await blob.arrayBuffer();
-await connection.remote.process(
-  withTransferable(t => t(buffer))
-);
+await connection.remote.process(withTransferable((t) => t(buffer)));
 ```
 
 ## When to Use Transferables
 
-###  Use Transferables When:
+### Use Transferables When:
 
 - Data is large (> 1MB)
 - Data is binary (ArrayBuffer, TypedArray)
 - You don't need the data after sending
 - Performance is critical
 
-###  Don't Use Transferables When:
+### Don't Use Transferables When:
 
 - Data is small (< 100KB) - overhead not worth it
 - You need to keep using the data
@@ -446,9 +419,7 @@ console.timeEnd('copy');
 
 // Measure transfer time
 console.time('transfer');
-await connection.remote.process(
-  withTransferable(t => t(buffer))
-);
+await connection.remote.process(withTransferable((t) => t(buffer)));
 console.timeEnd('transfer');
 ```
 
@@ -457,15 +428,11 @@ console.timeEnd('transfer');
 ```javascript
 //  Multiple transfers (unnecessary overhead)
 for (const buffer of buffers) {
-  await connection.remote.process(
-    withTransferable(t => t(buffer))
-  );
+  await connection.remote.process(withTransferable((t) => t(buffer)));
 }
 
 //  Single transfer with all buffers
-await connection.remote.processBatch(
-  withTransferable(t => buffers.map(b => t(b)))
-);
+await connection.remote.processBatch(withTransferable((t) => buffers.map((b) => t(b))));
 ```
 
 ### 3. Reuse Buffers When Possible
@@ -506,6 +473,7 @@ Transferables are widely supported:
 - Don't use for: small data, data you need to keep, non-binary data
 
 **Next steps:**
+
 - [Web Workers Guide](?path=/docs/guides-web-workers--docs) for worker patterns
 - [Examples](?path=/docs/examples-workers--docs) for real-world use cases
 - [Message Flow](?path=/docs/architecture-messageflow--docs) for technical details

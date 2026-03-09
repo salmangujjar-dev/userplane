@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { useState } from 'react';
 
+import { AiPromptModal } from '@/components/modals/ai-prompt-modal';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
 import { EditRecordingModal } from '@/components/modals/edit-recording-modal';
 import { ShareRecordingModal } from '@/components/modals/share-recording';
@@ -18,6 +19,9 @@ import { RecordingDetailSkeleton } from '@/components/skeleton';
 import {
   useDeleteRecording,
   useRecording,
+  useRecordingAction,
+  useRecordingConsoleLog,
+  useRecordingNetworkLog,
   useRecordingThumbnail,
   useRecordingVideo,
   useUpdateRecordingExpiry,
@@ -34,6 +38,7 @@ export default function RecordingDetailPage() {
   const recordingId = params.recordingId as string;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAiPromptModal, setShowAiPromptModal] = useState(false);
   const [showShareModal, setShowShareModal] = useQueryState('share', booleanParser);
 
   const {
@@ -60,6 +65,10 @@ export default function RecordingDetailPage() {
 
   const { data: roleResult } = useWorkspaceRole();
   const membership = roleResult?.success ? roleResult.data : null;
+
+  const { data: consoleLogResource } = useRecordingConsoleLog(workspaceId, recordingId);
+  const { data: networkLogResource } = useRecordingNetworkLog(workspaceId, recordingId);
+  const { data: actionResource } = useRecordingAction(workspaceId, recordingId);
 
   const markers = useConsoleErrorMarkers(workspaceId, recordingId, recordingData?.recording);
 
@@ -103,6 +112,7 @@ export default function RecordingDetailPage() {
         onShare={handleShare}
         onEdit={canEdit ? () => setShowEditModal(true) : undefined}
         onDelete={canDelete ? () => setShowDeleteModal(true) : undefined}
+        onGetAiPrompt={() => setShowAiPromptModal(true)}
       />
 
       <RecordingPlayerProvider>
@@ -140,6 +150,21 @@ export default function RecordingDetailPage() {
         open={showShareModal}
         onOpenChange={(open) => void setShowShareModal(open)}
         recordingId={recordingId}
+      />
+
+      <AiPromptModal
+        open={showAiPromptModal}
+        onOpenChange={setShowAiPromptModal}
+        recording={recording}
+        resources={{
+          consoleLog: {
+            url: consoleLogResource?.success ? consoleLogResource.data.resource.url : null,
+          },
+          networkLog: {
+            url: networkLogResource?.success ? networkLogResource.data.resource.url : null,
+          },
+          action: { url: actionResource?.success ? actionResource.data.resource.url : null },
+        }}
       />
     </div>
   );

@@ -8,7 +8,7 @@
  * @example
  * ```html
  * <meta name="userplane:workspace" content="ws_xxx" />
- * <script type="module" src="https://cdn.userplane.io/embed.js"></script>
+ * <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
  * ```
  */
 

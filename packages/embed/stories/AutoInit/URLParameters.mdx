@@ -10,10 +10,10 @@ The embed package automatically detects recording links in the URL and opens the
 
 During auto-initialization, the SDK inspects `window.location.search` for two parameters:
 
-| Parameter | Purpose |
-|-----------|---------|
+| Parameter          | Purpose                                     |
+| ------------------ | ------------------------------------------- |
 | `userplane-action` | The action to take (`open` = open recorder) |
-| `userplane-token` | The recording session token |
+| `userplane-token`  | The recording session token                 |
 
 Example recording URL:
 
@@ -91,6 +91,7 @@ https://yoursite.com/{path}?userplane-action=open&userplane-token={token}
 ```
 
 Where:
+
 - `{path}` — any path on your site (the recorder opens on top of whatever page is loaded)
 - `{token}` — a short-lived token identifying the recording session
 
