@@ -410,7 +410,7 @@ const ESSENTIAL_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     included: true,
     subFeatures: [
       {
-        text: 'Mask confidential fields and sensitive data from customer recordings',
+        text: 'Mask confidential fields and sensitive customer data',
         included: true,
       },
     ],
@@ -504,7 +504,7 @@ const STARTER_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     included: true,
     subFeatures: [
       {
-        text: 'Debug customer issues with console logs, network activity & action replay',
+        text: 'Capture console logs, network requests & session data',
         included: true,
       },
     ],
@@ -514,7 +514,7 @@ const STARTER_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     included: true,
     subFeatures: [
       {
-        text: 'Mask confidential fields and sensitive data from customer recordings',
+        text: 'Mask confidential fields and sensitive customer data',
         included: true,
       },
     ],
@@ -608,7 +608,7 @@ const SCALE_UP_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     included: true,
     subFeatures: [
       {
-        text: 'Debug customer issues with console logs, network activity & action replay',
+        text: 'Capture console logs, network requests & session data',
         included: true,
       },
     ],
@@ -618,7 +618,7 @@ const SCALE_UP_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     included: true,
     subFeatures: [
       {
-        text: 'Mask confidential fields and sensitive data from customer recordings',
+        text: 'Mask confidential fields and sensitive customer data',
         included: true,
       },
     ],
@@ -732,7 +732,17 @@ const ENTERPRISE_FEATURE_HIGHLIGHTS: PlanFeatureHighlight[] = [
     included: true,
     subFeatures: [
       {
-        text: 'Mask confidential fields and sensitive data from customer recordings',
+        text: 'Mask confidential fields and sensitive customer data',
+        included: true,
+      },
+    ],
+  },
+  {
+    text: 'SAML SSO (Okta, Microsoft Entra, etc.)',
+    included: true,
+    subFeatures: [
+      {
+        text: 'Enterprise-grade single sign-on with your identity provider',
         included: true,
       },
     ],
@@ -789,6 +799,7 @@ export const PLAN_CARD_HIGHLIGHTS: Record<string, string[]> = {
     'Everything in Starter',
     'Up to 30 seats in workspace',
     'Request unlimited recordings',
+    'Unlimited screenshots & annotation',
     'Console logs, network activity & action replay',
     'Customize Userplane workspace branding',
     'Custom data retention policies',

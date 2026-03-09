@@ -30,6 +30,14 @@ export const UPSELL_CONFIGS: Partial<Record<FeatureGate, UpsellConfig>> = {
     title: 'Collect Server Logs',
     subtitle: 'Correlate frontend issues with server-side logs',
   },
+  requestScreenshots: {
+    title: 'Capture Screenshots',
+    subtitle: 'Request and annotate unlimited screenshots for customer issues',
+  },
+  samlSso: {
+    title: 'SAML Single Sign-On',
+    subtitle: 'Connect your identity provider for enterprise-grade authentication',
+  },
 } as const;
 
 export const RESOURCE_UPSELL_CONFIGS: Partial<Record<FeatureLimit, UpsellConfig>> = {
