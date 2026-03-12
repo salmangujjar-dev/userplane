@@ -16,6 +16,21 @@ const config: StorybookConfig = {
       ...config.resolve.alias,
       '@': resolve(__dirname, '../src'),
       '@stories': resolve(__dirname, '.'),
+      // Replace next/image with a plain <img> mock to bypass hostname validation
+      'next/image': resolve(__dirname, 'mocks/next-image.tsx'),
+    };
+
+    // Polyfill `process.env` for Node-only code (e.g. next/image) running in the browser
+    config.define = {
+      ...config.define,
+      'process.env': '{}',
+    };
+
+    // Next.js tsconfig uses "jsx": "preserve" which skips the React import transform.
+    // Tell esbuild to use the automatic JSX runtime so stories don't need `import React`.
+    config.esbuild = {
+      ...config.esbuild,
+      jsx: 'automatic',
     };
 
     // Add Tailwind CSS plugin
