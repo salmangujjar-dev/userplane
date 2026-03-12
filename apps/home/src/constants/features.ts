@@ -48,10 +48,10 @@ export const FEATURES: Feature[] = [
     image: mediaClient.getFeatureMediaUrl('features/complete-issue-context.webp', {
       transform: mergeTransformOptions('feature', { width: 1400 }),
     }),
-    imageAlt: 'Replay customer issues',
-    title: 'Replay customer issues',
+    imageAlt: 'Complete Issue Context',
+    title: 'Complete Issue Context',
     description:
-      'Watch exactly what went wrong. Review and replay customer sessions without the back and forth. Get complete visibility into the customer issue.',
+      'Capture console errors, network activity, user steps, and error traces with every recording. Get complete visibility into customer issue.',
   },
   {
     image: mediaClient.getFeatureMediaUrl('features/native-integrations.webp', {
