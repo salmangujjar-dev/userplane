@@ -1,0 +1,104 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Interceptors/Overview" />
+
+# Interceptors Overview
+
+Interceptors are the foundation of the logger. They monkey-patch browser APIs to capture events transparently, without requiring any changes to the application code.
+
+## How Patching Works
+
+The `initPatches()` function is the single entry point that activates all interceptors:
+
+```typescript
+import { initPatches } from '@userplane/logger';
+
+initPatches();
+```
+
+Internally, this:
+
+1. **Guards against double-init** — checks `window.__userplane_logger_loaded`
+2. **Saves pristine references** — stores original browser APIs in `window.__userplane_pristine_natives`
+3. **Applies all patches** — calls each `patchXxx()` function
+4. **Registers teardown** — hooks into `onTeardown()` for clean restoration
+
+## Patch Functions
+
+| Function                    | What It Patches                                             |
+| --------------------------- | ----------------------------------------------------------- |
+| `patchConsole()`            | `console.log`, `info`, `warn`, `error`, `debug`, `trace`    |
+| `patchFetch()`              | `window.fetch`                                              |
+| `patchXHR()`                | `XMLHttpRequest.prototype.open`, `setRequestHeader`, `send` |
+| `patchNavigation()`         | `history.pushState`, `replaceState`, Navigation API         |
+| `patchClicks()`             | `click` and `pointerdown` events                            |
+| `patchFocus()`              | `focus`, `blur`, `visibilitychange` events                  |
+| `patchGlobalErrors()`       | `window.onerror` / `error` event                            |
+| `patchUnhandledRejection()` | `unhandledrejection` event                                  |
+| `patchCSP()`                | `securitypolicyviolation` event                             |
+| `patchResourceErrors()`     | Resource `error` events on elements                         |
+| `observeResources()`        | `PerformanceObserver` for resource timing                   |
+
+## Pristine Natives
+
+Before any patching occurs, the original browser API references are saved:
+
+```typescript
+window.__userplane_pristine_natives = {
+  fetch: window.fetch,
+  consoleLog: console.log,
+  consoleWarn: console.warn,
+  // ... all original references
+};
+```
+
+This is critical because:
+
+- The logger uses pristine references for its own internal logging (avoiding infinite recursion)
+- During teardown, these references are restored to unpatch cleanly
+- Even if other libraries also patch these APIs, the logger can always access the originals
+
+## Event Dispatch Pattern
+
+Every interceptor follows the same pattern:
+
+```typescript
+function patchSomething() {
+  const original = window.something;
+
+  window.something = function (...args) {
+    try {
+      // Capture relevant data
+      const eventData = {
+        /* ... */
+      };
+
+      // Dispatch to LogProcessor via EventBridge
+      dispatch(eventData);
+    } catch (e) {
+      // Never break the application
+    }
+
+    // Always call the original
+    return original.apply(this, args);
+  };
+}
+```
+
+Key principles:
+
+- **Always call the original** — the patched function must behave identically
+- **Best-effort capture** — errors in capture code are silently caught
+- **Decouple via events** — interceptors don't import or reference LogProcessor
+
+## Teardown and Restoration
+
+When `requestTeardown()` is called, the `unpatch()` function:
+
+1. Restores all browser APIs from pristine natives
+2. Removes all event listeners added by interceptors
+3. Disconnects the PerformanceObserver
+4. Removes Navigation API hooks
+5. Sets `window.__userplane_logger_loaded = false`
+
+After teardown, all browser APIs behave exactly as they did before the logger was initialized.

@@ -1,0 +1,131 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/Interceptors" />
+
+# Interceptors API
+
+All interceptor functions are exported for granular use. Typically, you use `initPatches()` to apply all patches at once, but individual functions are available for selective patching.
+
+## initPatches()
+
+```typescript
+initPatches(): void
+```
+
+Applies all interceptor patches. Checks `window.__userplane_logger_loaded` to prevent double-initialization. Saves pristine native references before patching.
+
+## Console
+
+### patchConsole()
+
+```typescript
+patchConsole(): void
+```
+
+Patches `console.log`, `info`, `warn`, `error`, `debug`, and `trace` using `Object.defineProperty` getter/setter pairs. Includes re-entrancy guard and repeat tracking.
+
+## Network
+
+### patchFetch()
+
+```typescript
+patchFetch(): void
+```
+
+Wraps `window.fetch` to capture request/response data. Clones responses for body reading. Enriches with performance timing. Dispatches `network` or `network-error` events.
+
+### patchXHR()
+
+```typescript
+patchXHR(): void
+```
+
+Patches `XMLHttpRequest.prototype.open`, `setRequestHeader`, and `send`. Uses WeakMap for per-instance metadata. Handles success, error, abort, and timeout scenarios.
+
+## User Actions
+
+### patchClicks()
+
+```typescript
+patchClicks(): void
+```
+
+Listens for `click` and `pointerdown` events in capture phase. Filters trusted events only. Debounces duplicate clicks within 120ms. Captures element info (tagName, id, classList).
+
+### patchNavigation()
+
+```typescript
+patchNavigation(): void
+```
+
+Patches `history.pushState` and `replaceState`. Listens for `popstate`, `hashchange`, and Navigation API `currententrychange`. Throttles to one event per 200ms.
+
+### patchFocus()
+
+```typescript
+patchFocus(): void
+```
+
+Listens for `focus`, `blur`, and `visibilitychange`. Updates `window.__userplane_has_focus`. Only dispatches on actual state changes.
+
+### initFocusState()
+
+```typescript
+initFocusState(): void
+```
+
+Emits an `init_page` action if the document is visible when called. Establishes the initial tab state.
+
+## Errors
+
+### patchGlobalErrors()
+
+```typescript
+patchGlobalErrors(): void
+```
+
+Listens for `error` events on `window` in capture phase. Filters out logger-internal errors and resource errors.
+
+### patchUnhandledRejection()
+
+```typescript
+patchUnhandledRejection(): void
+```
+
+Listens for `unhandledrejection` events. Skips rejections originating from logger code.
+
+### patchCSP()
+
+```typescript
+patchCSP(): void
+```
+
+Listens for `securitypolicyviolation` events. Captures directive, blocked URI, and disposition.
+
+## Resources
+
+### observeResources()
+
+```typescript
+observeResources(): void
+```
+
+Creates a `PerformanceObserver` for resource timing. Skips fetch/XHR entries. Captures CSS, images, fonts, and other static resources.
+
+### patchResourceErrors()
+
+```typescript
+patchResourceErrors(): void
+```
+
+Listens for `error` events on `<script>`, `<img>`, `<link>`, `<iframe>`, `<video>`, `<audio>`, and `<source>` elements.
+
+## Page Lifecycle
+
+### patchUnload()
+
+```typescript
+patchUnload(): void
+```
+
+Listens for `beforeunload` and dispatches a `page_unload` action.

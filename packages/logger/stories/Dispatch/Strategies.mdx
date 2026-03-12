@@ -1,0 +1,172 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Dispatch/Strategies" />
+
+# Dispatch Strategies
+
+The logger supports two dispatch strategies for delivering processed log entries: **ImmediateDispatcher** and **BatchedDispatcher**. Both implement the `DispatchStrategy` interface.
+
+## DispatchStrategy Interface
+
+```typescript
+interface DispatchStrategy {
+  emit(entry: ProcessedLogEntry): void;
+  start(): void;
+  pause(): void;
+  stop(): void;
+  destroy(): void;
+}
+```
+
+Both strategies are configured with a `DispatchContext`:
+
+```typescript
+interface DispatchContext {
+  tabId: string;
+  serverNow: () => number;
+  saveFunction: (payload: SavePayload | BatchSavePayload) => Promise<void>;
+}
+```
+
+## ImmediateDispatcher
+
+Sends each entry individually as soon as it's emitted.
+
+```
+LogProcessor.emitEntry(entry)
+    │
+    ▼
+ImmediateDispatcher.emit(entry)
+    │
+    └── saveFunction({
+          type: 'network',
+          entry: { ... },
+          tabId: 'tab-123',
+          tabState: 'ACTIVE',
+          timestamp: 1234567890,
+          focused: true,
+        })
+```
+
+### When to Use
+
+- Real-time monitoring where latency matters
+- Low-volume logging scenarios
+- When you need each event to be persisted immediately
+
+### Payload Format
+
+Each call to `saveFunction` receives a `SavePayload`:
+
+```typescript
+interface SavePayload {
+  type: LogStoreType;
+  entry: ProcessedLogEntry;
+  tabId: string;
+  tabState: string;
+  timestamp: number;
+  focused: boolean;
+}
+```
+
+## BatchedDispatcher
+
+Buffers entries in memory and flushes them periodically or when triggered.
+
+```
+LogProcessor.emitEntry(entry)
+    │
+    ▼
+BatchedDispatcher.emit(entry)
+    │
+    └── buffer.push(entry)
+            │
+            ├── Buffer full (50 entries)? → flush()
+            ├── Interval fires (1000ms)?  → flush()
+            ├── Page unloading?           → flush()
+            └── Tab hidden?               → flush()
+```
+
+### Configuration
+
+```typescript
+const dispatcher = new BatchedDispatcher(context, {
+  flushInterval: 1000, // ms between automatic flushes (default: 1000)
+  maxBufferSize: 50, // max entries before forced flush (default: 50)
+});
+```
+
+### Flush Triggers
+
+The BatchedDispatcher flushes its buffer when:
+
+1. **Interval** — every `flushInterval` milliseconds
+2. **Buffer size** — when `buffer.length >= maxBufferSize`
+3. **Page unload** — on `window.beforeunload` event
+4. **Visibility change** — when `document.visibilityState` becomes `'hidden'`
+
+The unload and visibility triggers ensure data isn't lost when the user navigates away or switches tabs.
+
+### Payload Format
+
+Each flush sends a `BatchSavePayload`:
+
+```typescript
+interface BatchSavePayload {
+  entries: Array<{
+    type: LogStoreType;
+    entry: ProcessedLogEntry;
+  }>;
+  tabId: string;
+  tabState: string;
+  timestamp: number;
+  focused: boolean;
+}
+```
+
+### When to Use
+
+- Production environments where reducing network calls matters
+- High-volume logging scenarios
+- When backend supports batch ingestion
+
+## EventBridge
+
+The `EventBridge` module controls the flow of events between interceptors and the LogProcessor:
+
+```typescript
+import {
+  dispatch,
+  enableDispatch,
+  disableDispatch,
+  isDispatchActive,
+  onTeardown,
+  requestTeardown,
+} from '@userplane/logger';
+```
+
+### dispatch(event)
+
+Emits a `CustomEvent` on `document` with the name `__userplane_logger`. This is how interceptors send captured data to the LogProcessor.
+
+### enableDispatch() / disableDispatch()
+
+Gates whether `dispatch()` actually emits events. When disabled, events are silently dropped. Used during pause/resume transitions.
+
+### isDispatchActive()
+
+Returns whether dispatch is currently enabled.
+
+### onTeardown(fn) / requestTeardown()
+
+`onTeardown()` registers a callback to run during teardown. `requestTeardown()` invokes all registered callbacks — this is how `stop()` triggers the `unpatch()` function to restore all browser APIs.
+
+## Choosing a Strategy
+
+| Consideration  | Immediate                   | Batched                       |
+| -------------- | --------------------------- | ----------------------------- |
+| Latency        | Real-time                   | Up to `flushInterval` delay   |
+| Network calls  | One per event               | One per flush                 |
+| Data loss risk | Lower                       | Mitigated by unload flush     |
+| Memory usage   | None (no buffer)            | Up to `maxBufferSize` entries |
+| Best for       | Low volume, real-time needs | High volume, production       |

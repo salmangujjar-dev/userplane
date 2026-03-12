@@ -1,0 +1,316 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/Types" />
+
+# Types Reference
+
+All TypeScript types exported by `@userplane/logger`.
+
+## Log Events
+
+These are the raw event types dispatched by interceptors via `CustomEvent`.
+
+### ConsoleLogEvent
+
+```typescript
+interface ConsoleLogEvent {
+  type: 'console';
+  level: 'log' | 'info' | 'warn' | 'error' | 'debug' | 'trace';
+  args: any[];
+  trace?: {
+    first: string;
+    lines: string[];
+  };
+  repeatCount?: number;
+  subtype?: 'securitypolicyviolation';
+  violatedDirective?: string;
+  blockedURI?: string;
+  effectiveDirective?: string;
+  disposition?: string;
+  meta?: {
+    truncated?: {
+      trace?: boolean;
+      args?: boolean;
+    };
+  };
+}
+```
+
+### NetworkLogEvent
+
+```typescript
+interface NetworkLogEvent {
+  type: 'network';
+  url: string;
+  method: string;
+  status: number;
+  statusText: string;
+  requestHeaders: Record<string, string>;
+  responseHeaders: Record<string, string>;
+  requestBody?: any;
+  responseBody?: string;
+  performanceData?: PerformanceData;
+  timestamp: number;
+  initiatorType: 'fetch' | 'xmlhttprequest';
+}
+```
+
+### NetworkErrorLogEvent
+
+```typescript
+interface NetworkErrorLogEvent {
+  type: 'network-error';
+  url: string;
+  method: string;
+  error: string;
+  requestHeaders?: Record<string, string>;
+  requestBody?: any;
+  timestamp: number;
+  initiatorType: 'fetch' | 'xmlhttprequest';
+}
+```
+
+### ResourceLogEvent
+
+```typescript
+interface ResourceLogEvent {
+  type: 'resource';
+  url: string;
+  initiatorType: string;
+  contentType?: string;
+  performanceData?: PerformanceData;
+}
+```
+
+### ResourceErrorLogEvent
+
+```typescript
+interface ResourceErrorLogEvent {
+  type: 'resource-error';
+  url: string;
+  tagName: string;
+  contentType?: string;
+  performanceData?: PerformanceData;
+}
+```
+
+### UserActionLogEvent
+
+```typescript
+interface UserActionLogEvent {
+  type: 'user-action';
+  data: {
+    action:
+      | 'click'
+      | 'spa_route'
+      | 'tab_activated'
+      | 'tab_deactivated'
+      | 'init_page'
+      | 'page_unload'
+      | 'tab_switch';
+    element?: {
+      tagName: string;
+      id?: string;
+      classList?: string[];
+    };
+    x?: number;
+    y?: number;
+    from?: string;
+    to?: string;
+    method?: string;
+    timestamp: number;
+  };
+}
+```
+
+## Processed Entries
+
+Normalized entries produced by the LogProcessor for storage/dispatch.
+
+### ProcessedNetworkEntry
+
+```typescript
+interface ProcessedNetworkEntry {
+  url: string;
+  method: string;
+  status: number;
+  statusText: string;
+  requestHeaders: Record<string, string>;
+  responseHeaders: Record<string, string>;
+  requestBody?: any;
+  responseBody?: string;
+  protocol?: string;
+  duration?: number;
+  performanceData?: PerformanceData;
+  timestamp: number;
+  contentType?: string;
+}
+```
+
+### ProcessedConsoleEntry
+
+```typescript
+interface ProcessedConsoleEntry {
+  level: string;
+  args: any[];
+  trace?: {
+    first: string;
+    lines: string[];
+  };
+  repeatCount?: number;
+  timestamp: number;
+}
+```
+
+### ProcessedUserActionEntry
+
+```typescript
+interface ProcessedUserActionEntry {
+  action: string;
+  element?: {
+    tagName: string;
+    id?: string;
+    classList?: string[];
+  };
+  x?: number;
+  y?: number;
+  from?: string;
+  to?: string;
+  method?: string;
+  timestamp: number;
+}
+```
+
+## Dispatch Types
+
+### SavePayload
+
+```typescript
+interface SavePayload {
+  type: LogStoreType;
+  entry: ProcessedNetworkEntry | ProcessedConsoleEntry | ProcessedUserActionEntry;
+  tabId: string;
+  tabState: string;
+  timestamp: number;
+  focused: boolean;
+}
+```
+
+### BatchSavePayload
+
+```typescript
+interface BatchSavePayload {
+  entries: Array<{
+    type: LogStoreType;
+    entry: ProcessedNetworkEntry | ProcessedConsoleEntry | ProcessedUserActionEntry;
+  }>;
+  tabId: string;
+  tabState: string;
+  timestamp: number;
+  focused: boolean;
+}
+```
+
+### DispatchStrategy
+
+```typescript
+interface DispatchStrategy {
+  emit(entry: ProcessedLogEntry): void;
+  start(): void;
+  pause(): void;
+  stop(): void;
+  destroy(): void;
+}
+```
+
+### DispatchContext
+
+```typescript
+interface DispatchContext {
+  tabId: string;
+  serverNow: () => number;
+  saveFunction: (payload: SavePayload | BatchSavePayload) => Promise<void>;
+}
+```
+
+## Tab State
+
+### TabState
+
+```typescript
+enum TabState {
+  UNKNOWN = 0,
+  BACKGROUND = 1,
+  ACTIVE = 2,
+}
+```
+
+### TabInfo
+
+```typescript
+interface TabInfo {
+  state: TabState;
+  url: string;
+  lastUnloadTs: number;
+}
+```
+
+### LastNavigation
+
+```typescript
+interface LastNavigation {
+  from: string;
+  to: string;
+  method: string;
+}
+```
+
+## Store Types
+
+### LogStoreType
+
+```typescript
+type LogStoreType = 'network' | 'console' | 'action';
+```
+
+## Performance Data
+
+### PerformanceData
+
+```typescript
+interface PerformanceData {
+  nextHopProtocol: string;
+  encodedBodySize: number;
+  decodedBodySize: number;
+  transferSize: number;
+  domainLookupTime: number;
+  connectTime: number;
+  secureConnectionTime: number;
+  requestTime: number;
+  responseTime: number;
+  startTime: number;
+  duration: number;
+}
+```
+
+## Window Extensions
+
+```typescript
+interface Window {
+  __userplane_logger_loaded?: boolean;
+  __userplane_logger_originals?: LoggerOriginals;
+  __userplane_pristine_natives?: PristineNatives;
+  __userplane_has_focus?: boolean;
+  __userplane_removeNavigationApiHook?: () => void;
+  navigation?: Navigation;
+}
+```
+
+## Parsed Body
+
+```typescript
+interface ParsedBody {
+  type: string;
+  body: any;
+}
+```
