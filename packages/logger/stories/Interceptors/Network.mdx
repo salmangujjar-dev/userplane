@@ -1,0 +1,124 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Interceptors/Network" />
+
+# Network Interceptor
+
+The network interceptor captures HTTP traffic from both `fetch` and `XMLHttpRequest`, including request/response headers, bodies, timing, and errors.
+
+## Fetch Interception
+
+`patchFetch()` wraps `window.fetch` using `Object.defineProperty`:
+
+```
+fetch('/api/data', { method: 'POST', body: '{"q":"test"}' })
+    │
+    ▼
+Patched fetch wrapper
+    │
+    ├── Capture: method, URL, headers, body
+    ├── Call original fetch (pristine native)
+    ├── Clone response to read body
+    ├── Check: same-site? text content-type? not .js file?
+    ├── Read response body (up to 128KB)
+    ├── Enrich with PerformanceResourceTiming data
+    ├── Dispatch NetworkLogEvent or NetworkErrorLogEvent
+    │
+    └── Return original response to caller
+```
+
+### Response Body Capture
+
+Response bodies are only captured when:
+
+- The response is **same-site** (same protocol + registrable domain)
+- The content type is **text-based** (JSON, XML, HTML, plain text, etc.)
+- The URL does **not** end in `.js`
+
+The body is limited to **128KB**. If exceeded, it's truncated with a message.
+
+### Error Handling
+
+If `fetch` throws (network error, abort, etc.), the interceptor:
+
+1. Dispatches a `network-error` event with the error details
+2. Logs the error to the console
+3. Re-throws the original error so the application behaves normally
+
+## XHR Interception
+
+`patchXHR()` patches three methods on `XMLHttpRequest.prototype`:
+
+### `open(method, url)`
+
+Stores the method and URL in a `WeakMap` keyed by the XHR instance.
+
+### `setRequestHeader(name, value)`
+
+Accumulates request headers in the WeakMap metadata.
+
+### `send(body)`
+
+- Parses the request body
+- Attaches a `readystatechange` listener
+- When `readyState === 4` (DONE), captures the response
+- Also handles `error`, `abort`, and `timeout` events
+
+```
+xhr.open('GET', '/api/users')
+xhr.setRequestHeader('Authorization', 'Bearer ...')
+xhr.send()
+    │
+    ▼
+Patched open → stores method='GET', url='/api/users' in WeakMap
+Patched setRequestHeader → stores headers in WeakMap
+Patched send → attaches readystatechange listener
+    │
+    ▼ (on readyState === 4)
+    │
+    ├── Read: status, statusText, responseHeaders, responseText
+    ├── Enrich with PerformanceResourceTiming
+    ├── Dispatch NetworkLogEvent
+```
+
+### WeakMap Tracking
+
+Each XHR instance's metadata is stored in a `WeakMap<XMLHttpRequest, XHRMeta>`, which:
+
+- Prevents memory leaks (entries are GC'd when the XHR is)
+- Avoids polluting the XHR object with custom properties
+- Tracks a `completed` flag to prevent duplicate events
+
+## Performance Enrichment
+
+Both fetch and XHR interceptors call `enrichWithPerformance()` to add timing data from the `PerformanceResourceTiming` API:
+
+```typescript
+{
+  nextHopProtocol: 'h2',        // HTTP/2
+  encodedBodySize: 1234,
+  decodedBodySize: 5678,
+  transferSize: 1300,
+  domainLookupTime: 5,
+  connectTime: 20,
+  secureConnectionTime: 15,
+  requestTime: 100,
+  responseTime: 50,
+  startTime: 1234567890,
+  duration: 190,
+}
+```
+
+## Throttling
+
+The `shouldLogNetwork()` utility deduplicates rapid-fire identical requests. A key is constructed as:
+
+```
+fetch|GET|/api/data|200
+```
+
+If the same key appears within 200ms, the duplicate is dropped. The throttle map is pruned at 500 entries to prevent memory growth.
+
+## Internal Endpoint Filtering
+
+Network events for userplane's own API endpoints are filtered out by the LogProcessor (not the interceptor itself). This keeps the interceptor simple and the filtering logic centralized. See the [Internal Endpoint Filtering](?path=/docs/guides-internal-endpoint-filtering--docs) guide for details.

@@ -1,0 +1,107 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Interceptors/Console" />
+
+# Console Interceptor
+
+The console interceptor captures all `console.log`, `info`, `warn`, `error`, `debug`, and `trace` calls, including argument serialization and stack traces.
+
+## How It Works
+
+`patchConsole()` uses `Object.defineProperty` with getter/setter pairs on each console method. This approach (vs simple assignment) allows the interceptor to survive re-assignment by external code.
+
+```
+Application: console.log('hello', { user: 'alice' })
+    │
+    ▼
+Patched console.log
+    │
+    ├── Serialize arguments → ['hello', { user: 'alice' }]
+    ├── Parse stack trace → { first: '...', lines: [...] }
+    ├── Clean & truncate payload
+    ├── Dispatch ConsoleLogEvent
+    │
+    └── Call original console.log('hello', { user: 'alice' })
+```
+
+## Re-entrancy Guard
+
+A critical design feature is the `_insideWrapper` flag that prevents infinite recursion:
+
+```
+console.log('x')
+  → patched wrapper (sets _insideWrapper = true)
+    → dispatch event (which might internally console.log)
+      → patched wrapper sees _insideWrapper = true → calls original directly
+    → call original console.log('x')
+  → (sets _insideWrapper = false)
+```
+
+Without this guard, the logger's own internal console calls would trigger the interceptor in an infinite loop.
+
+## Repeat Tracking
+
+When the same console method is called rapidly with no arguments (e.g., repeated `console.log()` calls), the interceptor batches them:
+
+- First call dispatches immediately
+- Subsequent identical calls within 100ms increment a `repeatCount`
+- After the debounce window, a single event with the accumulated `repeatCount` is dispatched
+
+This prevents flooding the event pipeline with redundant entries.
+
+## Argument Serialization
+
+Arguments are serialized using `serializeValue()`:
+
+| Type                 | Serialization                                |
+| -------------------- | -------------------------------------------- |
+| Primitives           | Passed through as-is                         |
+| Functions            | `"function functionName() { ... }"`          |
+| HTMLElements         | CSS selector path via `buildSelector()`      |
+| Errors               | `{ message, stack, name }`                   |
+| Objects/Arrays       | Deep clone with circular reference detection |
+| `null` / `undefined` | `'null'` / `'undefined'` strings             |
+
+### CSS Selector Builder
+
+For HTML elements, `buildSelector()` constructs a path like:
+
+```
+div#app > main.content > button.primary
+```
+
+It walks up to 6 ancestors and stops at the first element with an `id`.
+
+## Stack Trace Parsing
+
+`parseStack()` extracts structured data from `Error().stack`:
+
+- `first` — the first non-logger stack line (the actual call site)
+- `lines` — array of all stack frames
+
+Logger-internal frames are filtered out using `LOGGER_FILE_PATTERNS`.
+
+## Payload Processing
+
+Before dispatch, the event goes through:
+
+1. **`cleanPayload()`** — strips `null`, `undefined`, empty arrays, and empty objects
+2. **`truncatePayload()`** — if the event exceeds 30KB, progressively removes data:
+   - Pop trace lines
+   - Collapse args to summary
+   - Clear trace entirely
+   - Drop args
+
+## defineProperty Wrapping
+
+The use of `Object.defineProperty` with getter/setter pairs means:
+
+```javascript
+// External code tries to reassign:
+console.log = myCustomLogger;
+
+// The setter intercepts this and wraps myCustomLogger
+// so the interceptor chain is maintained
+```
+
+This makes the console interceptor resilient to third-party code that also patches console methods.

@@ -1,0 +1,129 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Getting Started/Quick Start" />
+
+# Quick Start
+
+Get up and running with `@userplane/logger` in minutes.
+
+## Installation
+
+```bash
+bun add @userplane/logger
+```
+
+## Basic Setup
+
+### 1. Create a LogProcessor
+
+The `LogProcessor` is the main orchestrator. It listens for intercepted events and processes them.
+
+```typescript
+import { LogProcessor } from '@userplane/logger';
+
+const processor = new LogProcessor();
+```
+
+### 2. Initialize with a Save Function
+
+Provide a tab ID and a callback that receives processed log entries:
+
+```typescript
+processor.initialize('tab-123', async (payload) => {
+  // Send to your backend, store locally, etc.
+  console.log('Log entry:', payload);
+});
+```
+
+### 3. Start Capturing
+
+```typescript
+processor.start();
+```
+
+This patches all browser APIs (console, fetch, XHR, clicks, navigation, etc.) and begins capturing events.
+
+### 4. Stop When Done
+
+```typescript
+processor.stop();
+// or for full cleanup:
+processor.destroy();
+```
+
+## Using LogStore for Persistence
+
+If you want client-side persistence in IndexedDB:
+
+```typescript
+import { LogStore } from '@userplane/logger';
+
+const store = new LogStore('session-abc', 'tab-123');
+await store.open();
+
+// Use as your save function
+processor.initialize('tab-123', async (payload) => {
+  await store.append('network', payload);
+});
+```
+
+## Choosing a Dispatch Strategy
+
+### Immediate Dispatch
+
+Sends each event as soon as it's captured:
+
+```typescript
+import { ImmediateDispatcher } from '@userplane/logger';
+
+const dispatcher = new ImmediateDispatcher({
+  tabId: 'tab-123',
+  serverNow: () => Date.now(),
+  saveFunction: async (payload) => {
+    /* send to backend */
+  },
+});
+```
+
+### Batched Dispatch
+
+Buffers events and flushes periodically or on page unload:
+
+```typescript
+import { BatchedDispatcher } from '@userplane/logger';
+
+const dispatcher = new BatchedDispatcher({
+  tabId: 'tab-123',
+  serverNow: () => Date.now(),
+  saveFunction: async (batch) => {
+    /* send batch to backend */
+  },
+});
+```
+
+## Selective Capture
+
+Toggle which categories of events to capture:
+
+```typescript
+processor.setCaptureOptions({
+  console: true,
+  network: true,
+  action: false, // disable user action capture
+});
+```
+
+## What Gets Captured
+
+Once started, the logger automatically intercepts:
+
+| Category   | What's Captured                                          |
+| ---------- | -------------------------------------------------------- |
+| Console    | `log`, `info`, `warn`, `error`, `debug`, `trace` calls   |
+| Network    | `fetch` and `XMLHttpRequest` requests and responses      |
+| Navigation | `pushState`, `replaceState`, `popstate`, `hashchange`    |
+| Clicks     | Click and pointer events on page elements                |
+| Focus      | Tab activation/deactivation, visibility changes          |
+| Errors     | Unhandled exceptions, promise rejections, CSP violations |
+| Resources  | Resource load performance, load failures                 |
+| Lifecycle  | Page unload events                                       |
