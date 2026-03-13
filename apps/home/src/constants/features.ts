@@ -8,6 +8,7 @@ import type { HighlightConfig } from './types';
  */
 export interface Feature {
   image: string;
+  imageMobile: string;
   imageAlt: string;
   title: string;
   description: string;
@@ -39,6 +40,9 @@ export const FEATURES: Feature[] = [
     image: mediaClient.getFeatureMediaUrl('features/one-click-screen-recordings.webp', {
       transform: mergeTransformOptions('feature', { width: 1400 }),
     }),
+    imageMobile: mediaClient.getFeatureMediaUrl('features/one-click-screen-recordings.webp', {
+      transform: mergeTransformOptions('feature', { width: 700 }),
+    }),
     imageAlt: 'One click recordings',
     title: 'One click recordings',
     description:
@@ -47,6 +51,9 @@ export const FEATURES: Feature[] = [
   {
     image: mediaClient.getFeatureMediaUrl('features/complete-issue-context.webp', {
       transform: mergeTransformOptions('feature', { width: 1400 }),
+    }),
+    imageMobile: mediaClient.getFeatureMediaUrl('features/complete-issue-context.webp', {
+      transform: mergeTransformOptions('feature', { width: 700 }),
     }),
     imageAlt: 'Complete Issue Context',
     title: 'Complete Issue Context',
@@ -57,6 +64,9 @@ export const FEATURES: Feature[] = [
     image: mediaClient.getFeatureMediaUrl('features/native-integrations.webp', {
       transform: mergeTransformOptions('feature', { width: 1400 }),
     }),
+    imageMobile: mediaClient.getFeatureMediaUrl('features/native-integrations.webp', {
+      transform: mergeTransformOptions('feature', { width: 700 }),
+    }),
     imageAlt: 'Native Intercom integration',
     title: 'Native Intercom integration',
     description:
@@ -65,6 +75,9 @@ export const FEATURES: Feature[] = [
   {
     image: mediaClient.getFeatureMediaUrl('features/privacy-and-security.webp', {
       transform: mergeTransformOptions('feature', { width: 1400 }),
+    }),
+    imageMobile: mediaClient.getFeatureMediaUrl('features/privacy-and-security.webp', {
+      transform: mergeTransformOptions('feature', { width: 700 }),
     }),
     imageAlt: 'Privacy and security controls',
     title: 'Privacy and security built-in',

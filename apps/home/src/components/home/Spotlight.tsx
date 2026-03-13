@@ -7,6 +7,8 @@ export default function Spotlight() {
         <div className="relative w-full aspect-video rounded-xl overflow-hidden">
           <img
             src={SPOTLIGHT_IMAGE.src}
+            srcSet={SPOTLIGHT_IMAGE.srcSet}
+            sizes={SPOTLIGHT_IMAGE.sizes}
             alt={SPOTLIGHT_IMAGE.alt}
             className="w-full h-full object-cover"
             draggable={false}
