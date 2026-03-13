@@ -7,16 +7,19 @@ import {
 
 import Highlight from './Highlight';
 
-function FeatureCard({ image, imageAlt, title, description }: Feature) {
+function FeatureCard({ image, imageMobile, imageAlt, title, description }: Feature) {
   return (
     <div className="relative flex flex-col bg-white rounded-xl border border-zinc-200 shadow-sm">
       <div className="flex-none px-6 pt-6">
         <div className="relative aspect-video">
           <img
             src={image}
+            srcSet={`${imageMobile} 700w, ${image} 1400w`}
+            sizes="(max-width: 768px) 100vw, 50vw"
             alt={imageAlt}
             className="w-full h-full object-cover object-top-left"
             draggable={false}
+            loading="lazy"
           />
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-white via-white/90 to-transparent"></div>
         </div>
