@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
 
-import { LogStore } from '../src';
 import type { LogStoreType } from '../src';
-
+import { LogStore } from '../src';
 import { escapeHtml, formatTime } from './story-cleanup';
 
 const btnBase =

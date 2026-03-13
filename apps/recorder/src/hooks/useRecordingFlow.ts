@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { AggregatedLogs } from '@/bridge/types';
-import { RECORDING_LIMITS } from '@/constants';
+import { AUTO_STOP_BUFFER_MS, RECORDING_LIMITS } from '@/constants';
 import { createLogger } from '@/lib/logger';
 import { posthog } from '@/posthog/client';
 import { createClientError, createClientErrorWithMessage } from '@/posthog/client-errors';
@@ -211,11 +211,14 @@ export function useRecordingFlow(
       clearTimeout(autoStopTimerRef.current);
     }
 
-    autoStopTimerRef.current = setTimeout(() => {
-      if (stopRecordingRef.current) {
-        stopRecordingRef.current();
-      }
-    }, maxRecordingDurationMs);
+    autoStopTimerRef.current = setTimeout(
+      () => {
+        if (stopRecordingRef.current) {
+          stopRecordingRef.current();
+        }
+      },
+      Math.max(0, maxRecordingDurationMs - AUTO_STOP_BUFFER_MS)
+    );
 
     return () => {
       if (autoStopTimerRef.current) {
