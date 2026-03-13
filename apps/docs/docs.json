@@ -8,17 +8,11 @@
   "favicon": "/static/favicon.svg",
   "theme": "almond",
   "colors": {
-    "primary": "#6366F1",
-    "light": "#818CF8",
-    "dark": "#4F46E5"
+    "primary": "#000000",
+    "light": "#FAFAFA",
+    "dark": "#000000"
   },
   "navbar": {
-    "links": [
-      {
-        "label": "Talk to Us",
-        "href": "/support/contact"
-      }
-    ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
