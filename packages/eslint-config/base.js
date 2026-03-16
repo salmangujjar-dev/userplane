@@ -41,6 +41,7 @@ export const config = [
       '**/coverage/**',
       '**/.turbo/**',
       '**/storybook-static/**',
+      '**/stories/**',
     ],
   },
 ];

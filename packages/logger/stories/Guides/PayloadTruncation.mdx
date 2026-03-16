@@ -1,0 +1,98 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Guides/Payload Truncation" />
+
+# Payload Truncation
+
+The logger uses progressive truncation strategies to keep event payloads within size limits, ensuring reliable storage and transmission.
+
+## Size Limits
+
+| Limit                 | Value | Where                         |
+| --------------------- | ----- | ----------------------------- |
+| Console event payload | 30KB  | `truncatePayload()`           |
+| Network response body | 128KB | `patchFetch()` / `patchXHR()` |
+
+## Console Event Truncation
+
+`truncatePayload()` uses a **progressive strategy** — it tries the least destructive approach first and escalates only if the event is still too large:
+
+```
+Event exceeds 30KB
+    │
+    ├── Step 1: Pop trace lines (remove stack frames one at a time)
+    │   Still too large?
+    │
+    ├── Step 2: Collapse args to summary strings
+    │   Still too large?
+    │
+    ├── Step 3: Clear trace entirely
+    │   Still too large?
+    │
+    └── Step 4: Drop args completely
+```
+
+### Truncation Metadata
+
+When truncation occurs, the event's `meta.truncated` field tracks what was removed:
+
+```typescript
+{
+  args: ['Large object...'],
+  trace: { first: '...', lines: [] },
+  meta: {
+    truncated: {
+      trace: true,     // trace lines were removed
+      args: true,      // args were collapsed or dropped
+    }
+  }
+}
+```
+
+This metadata allows consumers to know that the event was modified and what data was lost.
+
+## Network Body Truncation
+
+Response bodies captured by `patchFetch()` and `patchXHR()` are capped at **128KB**:
+
+```typescript
+const body = await response.text();
+if (body.length > 128 * 1024) {
+  // Body is truncated with a message indicating truncation
+}
+```
+
+This prevents large API responses (e.g., data exports, file downloads) from bloating the log store.
+
+## Payload Cleaning
+
+Before truncation, `cleanPayload()` strips unnecessary data:
+
+- `null` values
+- `undefined` values
+- Empty arrays `[]`
+- Empty objects `{}`
+
+This reduces payload size without losing meaningful data and often prevents truncation from being needed at all.
+
+## Best Practices
+
+### Structured Logging
+
+Prefer structured logging over large string dumps:
+
+```typescript
+// Good: structured, compact
+console.log('User action', { userId: 123, action: 'click', target: 'submit' });
+
+// Avoid: large serialized objects
+console.log('User action', JSON.stringify(entireAppState));
+```
+
+### Response Body Size
+
+If your API returns large payloads, be aware that only the first 128KB of response bodies are captured. For debugging purposes, this is usually sufficient — the headers, status code, and timing data are always captured in full.
+
+### Monitoring Truncation
+
+Check for `meta.truncated` in your log processing pipeline to identify events where data was lost. Frequent truncation may indicate overly verbose logging that could be optimized.

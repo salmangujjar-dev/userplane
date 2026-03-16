@@ -1,0 +1,173 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Interceptors/Errors" />
+
+# Error Interceptors
+
+Error interceptors capture unhandled exceptions, promise rejections, CSP violations, and resource load failures.
+
+## Global Errors
+
+`patchGlobalErrors()` listens for the `error` event on `window` in the **capture phase**:
+
+```typescript
+window.addEventListener('error', handler, true);
+```
+
+### Filtering
+
+- Skips errors originating from logger code (checks `LOGGER_FILE_PATTERNS` against the error filename)
+- Skips resource load errors (handled separately by `patchResourceErrors`)
+
+### Captured Data
+
+Dispatched as a `ConsoleLogEvent` with level `error`:
+
+```typescript
+{
+  type: 'console',
+  level: 'error',
+  args: ['Uncaught TypeError: Cannot read property "x" of undefined'],
+  trace: {
+    first: 'at handleClick (app.js:42:15)',
+    lines: ['at handleClick (app.js:42:15)', 'at HTMLButtonElement.onclick (index.html:10:1)'],
+  },
+}
+```
+
+## Unhandled Promise Rejections
+
+`patchUnhandledRejection()` listens for `unhandledrejection`:
+
+```typescript
+window.addEventListener('unhandledrejection', handler);
+```
+
+### Filtering
+
+- Skips rejections where the reason includes logger file patterns in the stack trace
+
+### Captured Data
+
+```typescript
+{
+  type: 'console',
+  level: 'error',
+  args: ['Unhandled promise rejection:', 'Network request failed'],
+  trace: { ... },
+}
+```
+
+The rejection reason is extracted from `event.reason` — if it's an Error, the message and stack are used; otherwise, the value is serialized.
+
+## CSP Violations
+
+`patchCSP()` listens for `securitypolicyviolation` events:
+
+```typescript
+document.addEventListener('securitypolicyviolation', handler);
+```
+
+### Captured Data
+
+Dispatched as a `ConsoleLogEvent` with additional CSP-specific fields:
+
+```typescript
+{
+  type: 'console',
+  level: 'error',
+  subtype: 'securitypolicyviolation',
+  args: ['Content Security Policy violation: blocked-uri ...'],
+  violatedDirective: 'script-src',
+  blockedURI: 'https://evil.com/script.js',
+  effectiveDirective: 'script-src',
+  disposition: 'enforce',
+}
+```
+
+## Resource Load Errors
+
+`patchResourceErrors()` listens for `error` events on specific element types in the capture phase:
+
+### Monitored Elements
+
+- `<script>`
+- `<img>`
+- `<link>` (stylesheets)
+- `<iframe>`
+- `<video>`
+- `<audio>`
+- `<source>`
+
+### How It Works
+
+```
+<img src="/broken-image.png"> fails to load
+    │
+    ▼
+error event fires on <img> element (capture phase)
+    │
+    ├── Check: is target one of the monitored element types?
+    ├── Extract src/href URL from the element
+    ├── Look up PerformanceResourceTiming entry for timing data
+    ├── Infer content type from URL or element type
+    │
+    └── Dispatch ResourceErrorLogEvent
+```
+
+### Captured Data
+
+```typescript
+{
+  type: 'resource-error',
+  url: '/broken-image.png',
+  tagName: 'IMG',
+  contentType: 'image/png',
+  performanceData: {
+    duration: 50,
+    startTime: 1234567890,
+    // ...timing breakdown
+  },
+}
+```
+
+## Resource Performance
+
+`observeResources()` uses a `PerformanceObserver` to monitor resource loading:
+
+```typescript
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    // Process resource timing entry
+  }
+});
+observer.observe({ type: 'resource', buffered: true });
+```
+
+### Filtering
+
+- Skips `fetch` and `xmlhttprequest` initiator types (handled by network interceptors)
+- Only captures CSS, images, fonts, and other static resources
+
+### Captured Data
+
+```typescript
+{
+  type: 'resource',
+  url: '/styles/main.css',
+  initiatorType: 'link',
+  contentType: 'text/css',
+  performanceData: {
+    nextHopProtocol: 'h2',
+    encodedBodySize: 45000,
+    decodedBodySize: 45000,
+    transferSize: 15000,
+    duration: 120,
+    // ...full timing breakdown
+  },
+}
+```
+
+## Error vs Logger Distinction
+
+All error interceptors check whether the error originates from the logger itself using `LOGGER_FILE_PATTERNS` (`['userplane_logger', 'userplane-logger']`). If the error's filename or stack trace matches these patterns, it's silently ignored to prevent the logger from logging its own errors in an infinite loop.

@@ -22,6 +22,9 @@ export default defineConfig({
   prefetch: {
     defaultStrategy: 'hover',
   },
+  build: {
+    inlineStylesheets: 'auto',
+  },
   integrations: [react()],
   image: {
     // Use custom Cloudflare image service for on-the-fly transforms

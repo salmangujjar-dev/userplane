@@ -1,0 +1,141 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Architecture/Lifecycle" />
+
+# Lifecycle Management
+
+The LogProcessor manages a full lifecycle: initialization, start, pause, resume, stop, and destroy.
+
+## State Transitions
+
+```
+              initialize()
+                  │
+                  ▼
+    ┌─────────────────────────┐
+    │       INITIALIZED       │
+    │  (tabId + save function │
+    │   configured)           │
+    └────────────┬────────────┘
+                 │ start()
+                 ▼
+    ┌─────────────────────────┐
+    │        RUNNING          │◄──────────────┐
+    │  (patches active,       │               │
+    │   dispatch enabled)     │    resume()   │
+    └────┬───────────┬────────┘               │
+         │           │                        │
+  stop() │           │ pause()                │
+         │           ▼                        │
+         │  ┌─────────────────────────┐       │
+         │  │        PAUSED           │───────┘
+         │  │  (patches active,       │
+         │  │   dispatch disabled)    │
+         │  └─────────────────────────┘
+         ▼
+    ┌─────────────────────────┐
+    │        STOPPED          │
+    │  (patches removed,      │
+    │   dispatch disabled)    │
+    └────────────┬────────────┘
+                 │ destroy()
+                 ▼
+    ┌─────────────────────────┐
+    │       DESTROYED         │
+    │  (all references        │
+    │   cleaned up)           │
+    └─────────────────────────┘
+```
+
+## Lifecycle Methods
+
+### `initialize(tabId, saveFunction)`
+
+Configures the processor with:
+
+- A `tabId` identifying the current tab
+- A `saveFunction` callback that receives processed log entries
+
+Must be called before `start()`.
+
+### `start(isResume?, pausedFor?)`
+
+Begins event capture:
+
+- Calls `initPatches()` to patch all browser APIs (unless resuming)
+- Enables dispatch via EventBridge
+- Starts the configured dispatcher
+- Emits an initial focus state event
+
+When `isResume` is true, patches are not re-applied (they're still active from before the pause).
+
+### `pause()`
+
+Temporarily stops event delivery without removing patches:
+
+- Disables dispatch (events are silently dropped)
+- Pauses the dispatcher (stops flush intervals for batched mode)
+- Browser APIs remain patched — interception continues but events are discarded
+
+Useful when you want to temporarily suppress logging without the cost of unpatching and re-patching all APIs.
+
+### `resume(pausedFor?)`
+
+Resumes from a paused state:
+
+- Re-enables dispatch
+- Resumes the dispatcher
+- Calls `start(true, pausedFor)` internally
+
+### `stop(isPause?)`
+
+Stops event capture:
+
+- Disables dispatch
+- Requests teardown via EventBridge (triggers `unpatch()`)
+- All original browser APIs are restored
+- Stops the dispatcher
+
+When `isPause` is true, performs a lighter teardown suitable for pausing.
+
+### `destroy()`
+
+Full cleanup:
+
+- Calls `stop()` if still running
+- Destroys the dispatcher
+- Removes all event listeners
+- Clears internal references
+
+## Teardown Process
+
+When `stop()` is called, the teardown follows this sequence:
+
+```
+stop()
+  → disableDispatch()
+  → requestTeardown()
+    → calls registered onTeardown callbacks
+    → unpatch() runs:
+      → restores console methods from pristine natives
+      → restores window.fetch
+      → restores XMLHttpRequest.prototype methods
+      → restores history.pushState / replaceState
+      → removes all event listeners (click, focus, error, etc.)
+      → disconnects PerformanceObserver
+      → sets window.__userplane_logger_loaded = false
+  → dispatcher.stop()
+```
+
+## Guard Against Double-Init
+
+The patcher checks `window.__userplane_logger_loaded` before applying patches. If it's already `true`, `initPatches()` returns early without re-patching. This prevents issues when the logger script is accidentally loaded twice.
+
+## Dispatcher Lifecycle
+
+Dispatchers also follow a lifecycle that mirrors the processor:
+
+- `start()` — begin accepting entries (BatchedDispatcher starts its flush interval)
+- `pause()` — stop flushing but keep the buffer (BatchedDispatcher clears its interval)
+- `stop()` — flush remaining entries and stop
+- `destroy()` — clean up all references and listeners

@@ -1,0 +1,115 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/LogStore" />
+
+# LogStore API
+
+The `LogStore` class provides an IndexedDB wrapper for persisting log entries on the client.
+
+## Constructor
+
+```typescript
+const store = new LogStore(sessionId: string, tabId: string);
+```
+
+Creates a new LogStore instance. The database name is `userplane_logs_{sessionId}_{tabId}`.
+
+**Parameters:**
+
+- `sessionId` — session identifier
+- `tabId` — tab identifier
+
+## Instance Methods
+
+### open()
+
+```typescript
+await store.open(): Promise<void>
+```
+
+Opens (or creates) the IndexedDB database with three object stores: `network`, `console`, `action`.
+
+### append(type, entry)
+
+```typescript
+await store.append(type: LogStoreType, entry: any): Promise<void>
+```
+
+Adds a single log entry to the specified object store.
+
+**Parameters:**
+
+- `type` — `'network'`, `'console'`, or `'action'`
+- `entry` — the processed log entry to store
+
+### getAll(type)
+
+```typescript
+const entries = await store.getAll(type: LogStoreType): Promise<any[]>
+```
+
+Returns all entries from the specified object store.
+
+### getAllLogs()
+
+```typescript
+const logs = await store.getAllLogs(): Promise<{
+  network: any[];
+  console: any[];
+  action: any[];
+}>
+```
+
+Fetches all entries from all three stores in parallel.
+
+### clear()
+
+```typescript
+await store.clear(): Promise<void>
+```
+
+Removes all entries from all object stores but keeps the database.
+
+### close()
+
+```typescript
+store.close(): void
+```
+
+Closes the IndexedDB connection.
+
+### deleteDatabase()
+
+```typescript
+await store.deleteDatabase(): Promise<void>
+```
+
+Completely deletes the database.
+
+## Static Methods
+
+### cleanupOrphanedDatabases()
+
+```typescript
+await LogStore.cleanupOrphanedDatabases(): Promise<void>
+```
+
+Identifies and removes databases from old sessions that are no longer active.
+
+## Constants
+
+### LOG_DB_PREFIX
+
+```typescript
+const LOG_DB_PREFIX = 'userplane_logs_';
+```
+
+The prefix used for all logger database names.
+
+### LogStoreType
+
+```typescript
+type LogStoreType = 'network' | 'console' | 'action';
+```
+
+The three object store types supported by LogStore.

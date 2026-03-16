@@ -1,0 +1,130 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Interceptors/User Actions" />
+
+# User Action Interceptors
+
+User action interceptors capture clicks, navigation events, focus changes, and page lifecycle events.
+
+## Click Tracking
+
+`patchClicks()` listens for `click` and `pointerdown` events in the **capture phase** (to catch events before they're stopped by application code).
+
+### Filtering Rules
+
+- **Trusted events only** — `event.isTrusted` must be true
+- **Real clicks only** — `event.detail !== 0` (filters out synthetic click events)
+- **No extension elements** — skips elements with `USERPLANE-EXTENSION` tag
+- **Debounced** — duplicate clicks on the same element within 120ms are dropped
+
+### Captured Data
+
+```typescript
+{
+  type: 'user-action',
+  data: {
+    action: 'click',
+    element: {
+      tagName: 'BUTTON',
+      id: 'submit-btn',
+      classList: ['primary', 'large'],
+    },
+    x: 450,
+    y: 320,
+    timestamp: 1234567890,
+  }
+}
+```
+
+## Navigation Tracking
+
+`patchNavigation()` captures SPA route changes from multiple sources:
+
+### Patched APIs
+
+- `history.pushState()` — wraps to detect programmatic navigation
+- `history.replaceState()` — wraps with deduplication (replaceState is called frequently)
+
+### Event Listeners
+
+- `popstate` — browser back/forward navigation
+- `hashchange` — hash-based routing
+- Navigation API `currententrychange` — modern browsers with Navigation API support
+
+### Throttling
+
+Navigation events are throttled to one per 200ms using `shouldLogNavigation()`. This prevents flooding from frameworks that call `replaceState` rapidly (e.g., for scroll position tracking).
+
+### Deduplication
+
+`replaceState` calls are deduplicated — if the URL hasn't changed, the event is dropped. The interceptor tracks `lastHref` to compare.
+
+### Event Data
+
+```typescript
+{
+  type: 'user-action',
+  data: {
+    action: 'spa_route',
+    from: 'https://app.example.com/dashboard',
+    to: 'https://app.example.com/settings',
+    method: 'pushState',
+  }
+}
+```
+
+## Focus Tracking
+
+`patchFocus()` tracks tab visibility and focus state:
+
+### Event Listeners
+
+- `focus` — window receives focus
+- `blur` — window loses focus
+- `visibilitychange` — tab becomes visible/hidden
+
+### State Management
+
+The global `window.__userplane_has_focus` tracks the current focus state. Events are only dispatched when the state actually changes (prevents duplicate events from redundant focus/visibility notifications).
+
+### Event Data
+
+```typescript
+// Tab becomes active
+{
+  type: 'user-action',
+  data: {
+    action: 'tab_activated',
+    timestamp: 1234567890,
+  }
+}
+
+// Tab becomes inactive
+{
+  type: 'user-action',
+  data: {
+    action: 'tab_deactivated',
+    timestamp: 1234567890,
+  }
+}
+```
+
+### Initial Focus State
+
+`initFocusState()` emits an `init_page` action if the document is visible when the logger starts, establishing the initial tab state.
+
+## Page Unload
+
+`patchUnload()` listens for `beforeunload` and dispatches a `page_unload` action. This is the last event captured before the page navigates away.
+
+```typescript
+{
+  type: 'user-action',
+  data: {
+    action: 'page_unload',
+    timestamp: 1234567890,
+  }
+}
+```
+
+The BatchedDispatcher also listens for `beforeunload` to flush any buffered entries before the page unloads.

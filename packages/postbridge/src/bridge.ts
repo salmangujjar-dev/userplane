@@ -121,12 +121,13 @@ function createSharedWorker(workerURL?: string): SharedWorker {
     return new SharedWorker(workerURL, { type: 'module' });
   }
 
-  // Fallback: construct URL at runtime. The indirection through a variable
-  // prevents bundlers (webpack/turbopack) from statically analyzing this as
-  // a worker asset import, which would fail when bridge-worker.js isn't
-  // available relative to this source file during the build.
-  const workerFile = 'bridge-worker.js';
-  return new SharedWorker(new URL(`./${workerFile}`, import.meta.url), {
+  // Fallback: construct URL at runtime. Assigning import.meta.url to a
+  // variable prevents both Vite's worker-import-meta-url plugin and
+  // webpack/turbopack from statically analyzing this as a worker asset
+  // import, which would fail when bridge-worker.js isn't available
+  // relative to this source file during the build.
+  const base = import.meta.url;
+  return new SharedWorker(new URL('./bridge-worker.js', base), {
     type: 'module',
     name: 'bridge-worker',
   });
