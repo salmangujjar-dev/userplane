@@ -1,0 +1,124 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Storage/LogStore" />
+
+# LogStore
+
+`LogStore` is an IndexedDB wrapper that provides persistent client-side storage for log entries.
+
+## Database Schema
+
+Each `LogStore` instance creates a database named `userplane_logs_{sessionId}_{tabId}` with three object stores:
+
+```
+Database: userplane_logs_session123_tab456
+    │
+    ├── Object Store: 'network'    (auto-increment key)
+    ├── Object Store: 'console'    (auto-increment key)
+    └── Object Store: 'action'     (auto-increment key)
+```
+
+The three stores correspond to the `LogStoreType` union:
+
+```typescript
+type LogStoreType = 'network' | 'console' | 'action';
+```
+
+## Usage
+
+### Creating and Opening
+
+```typescript
+import { LogStore } from '@userplane/logger';
+
+const store = new LogStore('session-abc', 'tab-123');
+await store.open();
+```
+
+`open()` creates the database and object stores if they don't exist, or opens the existing database.
+
+### Appending Entries
+
+```typescript
+await store.append('network', {
+  url: '/api/data',
+  method: 'GET',
+  status: 200,
+  // ... processed network entry
+});
+
+await store.append('console', {
+  level: 'error',
+  args: ['Something went wrong'],
+  // ... processed console entry
+});
+
+await store.append('action', {
+  action: 'click',
+  element: { tagName: 'BUTTON', id: 'submit' },
+  // ... processed action entry
+});
+```
+
+### Reading Entries
+
+```typescript
+// Get all entries from one store
+const networkLogs = await store.getAll('network');
+const consoleLogs = await store.getAll('console');
+
+// Get all entries from all stores at once
+const allLogs = await store.getAllLogs();
+// Returns: { network: [...], console: [...], action: [...] }
+```
+
+### Cleanup
+
+```typescript
+// Clear all entries but keep the database
+await store.clear();
+
+// Close the connection
+store.close();
+
+// Completely delete the database
+await store.deleteDatabase();
+```
+
+## Database Naming
+
+The database name follows the pattern:
+
+```
+{LOG_DB_PREFIX}{sessionId}_{tabId}
+```
+
+Where `LOG_DB_PREFIX` is `'userplane_logs_'`.
+
+This naming scheme ensures:
+
+- Each session gets its own database (no cross-session pollution)
+- Each tab within a session has isolated storage
+- Databases can be identified and cleaned up by prefix
+
+## Orphaned Database Cleanup
+
+Over time, databases from old sessions accumulate. `LogStore.cleanupOrphanedDatabases()` removes them:
+
+```typescript
+await LogStore.cleanupOrphanedDatabases();
+```
+
+This static method:
+
+1. Lists all IndexedDB databases with the `userplane_logs_` prefix
+2. Identifies databases that don't belong to active sessions
+3. Deletes orphaned databases
+
+## Auto-Increment Keys
+
+All object stores use auto-incrementing primary keys (`autoIncrement: true`). Entries are stored in insertion order, which naturally corresponds to chronological order.
+
+## Error Handling
+
+All IndexedDB operations are wrapped in try/catch. If IndexedDB is unavailable (private browsing in some browsers, storage quota exceeded, etc.), operations fail silently rather than breaking the application.

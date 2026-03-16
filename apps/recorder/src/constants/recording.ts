@@ -19,6 +19,9 @@ export const RECORDING_LIMITS = RECORDING_DURATION_LIMITS;
 /** Default max recording duration in milliseconds (3 minutes) */
 export const DEFAULT_MAX_RECORDING_DURATION_MS = RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS;
 
+/** Stop recording this many ms before the limit to avoid exceeding it */
+export const AUTO_STOP_BUFFER_MS = 3000;
+
 /** Minimum recording duration in milliseconds (1 second) */
 export const MIN_RECORDING_DURATION_MS = RECORDING_DURATION_LIMITS.MIN_DURATION_MS;
 

@@ -1,0 +1,87 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Guides/Internal Endpoint Filtering" />
+
+# Internal Endpoint Filtering
+
+The logger automatically filters out HTTP requests to userplane's own API endpoints, preventing the logging system from logging its own traffic.
+
+## How It Works
+
+When the LogProcessor receives a network event, it checks the request URL against a list of internal endpoint patterns. If the URL matches, the event is silently dropped.
+
+```
+fetch('https://api.userplane.io/v1/logs')
+    │
+    ▼
+Network interceptor captures request
+    │
+    ▼
+LogProcessor._handleNetworkEvent()
+    │
+    ├── isInternalRequest(url) → true
+    │
+    └── Event dropped (not dispatched to save function)
+```
+
+## Default Internal Endpoints
+
+The following base URLs are filtered by default:
+
+| Endpoint                    | Purpose               |
+| --------------------------- | --------------------- |
+| `api.userplane.io`          | Production API        |
+| `api-dev.userplane.io`      | Development API       |
+| `app.userplane.io`          | Production app        |
+| `app-dev.userplane.io`      | Development app       |
+| `recorder.userplane.io`     | Production recorder   |
+| `recorder-dev.userplane.io` | Development recorder  |
+| `dash.userplane.io`         | Production dashboard  |
+| `dash-dev.userplane.io`     | Development dashboard |
+
+## buildEndpointMatchers
+
+The `buildEndpointMatchers()` utility converts base URLs into RegExp patterns:
+
+```typescript
+import { buildEndpointMatchers } from '@userplane/logger';
+
+const matchers = buildEndpointMatchers([
+  'https://api.example.com',
+  'https://analytics.example.com',
+]);
+// Returns: RegExp[] that match any URL starting with these base URLs
+```
+
+Each URL is escaped for use in a regular expression and anchored with `^` to match only the beginning of URLs. This ensures that `api.userplane.io` matches `api.userplane.io/v1/logs` but not `fake-api.userplane.io`.
+
+## Custom Filtering
+
+You can check whether a URL would be filtered using the LogProcessor's `isInternalRequest()` method:
+
+```typescript
+processor.isInternalRequest('https://api.userplane.io/v1/logs');
+// → true
+
+processor.isInternalRequest('https://api.example.com/data');
+// → false
+```
+
+## Why This Matters
+
+Without endpoint filtering, the logger would create an infinite feedback loop:
+
+```
+1. Application makes a fetch request
+2. Logger captures it and sends to api.userplane.io
+3. Logger captures the request to api.userplane.io
+4. Logger sends that capture to api.userplane.io
+5. Logger captures that request...
+   → infinite loop
+```
+
+By filtering internal endpoints at the LogProcessor level (not the interceptor level), the system:
+
+- Keeps interceptors simple and decoupled
+- Centralizes the filtering logic
+- Still captures the raw event (it's just not forwarded to the dispatcher)

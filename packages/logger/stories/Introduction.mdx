@@ -1,0 +1,90 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# Logger Documentation
+
+Welcome to **@userplane/logger** — a browser-side event capture and logging library that intercepts console output, network requests, user actions, and errors for session replay and debugging.
+
+## What is Logger?
+
+Logger transparently patches browser APIs to capture a comprehensive record of what happens in a web application. It intercepts and normalizes events from multiple sources, stores them in IndexedDB, and dispatches them for upstream processing.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                      @userplane/logger                           │
+│                                                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │   Console    │  │   Network   │  │ User Actions │              │
+│  │ Interceptor  │  │ Interceptor │  │ Interceptor  │              │
+│  └──────┬───────┘  └──────┬──────┘  └──────┬───────┘              │
+│         │                 │                │                      │
+│         └────────┬────────┴────────┬───────┘                      │
+│                  ▼                 ▼                               │
+│          ┌──────────────┐  ┌──────────────┐                       │
+│          │ LogProcessor │  │   LogStore   │                       │
+│          │  (normalize) │  │  (IndexedDB) │                       │
+│          └──────┬───────┘  └──────────────┘                       │
+│                 │                                                 │
+│          ┌──────▼───────┐                                         │
+│          │  Dispatcher  │                                         │
+│          │ (immediate/  │                                         │
+│          │   batched)   │                                         │
+│          └──────────────┘                                         │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Key Features
+
+- **Console Capture** — Intercepts `console.log`, `warn`, `error`, etc. with repeat batching
+- **Network Capture** — Patches `fetch` and `XMLHttpRequest` with full request/response data
+- **User Actions** — Tracks clicks, navigation (SPA routes), focus/blur, and page lifecycle
+- **Error Capture** — Global errors, unhandled rejections, CSP violations, resource load failures
+- **IndexedDB Storage** — Persistent client-side storage with per-session databases
+- **Flexible Dispatch** — Immediate or batched dispatch strategies with flush-on-unload
+- **Internal Filtering** — Automatically filters out userplane's own API traffic
+- **Payload Truncation** — Progressive truncation to keep events within size limits
+- **Tab State Tracking** — Tracks active/background tab state across focus changes
+
+## Architecture at a Glance
+
+The system follows a pipeline architecture:
+
+1. **Interceptors** patch browser APIs and emit `CustomEvent`s
+2. **LogProcessor** listens for events, normalizes them into structured entries
+3. **Dispatchers** route entries to a save function (immediate or batched)
+4. **LogStore** provides IndexedDB persistence when needed
+
+## Documentation Structure
+
+### Getting Started
+
+Quick start guide to integrate the logger into your application.
+
+### Architecture
+
+Deep dive into the event pipeline, data flow, and lifecycle management.
+
+### Interceptors
+
+Detailed documentation for each interceptor: console, network, user actions, and errors.
+
+### Storage
+
+IndexedDB wrapper and object store schema.
+
+### Dispatch
+
+Immediate vs batched dispatch strategies and the EventBridge system.
+
+### Guides
+
+Practical guides for endpoint filtering, payload truncation, and tab state management.
+
+### API Reference
+
+Complete API documentation for all exported classes, functions, and types.
+
+### Examples
+
+End-to-end usage examples.

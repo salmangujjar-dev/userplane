@@ -2,7 +2,16 @@ import '../src/styles/global.css';
 
 import type { Preview } from '@storybook/react-vite';
 
+import { AppModeProvider } from '@/contexts/AppModeContext';
+
 const preview: Preview = {
+  decorators: [
+    (Story) => (
+      <AppModeProvider actionType="recording">
+        <Story />
+      </AppModeProvider>
+    ),
+  ],
   parameters: {
     controls: {
       expanded: true,

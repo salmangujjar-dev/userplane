@@ -35,7 +35,14 @@ const spotlightSrc = SPOTLIGHT_IMAGE.src;
     </style>
 
     <!-- Preload LCP image -->
-    <link rel="preload" as="image" href={spotlightSrc} fetchpriority="high" />
+    <link
+      rel="preload"
+      as="image"
+      href={spotlightSrc}
+      imagesrcset={SPOTLIGHT_IMAGE.srcSet}
+      imagesizes={SPOTLIGHT_IMAGE.sizes}
+      fetchpriority="high"
+    />
 
     <!-- Primary Meta Tags -->
     <title>{title}</title>

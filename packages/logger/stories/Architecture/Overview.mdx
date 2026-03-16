@@ -1,0 +1,124 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Architecture/Overview" />
+
+# Architecture Overview
+
+The logger is built as a pipeline with four main layers: **Interceptors**, **EventBridge**, **LogProcessor**, and **Dispatchers**.
+
+## System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Browser APIs                             │
+│  console.log  fetch  XHR  history  click  focus  error      │
+└──────┬────────┬──────┬─────┬────────┬───────┬───────┬───────┘
+       │        │      │     │        │       │       │
+       ▼        ▼      ▼     ▼        ▼       ▼       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Interceptors (Patchers)                    │
+│  patchConsole  patchFetch  patchXHR  patchClicks  ...       │
+│                                                              │
+│  Each patches a browser API and emits a CustomEvent          │
+└──────────────────────────┬──────────────────────────────────┘
+                           │  CustomEvent: '__userplane_logger'
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      EventBridge                             │
+│  dispatch()  enableDispatch()  disableDispatch()            │
+│  onTeardown()  requestTeardown()                            │
+│                                                              │
+│  Controls whether events flow from patchers to processor     │
+└──────────────────────────┬──────────────────────────────────┘
+                           │  document.addEventListener
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     LogProcessor                             │
+│  processLogEvent() → _handleNetworkEvent()                  │
+│                    → _handleConsoleEvent()                   │
+│                    → _handleUserActionEvent()                │
+│                    → _handleResourceEvent()                  │
+│                                                              │
+│  Normalizes raw events into ProcessedLogEntry objects         │
+│  Filters internal endpoints, manages tab state               │
+└──────────────────────────┬──────────────────────────────────┘
+                           │  emitEntry()
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Dispatcher                               │
+│  ┌──────────────────┐  ┌─────────────────────┐              │
+│  │ ImmediateDispatcher│ │ BatchedDispatcher   │              │
+│  │ (send right away) │  │ (buffer + flush)    │              │
+│  └──────────────────┘  └─────────────────────┘              │
+└──────────────────────────┬──────────────────────────────────┘
+                           │  saveFunction()
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Backend / LogStore                           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Core Components
+
+### LogProcessor
+
+The central coordinator. It:
+
+- Registers a `CustomEvent` listener on `document` for `__userplane_logger` events
+- Routes events to type-specific handlers (`_handleNetworkEvent`, `_handleConsoleEvent`, etc.)
+- Normalizes raw interceptor data into structured `ProcessedLogEntry` objects
+- Manages tab state (active, background, unknown)
+- Filters out internal userplane API traffic
+- Delegates processed entries to the configured dispatch strategy
+
+### LogStore
+
+An IndexedDB wrapper that provides persistent client-side storage:
+
+- Creates one database per `sessionId_tabId` pair
+- Maintains three object stores: `network`, `console`, `action`
+- Provides `append()`, `getAll()`, `getAllLogs()`, `clear()` operations
+- Includes static `cleanupOrphanedDatabases()` for housekeeping
+
+### Patcher (initPatches)
+
+The entry point for all interceptors. Calling `initPatches()`:
+
+- Checks the `__userplane_logger_loaded` guard to prevent double-patching
+- Saves pristine references to original browser APIs
+- Calls each individual patch function (console, fetch, XHR, clicks, etc.)
+- Registers cleanup via `onTeardown()` for full API restoration
+
+### EventBridge
+
+A simple pub/sub coordinator between interceptors and the LogProcessor:
+
+- `dispatch(event)` — emits a `CustomEvent` on `document`
+- `enableDispatch()` / `disableDispatch()` — gate event flow
+- `onTeardown(fn)` — register cleanup callbacks
+- `requestTeardown()` — trigger full unpatch and restore original APIs
+
+### Dispatch Strategies
+
+Two strategies for delivering processed entries:
+
+- **ImmediateDispatcher** — calls `saveFunction` for each entry immediately
+- **BatchedDispatcher** — buffers entries and flushes on interval, buffer size limit, or page unload
+
+## Key Design Decisions
+
+### CustomEvent Decoupling
+
+Interceptors don't directly reference the LogProcessor. Instead, they dispatch `CustomEvent`s on `document`, and the LogProcessor listens for them. This allows interceptors to run independently — even as an injected script — with the processor in a separate context.
+
+### Pristine Natives
+
+Before patching, original browser API references are saved to `window.__userplane_pristine_natives`. This ensures the logger can always call the real `fetch`, `console.log`, etc. even if other libraries also monkey-patch these APIs.
+
+### defineProperty Wrapping
+
+Console methods are patched using `Object.defineProperty` with getter/setter pairs rather than simple assignment. This allows re-wrapping if external code reassigns `console.log = something`, maintaining the interception chain.
+
+### Best-Effort Error Handling
+
+All interceptor code is wrapped in try/catch blocks. The logger must never break the host application — if an interceptor fails, the original API call still succeeds.

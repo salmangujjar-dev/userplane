@@ -1,0 +1,161 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/LogProcessor" />
+
+# LogProcessor API
+
+The `LogProcessor` class is the main orchestrator of the logging system. It listens for intercepted events, processes them, and delegates to a dispatch strategy.
+
+## Constructor
+
+```typescript
+const processor = new LogProcessor();
+```
+
+Creates a new LogProcessor instance. No arguments required.
+
+## Methods
+
+### initialize(tabId, saveFunction)
+
+```typescript
+processor.initialize(
+  tabId: string,
+  saveFunction: (payload: SavePayload | BatchSavePayload) => Promise<void>
+): void
+```
+
+Configures the processor with a tab identifier and a callback that receives processed log entries.
+
+**Parameters:**
+
+- `tabId` — unique identifier for the current tab
+- `saveFunction` — async callback invoked by the dispatcher with processed entries
+
+### start(isResume?, pausedFor?)
+
+```typescript
+processor.start(isResume?: boolean, pausedFor?: number): void
+```
+
+Begins event capture. Calls `initPatches()` to patch browser APIs and enables dispatch.
+
+**Parameters:**
+
+- `isResume` — if `true`, skips re-patching (patches are already active from before pause)
+- `pausedFor` — duration in ms that the processor was paused (for analytics)
+
+### pause()
+
+```typescript
+processor.pause(): void
+```
+
+Temporarily stops event delivery without removing patches. Events are silently dropped during pause.
+
+### resume(pausedFor?)
+
+```typescript
+processor.resume(pausedFor?: number): void
+```
+
+Resumes from a paused state. Re-enables dispatch and restarts the dispatcher.
+
+**Parameters:**
+
+- `pausedFor` — duration in ms that the processor was paused
+
+### stop(isPause?)
+
+```typescript
+processor.stop(isPause?: boolean): void
+```
+
+Stops event capture. Removes all patches and restores original browser APIs.
+
+**Parameters:**
+
+- `isPause` — if `true`, performs a lighter teardown suitable for pausing
+
+### destroy()
+
+```typescript
+processor.destroy(): void
+```
+
+Full cleanup. Calls `stop()`, destroys the dispatcher, removes event listeners, and clears all internal references.
+
+### setCaptureOptions(options)
+
+```typescript
+processor.setCaptureOptions(options: {
+  console?: boolean;
+  network?: boolean;
+  action?: boolean;
+}): void
+```
+
+Toggles which categories of events are captured.
+
+### setMaskResponseBody(mask)
+
+```typescript
+processor.setMaskResponseBody(mask: boolean): void
+```
+
+Enables or disables response body masking. When enabled, response bodies are replaced with a placeholder for privacy.
+
+### setFocus(focused)
+
+```typescript
+processor.setFocus(focused: boolean): void
+```
+
+Manually sets the tab focus state. Typically called by the embedding application.
+
+### isInternalRequest(url)
+
+```typescript
+processor.isInternalRequest(url: string): boolean
+```
+
+Checks whether a URL matches an internal userplane endpoint.
+
+### processLogEvent(event)
+
+```typescript
+processor.processLogEvent(event: CustomEvent): void
+```
+
+Main event handler. Routes the event to the appropriate type-specific handler. Normally called automatically via the `CustomEvent` listener — not typically called directly.
+
+## Internal Event Handlers
+
+These are called by `processLogEvent()` based on the event type:
+
+| Handler                     | Event Type       | Produces                   |
+| --------------------------- | ---------------- | -------------------------- |
+| `_handleNetworkEvent`       | `network`        | `ProcessedNetworkEntry`    |
+| `_handleNetworkErrorEvent`  | `network-error`  | `ProcessedNetworkEntry`    |
+| `_handleResourceEvent`      | `resource`       | `ProcessedNetworkEntry`    |
+| `_handleResourceErrorEvent` | `resource-error` | `ProcessedNetworkEntry`    |
+| `_handleConsoleEvent`       | `console`        | `ProcessedConsoleEntry`    |
+| `_handleUserActionEvent`    | `user-action`    | `ProcessedUserActionEntry` |
+
+## Protocol Formatting
+
+Network events include protocol names that are normalized for display:
+
+| Raw Value  | Formatted  |
+| ---------- | ---------- |
+| `http/1.1` | `HTTP/1.1` |
+| `h2`       | `HTTP/2`   |
+| `h3`       | `HTTP/3`   |
+
+## Duration Computation
+
+`_computeDuration()` calculates request duration from multiple sources in priority order:
+
+1. Performance API `duration` field
+2. Performance API `responseEnd - requestStart`
+3. Interceptor-measured `startTime` to `endTime`

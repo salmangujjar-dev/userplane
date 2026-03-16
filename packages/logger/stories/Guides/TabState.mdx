@@ -1,0 +1,118 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Guides/Tab State" />
+
+# Tab State Management
+
+The logger tracks the lifecycle and focus state of browser tabs, enriching log entries with context about whether the user was actively viewing the page.
+
+## TabState Enum
+
+```typescript
+enum TabState {
+  UNKNOWN = 0,
+  BACKGROUND = 1,
+  ACTIVE = 2,
+}
+```
+
+| State        | Meaning                                        |
+| ------------ | ---------------------------------------------- |
+| `UNKNOWN`    | Initial state before focus events are received |
+| `BACKGROUND` | Tab is open but not focused/visible            |
+| `ACTIVE`     | Tab is focused and visible to the user         |
+
+## State Transitions
+
+```
+Page loads
+    │
+    ▼
+  UNKNOWN ──── initFocusState() ────→ ACTIVE (if document is visible)
+    │
+    │ (focus event)
+    ▼
+  ACTIVE ◄─────────────────────────── Tab receives focus
+    │
+    │ (blur / visibilitychange)
+    ▼
+  BACKGROUND ◄────────────────────── Tab loses focus or becomes hidden
+    │
+    │ (focus / visibilitychange)
+    ▼
+  ACTIVE ◄─────────────────────────── Tab regains focus
+```
+
+## Focus Tracking
+
+The `window.__userplane_has_focus` global tracks the current focus state. It's updated by the focus interceptor and read by dispatchers when constructing payloads.
+
+### Events That Update Focus
+
+| Browser Event                | Resulting Tab State |
+| ---------------------------- | ------------------- |
+| `focus`                      | ACTIVE              |
+| `blur`                       | BACKGROUND          |
+| `visibilitychange` (visible) | ACTIVE              |
+| `visibilitychange` (hidden)  | BACKGROUND          |
+
+### Deduplication
+
+The focus interceptor only dispatches events when the state actually changes. If the tab is already ACTIVE and receives another focus event, no event is dispatched. This prevents duplicate entries from browsers that fire both `focus` and `visibilitychange` simultaneously.
+
+## Tab Info
+
+The LogProcessor maintains a `Map<string, TabInfo>` for tracking tab metadata:
+
+```typescript
+interface TabInfo {
+  state: TabState;
+  url: string;
+  lastUnloadTs: number;
+}
+```
+
+- `state` — current tab state
+- `url` — last known URL for the tab
+- `lastUnloadTs` — timestamp of the last `page_unload` event (used for session continuity)
+
+## Tab ID
+
+Each tab is identified by a `tabId` passed to `LogProcessor.initialize()`. The tab ID is:
+
+- Stored in `window.name` with the prefix `userplane_tab_`
+- Persisted across page navigations within the same tab
+- Unique per tab (not per page load)
+
+This allows the logger to track a tab's lifecycle across SPA navigations and even full page reloads.
+
+## How Tab State Enriches Logs
+
+Every dispatched payload includes tab state metadata:
+
+```typescript
+// SavePayload includes:
+{
+  tabId: 'tab-123',
+  tabState: 'ACTIVE',   // or 'BACKGROUND' or 'UNKNOWN'
+  focused: true,         // boolean shorthand
+  timestamp: 1234567890,
+}
+```
+
+This context is valuable for understanding:
+
+- Whether errors occurred while the user was actively using the page
+- Whether network requests were triggered by background processes
+- User engagement patterns (time spent active vs background)
+
+## Lifecycle Events
+
+The focus interceptor emits specific user action events for tab lifecycle:
+
+| Event             | When                                  |
+| ----------------- | ------------------------------------- |
+| `init_page`       | Logger starts and document is visible |
+| `tab_activated`   | Tab gains focus                       |
+| `tab_deactivated` | Tab loses focus                       |
+| `page_unload`     | Page is about to unload               |

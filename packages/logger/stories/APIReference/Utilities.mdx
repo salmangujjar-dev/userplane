@@ -1,0 +1,223 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="API Reference/Utilities" />
+
+# Utilities API
+
+Utility functions exported by the logger package for advanced use cases.
+
+## Serialization
+
+### serializeValue(value)
+
+```typescript
+serializeValue(value: any): any
+```
+
+Safely converts any value for logging. Handles primitives, functions, HTMLElements, Errors, and objects with circular reference detection.
+
+### buildSelector(element)
+
+```typescript
+buildSelector(element: HTMLElement): string
+```
+
+Builds a CSS selector path for an element, walking up to 6 ancestors. Stops at the first element with an `id`.
+
+**Example:** `"div#app > main.content > button.primary"`
+
+### parseStack(stack)
+
+```typescript
+parseStack(stack: string): { first: string; lines: string[] }
+```
+
+Extracts structured data from an `Error().stack` string. Filters out logger-internal stack frames.
+
+## Body Parsing
+
+### parseFetchBody(body)
+
+```typescript
+parseFetchBody(body: BodyInit | null): ParsedBody
+```
+
+Parses a fetch request body. Handles strings (attempts JSON parse), FormData, URLSearchParams, and other body types.
+
+### parseXHRBody(body)
+
+```typescript
+parseXHRBody(body: Document | XMLHttpRequestBodyInit | null): ParsedBody
+```
+
+Parses an XHR request body with similar logic to `parseFetchBody`.
+
+## Content Type
+
+### inferContentType(url, initiatorType)
+
+```typescript
+inferContentType(url: string, initiatorType?: string): string | undefined
+```
+
+Infers MIME type from file extension or initiator type.
+
+**Extension mapping:** `.js` → `application/javascript`, `.png` → `image/png`, `.css` → `text/css`, etc.
+
+**Initiator mapping:** `fetch` → `application/json`, `script` → `application/javascript`, etc.
+
+### isTextContentType(contentType)
+
+```typescript
+isTextContentType(contentType: string): boolean
+```
+
+Checks whether a content type represents textual content that should be captured.
+
+**Text prefixes:** `text/*`, `application/json`, `application/xml`, `application/javascript`
+
+## Headers
+
+### parseResponseHeaders(raw)
+
+```typescript
+parseResponseHeaders(raw: string): Record<string, string>
+```
+
+Parses raw HTTP header strings (from XHR `getAllResponseHeaders()`) into key-value objects.
+
+## HTTP Status
+
+### HTTP_STATUS_TEXT
+
+```typescript
+const HTTP_STATUS_TEXT: Record<number, string>;
+```
+
+Mapping of HTTP status codes to their standard text descriptions.
+
+**Examples:** `200` → `'OK'`, `404` → `'Not Found'`, `500` → `'Internal Server Error'`
+
+## Performance
+
+### enrichWithPerformance(url, initiatorType, response)
+
+```typescript
+enrichWithPerformance(url: string, initiatorType: string, response: any): any
+```
+
+Looks up a `PerformanceResourceTiming` entry for the given URL and enriches the response object with timing data.
+
+### extractPerformanceData(entry)
+
+```typescript
+extractPerformanceData(entry: PerformanceResourceTiming): PerformanceData
+```
+
+Extracts structured timing data from a performance entry:
+
+```typescript
+{
+  nextHopProtocol: string;
+  encodedBodySize: number;
+  decodedBodySize: number;
+  transferSize: number;
+  domainLookupTime: number;
+  connectTime: number;
+  secureConnectionTime: number;
+  requestTime: number;
+  responseTime: number;
+  startTime: number;
+  duration: number;
+}
+```
+
+## URL Utilities
+
+### extractDomain(hostname)
+
+```typescript
+extractDomain(hostname: string): string
+```
+
+Extracts the registrable domain from a hostname. Handles compound TLDs like `.co.uk`.
+
+### isLocalhost(hostname)
+
+```typescript
+isLocalhost(hostname: string): boolean
+```
+
+Checks for `localhost`, `127.0.0.1`, or `::1`.
+
+### isSameSite(a, b)
+
+```typescript
+isSameSite(a: string, b: string): boolean
+```
+
+Checks if two URLs share the same protocol and registrable domain.
+
+### isCrossOrigin(url)
+
+```typescript
+isCrossOrigin(url: string): boolean
+```
+
+Checks if a URL is a different origin from the current page.
+
+## Throttling
+
+### shouldLogNetwork(key)
+
+```typescript
+shouldLogNetwork(key: string): boolean
+```
+
+Deduplicates rapid-fire identical network requests within a 200ms window. Key format: `"fetch|GET|/api/data|200"`. Prunes the map at 500 entries.
+
+### shouldLogNavigation(method, from, to)
+
+```typescript
+shouldLogNavigation(method: string, from: string, to: string): boolean
+```
+
+Deduplicates navigation events within a 200ms window.
+
+## Truncation
+
+### truncatePayload(event, maxBytes?)
+
+```typescript
+truncatePayload(event: ConsoleLogEvent, maxBytes?: number): ConsoleLogEvent
+```
+
+Progressively truncates oversized console events. Default limit: 30KB. Sets `meta.truncated` flags.
+
+### cleanPayload(event)
+
+```typescript
+cleanPayload(event: any): any
+```
+
+Removes `null`, `undefined`, empty arrays, and empty objects from event payloads.
+
+## Endpoint Filtering
+
+### buildEndpointMatchers(baseUrls)
+
+```typescript
+buildEndpointMatchers(baseUrls: string[]): RegExp[]
+```
+
+Converts base URLs into RegExp patterns for internal endpoint matching.
+
+## Time
+
+### now()
+
+```typescript
+now(): number
+```
+
+Returns `Date.now()`. Server time delta is applied at upload time, not here.

@@ -1,0 +1,166 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Examples/Basic Usage" />
+
+# Basic Usage Example
+
+An end-to-end example showing how to integrate `@userplane/logger` into a web application.
+
+## Complete Setup
+
+```typescript
+import { LogProcessor, LogStore, BatchedDispatcher } from '@userplane/logger';
+
+// 1. Generate or retrieve identifiers
+const sessionId = crypto.randomUUID();
+const tabId = crypto.randomUUID();
+
+// 2. Create a LogStore for client-side persistence
+const store = new LogStore(sessionId, tabId);
+await store.open();
+
+// 3. Define a save function
+async function saveToStore(payload) {
+  if ('entries' in payload) {
+    // Batched payload
+    for (const { type, entry } of payload.entries) {
+      await store.append(type, entry);
+    }
+  } else {
+    // Single payload
+    await store.append(payload.type, payload.entry);
+  }
+}
+
+// 4. Create and configure the LogProcessor
+const processor = new LogProcessor();
+processor.initialize(tabId, saveToStore);
+
+// 5. Start capturing
+processor.start();
+```
+
+## Sending Logs to a Backend
+
+```typescript
+async function sendToBackend(payload) {
+  await fetch('https://your-api.com/logs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+// Use with batched dispatch for efficiency
+const processor = new LogProcessor();
+processor.initialize(tabId, sendToBackend);
+processor.start();
+```
+
+## Selective Capture
+
+```typescript
+// Only capture network and console events
+processor.setCaptureOptions({
+  console: true,
+  network: true,
+  action: false,
+});
+
+// Enable response body masking for privacy
+processor.setMaskResponseBody(true);
+```
+
+## Pause and Resume
+
+```typescript
+// Pause logging (patches stay active, events are dropped)
+processor.pause();
+
+// ... some time later ...
+
+// Resume logging
+const pausedDuration = Date.now() - pauseStartTime;
+processor.resume(pausedDuration);
+```
+
+## Reading Stored Logs
+
+```typescript
+// Get all logs from IndexedDB
+const allLogs = await store.getAllLogs();
+
+console.log('Network entries:', allLogs.network.length);
+console.log('Console entries:', allLogs.console.length);
+console.log('Action entries:', allLogs.action.length);
+
+// Get logs from a specific store
+const networkLogs = await store.getAll('network');
+for (const entry of networkLogs) {
+  console.log(`${entry.method} ${entry.url} → ${entry.status}`);
+}
+```
+
+## Cleanup
+
+```typescript
+// Stop capturing and restore browser APIs
+processor.stop();
+
+// Close the store
+store.close();
+
+// Full cleanup
+processor.destroy();
+await store.deleteDatabase();
+
+// Clean up old databases from previous sessions
+await LogStore.cleanupOrphanedDatabases();
+```
+
+## Using Individual Interceptors
+
+For advanced use cases, you can apply interceptors selectively:
+
+```typescript
+import { patchConsole, patchFetch, patchClicks, enableDispatch } from '@userplane/logger';
+
+// Enable the event bridge
+enableDispatch();
+
+// Only patch what you need
+patchConsole();
+patchFetch();
+patchClicks();
+
+// Listen for events directly
+document.addEventListener('__userplane_logger', (event) => {
+  const logEvent = (event as CustomEvent).detail;
+  console.log('Captured:', logEvent.type, logEvent);
+});
+```
+
+## With Batched Dispatcher
+
+```typescript
+import { LogProcessor, BatchedDispatcher } from '@userplane/logger';
+
+const dispatcher = new BatchedDispatcher(
+  {
+    tabId: 'tab-123',
+    serverNow: () => Date.now(),
+    saveFunction: async (batch) => {
+      await fetch('/api/logs', {
+        method: 'POST',
+        body: JSON.stringify(batch),
+      });
+    },
+  },
+  {
+    flushInterval: 2000, // Flush every 2 seconds
+    maxBufferSize: 100, // Or when 100 entries accumulate
+  }
+);
+
+dispatcher.start();
+```

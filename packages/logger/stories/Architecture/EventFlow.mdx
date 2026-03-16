@@ -1,0 +1,115 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Architecture/Event Flow" />
+
+# Event Flow
+
+This page traces how a browser event flows through the logger pipeline from interception to dispatch.
+
+## The Pipeline
+
+Every captured event follows the same path:
+
+```
+Browser API call → Interceptor → CustomEvent → LogProcessor → Dispatcher → Save
+```
+
+## Step-by-Step: A fetch Request
+
+Here's what happens when the application calls `fetch('/api/data')`:
+
+### 1. Interception
+
+The patched `fetch` wrapper (`patchFetch`) intercepts the call:
+
+```
+Application calls fetch('/api/data')
+    → Patched fetch wrapper captures: method, URL, headers, body
+    → Calls the real (pristine) fetch
+    → Clones the response to read the body
+    → Enriches with PerformanceResourceTiming data
+```
+
+### 2. Event Dispatch
+
+The interceptor creates a `NetworkLogEvent` and dispatches it:
+
+```typescript
+dispatch({
+  type: 'network',
+  url: '/api/data',
+  method: 'GET',
+  status: 200,
+  statusText: 'OK',
+  requestHeaders: { ... },
+  responseHeaders: { ... },
+  responseBody: '{"result": 42}',
+  performanceData: { duration: 150, ... },
+  timestamp: Date.now(),
+});
+```
+
+This emits a `CustomEvent` named `__userplane_logger` on `document`.
+
+### 3. Processing
+
+The LogProcessor receives the event and routes it to `_handleNetworkEvent()`:
+
+- Checks if the URL is an internal endpoint (filters out userplane API traffic)
+- Checks the throttle map (deduplicates rapid identical requests)
+- Formats the protocol name (e.g., `h2` → `HTTP/2`)
+- Optionally masks the response body (privacy mode)
+- Computes request duration from performance data
+- Creates a `ProcessedNetworkEntry` with normalized fields
+
+### 4. Dispatch
+
+The processed entry is passed to the configured dispatcher:
+
+- **ImmediateDispatcher**: Wraps in `SavePayload` with metadata (tab state, timestamp) and calls `saveFunction` immediately
+- **BatchedDispatcher**: Adds to buffer, flushes when interval fires or buffer is full
+
+## Event Types
+
+Each interceptor produces a specific event type:
+
+| Interceptor               | Event Type                                | Handler                     |
+| ------------------------- | ----------------------------------------- | --------------------------- |
+| `patchConsole`            | `console`                                 | `_handleConsoleEvent`       |
+| `patchFetch`              | `network`                                 | `_handleNetworkEvent`       |
+| `patchXHR`                | `network`                                 | `_handleNetworkEvent`       |
+| `patchFetch` (error)      | `network-error`                           | `_handleNetworkErrorEvent`  |
+| `patchXHR` (error)        | `network-error`                           | `_handleNetworkErrorEvent`  |
+| `observeResources`        | `resource`                                | `_handleResourceEvent`      |
+| `patchResourceErrors`     | `resource-error`                          | `_handleResourceErrorEvent` |
+| `patchClicks`             | `user-action` (click)                     | `_handleUserActionEvent`    |
+| `patchNavigation`         | `user-action` (spa_route)                 | `_handleUserActionEvent`    |
+| `patchFocus`              | `user-action` (tab_activated/deactivated) | `_handleUserActionEvent`    |
+| `patchUnhandledRejection` | `console` (error)                         | `_handleConsoleEvent`       |
+| `patchGlobalErrors`       | `console` (error)                         | `_handleConsoleEvent`       |
+| `patchCSP`                | `console` (error)                         | `_handleConsoleEvent`       |
+
+## The CustomEvent Contract
+
+All events are dispatched as:
+
+```typescript
+document.dispatchEvent(
+  new CustomEvent('__userplane_logger', {
+    detail: logEvent,
+  })
+);
+```
+
+The `detail` field contains a discriminated union based on the `type` property:
+
+- `type: 'console'` → `ConsoleLogEvent`
+- `type: 'network'` → `NetworkLogEvent`
+- `type: 'network-error'` → `NetworkErrorLogEvent`
+- `type: 'resource'` → `ResourceLogEvent`
+- `type: 'resource-error'` → `ResourceErrorLogEvent`
+- `type: 'user-action'` → `UserActionLogEvent`
+
+## Dispatch Gating
+
+The EventBridge provides `enableDispatch()` and `disableDispatch()` to control whether events flow from interceptors to the processor. When dispatch is disabled, interceptors still run (browser APIs remain patched) but events are silently dropped. This is used during pause/resume transitions.
