@@ -17,6 +17,17 @@ interface ApiClientOptions {
   apiToken: string;
 }
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public status: number
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 class ApiClient {
   private apiToken: string;
   private baseUrl: string;
@@ -37,8 +48,12 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Request failed' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
+      const body = await response.json().catch(() => ({ error: 'Request failed' }));
+      throw new ApiError(
+        body.error || `HTTP ${response.status}`,
+        body.code || 'UNKNOWN_ERROR',
+        response.status
+      );
     }
 
     return response.json();
