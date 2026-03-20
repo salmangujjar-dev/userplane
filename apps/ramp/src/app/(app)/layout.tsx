@@ -4,17 +4,25 @@ import { AppShell } from '@/components/layout/AppShell';
 import { FlagHydrator } from '@/components/providers/FlagHydrator';
 import { IntercomProvider } from '@/components/providers/IntercomProvider';
 import { type UserIdentity, UserplaneProvider } from '@/components/providers/UserplaneProvider';
+import { ZendeskProvider } from '@/components/providers/ZendeskProvider';
 import { auth } from '@/lib/auth';
-import { getOverridesMap, loadAndApplyOverrides } from '@/lib/feature-flag-service';
+import {
+  getOverridesMap,
+  getVariantOverridesMap,
+  loadAndApplyOverrides,
+} from '@/lib/feature-flag-service';
+import { getVariantValue } from '@/lib/feature-flags';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   loadAndApplyOverrides();
   const overrides = getOverridesMap();
+  const variantOverrides = getVariantOverridesMap();
 
   const session = await auth.api.getSession({ headers: await headers() });
 
   const workspaceId = process.env.NEXT_PUBLIC_USERPLANE_WORKSPACE_ID!;
   const intercomAppId = process.env.NEXT_PUBLIC_INTERCOM_APP_ID!;
+  const zendeskKey = process.env.NEXT_PUBLIC_ZENDESK_KEY!;
 
   const user: UserIdentity = {
     user_id: session?.user?.id ?? '',
@@ -26,12 +34,27 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       : '',
   };
 
+  const supportProvider = getVariantValue('supportProvider');
+
+  const content = (
+    <>
+      <FlagHydrator overrides={overrides} variantOverrides={variantOverrides} />
+      <AppShell>{children}</AppShell>
+    </>
+  );
+
+  const wrappedContent =
+    supportProvider === 'intercom' ? (
+      <IntercomProvider appId={intercomAppId}>{content}</IntercomProvider>
+    ) : supportProvider === 'zendesk' ? (
+      <ZendeskProvider zendeskKey={zendeskKey}>{content}</ZendeskProvider>
+    ) : (
+      content
+    );
+
   return (
     <UserplaneProvider workspaceId={workspaceId} user={user}>
-      <IntercomProvider appId={intercomAppId}>
-        <FlagHydrator overrides={overrides} />
-        <AppShell>{children}</AppShell>
-      </IntercomProvider>
+      {wrappedContent}
     </UserplaneProvider>
   );
 }

@@ -4,11 +4,25 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { applyOverrides, type FeatureFlag, type RuntimeFlagInfo } from '@/lib/feature-flags';
+import {
+  applyOverrides,
+  type FeatureFlag,
+  type RuntimeFlagInfo,
+  type RuntimeVariantInfo,
+  type VariantFlag,
+} from '@/lib/feature-flags';
 
 type GroupedFlags = Record<string, RuntimeFlagInfo[]>;
+type GroupedVariants = Record<string, RuntimeVariantInfo[]>;
 
 function groupByCategory(flags: RuntimeFlagInfo[]): GroupedFlags {
   const groups: GroupedFlags = {};
@@ -19,21 +33,43 @@ function groupByCategory(flags: RuntimeFlagInfo[]): GroupedFlags {
   return groups;
 }
 
+function groupVariantsByCategory(variants: RuntimeVariantInfo[]): GroupedVariants {
+  const groups: GroupedVariants = {};
+  for (const v of variants) {
+    const group = groups[v.category] ?? (groups[v.category] = []);
+    group.push(v);
+  }
+  return groups;
+}
+
+interface ResponseData {
+  flags: RuntimeFlagInfo[];
+  variants: RuntimeVariantInfo[];
+}
+
 export default function FlagsPage() {
   const [serverFlags, setServerFlags] = useState<RuntimeFlagInfo[]>([]);
   const [localFlags, setLocalFlags] = useState<RuntimeFlagInfo[]>([]);
+  const [serverVariants, setServerVariants] = useState<RuntimeVariantInfo[]>([]);
+  const [localVariants, setLocalVariants] = useState<RuntimeVariantInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const syncFromResponse = useCallback((data: RuntimeFlagInfo[]) => {
-    setServerFlags(data);
-    setLocalFlags(data);
+  const syncFromResponse = useCallback((data: ResponseData) => {
+    setServerFlags(data.flags);
+    setLocalFlags(data.flags);
+    setServerVariants(data.variants);
+    setLocalVariants(data.variants);
 
     const overrides: Partial<Record<FeatureFlag, boolean>> = {};
-    for (const f of data) {
+    for (const f of data.flags) {
       if (f.isOverridden) overrides[f.flag] = f.value;
     }
-    applyOverrides(overrides);
+    const variantOverrides: Partial<Record<VariantFlag, string>> = {};
+    for (const v of data.variants) {
+      if (v.isOverridden) variantOverrides[v.flag] = v.value;
+    }
+    applyOverrides(overrides, variantOverrides);
   }, []);
 
   const fetchFlags = useCallback(async () => {
@@ -49,15 +85,23 @@ export default function FlagsPage() {
 
   const { isDirty, pendingChangeCount } = useMemo(() => {
     const serverMap = new Map(serverFlags.map((f) => [f.flag, f.value]));
+    const serverVariantMap = new Map(serverVariants.map((v) => [v.flag, v.value]));
     let count = 0;
     for (const f of localFlags) {
       if (f.value !== serverMap.get(f.flag)) count++;
     }
+    for (const v of localVariants) {
+      if (v.value !== serverVariantMap.get(v.flag)) count++;
+    }
     return { isDirty: count > 0, pendingChangeCount: count };
-  }, [localFlags, serverFlags]);
+  }, [localFlags, serverFlags, localVariants, serverVariants]);
 
   const handleToggle = (flag: FeatureFlag, newValue: boolean) => {
     setLocalFlags((prev) => prev.map((f) => (f.flag === flag ? { ...f, value: newValue } : f)));
+  };
+
+  const handleVariantChange = (flag: VariantFlag, newValue: string) => {
+    setLocalVariants((prev) => prev.map((v) => (v.flag === flag ? { ...v, value: newValue } : v)));
   };
 
   const handleSave = async () => {
@@ -66,12 +110,16 @@ export default function FlagsPage() {
     for (const f of localFlags) {
       overrides[f.flag] = f.value;
     }
+    const variantOverrides: Record<string, string> = {};
+    for (const v of localVariants) {
+      variantOverrides[v.flag] = v.value;
+    }
 
     try {
       const res = await fetch('/api/flags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'save-overrides', overrides }),
+        body: JSON.stringify({ action: 'save-overrides', overrides, variantOverrides }),
       });
       const json = await res.json();
       syncFromResponse(json.data);
@@ -82,10 +130,12 @@ export default function FlagsPage() {
 
   const handleCancel = () => {
     setLocalFlags(serverFlags);
+    setLocalVariants(serverVariants);
   };
 
   const handleResetAll = () => {
     setLocalFlags((prev) => prev.map((f) => ({ ...f, value: f.defaultValue })));
+    setLocalVariants((prev) => prev.map((v) => ({ ...v, value: v.defaultValue })));
   };
 
   if (loading) {
@@ -96,12 +146,25 @@ export default function FlagsPage() {
     );
   }
 
-  const serverOverrideCount = serverFlags.filter((f) => f.isOverridden).length;
+  const serverOverrideCount =
+    serverFlags.filter((f) => f.isOverridden).length +
+    serverVariants.filter((v) => v.isOverridden).length;
+
+  const totalFlagCount = localFlags.length + localVariants.length;
 
   const serverValueMap = new Map(serverFlags.map((f) => [f.flag, f.value]));
+  const serverVariantValueMap = new Map(serverVariants.map((v) => [v.flag, v.value]));
 
   const grouped = groupByCategory(localFlags);
-  const categoryOrder = ['Client UI', 'Auth', 'Server API', 'Chaos (API)', 'Chaos (Client)'];
+  const groupedVariants = groupVariantsByCategory(localVariants);
+  const categoryOrder = [
+    'Client UI',
+    'Auth',
+    'Server API',
+    'Chaos (API)',
+    'Chaos (Client)',
+    'Integrations',
+  ];
 
   return (
     <div className="p-4 md:p-6 space-y-6 pb-24">
@@ -109,7 +172,7 @@ export default function FlagsPage() {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{localFlags.length} flags</span>
+            <span className="text-sm text-muted-foreground">{totalFlagCount} flags</span>
             {serverOverrideCount > 0 && (
               <Badge variant="warning" size="sm">
                 {serverOverrideCount} overridden
@@ -125,13 +188,14 @@ export default function FlagsPage() {
       {/* Flag groups */}
       {categoryOrder.map((category) => {
         const categoryFlags = grouped[category];
-        if (!categoryFlags?.length) return null;
+        const categoryVariants = groupedVariants[category];
+        if (!categoryFlags?.length && !categoryVariants?.length) return null;
 
         return (
           <div key={category}>
             <h3 className="text-sm font-semibold mb-3">{category}</h3>
             <div className="rounded-lg border divide-y">
-              {categoryFlags.map((flag) => {
+              {categoryFlags?.map((flag) => {
                 const isUnsaved = flag.value !== serverValueMap.get(flag.flag);
                 const isServerOverridden = serverFlags.find(
                   (sf) => sf.flag === flag.flag
@@ -168,6 +232,55 @@ export default function FlagsPage() {
                         checked={flag.value}
                         onCheckedChange={(checked) => handleToggle(flag.flag, checked)}
                       />
+                    </div>
+                  </div>
+                );
+              })}
+              {categoryVariants?.map((variant) => {
+                const isUnsaved = variant.value !== serverVariantValueMap.get(variant.flag);
+                const isServerOverridden = serverVariants.find(
+                  (sv) => sv.flag === variant.flag
+                )?.isOverridden;
+
+                return (
+                  <div
+                    key={variant.flag}
+                    className="flex items-center justify-between gap-4 px-4 py-3"
+                  >
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <code className="text-sm font-mono">{variant.flag}</code>
+                        {isUnsaved && (
+                          <Badge variant="info" size="sm">
+                            unsaved
+                          </Badge>
+                        )}
+                        {isServerOverridden && (
+                          <Badge variant="warning" size="sm">
+                            overridden
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{variant.description}</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <Select
+                        value={variant.value}
+                        onValueChange={(val) => {
+                          if (val !== null) handleVariantChange(variant.flag, val);
+                        }}
+                      >
+                        <SelectTrigger size="sm" className="w-36">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {variant.allowedValues.map((v) => (
+                            <SelectItem key={v} value={v}>
+                              {v}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 );
