@@ -5,13 +5,15 @@ import { SUPPORT_EMAIL_MAILTO } from '@userplane/shared';
 import { Button } from '@userplane/ui/components/button';
 import { Label } from '@userplane/ui/components/label';
 import Logo from '@userplane/ui/components/logo';
-import { ArrowLeftRight, Loader2 } from 'lucide-react';
+import { ArrowLeftRight, Check, Circle, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { useEffect, useRef, useState } from 'react';
 import { Control, Controller, FieldErrors, useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+import type { IntegrationAssetKey } from '@userplane/storage/media';
 
 import { apiClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
@@ -21,6 +23,7 @@ import {
   OAuthErrorState,
   OAuthLoadingState,
 } from '@/components/integrations/intercom';
+import { ZendeskSubdomainInput } from '@/components/zendesk-subdomain-input';
 import { URLInput } from '@/components/url-input';
 import { useAccount } from '@/features/account';
 import { useFirstWorkspaceDomain } from '@/features/domains';
@@ -129,7 +132,9 @@ function WorkspaceUrlField({
           />
         )}
       />
-      {errors.workspace && <p className="text-sm text-destructive">{errors.workspace.message}</p>}
+      <p className={`text-sm text-destructive ${errors.workspace ? 'visible' : 'invisible'}`}>
+        {errors.workspace?.message ?? '\u00A0'}
+      </p>
     </div>
   );
 }
@@ -141,14 +146,14 @@ function CreateWorkspaceForm({
   isValid,
   isPending,
   onSubmit,
-  onConnectIntercom,
+  onConnectIntegration,
 }: {
   control: Control<WorkspaceFormValues>;
   errors: FieldErrors<WorkspaceFormValues>;
   isValid: boolean;
   isPending: boolean;
   onSubmit: (e: React.FormEvent) => void;
-  onConnectIntercom: () => void;
+  onConnectIntegration: () => void;
 }) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -173,10 +178,10 @@ function CreateWorkspaceForm({
       <div className="flex justify-center">
         <button
           type="button"
-          onClick={onConnectIntercom}
+          onClick={onConnectIntegration}
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          Connect using Intercom
+          Connect using an integration
         </button>
       </div>
     </form>
@@ -225,8 +230,54 @@ function PostCreationInviteView({
   );
 }
 
-// Intercom OAuth initiation flow
-function IntercomConnectFlow() {
+// Provider selection card
+function ProviderCard({
+  provider,
+  icon,
+  label,
+  selected,
+  onSelect,
+}: {
+  provider: 'intercom' | 'zendesk';
+  icon: IntegrationAssetKey;
+  label: string;
+  selected: boolean;
+  onSelect: (provider: 'intercom' | 'zendesk') => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(provider)}
+      className={`relative flex flex-col items-center gap-3 rounded-xl border p-6 bg-card transition-colors hover:bg-accent/50 ${
+        selected ? 'border-foreground ring-1 ring-foreground' : 'border-border'
+      }`}
+    >
+      <div className="absolute top-3 right-3">
+        {selected ? (
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-background">
+            <Check className="h-3 w-3" />
+          </div>
+        ) : (
+          <Circle className="h-5 w-5 text-muted-foreground/40" />
+        )}
+      </div>
+      <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
+        <Image
+          src={mediaClient.getIntegrationMediaUrl(icon)}
+          alt={label}
+          width={32}
+          height={32}
+          className="object-contain"
+        />
+      </div>
+      <span className="text-sm font-medium text-foreground">{label}</span>
+    </button>
+  );
+}
+
+// Provider selector flow — lets users pick Intercom or Zendesk before connecting
+function ProviderSelectFlow() {
+  const [selectedProvider, setSelectedProvider] = useState<'intercom' | 'zendesk'>('intercom');
   const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
   const { data: accountResult } = useAccount();
@@ -235,6 +286,11 @@ function IntercomConnectFlow() {
   const account = accountResult?.success ? accountResult.data : null;
 
   const handleConnect = async () => {
+    if (selectedProvider === 'zendesk') {
+      router.push('/workspace/create?flow=zendesk-inapp');
+      return;
+    }
+
     setIsConnecting(true);
     try {
       const [error, response] = await apiClient.provisioner.intercom.authorize({
@@ -247,7 +303,6 @@ function IntercomConnectFlow() {
         return;
       }
 
-      // Redirect to Intercom OAuth page
       window.location.href = result.data.authorizationUrl;
     } catch (error) {
       showIntercomConnectionFailedToast(error instanceof Error ? error.message : undefined);
@@ -256,6 +311,8 @@ function IntercomConnectFlow() {
     }
   };
 
+  const providerLabel = selectedProvider === 'intercom' ? 'Intercom' : 'Zendesk';
+
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 pb-32 lg:pb-12 bg-background overflow-hidden">
       <AuthIcons />
@@ -263,48 +320,47 @@ function IntercomConnectFlow() {
       {account && <AccountLogoutFooter userName={account.userName} onSignOut={signOut} />}
 
       <div className="w-full max-w-md space-y-10 relative z-10">
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex items-center gap-4">
-            <Logo variant="tiled" size="md" showText={false} />
-            <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
-            <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
-              <Image
-                src={mediaClient.getIntegrationMediaUrl('integrations/intercom.webp')}
-                alt="Intercom"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-            </div>
+        <PageHeader
+          title="Let's create your workspace"
+          subtitle="Connect your workspace to get started"
+        />
+
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <ProviderCard
+              provider="intercom"
+              icon="integrations/intercom.webp"
+              label="Intercom"
+              selected={selectedProvider === 'intercom'}
+              onSelect={setSelectedProvider}
+            />
+            <ProviderCard
+              provider="zendesk"
+              icon="integrations/zendesk.webp"
+              label="Zendesk"
+              selected={selectedProvider === 'zendesk'}
+              onSelect={setSelectedProvider}
+            />
           </div>
 
-          <div className="flex flex-col items-center gap-2">
-            <h1 className="text-xl font-medium text-foreground">
-              Let&apos;s create your workspace
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Connect your intercom workspace to get started
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
           <Button
             onClick={handleConnect}
             disabled={isConnecting}
             size="lg"
             className="w-full rounded-full px-7 py-6"
           >
-            {isConnecting ? 'Connecting...' : 'Connect to Intercom'}
+            {isConnecting ? 'Connecting...' : `Connect to ${providerLabel}`}
           </Button>
 
-          <button
-            type="button"
-            onClick={() => router.push('/workspace/create?flow=direct')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-center"
-          >
-            Configure userplane manually
-          </button>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => router.push('/workspace/create?flow=direct')}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Configure userplane manually
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -396,7 +452,7 @@ function ZendeskSubdomainFlow({ source }: { source: 'marketplace' | 'inapp' }) {
   const account = accountResult?.success ? accountResult.data : null;
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors: formErrors, isValid },
   } = useForm<ZendeskSubdomainValues>({
@@ -430,6 +486,7 @@ function ZendeskSubdomainFlow({ source }: { source: 'marketplace' | 'inapp' }) {
   if (error) {
     return (
       <OAuthErrorState
+        provider="zendesk"
         error={error}
         errorActionPrimary={{
           label: 'Try Again',
@@ -485,21 +542,25 @@ function ZendeskSubdomainFlow({ source }: { source: 'marketplace' | 'inapp' }) {
             <p className="text-xs text-muted-foreground">
               Enter the subdomain from your Zendesk URL
             </p>
-            <div className="flex items-center gap-0">
-              <input
-                id="subdomain"
-                {...register('subdomain')}
-                placeholder="your-company"
-                disabled={isConnecting}
-                className="flex h-10 w-full rounded-l-md border border-r-0 border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              <span className="inline-flex h-10 items-center rounded-r-md border border-input bg-muted px-3 text-sm text-muted-foreground">
-                .zendesk.com
-              </span>
-            </div>
-            {formErrors.subdomain && (
-              <p className="text-sm text-destructive">{formErrors.subdomain.message}</p>
-            )}
+            <Controller
+              name="subdomain"
+              control={control}
+              render={({ field }) => (
+                <ZendeskSubdomainInput
+                  id="subdomain"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={!!formErrors.subdomain}
+                  disabled={isConnecting}
+                />
+              )}
+            />
+            <p
+              className={`text-sm text-destructive ${formErrors.subdomain ? 'visible' : 'invisible'}`}
+            >
+              {formErrors.subdomain?.message ?? '\u00A0'}
+            </p>
           </div>
 
           <Button
@@ -549,7 +610,7 @@ export default function CreateWorkspacePage() {
   }
 
   if (flow === 'intercom-inapp') {
-    return <IntercomConnectFlow />;
+    return <ProviderSelectFlow />;
   }
 
   // Direct create flow (flow=direct or any other value)
@@ -688,7 +749,7 @@ function DirectCreateFlow() {
           isValid={isValid}
           isPending={isPending}
           onSubmit={handleSubmit(handleUrlSubmit)}
-          onConnectIntercom={() => router.push('/workspace/create?flow=intercom-inapp')}
+          onConnectIntegration={() => router.push('/workspace/create?flow=intercom-inapp')}
         />
       </div>
     </div>
