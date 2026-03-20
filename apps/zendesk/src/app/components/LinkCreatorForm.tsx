@@ -2,7 +2,8 @@ import type { ZendeskDomain, ZendeskProject } from '@userplane/contract';
 
 import { DASHBOARD_URL } from '@/lib/constants';
 
-import { ErrorMessage } from './ErrorMessage';
+import { UserplaneIcon } from './Icons';
+import { ScreenHeader } from './ScreenHeader';
 
 interface LinkCreatorFormProps {
   projects: ZendeskProject[];
@@ -12,10 +13,12 @@ interface LinkCreatorFormProps {
   onProjectChange: (id: string) => void;
   onDomainChange: (id: string) => void;
   onSubmit: () => void;
+  onGoBack?: () => void;
   isCreating: boolean;
   isLoading: boolean;
-  error: string | null;
   workspaceId: string;
+  customMessage?: string;
+  onCustomMessageChange?: (msg: string) => void;
 }
 
 export function LinkCreatorForm({
@@ -26,33 +29,59 @@ export function LinkCreatorForm({
   onProjectChange,
   onDomainChange,
   onSubmit,
+  onGoBack,
   isCreating,
   isLoading,
-  error,
   workspaceId,
+  customMessage,
+  onCustomMessageChange,
 }: LinkCreatorFormProps) {
   if (isLoading) {
-    return <div style={{ textAlign: 'center', color: '#68737d', padding: '16px' }}>Loading...</div>;
+    return (
+      <div style={{ padding: '24px 16px', textAlign: 'center' }}>
+        <ScreenHeader
+          icon={<UserplaneIcon size={40} />}
+          title="Loading..."
+          description="Fetching your workspace data"
+        />
+      </div>
+    );
   }
 
   if (projects.length === 0) {
     return (
       <div
         style={{
-          textAlign: 'center',
           padding: '16px',
-          color: '#68737d',
-          fontSize: '13px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          alignItems: 'center',
         }}
       >
-        <p style={{ marginBottom: '8px' }}>No projects found.</p>
+        <ScreenHeader
+          icon={<UserplaneIcon size={40} />}
+          title="No projects found"
+          description="Create a project in your Userplane dashboard to get started."
+        />
         <a
           href={`${DASHBOARD_URL}/workspace/${workspaceId}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: '#1f73b7', textDecoration: 'underline' }}
+          style={{
+            display: 'inline-block',
+            padding: '8px 16px',
+            background: 'white',
+            color: '#2f3941',
+            border: '1px solid #d8dcde',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: 500,
+            textDecoration: 'none',
+            cursor: 'pointer',
+          }}
         >
-          Configure your workspace in the Userplane dashboard
+          Open Dashboard
         </a>
       </div>
     );
@@ -60,6 +89,14 @@ export function LinkCreatorForm({
 
   return (
     <>
+      <div style={{ marginBottom: '16px' }}>
+        <ScreenHeader
+          icon={<UserplaneIcon size={40} />}
+          title="Create recording link"
+          description="Select a project and send a recording request to your customer."
+        />
+      </div>
+
       <div style={{ marginBottom: '8px' }}>
         <label
           style={{
@@ -122,25 +159,71 @@ export function LinkCreatorForm({
         </div>
       )}
 
-      <button
-        onClick={onSubmit}
-        disabled={isCreating || !selectedProject}
-        style={{
-          width: '100%',
-          padding: '8px 16px',
-          background: isCreating ? '#87929d' : '#1f73b7',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: isCreating ? 'not-allowed' : 'pointer',
-          fontSize: '13px',
-          fontWeight: 500,
-        }}
-      >
-        {isCreating ? 'Creating...' : 'Create Link'}
-      </button>
+      {customMessage !== undefined && onCustomMessageChange && (
+        <div style={{ marginBottom: '8px' }}>
+          <label
+            style={{
+              display: 'block',
+              fontSize: '12px',
+              color: '#68737d',
+              marginBottom: '4px',
+            }}
+          >
+            Message to customer
+          </label>
+          <input
+            type="text"
+            value={customMessage}
+            onChange={(e) => onCustomMessageChange(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px',
+              border: '1px solid #d8dcde',
+              borderRadius: '4px',
+              fontSize: '13px',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+      )}
 
-      {error && <ErrorMessage message={error} />}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <button
+          onClick={onSubmit}
+          disabled={isCreating || !selectedProject}
+          style={{
+            width: '100%',
+            padding: '8px 16px',
+            background: isCreating ? '#87929d' : '#000',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isCreating ? 'not-allowed' : 'pointer',
+            fontSize: '13px',
+            fontWeight: 500,
+          }}
+        >
+          {isCreating ? 'Creating...' : 'Create Link'}
+        </button>
+
+        {onGoBack && (
+          <button
+            onClick={onGoBack}
+            style={{
+              width: '100%',
+              padding: '8px 16px',
+              background: 'white',
+              color: '#2f3941',
+              border: '1px solid #d8dcde',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '13px',
+            }}
+          >
+            Go back
+          </button>
+        )}
+      </div>
     </>
   );
 }

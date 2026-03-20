@@ -29,10 +29,18 @@ export const Default: Story = {
     onProjectChange: () => {},
     onDomainChange: () => {},
     onSubmit: () => {},
+    onGoBack: () => console.log('Go back'),
     isCreating: false,
     isLoading: false,
-    error: null,
     workspaceId: 'ws_123',
+  },
+};
+
+export const WithCustomMessage: Story = {
+  args: {
+    ...Default.args,
+    customMessage: 'John has requested a screen recording from you',
+    onCustomMessageChange: () => {},
   },
 };
 
@@ -54,12 +62,5 @@ export const Creating: Story = {
   args: {
     ...Default.args,
     isCreating: true,
-  },
-};
-
-export const WithError: Story = {
-  args: {
-    ...Default.args,
-    error: 'Recording limit exceeded. Upgrade your plan in the dashboard.',
   },
 };

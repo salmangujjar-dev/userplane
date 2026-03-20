@@ -1,66 +1,70 @@
+import { useState } from 'react';
+
+import { SuccessIcon } from './Icons';
+import { ScreenHeader } from './ScreenHeader';
+
 interface LinkSuccessAction {
   label: string;
   onClick: () => void;
-  variant: 'primary' | 'secondary' | 'ghost';
+  variant: 'primary' | 'secondary';
 }
 
 interface LinkSuccessProps {
   linkUrl: string;
+  description: string;
   actions: LinkSuccessAction[];
 }
 
 const variantStyles: Record<LinkSuccessAction['variant'], React.CSSProperties> = {
   primary: {
-    background: '#1f73b7',
+    background: '#000',
     color: 'white',
     border: 'none',
   },
   secondary: {
-    background: 'white',
-    color: '#1f73b7',
-    border: '1px solid #1f73b7',
-  },
-  ghost: {
     background: 'white',
     color: '#2f3941',
     border: '1px solid #d8dcde',
   },
 };
 
-export function LinkSuccess({ linkUrl, actions }: LinkSuccessProps) {
+export function LinkSuccess({ linkUrl, description, actions }: LinkSuccessProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(linkUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div>
-      <div
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <ScreenHeader
+        icon={<SuccessIcon size={40} />}
+        title="Recording link created"
+        description={description}
+      />
+
+      <button
+        onClick={handleCopy}
         style={{
-          padding: '12px',
-          background: '#edf8f4',
+          display: 'block',
+          width: '100%',
+          padding: '8px 10px',
+          background: '#f8f9f9',
           borderRadius: '4px',
-          marginBottom: '12px',
+          fontSize: '12px',
+          wordBreak: 'break-all',
+          border: '1px solid #d8dcde',
+          cursor: 'pointer',
+          color: copied ? '#038153' : '#2f3941',
+          textAlign: 'left',
+          transition: 'color 0.15s',
         }}
+        title="Click to copy"
       >
-        <div
-          style={{
-            fontSize: '12px',
-            color: '#038153',
-            marginBottom: '8px',
-            fontWeight: 500,
-          }}
-        >
-          Link created
-        </div>
-        <div
-          style={{
-            padding: '6px 8px',
-            background: 'white',
-            borderRadius: '4px',
-            fontSize: '12px',
-            wordBreak: 'break-all',
-            border: '1px solid #d1e8df',
-          }}
-        >
-          {linkUrl}
-        </div>
-      </div>
+        {copied ? 'Copied!' : linkUrl}
+      </button>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {actions.map((action) => (

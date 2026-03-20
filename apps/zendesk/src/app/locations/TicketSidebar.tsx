@@ -7,11 +7,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { getApiClient } from '@/api/client';
 import { ErrorMessage } from '@/app/components/ErrorMessage';
+import { UserplaneIcon } from '@/app/components/Icons';
 import { LinkCreatorForm } from '@/app/components/LinkCreatorForm';
 import { LinkSuccess } from '@/app/components/LinkSuccess';
 import { OpenerView } from '@/app/components/OpenerView';
-import { RecordingRequestedBadge } from '@/app/components/RecordingRequestedBadge';
-import { RequesterBanner } from '@/app/components/RequesterBanner';
+import { ScreenHeader } from '@/app/components/ScreenHeader';
 import { useAgentContext } from '@/app/hooks/useAgentContext';
 import { useClient } from '@/app/hooks/useClient';
 import { useTicketContext } from '@/app/hooks/useTicketContext';
@@ -19,7 +19,7 @@ import { useWorkspaceData } from '@/app/hooks/useWorkspaceData';
 import { DASHBOARD_URL } from '@/lib/constants';
 import { getErrorMessage } from '@/lib/errors';
 
-function escapeHtmlAttr(str: string): string {
+function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
@@ -27,20 +27,47 @@ function escapeHtmlAttr(str: string): string {
     .replace(/>/g, '&gt;');
 }
 
-type View = 'opener' | 'creator' | 'success';
+function generateDefaultMessage(agentName: string | null): string {
+  return agentName
+    ? `${agentName} has requested a screen recording from you`
+    : 'Your support team has requested a screen recording from you';
+}
+
+type View = 'opener' | 'creator' | 'success' | 'error';
 
 export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
   const client = useClient();
-  const { agentEmail, isLoading: agentLoading, error: agentError } = useAgentContext();
-  const { requester, ticketId, ticketTags, isLoading: ticketLoading } = useTicketContext();
+  const { agentEmail, agentName, isLoading: agentLoading, error: agentError } = useAgentContext();
+  const {
+    requester,
+    ticketId,
+    ticketSubject,
+    ticketPriority,
+    ticketType,
+    ticketTags,
+    isLoading: ticketLoading,
+  } = useTicketContext();
 
   const [view, setView] = useState<View>('opener');
   const [isCreating, setIsCreating] = useState(false);
   const [createdLink, setCreatedLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [customMessage, setCustomMessage] = useState(() => generateDefaultMessage(agentName));
 
   const workspace = useWorkspaceData({ workspaceId, enabled: view === 'creator' });
-  const hasRequestedRecording = ticketTags.includes('userplane-recording-requested');
+
+  // Update default message when agent name loads
+  useEffect(() => {
+    setCustomMessage(generateDefaultMessage(agentName));
+  }, [agentName]);
+
+  // Show error view if agent context failed
+  useEffect(() => {
+    if (agentError) {
+      setError(agentError);
+      setView('error');
+    }
+  }, [agentError]);
 
   useEffect(() => {
     const resize = () => client.invoke('resize', { width: '100%', height: '400px' });
@@ -54,10 +81,12 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
   const handleCreateLink = useCallback(async () => {
     if (!workspace.selectedProject) {
       setError('Please select a project.');
+      setView('error');
       return;
     }
     if (!agentEmail) {
       setError('Could not resolve your email. Please reload the app.');
+      setView('error');
       return;
     }
 
@@ -72,19 +101,40 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
         domainId: workspace.selectedDomain,
         agentEmail,
         ticketId: ticketId ?? undefined,
+        ticketSubject: ticketSubject ?? undefined,
+        ticketPriority: ticketPriority ?? undefined,
+        ticketType: ticketType ?? undefined,
+        ticketTags: ticketTags.length > 0 ? ticketTags : undefined,
+        requesterName: requester?.name ?? undefined,
+        requesterEmail: requester?.email ?? undefined,
+        agentName: agentName ?? undefined,
       });
 
       if (result.success) {
         setCreatedLink(result.data.linkUrl);
         setView('success');
-        client.invoke('notify', 'Link created successfully', 'notice');
+
+        // Auto-append to ticket comment
+        const safeLink = escapeHtml(result.data.linkUrl);
+        const safeMsg = escapeHtml(customMessage);
+        const html = `<p>${safeMsg}: <a href="${safeLink}" target="_blank">${safeLink}</a></p>`;
+        client.invoke('comment.appendHtml', html).catch(() => {
+          client.invoke('notify', 'Could not add link to comment draft', 'error');
+        });
+
+        // Auto-tag the ticket
+        client.invoke('ticket.tags.add', 'userplane-recording-requested').catch(() => {});
+
+        client.invoke('notify', 'Link created and added to comment', 'notice');
       } else {
-        setError('Failed to create link');
+        setError('Failed to create link. Please try again.');
+        setView('error');
         client.invoke('notify', 'Failed to create link', 'error');
       }
     } catch (err) {
       const message = getErrorMessage(err);
       setError(message);
+      setView('error');
       client.invoke('notify', message, 'error');
     } finally {
       setIsCreating(false);
@@ -94,42 +144,27 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
     workspace.selectedProject,
     workspace.selectedDomain,
     ticketId,
+    ticketSubject,
+    ticketPriority,
+    ticketType,
+    ticketTags,
+    requester,
     agentEmail,
+    agentName,
+    customMessage,
     client,
   ]);
-
-  const handleCopy = useCallback(async () => {
-    if (!createdLink) return;
-    await navigator.clipboard.writeText(createdLink);
-    client.invoke('notify', 'Link copied to clipboard', 'notice');
-  }, [client, createdLink]);
-
-  const handleAppendToComment = useCallback(async () => {
-    if (!createdLink) return;
-
-    const safeLink = escapeHtmlAttr(createdLink);
-    const html = `<p>Please record your screen using this link: <a href="${safeLink}" target="_blank">${safeLink}</a></p>`;
-    try {
-      await client.invoke('comment.appendHtml', html);
-      client.invoke('notify', 'Link added to comment', 'notice');
-    } catch {
-      client.invoke('notify', 'Failed to add link to comment', 'error');
-    }
-  }, [client, createdLink]);
-
-  const handleAddTag = useCallback(async () => {
-    try {
-      await client.invoke('ticket.tags.add', 'userplane-recording-requested');
-      client.invoke('notify', 'Tag added to ticket', 'notice');
-    } catch {
-      client.invoke('notify', 'Failed to add tag to ticket', 'error');
-    }
-  }, [client]);
 
   const handleCreateAnother = useCallback(() => {
     setCreatedLink(null);
     setError(null);
     setView('creator');
+  }, []);
+
+  const handleDone = useCallback(() => {
+    setCreatedLink(null);
+    setError(null);
+    setView('opener');
   }, []);
 
   const handleViewRecordings = useCallback(() => {
@@ -138,15 +173,19 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
   }, [workspaceId]);
 
   if (ticketLoading || agentLoading) {
-    return <div style={{ padding: '16px', textAlign: 'center', color: '#68737d' }}>Loading...</div>;
+    return (
+      <div style={{ padding: '24px 16px', textAlign: 'center' }}>
+        <ScreenHeader
+          icon={<UserplaneIcon size={40} />}
+          title="Loading..."
+          description="Connecting to your workspace"
+        />
+      </div>
+    );
   }
 
   return (
     <div style={{ padding: '16px', fontFamily: 'system-ui, sans-serif', fontSize: '14px' }}>
-      {requester && <RequesterBanner name={requester.name} email={requester.email} />}
-
-      {hasRequestedRecording && <RecordingRequestedBadge />}
-
       {view === 'opener' && (
         <OpenerView
           onRequestRecording={() => setView('creator')}
@@ -156,30 +195,6 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
 
       {view === 'creator' && (
         <div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '12px',
-            }}
-          >
-            <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>Create Recording Link</h3>
-            <button
-              onClick={() => setView('opener')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#68737d',
-                cursor: 'pointer',
-                fontSize: '12px',
-                padding: '4px',
-              }}
-            >
-              Back
-            </button>
-          </div>
-
           <LinkCreatorForm
             projects={workspace.projects}
             domains={workspace.domains}
@@ -188,10 +203,12 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
             onProjectChange={workspace.setSelectedProject}
             onDomainChange={workspace.setSelectedDomain}
             onSubmit={handleCreateLink}
+            onGoBack={() => setView('opener')}
             isCreating={isCreating}
             isLoading={workspace.isLoading}
-            error={error || agentError || workspace.error}
             workspaceId={workspaceId}
+            customMessage={customMessage}
+            onCustomMessageChange={setCustomMessage}
           />
         </div>
       )}
@@ -199,16 +216,27 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
       {view === 'success' && createdLink && (
         <LinkSuccess
           linkUrl={createdLink}
+          description="The link has been added to your reply draft."
           actions={[
-            { label: 'Add to ticket comment', onClick: handleAppendToComment, variant: 'primary' },
-            { label: 'Copy link', onClick: handleCopy, variant: 'secondary' },
-            { label: 'Add tag', onClick: handleAddTag, variant: 'secondary' },
-            { label: 'Create another', onClick: handleCreateAnother, variant: 'ghost' },
+            { label: 'Create another link', onClick: handleCreateAnother, variant: 'primary' },
+            { label: 'Done', onClick: handleDone, variant: 'secondary' },
           ]}
         />
       )}
 
-      {view !== 'creator' && error && <ErrorMessage message={error} />}
+      {view === 'error' && error && (
+        <ErrorMessage
+          message={error}
+          onRetry={() => {
+            setError(null);
+            setView('creator');
+          }}
+          onGoBack={() => {
+            setError(null);
+            setView('opener');
+          }}
+        />
+      )}
     </div>
   );
 }
