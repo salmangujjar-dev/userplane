@@ -9,6 +9,9 @@ import {
   IntercomCallbackQuerySchema,
   ProvisionerErrors,
   WorkspaceCreateDataSchema,
+  ZendeskAuthorizeQuerySchema,
+  ZendeskAuthorizeResponseSchema,
+  ZendeskCallbackQuerySchema,
 } from '../schemas';
 
 /**
@@ -86,4 +89,49 @@ export const intercomCallback = oc
     WORKSPACE_CREATION_LIMIT_EXCEEDED: ProvisionerErrors.WORKSPACE_CREATION_LIMIT_EXCEEDED,
   })
   .input(z.object({ query: IntercomCallbackQuerySchema }))
+  .output(ApiResponseSchema(WorkspaceCreateDataSchema));
+
+/**
+ * GET /provisioner/zendesk/authorize
+ * Initiate Zendesk OAuth flow
+ */
+export const zendeskAuthorize = oc
+  .route({
+    method: 'GET',
+    path: '/provisioner/zendesk/authorize',
+    inputStructure: 'detailed',
+    summary: 'Initiate Zendesk OAuth',
+    description: 'Generate Zendesk OAuth authorization URL with CSRF state token',
+    tags: ['Provisioner', 'Zendesk'],
+  })
+  .errors({
+    UNAUTHORIZED: ProvisionerErrors.UNAUTHORIZED,
+  })
+  .input(z.object({ query: ZendeskAuthorizeQuerySchema }))
+  .output(ApiResponseSchema(ZendeskAuthorizeResponseSchema));
+
+/**
+ * GET /provisioner/zendesk/callback
+ * Handle Zendesk OAuth callback
+ */
+export const zendeskCallback = oc
+  .route({
+    method: 'GET',
+    path: '/provisioner/zendesk/callback',
+    inputStructure: 'detailed',
+    summary: 'Handle Zendesk OAuth callback',
+    description: 'Exchange authorization code for access token and create workspace',
+    tags: ['Provisioner', 'Zendesk'],
+  })
+  .errors({
+    UNAUTHORIZED: ProvisionerErrors.UNAUTHORIZED,
+    ZENDESK_OAUTH_STATE_INVALID: ProvisionerErrors.ZENDESK_OAUTH_STATE_INVALID,
+    ZENDESK_TOKEN_EXCHANGE_FAILED: ProvisionerErrors.ZENDESK_TOKEN_EXCHANGE_FAILED,
+    ZENDESK_USER_INFO_FAILED: ProvisionerErrors.ZENDESK_USER_INFO_FAILED,
+    ZENDESK_WORKSPACE_ALREADY_CONNECTED: ProvisionerErrors.ZENDESK_WORKSPACE_ALREADY_CONNECTED,
+    PROVISIONER_WORKSPACE_CREATE_FAILED: ProvisionerErrors.PROVISIONER_WORKSPACE_CREATE_FAILED,
+    PROVISIONER_TRANSACTION_FAILED: ProvisionerErrors.PROVISIONER_TRANSACTION_FAILED,
+    WORKSPACE_CREATION_LIMIT_EXCEEDED: ProvisionerErrors.WORKSPACE_CREATION_LIMIT_EXCEEDED,
+  })
+  .input(z.object({ query: ZendeskCallbackQuerySchema }))
   .output(ApiResponseSchema(WorkspaceCreateDataSchema));

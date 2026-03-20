@@ -78,3 +78,44 @@ export const IntercomCallbackQuerySchema = z.object({
   code: z.string(),
   state: z.string(),
 });
+
+/**
+ * Zendesk OAuth source
+ * Identifies the origin of the OAuth flow for callback routing:
+ * - inapp: user initiated from /workspace/create (onboarding)
+ * - marketplace: user came from Zendesk Marketplace
+ */
+export const ZendeskOAuthSourceSchema = z
+  .enum(['inapp', 'marketplace'])
+  .optional()
+  .default('inapp');
+
+/**
+ * Zendesk OAuth authorize request
+ * Source and subdomain required (Zendesk needs subdomain for OAuth URL)
+ */
+export const ZendeskAuthorizeQuerySchema = z.object({
+  source: ZendeskOAuthSourceSchema,
+  subdomain: z
+    .string()
+    .min(1)
+    .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/, 'Invalid Zendesk subdomain'),
+});
+
+/**
+ * Zendesk OAuth authorize response
+ * Returns the authorization URL and state for CSRF protection
+ */
+export const ZendeskAuthorizeResponseSchema = z.object({
+  authorizationUrl: z.string().url(),
+  state: z.string(),
+});
+
+/**
+ * Zendesk OAuth callback query parameters
+ * Received from Zendesk after user authorizes
+ */
+export const ZendeskCallbackQuerySchema = z.object({
+  code: z.string(),
+  state: z.string(),
+});
