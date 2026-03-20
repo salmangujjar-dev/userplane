@@ -33,6 +33,14 @@ export type IntercomLinkProviderData = z.infer<typeof IntercomLinkProviderDataSc
  */
 export const ZendeskLinkProviderDataSchema = z.object({
   ticketId: z.string().optional(),
+  ticketSubject: z.string().optional(),
+  ticketPriority: z.string().optional(),
+  ticketType: z.string().optional(),
+  ticketTags: z.array(z.string()).optional(),
+  requesterName: z.string().optional(),
+  requesterEmail: z.string().optional(),
+  agentName: z.string().optional(),
+  agentEmail: z.string().optional(),
 });
 export type ZendeskLinkProviderData = z.infer<typeof ZendeskLinkProviderDataSchema>;
 

@@ -72,9 +72,16 @@ export class ZendeskAppService {
     domainId: string;
     agentEmail: string;
     ticketId?: string;
+    ticketSubject?: string;
+    ticketPriority?: string;
+    ticketType?: string;
+    ticketTags?: string[];
+    requesterName?: string;
+    requesterEmail?: string;
+    agentName?: string;
     subdomain?: string;
   }): Promise<{ linkId: string; linkUrl: string }> {
-    const { ticketId, subdomain, agentEmail } = params;
+    const { ticketId, ticketSubject, subdomain, agentEmail } = params;
 
     // Check recording limit before creating link
     const hasRoom = await this.deps.entitlementService.hasCapacity(params.workspaceId, 'links');
@@ -93,12 +100,24 @@ export class ZendeskAppService {
       domainId: params.domainId,
       createdBy: workspaceMemberId,
       linkProviderType: 'zendesk',
-      linkTitle: ticketId ? `Zendesk #${ticketId}` : undefined,
+      linkTitle: ticketId
+        ? ticketSubject
+          ? `Zendesk #${ticketId}: ${ticketSubject.slice(0, 80)}`
+          : `Zendesk #${ticketId}`
+        : undefined,
       linkProviderId: ticketId ?? null,
       linkProviderRef:
         ticketId && subdomain ? `https://${subdomain}.zendesk.com/agent/tickets/${ticketId}` : null,
       linkProviderData: createLinkProviderData('zendesk', {
-        ticketId: ticketId ?? undefined,
+        ...(ticketId != null && { ticketId }),
+        ...(params.ticketSubject != null && { ticketSubject: params.ticketSubject }),
+        ...(params.ticketPriority != null && { ticketPriority: params.ticketPriority }),
+        ...(params.ticketType != null && { ticketType: params.ticketType }),
+        ...(params.ticketTags != null && { ticketTags: params.ticketTags }),
+        ...(params.requesterName != null && { requesterName: params.requesterName }),
+        ...(params.requesterEmail != null && { requesterEmail: params.requesterEmail }),
+        ...(params.agentName != null && { agentName: params.agentName }),
+        ...(params.agentEmail != null && { agentEmail: params.agentEmail }),
       }),
     });
 

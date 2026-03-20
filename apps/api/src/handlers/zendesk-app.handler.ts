@@ -33,12 +33,10 @@ export function createCreateLinkHandler(service: ZendeskAppService) {
 
     try {
       const subdomain = c.get('subdomain');
+      const { workspaceId: _, ...linkParams } = parsed.data;
       const result = await service.createLink({
+        ...linkParams,
         workspaceId,
-        projectId: parsed.data.projectId,
-        domainId: parsed.data.domainId,
-        agentEmail: parsed.data.agentEmail,
-        ticketId: parsed.data.ticketId,
         subdomain,
       });
 

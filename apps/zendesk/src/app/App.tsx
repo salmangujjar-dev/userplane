@@ -32,7 +32,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
             onClick={() => window.location.reload()}
             style={{
               padding: '8px 16px',
-              background: '#1f73b7',
+              background: '#000',
               color: 'white',
               border: 'none',
               borderRadius: '4px',

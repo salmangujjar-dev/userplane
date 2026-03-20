@@ -11,6 +11,8 @@ interface TicketContext {
   requester: TicketRequester | null;
   ticketId: string | null;
   ticketSubject: string | null;
+  ticketPriority: string | null;
+  ticketType: string | null;
   ticketTags: string[];
   isLoading: boolean;
 }
@@ -20,6 +22,8 @@ export function useTicketContext(): TicketContext {
   const [requester, setRequester] = useState<TicketRequester | null>(null);
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [ticketSubject, setTicketSubject] = useState<string | null>(null);
+  const [ticketPriority, setTicketPriority] = useState<string | null>(null);
+  const [ticketType, setTicketType] = useState<string | null>(null);
   const [ticketTags, setTicketTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -30,6 +34,8 @@ export function useTicketContext(): TicketContext {
           'ticket.requester',
           'ticket.id',
           'ticket.subject',
+          'ticket.priority',
+          'ticket.type',
           'ticket.tags',
         ]);
 
@@ -53,6 +59,16 @@ export function useTicketContext(): TicketContext {
           setTicketSubject(subject);
         }
 
+        const priority = data['ticket.priority'];
+        if (typeof priority === 'string') {
+          setTicketPriority(priority);
+        }
+
+        const type = data['ticket.type'];
+        if (typeof type === 'string') {
+          setTicketType(type);
+        }
+
         const tags = data['ticket.tags'];
         if (Array.isArray(tags)) {
           setTicketTags(tags as string[]);
@@ -67,5 +83,5 @@ export function useTicketContext(): TicketContext {
     fetchTicketData();
   }, [client]);
 
-  return { requester, ticketId, ticketSubject, ticketTags, isLoading };
+  return { requester, ticketId, ticketSubject, ticketPriority, ticketType, ticketTags, isLoading };
 }

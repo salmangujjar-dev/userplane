@@ -10,13 +10,17 @@ const meta: Meta<typeof ErrorMessage> = {
 export default meta;
 type Story = StoryObj<typeof ErrorMessage>;
 
-export const Short: Story = {
-  args: { message: 'Failed to create link' },
+export const WithRetryAndGoBack: Story = {
+  args: {
+    message: 'An unexpected error occurred. Please try again.',
+    onRetry: () => console.log('Retry clicked'),
+    onGoBack: () => console.log('Go back clicked'),
+  },
 };
 
-export const Long: Story = {
+export const WithGoBackOnly: Story = {
   args: {
-    message:
-      'Integration disconnected. Reconnect from the Userplane dashboard. If the problem persists, contact support.',
+    message: 'Integration disconnected. Try reconnecting.',
+    onGoBack: () => console.log('Go back clicked'),
   },
 };

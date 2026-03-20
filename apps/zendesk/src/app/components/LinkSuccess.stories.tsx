@@ -10,24 +10,23 @@ const meta: Meta<typeof LinkSuccess> = {
 export default meta;
 type Story = StoryObj<typeof LinkSuccess>;
 
-export const SidebarActions: Story = {
+export const Sidebar: Story = {
   args: {
     linkUrl: 'https://record.userplane.io/abc123',
+    description: 'The link has been added to your reply draft.',
     actions: [
-      { label: 'Add to ticket comment', onClick: () => {}, variant: 'primary' },
-      { label: 'Copy link', onClick: () => {}, variant: 'secondary' },
-      { label: 'Add tag', onClick: () => {}, variant: 'secondary' },
-      { label: 'Create another', onClick: () => {}, variant: 'ghost' },
+      { label: 'Create another link', onClick: () => {}, variant: 'primary' },
+      { label: 'Done', onClick: () => {}, variant: 'secondary' },
     ],
   },
 };
 
-export const TopBarActions: Story = {
+export const TopBar: Story = {
   args: {
     linkUrl: 'https://record.userplane.io/xyz789',
+    description: 'Copy or share the recording link.',
     actions: [
-      { label: 'Copy Link', onClick: () => {}, variant: 'primary' },
-      { label: 'Create Another', onClick: () => {}, variant: 'ghost' },
+      { label: 'Create another', onClick: () => {}, variant: 'primary' },
       { label: 'Open in Dashboard', onClick: () => {}, variant: 'secondary' },
     ],
   },
