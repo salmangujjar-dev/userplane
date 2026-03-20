@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:zendesk dev\:docs build build\:web build\:home build\:api build\:share build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -62,7 +62,6 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:email$(WHITE)                     ║$(RESET) Run Email preview server only                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:ramp$(WHITE)                      ║$(RESET) Run ramp app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:home$(WHITE)                      ║$(RESET) Run home app only                                                 $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev:zendesk$(WHITE)                   ║$(RESET) Run Zendesk app only                                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:docs$(WHITE)                      ║$(RESET) Run docs app only (Mintlify)                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
@@ -72,6 +71,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)build:api$(WHITE)                     ║$(RESET) Build API only                                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:share$(WHITE)                   ║$(RESET) Build Share URL shortener only                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:home$(WHITE)                    ║$(RESET) Build home app only                                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)build:ramp$(WHITE)                    ║$(RESET) Build Ramp app only                                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:zendesk$(WHITE)                 ║$(RESET) Build Zendesk app only                                             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)preview:home$(WHITE)                  ║$(RESET) Preview home production build (Cloudflare)                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home$(WHITE)                   ║$(RESET) Deploy home app (preview)                                         $(WHITE)║$(RESET)"
@@ -105,6 +105,22 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)storybook:sdk:build$(WHITE)           ║$(RESET) Build Storybook for SDK package                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:embed$(WHITE)               ║$(RESET) Run Storybook for embed package                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:embed:build$(WHITE)         ║$(RESET) Build Storybook for embed package                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:zendesk$(WHITE)             ║$(RESET) Run Storybook for Zendesk app                                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:zendesk:build$(WHITE)       ║$(RESET) Build Storybook for Zendesk app                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)ZENDESK$(WHITE)                                                                                            ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)serve:zendesk$(WHITE)                 ║$(RESET) Build and serve Zendesk app locally (zcli)                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)package:zendesk$(WHITE)               ║$(RESET) Package Zendesk app for upload (.zip)                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)RAMP$(WHITE)                                                                                              ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)ramp:db:generate$(WHITE)              ║$(RESET) Generate Ramp Drizzle migrations                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)ramp:db:migrate$(WHITE)               ║$(RESET) Run Ramp database migrations                                      $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)ramp:db:push$(WHITE)                  ║$(RESET) Push Ramp schema directly to DB                                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)ramp:db:reset$(WHITE)                 ║$(RESET) Reset Ramp database (drop + migrate + seed)                        $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)ramp:db:seed$(WHITE)                  ║$(RESET) Seed Ramp database                                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)ramp:db:studio$(WHITE)                ║$(RESET) Open Drizzle Studio for Ramp                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)ASSETS (CDN)$(WHITE)                                                                                     ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -196,10 +212,6 @@ dev\:home: ## Run home app only
 	@echo "$(MAGENTA)Starting Home app (Astro)...$(RESET)"
 	@cd apps/home && bun dev
 
-dev\:zendesk: ## Run Zendesk app only
-	@echo "$(MAGENTA)Starting Zendesk app...$(RESET)"
-	@cd apps/zendesk && bun dev
-
 dev\:docs: ## Run docs app only (Mintlify)
 	@echo "$(MAGENTA)Starting Docs app (Mintlify on port 3003)...$(RESET)"
 	@cd apps/docs && fnm exec --using=22 bun dev
@@ -228,6 +240,11 @@ build\:home: ## Build home app only
 	@echo "$(BLUE)Building Home app...$(RESET)"
 	@bun run turbo build --filter=home
 	@echo "$(GREEN)Home app built!$(RESET)"
+
+build\:ramp: ## Build Ramp app only
+	@echo "$(BLUE)Building Ramp app...$(RESET)"
+	@cd apps/ramp && bun run build
+	@echo "$(GREEN)Ramp app built!$(RESET)"
 
 build\:zendesk: ## Build Zendesk app only
 	@echo "$(BLUE)Building Zendesk app...$(RESET)"
@@ -379,6 +396,24 @@ storybook\:logger\:build: ## Build Storybook for logger package
 	@echo "$(BLUE)Building Storybook for logger...$(RESET)"
 	@cd packages/logger && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
+
+storybook\:zendesk: ## Run Storybook for Zendesk app
+	@echo "$(MAGENTA)Starting Storybook for Zendesk...$(RESET)"
+	@cd apps/zendesk && bun run storybook
+
+storybook\:zendesk\:build: ## Build Storybook for Zendesk app
+	@echo "$(BLUE)Building Storybook for Zendesk...$(RESET)"
+	@cd apps/zendesk && bun run build-storybook
+	@echo "$(GREEN)Storybook build complete!$(RESET)"
+
+serve\:zendesk: build\:zendesk ## Build and serve Zendesk app locally (zcli)
+	@echo "$(MAGENTA)Serving Zendesk app via zcli...$(RESET)"
+	@cd apps/zendesk && bun run start
+
+package\:zendesk: build\:zendesk ## Package Zendesk app for upload (.zip)
+	@echo "$(BLUE)Packaging Zendesk app...$(RESET)"
+	@cd apps/zendesk && bun run package
+	@echo "$(GREEN)Zendesk app packaged!$(RESET)"
 
 # Assets commands
 assets\:upload: ## Upload assets to R2 CDN (dev)
@@ -538,6 +573,36 @@ db\:studio\:production: ## Open Drizzle Studio (production)
 		exit 1; \
 	fi
 	@cd packages/db && set -a && . ../../apps/api/.env.production && set +a && bun run db:studio
+
+# Ramp Database commands (local SQLite)
+ramp\:db\:generate: ## Generate Ramp Drizzle migrations
+	@echo "$(BLUE)Generating Ramp migrations...$(RESET)"
+	@cd apps/ramp && bunx drizzle-kit generate
+	@echo "$(GREEN)Ramp migrations generated!$(RESET)"
+
+ramp\:db\:migrate: ## Run Ramp database migrations
+	@echo "$(BLUE)Running Ramp migrations...$(RESET)"
+	@cd apps/ramp && bun run db:migrate
+	@echo "$(GREEN)Ramp migrations complete!$(RESET)"
+
+ramp\:db\:push: ## Push Ramp schema directly to DB
+	@echo "$(YELLOW)Pushing Ramp schema to database...$(RESET)"
+	@cd apps/ramp && bunx drizzle-kit push
+	@echo "$(GREEN)Ramp schema pushed!$(RESET)"
+
+ramp\:db\:reset: ## Reset Ramp database (drop + migrate + seed)
+	@echo "$(RED)Resetting Ramp database...$(RESET)"
+	@cd apps/ramp && bun run db:reset
+	@echo "$(GREEN)Ramp database reset!$(RESET)"
+
+ramp\:db\:seed: ## Seed Ramp database
+	@echo "$(BLUE)Seeding Ramp database...$(RESET)"
+	@cd apps/ramp && bun run db:seed
+	@echo "$(GREEN)Ramp database seeded!$(RESET)"
+
+ramp\:db\:studio: ## Open Drizzle Studio for Ramp
+	@echo "$(MAGENTA)Opening Drizzle Studio for Ramp...$(RESET)"
+	@cd apps/ramp && bun run db:studio
 
 # Pricing commands
 SEED_SCRIPT := packages/payments/scripts/seed-product-metadata.ts

@@ -6,8 +6,14 @@ type Props = {
 
 /**
  * Generic Zendesk OAuth callback dispatcher
- * Decodes the JWT state token and redirects to the workspace integration callback page
- * Zendesk only supports workspace integration flow (no onboarding flow)
+ * Decodes the JWT state token and redirects to the appropriate callback page based on:
+ * - workspaceId: present -> existing workspace integration flow
+ * - source: 'marketplace' -> workspace creation via Zendesk Marketplace
+ * - source: 'inapp' or absent -> workspace creation via in-app onboarding
+ *
+ * This keeps separation of concerns:
+ * - This page: Simple redirect logic based on state
+ * - Domain pages: Handle their respective API calls and flows
  */
 export default async function ZendeskCallbackPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -18,7 +24,9 @@ export default async function ZendeskCallbackPage({ searchParams }: Props) {
     redirect('/workspace/create?error=missing_oauth_params');
   }
 
-  let payload: { workspaceId?: string };
+  // Decode JWT state token (naive base64 decode of payload)
+  // Full cryptographic verification happens on the API when the callback is processed
+  let payload: { workspaceId?: string; source?: string };
   try {
     const parts = state.split('.');
     if (parts.length !== 3 || !parts[1]) {
@@ -33,11 +41,13 @@ export default async function ZendeskCallbackPage({ searchParams }: Props) {
   const queryParams = new URLSearchParams({ code, state });
 
   if (payload.workspaceId) {
+    // Integration flow - redirect to workspace integration callback
     redirect(
       `/workspace/${payload.workspaceId}/settings/integrations/zendesk/callback?${queryParams.toString()}`
     );
   }
 
-  // Zendesk doesn't support onboarding flow — redirect to error
-  redirect('/workspace/create?error=invalid_zendesk_flow');
+  // Workspace creation flow - route based on source
+  const flow = payload.source === 'marketplace' ? 'zendesk-marketplace' : 'zendesk-inapp';
+  redirect(`/workspace/create/callback?flow=${flow}&${queryParams.toString()}`);
 }

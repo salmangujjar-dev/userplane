@@ -28,7 +28,7 @@ import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
 import { type DefinedError, handleSafeResult, showErrorToastToast } from '@/lib/errors';
 import { mediaClient } from '@/lib/media';
-import { showIntercomConnectionFailedToast } from '@/lib/toasts';
+import { showIntercomConnectionFailedToast, showZendeskConnectionFailedToast } from '@/lib/toasts';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -372,8 +372,177 @@ function IntercomMarketplaceFlow() {
   return <OAuthLoadingState />;
 }
 
+const zendeskSubdomainSchema = z.object({
+  subdomain: z
+    .string()
+    .min(1, 'Subdomain is required')
+    .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/, 'Invalid subdomain format'),
+});
+
+type ZendeskSubdomainValues = z.infer<typeof zendeskSubdomainSchema>;
+
+/**
+ * Zendesk subdomain flow — shared by marketplace and in-app onboarding.
+ * Unlike Intercom, Zendesk OAuth requires a subdomain before the authorization URL
+ * can be built, so this flow collects the subdomain first.
+ */
+function ZendeskSubdomainFlow({ source }: { source: 'marketplace' | 'inapp' }) {
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<DefinedError | null>(null);
+  const router = useRouter();
+  const { data: accountResult } = useAccount();
+  const { signOut } = useAuth();
+
+  const account = accountResult?.success ? accountResult.data : null;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors: formErrors, isValid },
+  } = useForm<ZendeskSubdomainValues>({
+    resolver: zodResolver(zendeskSubdomainSchema),
+    mode: 'onTouched',
+    defaultValues: { subdomain: '' },
+  });
+
+  const handleConnect = async (data: ZendeskSubdomainValues) => {
+    setIsConnecting(true);
+    setError(null);
+    try {
+      const [apiError, response] = await apiClient.provisioner.zendesk.authorize({
+        query: { source, subdomain: data.subdomain },
+      });
+      const result = handleSafeResult(apiError, response?.data ?? null);
+
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      window.location.href = result.data.authorizationUrl;
+    } catch (err) {
+      showZendeskConnectionFailedToast(err instanceof Error ? err.message : undefined);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  if (error) {
+    return (
+      <OAuthErrorState
+        error={error}
+        errorActionPrimary={{
+          label: 'Try Again',
+          callback: () => {
+            setError(null);
+          },
+        }}
+        errorActionSecondary={{
+          label: 'Contact Support',
+          callback: () => {
+            window.open(SUPPORT_EMAIL_MAILTO, '_blank');
+          },
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 pb-32 lg:pb-12 bg-background overflow-hidden">
+      <AuthIcons />
+
+      {account && <AccountLogoutFooter userName={account.userName} onSignOut={signOut} />}
+
+      <div className="w-full max-w-md space-y-10 relative z-10">
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex items-center gap-4">
+            <Logo variant="tiled" size="md" showText={false} />
+            <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
+              <Image
+                src={mediaClient.getIntegrationMediaUrl('integrations/zendesk.webp')}
+                alt="Zendesk"
+                width={32}
+                height={32}
+                className="object-contain"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="text-xl font-medium text-foreground">
+              Let&apos;s create your workspace
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Connect your Zendesk account to get started
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit(handleConnect)} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="subdomain">Zendesk subdomain</Label>
+            <p className="text-xs text-muted-foreground">
+              Enter the subdomain from your Zendesk URL
+            </p>
+            <div className="flex items-center gap-0">
+              <input
+                id="subdomain"
+                {...register('subdomain')}
+                placeholder="your-company"
+                disabled={isConnecting}
+                className="flex h-10 w-full rounded-l-md border border-r-0 border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <span className="inline-flex h-10 items-center rounded-r-md border border-input bg-muted px-3 text-sm text-muted-foreground">
+                .zendesk.com
+              </span>
+            </div>
+            {formErrors.subdomain && (
+              <p className="text-sm text-destructive">{formErrors.subdomain.message}</p>
+            )}
+          </div>
+
+          <Button
+            type="submit"
+            disabled={!isValid || isConnecting}
+            size="lg"
+            className="w-full rounded-full px-7 py-6"
+          >
+            {isConnecting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Connecting...
+              </>
+            ) : (
+              'Connect to Zendesk'
+            )}
+          </Button>
+
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => router.push('/workspace/create?flow=direct')}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Configure userplane manually
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function CreateWorkspacePage() {
   const [flow] = useQueryState('flow', { defaultValue: 'intercom-inapp' });
+
+  if (flow === 'zendesk-marketplace') {
+    return <ZendeskSubdomainFlow source="marketplace" />;
+  }
+
+  if (flow === 'zendesk-inapp') {
+    return <ZendeskSubdomainFlow source="inapp" />;
+  }
 
   if (flow === 'intercom-marketplace') {
     return <IntercomMarketplaceFlow />;
