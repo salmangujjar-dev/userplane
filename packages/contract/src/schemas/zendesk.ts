@@ -88,6 +88,7 @@ export type ZendeskStatusResponse = z.infer<typeof ZendeskStatusResponseSchema>;
 
 export const ZendeskErrorResponseSchema = z.object({
   error: z.string(),
+  code: z.string().optional(),
   details: z.unknown().optional(),
 });
 

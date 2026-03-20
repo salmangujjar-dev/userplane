@@ -185,7 +185,7 @@ export const WorkspaceErrors = {
   // Integration errors
   INTEGRATION_ALREADY_CONNECTED: {
     status: 409,
-    message: 'Intercom is already connected to this workspace',
+    message: 'An integration is already connected to this workspace',
   },
   INTEGRATION_NOT_FOUND: {
     status: 404,
@@ -193,6 +193,6 @@ export const WorkspaceErrors = {
   },
   INTEGRATION_PROVIDER_WORKSPACE_CONFLICT: {
     status: 409,
-    message: 'This Intercom workspace is already connected to another account',
+    message: 'This provider account is already connected to another workspace',
   },
 } as const;
