@@ -7,7 +7,8 @@ import { ZendeskCreateLinkBodySchema, ZendeskWorkspaceQuerySchema } from '@userp
 import type { Context } from 'hono';
 
 import { createLogger } from '@/api/lib/logger';
-import type { ZendeskAppService } from '@/api/services/zendesk-app.service';
+import { ZendeskAppError, type ZendeskAppService } from '@/api/services/zendesk-app.service';
+import type { ZendeskAppEnv } from '@/api/types/internal';
 
 const logger = createLogger('zendesk-app-handler');
 
@@ -15,7 +16,7 @@ const logger = createLogger('zendesk-app-handler');
  * POST /api/v1/zendesk/links - Create a recording link
  */
 export function createCreateLinkHandler(service: ZendeskAppService) {
-  return async (c: Context) => {
+  return async (c: Context<ZendeskAppEnv>) => {
     const body = await c.req.json();
     const parsed = ZendeskCreateLinkBodySchema.safeParse(body);
 
@@ -23,7 +24,7 @@ export function createCreateLinkHandler(service: ZendeskAppService) {
       return c.json({ error: 'Invalid request body', details: parsed.error.errors }, 400);
     }
 
-    const workspaceId = c.get('workspaceId') as string;
+    const workspaceId = c.get('workspaceId');
 
     // Verify the requested workspace matches the authenticated workspace
     if (parsed.data.workspaceId !== workspaceId) {
@@ -31,7 +32,7 @@ export function createCreateLinkHandler(service: ZendeskAppService) {
     }
 
     try {
-      const subdomain = c.get('subdomain') as string | undefined;
+      const subdomain = c.get('subdomain');
       const result = await service.createLink({
         workspaceId,
         projectId: parsed.data.projectId,
@@ -43,8 +44,19 @@ export function createCreateLinkHandler(service: ZendeskAppService) {
 
       return c.json({ success: true, data: result });
     } catch (error) {
+      if (error instanceof ZendeskAppError) {
+        switch (error.code) {
+          case 'RECORDING_LIMIT_EXCEEDED':
+            return c.json({ error: error.message, code: error.code }, 403);
+          case 'AGENT_NOT_MEMBER':
+            return c.json({ error: error.message, code: error.code }, 403);
+          case 'AGENT_NOT_FOUND':
+            return c.json({ error: error.message, code: error.code }, 404);
+        }
+      }
+
       logger.error({ error }, 'Failed to create link');
-      return c.json({ error: 'Failed to create link' }, 500);
+      return c.json({ error: 'Failed to create link', code: 'INTERNAL_ERROR' }, 500);
     }
   };
 }
@@ -53,7 +65,7 @@ export function createCreateLinkHandler(service: ZendeskAppService) {
  * GET /api/v1/zendesk/projects - List workspace projects
  */
 export function createGetProjectsHandler(service: ZendeskAppService) {
-  return async (c: Context) => {
+  return async (c: Context<ZendeskAppEnv>) => {
     const query = c.req.query();
     const parsed = ZendeskWorkspaceQuerySchema.safeParse(query);
 
@@ -61,7 +73,7 @@ export function createGetProjectsHandler(service: ZendeskAppService) {
       return c.json({ error: 'Invalid query params', details: parsed.error.errors }, 400);
     }
 
-    const workspaceId = c.get('workspaceId') as string;
+    const workspaceId = c.get('workspaceId');
 
     if (parsed.data.workspaceId !== workspaceId) {
       return c.json({ error: 'Workspace mismatch' }, 403);
@@ -81,7 +93,7 @@ export function createGetProjectsHandler(service: ZendeskAppService) {
  * GET /api/v1/zendesk/domains - List workspace domains
  */
 export function createGetDomainsHandler(service: ZendeskAppService) {
-  return async (c: Context) => {
+  return async (c: Context<ZendeskAppEnv>) => {
     const query = c.req.query();
     const parsed = ZendeskWorkspaceQuerySchema.safeParse(query);
 
@@ -89,7 +101,7 @@ export function createGetDomainsHandler(service: ZendeskAppService) {
       return c.json({ error: 'Invalid query params', details: parsed.error.errors }, 400);
     }
 
-    const workspaceId = c.get('workspaceId') as string;
+    const workspaceId = c.get('workspaceId');
 
     if (parsed.data.workspaceId !== workspaceId) {
       return c.json({ error: 'Workspace mismatch' }, 403);
@@ -109,7 +121,7 @@ export function createGetDomainsHandler(service: ZendeskAppService) {
  * GET /api/v1/zendesk/status - Integration health check
  */
 export function createGetStatusHandler() {
-  return async (c: Context) => {
+  return async (c: Context<ZendeskAppEnv>) => {
     const query = c.req.query();
     const parsed = ZendeskWorkspaceQuerySchema.safeParse(query);
 
@@ -117,7 +129,7 @@ export function createGetStatusHandler() {
       return c.json({ error: 'Invalid query params', details: parsed.error.errors }, 400);
     }
 
-    const workspaceId = c.get('workspaceId') as string;
+    const workspaceId = c.get('workspaceId');
 
     if (parsed.data.workspaceId !== workspaceId) {
       return c.json({ error: 'Workspace mismatch' }, 403);

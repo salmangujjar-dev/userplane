@@ -3,6 +3,8 @@
  * Handles OAuth flow and API calls to Zendesk
  */
 
+import { z } from 'zod';
+
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';
@@ -24,26 +26,30 @@ function validateSubdomain(subdomain: string): string {
 /**
  * Zendesk OAuth token response
  */
-export interface ZendeskTokenResponse {
-  access_token: string;
-  token_type: string;
-  scope: string;
-}
+const ZendeskTokenResponseSchema = z.object({
+  access_token: z.string(),
+  token_type: z.string(),
+  scope: z.string(),
+});
+
+export type ZendeskTokenResponse = z.infer<typeof ZendeskTokenResponseSchema>;
 
 /**
  * Zendesk current user response from /api/v2/users/me.json
  */
-export interface ZendeskMeResponse {
-  user: {
-    id: number;
-    url: string;
-    name: string;
-    email: string;
-    role: string;
-    active: boolean;
-    verified: boolean;
-  };
-}
+const ZendeskMeResponseSchema = z.object({
+  user: z.object({
+    id: z.number(),
+    url: z.string(),
+    name: z.string(),
+    email: z.string().nullable(),
+    role: z.string(),
+    active: z.boolean(),
+    verified: z.boolean(),
+  }),
+});
+
+export type ZendeskMeResponse = z.infer<typeof ZendeskMeResponseSchema>;
 
 /**
  * Build Zendesk OAuth authorization URL
@@ -55,7 +61,7 @@ export function getAuthorizationUrl(subdomain: string, state: string): string {
     response_type: 'code',
     client_id: env.zendesk.clientId,
     redirect_uri: env.zendesk.redirectUri,
-    scope: 'read',
+    scope: 'read tickets:write',
     state,
   });
 
@@ -82,7 +88,7 @@ export async function exchangeCodeForToken(
         client_id: env.zendesk.clientId,
         client_secret: env.zendesk.clientSecret,
         redirect_uri: env.zendesk.redirectUri,
-        scope: 'read',
+        scope: 'read tickets:write',
       }),
     });
 
@@ -97,12 +103,72 @@ export async function exchangeCodeForToken(
       return null;
     }
 
-    const data = (await response.json()) as ZendeskTokenResponse;
+    const data = ZendeskTokenResponseSchema.parse(await response.json());
     return data;
   } catch (error) {
     logger.error({ error }, 'Token exchange error');
     captureException(error, undefined, { operation: 'zendesk_token_exchange' });
     return null;
+  }
+}
+
+/**
+ * Add an internal note or public comment to a Zendesk ticket
+ * Returns true on success, false on failure (fire-and-forget)
+ */
+export async function addTicketComment(
+  subdomain: string,
+  accessToken: string,
+  ticketId: string,
+  htmlBody: string,
+  isInternal: boolean = true
+): Promise<boolean> {
+  const validatedSubdomain = validateSubdomain(subdomain);
+  try {
+    const response = await fetch(
+      `https://${validatedSubdomain}.zendesk.com/api/v2/tickets/${ticketId}.json`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ticket: {
+            comment: {
+              html_body: htmlBody,
+              public: !isInternal,
+            },
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn(
+        { status: response.status, error: errorText, subdomain, ticketId },
+        'Add ticket comment failed'
+      );
+      captureException(new Error('failed to add ticket comment to Zendesk'), undefined, {
+        operation: 'zendesk_add_ticket_comment',
+        status: response.status,
+        error_text: errorText,
+        subdomain,
+        ticket_id: ticketId,
+      });
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logger.error({ error, subdomain, ticketId }, 'Add ticket comment error');
+    captureException(error, undefined, {
+      operation: 'zendesk_add_ticket_comment',
+      subdomain,
+      ticket_id: ticketId,
+    });
+    return false;
   }
 }
 
@@ -134,7 +200,7 @@ export async function getMe(
       return null;
     }
 
-    const data = (await response.json()) as ZendeskMeResponse;
+    const data = ZendeskMeResponseSchema.parse(await response.json());
     return data;
   } catch (error) {
     logger.error({ error, subdomain }, 'Get /me error');

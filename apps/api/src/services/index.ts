@@ -302,6 +302,7 @@ export const intercomHealthCheckService = new IntercomHealthCheckService({
 export const zendeskService = new ZendeskService({
   tokenService,
   integrationRepo,
+  provisionerService,
   cacheService,
 });
 
@@ -312,6 +313,7 @@ export const zendeskAppService = new ZendeskAppService({
   linkService,
   userRepo,
   workspaceMemberRepo,
+  entitlementService,
 });
 
 // Intercom Canvas service

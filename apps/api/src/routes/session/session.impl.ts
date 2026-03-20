@@ -14,6 +14,7 @@ import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-mem
 import type { IntercomNotificationService } from '@/api/services/intercom-notification.service';
 import type { NotificationService } from '@/api/services/notification.service';
 import type { SessionService } from '@/api/services/session.service';
+import type { ZendeskNotificationService } from '@/api/services/zendesk-notification.service';
 import { emailUrls } from '@/api/utils/email-urls';
 
 /**
@@ -129,6 +130,7 @@ async function sendRecordingNotifications(
     workspaceMemberRepo: WorkspaceMemberRepository;
     notificationService: NotificationService;
     intercomNotificationService: IntercomNotificationService;
+    zendeskNotificationService: ZendeskNotificationService;
   }
 ): Promise<void> {
   const recording = await deps.recordingRepo.findByIdWithDetailsAndStatusGroup(
@@ -168,6 +170,17 @@ async function sendRecordingNotifications(
       });
     }
   }
+
+  // Internal note on Zendesk ticket if link originated from Zendesk
+  if (recording.linkProviderType === 'zendesk' && recording.linkProviderId) {
+    const recordingUrl = emailUrls.recording.view(recording.workspaceId, recording.recordingId);
+    await deps.zendeskNotificationService.notifyRecordingReceived({
+      workspaceId: recording.workspaceId,
+      ticketId: recording.linkProviderId,
+      recordingId: recording.recordingId,
+      recordingUrl,
+    });
+  }
 }
 
 /**
@@ -181,7 +194,8 @@ export const completeUploadImpl = (
   recordingRepo: RecordingRepository,
   workspaceMemberRepo: WorkspaceMemberRepository,
   notificationService: NotificationService,
-  intercomNotificationService: IntercomNotificationService
+  intercomNotificationService: IntercomNotificationService,
+  zendeskNotificationService: ZendeskNotificationService
 ) => {
   return os.upload.complete.use(requireUploadToken).handler(async ({ input, context }) => {
     const result = await sessionService.markAsAvailable(
@@ -198,6 +212,7 @@ export const completeUploadImpl = (
           workspaceMemberRepo,
           notificationService,
           intercomNotificationService,
+          zendeskNotificationService,
         });
       } catch (error) {
         sessionLogger.error({ err: error }, 'Error sending recording notifications');
@@ -226,7 +241,8 @@ export const createSessionProcedures = (
   recordingRepo: RecordingRepository,
   workspaceMemberRepo: WorkspaceMemberRepository,
   notificationService: NotificationService,
-  intercomNotificationService: IntercomNotificationService
+  intercomNotificationService: IntercomNotificationService,
+  zendeskNotificationService: ZendeskNotificationService
 ) => {
   return {
     init: getSessionImpl(sessionService),
@@ -237,7 +253,8 @@ export const createSessionProcedures = (
         recordingRepo,
         workspaceMemberRepo,
         notificationService,
-        intercomNotificationService
+        intercomNotificationService,
+        zendeskNotificationService
       ),
     },
   };
