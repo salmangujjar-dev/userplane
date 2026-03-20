@@ -49,6 +49,7 @@ import {
   zendeskService,
 } from '@/api/services';
 import { IntercomNotificationService } from '@/api/services/intercom-notification.service';
+import { ZendeskNotificationService } from '@/api/services/zendesk-notification.service';
 
 import { createAccountProcedures } from './account/account.impl';
 import { createAdminProcedures } from './admin/admin.impl';
@@ -74,12 +75,14 @@ export type { WorkspaceContext } from '@/api/middleware/workspace.orpc';
  * Implemented procedures
  */
 const intercomNotificationService = new IntercomNotificationService({ integrationRepo });
+const zendeskNotificationService = new ZendeskNotificationService({ integrationRepo });
 const sessionProcedures = createSessionProcedures(
   sessionService,
   recordingRepo,
   workspaceMemberRepo,
   notificationService,
-  intercomNotificationService
+  intercomNotificationService,
+  zendeskNotificationService
 );
 const accountProcedures = createAccountProcedures(userService);
 const workspaceProcedures = createWorkspaceProcedures(
@@ -113,7 +116,8 @@ const inviteProcedures = createInviteProcedures(inviteService);
 const provisionerProcedures = createProvisionerProcedures(
   provisionerService,
   emailService,
-  intercomService
+  intercomService,
+  zendeskService
 );
 const statusProcedures = createStatusProcedures();
 const adminProcedures = createAdminProcedures(

@@ -18,6 +18,7 @@ import type {
   ShareTokenPayload,
   UploadTokenPayload,
   WorkspaceCreateInviteTokenPayload,
+  ZendeskOAuthSource,
   ZendeskOAuthStatePayload,
 } from '@/api/types';
 
@@ -320,14 +321,24 @@ export class TokenService {
    * Generate signed Zendesk OAuth state token
    * Used for CSRF protection during OAuth flow
    * Token expires in 15 minutes
+   * @param userId - The user initiating the OAuth flow
+   * @param subdomain - The Zendesk subdomain (required for token exchange)
+   * @param workspaceId - Optional workspace ID for workspace integration flow (absent for onboarding)
+   * @param source - Origin of the OAuth flow for callback routing
    */
-  signZendeskOAuthState(userId: string, workspaceId: string, subdomain: string): string {
+  signZendeskOAuthState(
+    userId: string,
+    subdomain: string,
+    workspaceId?: string,
+    source?: ZendeskOAuthSource
+  ): string {
     const now = Math.floor(Date.now() / 1000);
     const payload: ZendeskOAuthStatePayload = {
       iss: this.jwtIssuer,
       userId,
-      workspaceId,
+      ...(workspaceId && { workspaceId }),
       subdomain,
+      ...(source && { source }),
       timestamp: now,
       nonce: nanoid(16),
       iat: now,
@@ -340,11 +351,14 @@ export class TokenService {
   /**
    * Verify and decode Zendesk OAuth state token
    * Returns payload if valid and user matches, null otherwise
+   * @param token - The OAuth state token to verify
+   * @param userId - The expected user ID
+   * @param workspaceId - Optional expected workspace ID for workspace integration flow
    */
   verifyZendeskOAuthState(
     token: string,
     userId: string,
-    workspaceId: string
+    workspaceId?: string
   ): ZendeskOAuthStatePayload | null {
     try {
       const payload = jwt.verify(token, this.jwtSecret, {
@@ -353,7 +367,9 @@ export class TokenService {
 
       if (payload.iss !== this.jwtIssuer) return null;
       if (payload.userId !== userId) return null;
-      if (payload.workspaceId !== workspaceId) return null;
+
+      // If workspaceId is provided, verify it matches
+      if (workspaceId !== undefined && payload.workspaceId !== workspaceId) return null;
 
       return payload;
     } catch {

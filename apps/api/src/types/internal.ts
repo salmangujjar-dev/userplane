@@ -26,6 +26,7 @@ import {
   UploadTokenPayloadSchema,
   VideoSourceSchema,
   WorkspaceCreateInviteTokenPayloadSchema,
+  ZendeskOAuthSourceSchema,
 } from '@userplane/contract';
 import type { Link } from '@userplane/db';
 import type {
@@ -77,6 +78,18 @@ export type WorkspaceCreateInviteTokenPayload = z.infer<
 >;
 export type ShareTokenPayload = z.infer<typeof ShareTokenPayloadSchema>;
 export type PresignedUrlInfo = z.infer<typeof PresignedUrlInfoSchema>;
+
+/**
+ * Hono environment type for Zendesk app routes
+ * Ensures type-safe c.get()/c.set() in middleware and handlers
+ */
+export type ZendeskAppEnv = {
+  Variables: {
+    workspaceId: string;
+    integrationId: string;
+    subdomain: string;
+  };
+};
 
 /**
  * Link type inferred from database schema
@@ -477,16 +490,27 @@ export interface IntercomOAuthStatePayload {
 }
 
 /**
+ * Source of the Zendesk OAuth flow.
+ * Derives from the contract schema and extends with 'integration' for workspace flow.
+ * - inapp: user initiated from /workspace/create (onboarding)
+ * - marketplace: user came from Zendesk Marketplace (/install/zendesk)
+ * - integration: user connecting Zendesk to an existing workspace
+ */
+export type ZendeskOAuthSource = z.infer<typeof ZendeskOAuthSourceSchema> | 'integration';
+
+/**
  * Zendesk OAuth state payload for CSRF protection
  * Signed JWT with 15 minute expiry
- * Always has workspaceId (Zendesk only supports workspace integration flow)
+ * workspaceId is optional - present for workspace integration flow, absent for onboarding flow
  * subdomain is required for token exchange with Zendesk
+ * source identifies the origin of the flow for callback routing
  */
 export interface ZendeskOAuthStatePayload {
   iss: string;
   userId: string;
-  workspaceId: string;
+  workspaceId?: string;
   subdomain: string;
+  source?: ZendeskOAuthSource;
   timestamp: number;
   nonce: string;
   iat: number;

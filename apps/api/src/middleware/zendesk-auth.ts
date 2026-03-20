@@ -8,6 +8,7 @@ import type { Context, Next } from 'hono';
 
 import { createLogger } from '@/api/lib/logger';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { ZendeskAppEnv } from '@/api/types/internal';
 
 const logger = createLogger('zendesk-auth');
 
@@ -21,7 +22,7 @@ export interface ZendeskAuthDeps {
  * and attaches workspaceId to the request context
  */
 export function createZendeskAuthMiddleware(deps: ZendeskAuthDeps) {
-  return async (c: Context, next: Next) => {
+  return async (c: Context<ZendeskAppEnv>, next: Next) => {
     const authHeader = c.req.header('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return c.json({ error: 'Missing or invalid Authorization header' }, 401);
@@ -44,7 +45,7 @@ export function createZendeskAuthMiddleware(deps: ZendeskAuthDeps) {
     // Attach workspace context for downstream handlers
     c.set('workspaceId', integration.workspaceId);
     c.set('integrationId', integration.id);
-    c.set('subdomain', (integration.providerMeta as { subdomain: string }).subdomain);
+    c.set('subdomain', integration.providerMeta.subdomain);
 
     await next();
   };
