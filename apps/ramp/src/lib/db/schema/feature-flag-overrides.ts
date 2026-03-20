@@ -5,3 +5,9 @@ export const featureFlagOverrides = sqliteTable('feature_flag_overrides', {
   value: integer('value', { mode: 'boolean' }).notNull(),
   updatedAt: text('updated_at').notNull(),
 });
+
+export const variantFlagOverrides = sqliteTable('variant_flag_overrides', {
+  flag: text('flag').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
