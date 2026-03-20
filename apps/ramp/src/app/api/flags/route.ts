@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { clearAllOverrides, loadAndApplyOverrides, setOverrides } from '@/lib/feature-flag-service';
-import { type FeatureFlag, FLAG_DEFAULTS, getRuntimeFlags } from '@/lib/feature-flags';
+import {
+  type FeatureFlag,
+  FLAG_DEFAULTS,
+  getRuntimeFlags,
+  getRuntimeVariants,
+  VARIANT_DEFAULTS,
+  type VariantFlag,
+} from '@/lib/feature-flags';
+
+function getResponseData() {
+  return { flags: getRuntimeFlags(), variants: getRuntimeVariants() };
+}
 
 export function GET() {
   loadAndApplyOverrides();
-  return NextResponse.json({ success: true, data: getRuntimeFlags() });
+  return NextResponse.json({ success: true, data: getResponseData() });
 }
 
 export async function POST(request: NextRequest) {
@@ -13,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   if (body.action === 'reset-all') {
     clearAllOverrides();
-    return NextResponse.json({ success: true, data: getRuntimeFlags() });
+    return NextResponse.json({ success: true, data: getResponseData() });
   }
 
   if (body.action === 'save-overrides') {
@@ -32,8 +43,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    setOverrides(validOverrides);
-    return NextResponse.json({ success: true, data: getRuntimeFlags() });
+    // Validate variant overrides
+    const rawVariants = body.variantOverrides;
+    let validVariantOverrides: Partial<Record<VariantFlag, string>> | undefined;
+    if (typeof rawVariants === 'object' && rawVariants !== null && !Array.isArray(rawVariants)) {
+      validVariantOverrides = {};
+      for (const [key, value] of Object.entries(rawVariants)) {
+        if (key in VARIANT_DEFAULTS && typeof value === 'string') {
+          validVariantOverrides[key as VariantFlag] = value;
+        }
+      }
+    }
+
+    setOverrides(validOverrides, validVariantOverrides);
+    return NextResponse.json({ success: true, data: getResponseData() });
   }
 
   return NextResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });

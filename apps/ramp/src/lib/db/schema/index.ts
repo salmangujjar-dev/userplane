@@ -5,7 +5,7 @@ export type { employees as EmployeesTable } from './employees';
 export { employees } from './employees';
 export type { expenses as ExpensesTable } from './expenses';
 export { expenses } from './expenses';
-export { featureFlagOverrides } from './feature-flag-overrides';
+export { featureFlagOverrides, variantFlagOverrides } from './feature-flag-overrides';
 export { categoriesRelations, employeesRelations, expensesRelations } from './relations';
 
 import type { categories } from './categories';

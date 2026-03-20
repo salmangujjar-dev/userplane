@@ -96,23 +96,47 @@ const featureFlags = {
 
 export type FeatureFlag = keyof typeof featureFlags;
 
+// ── Variant flags (string-valued) ─────────────────────────────────────
+
+const variantFlags = {
+  supportProvider: 'intercom',
+} as const satisfies Record<string, string>;
+
+export type VariantFlag = keyof typeof variantFlags;
+export type SupportProvider = 'none' | 'intercom' | 'zendesk';
+
 // ── Static defaults (immutable reference) ─────────────────────────────
 
 export const FLAG_DEFAULTS: Record<FeatureFlag, boolean> = { ...featureFlags };
+export const VARIANT_DEFAULTS: Record<VariantFlag, string> = { ...variantFlags };
 
 // ── Mutable runtime state ─────────────────────────────────────────────
 
 const runtimeFlags: Record<FeatureFlag, boolean> = { ...featureFlags };
 const overriddenFlags = new Set<FeatureFlag>();
 
+const runtimeVariants: Record<VariantFlag, string> = { ...variantFlags };
+const overriddenVariants = new Set<VariantFlag>();
+
 // Check if a feature is enabled
 export function isFeatureEnabled(flag: FeatureFlag): boolean {
   return runtimeFlags[flag];
 }
 
+// Get current value of a variant flag
+export function getVariantValue(flag: VariantFlag): string {
+  return runtimeVariants[flag];
+}
+
 // ── Flag metadata ─────────────────────────────────────────────────────
 
-type FlagCategory = 'Client UI' | 'Auth' | 'Server API' | 'Chaos (API)' | 'Chaos (Client)';
+type FlagCategory =
+  | 'Client UI'
+  | 'Auth'
+  | 'Server API'
+  | 'Chaos (API)'
+  | 'Chaos (Client)'
+  | 'Integrations';
 
 interface FlagMeta {
   category: FlagCategory;
@@ -254,9 +278,28 @@ const FLAG_METADATA: Record<FeatureFlag, FlagMeta> = {
   },
 };
 
+// ── Variant flag metadata ─────────────────────────────────────────────
+
+interface VariantFlagMeta {
+  category: FlagCategory;
+  description: string;
+  allowedValues: string[];
+}
+
+const VARIANT_METADATA: Record<VariantFlag, VariantFlagMeta> = {
+  supportProvider: {
+    category: 'Integrations',
+    description: 'Which support provider to use (or none to disable)',
+    allowedValues: ['none', 'intercom', 'zendesk'],
+  },
+};
+
 // ── Runtime override management ───────────────────────────────────────
 
-export function applyOverrides(overrides: Partial<Record<FeatureFlag, boolean>>): void {
+export function applyOverrides(
+  overrides: Partial<Record<FeatureFlag, boolean>>,
+  variantOverrides?: Partial<Record<VariantFlag, string>>
+): void {
   // Reset to defaults
   for (const key of Object.keys(featureFlags) as FeatureFlag[]) {
     runtimeFlags[key] = featureFlags[key];
@@ -268,6 +311,22 @@ export function applyOverrides(overrides: Partial<Record<FeatureFlag, boolean>>)
     if (key in featureFlags) {
       runtimeFlags[key] = value;
       overriddenFlags.add(key);
+    }
+  }
+
+  // Reset variant flags to defaults
+  for (const key of Object.keys(variantFlags) as VariantFlag[]) {
+    runtimeVariants[key] = variantFlags[key];
+  }
+  overriddenVariants.clear();
+
+  // Apply variant overrides
+  if (variantOverrides) {
+    for (const [key, value] of Object.entries(variantOverrides) as [VariantFlag, string][]) {
+      if (key in variantFlags) {
+        runtimeVariants[key] = value;
+        overriddenVariants.add(key);
+      }
     }
   }
 }
@@ -291,6 +350,28 @@ export function getRuntimeFlags(): RuntimeFlagInfo[] {
     category: FLAG_METADATA[flag].category,
     description: FLAG_METADATA[flag].description,
     isChaos: FLAG_METADATA[flag].isChaos,
+  }));
+}
+
+export interface RuntimeVariantInfo {
+  flag: VariantFlag;
+  value: string;
+  defaultValue: string;
+  isOverridden: boolean;
+  category: FlagCategory;
+  description: string;
+  allowedValues: string[];
+}
+
+export function getRuntimeVariants(): RuntimeVariantInfo[] {
+  return (Object.keys(variantFlags) as VariantFlag[]).map((flag) => ({
+    flag,
+    value: runtimeVariants[flag],
+    defaultValue: variantFlags[flag],
+    isOverridden: overriddenVariants.has(flag),
+    category: VARIANT_METADATA[flag].category,
+    description: VARIANT_METADATA[flag].description,
+    allowedValues: VARIANT_METADATA[flag].allowedValues,
   }));
 }
 
@@ -320,9 +401,12 @@ export function getActiveFailureFlags(): string[] {
 
 // Convert feature flags to a flat metadata object for the Userplane SDK.
 // Keys are prefixed with `flag_` to namespace them (matches YC app convention).
-export function getFeatureFlagsMetadata(): Record<string, boolean> {
-  const metadata: Record<string, boolean> = {};
+export function getFeatureFlagsMetadata(): Record<string, boolean | string> {
+  const metadata: Record<string, boolean | string> = {};
   for (const [key, value] of Object.entries(runtimeFlags) as [string, boolean][]) {
+    metadata[`flag_${key}`] = value;
+  }
+  for (const [key, value] of Object.entries(runtimeVariants) as [string, string][]) {
     metadata[`flag_${key}`] = value;
   }
   return metadata;
