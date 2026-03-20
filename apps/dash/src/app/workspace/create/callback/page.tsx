@@ -351,13 +351,14 @@ function ZendeskCallbackContent({ flow }: { flow: ZendeskFlow }) {
 
   // Show loading during OAuth callback processing
   if (isLoading) {
-    return <OAuthLoadingState />;
+    return <OAuthLoadingState provider="zendesk" />;
   }
 
   // Show error if OAuth callback failed
   if (error) {
     return (
       <OAuthErrorState
+        provider="zendesk"
         error={error}
         errorActionPrimary={{
           label: 'Configure Userplane Manually',

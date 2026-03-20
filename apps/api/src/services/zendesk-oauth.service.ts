@@ -16,7 +16,7 @@ import { nanoid } from 'nanoid';
 
 import { exchangeCodeForToken, getAuthorizationUrl, getMe } from '@/api/clients/zendesk';
 import { generateIntegrationId } from '@/api/lib/id';
-import { deriveWorkspaceUrl } from '@/api/lib/workspace';
+import { deriveWorkspaceName, deriveWorkspaceUrl } from '@/api/lib/workspace';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
@@ -220,7 +220,7 @@ export class ZendeskService {
     // 6. Create workspace using ProvisionerService
     const result = await this.deps.provisionerService.createWorkspaceByURLAndName({
       url: workspaceUrl,
-      workspaceName: meResult.user.name,
+      workspaceName: deriveWorkspaceName(subdomain, userName),
       userId,
       userName,
       userEmail,

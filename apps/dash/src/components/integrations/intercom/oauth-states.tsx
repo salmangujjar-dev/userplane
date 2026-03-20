@@ -1,5 +1,6 @@
 'use client';
 
+import type { IntegrationAssetKey } from '@userplane/storage/media';
 import { Button } from '@userplane/ui/components/button';
 import Logo from '@userplane/ui/components/logo';
 import { ArrowLeftRight, Loader2 } from 'lucide-react';
@@ -9,10 +10,19 @@ import { AuthIcons } from '@/components/auth/auth-icons';
 import type { DefinedError } from '@/lib/errors';
 import { mediaClient } from '@/lib/media';
 
+type OAuthProvider = 'intercom' | 'zendesk';
+
+const providerConfig: Record<OAuthProvider, { label: string; icon: IntegrationAssetKey }> = {
+  intercom: { label: 'Intercom', icon: 'integrations/intercom.webp' },
+  zendesk: { label: 'Zendesk', icon: 'integrations/zendesk.webp' },
+};
+
 /**
  * Loading state shown during OAuth callback processing (before workspace creation).
  */
-export function OAuthLoadingState() {
+export function OAuthLoadingState({ provider = 'intercom' }: { provider?: OAuthProvider }) {
+  const { label, icon } = providerConfig[provider];
+
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
       <AuthIcons />
@@ -24,8 +34,8 @@ export function OAuthLoadingState() {
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src={mediaClient.getIntegrationMediaUrl('integrations/intercom.webp')}
-                alt="Intercom"
+                src={mediaClient.getIntegrationMediaUrl(icon)}
+                alt={label}
                 width={32}
                 height={32}
                 className="object-contain"
@@ -37,7 +47,7 @@ export function OAuthLoadingState() {
             <div className="flex flex-col items-center gap-2">
               <h1 className="text-xl font-medium text-foreground">Setting up your workspace</h1>
               <p className="text-sm text-muted-foreground">
-                Please wait while we connect your Intercom account...
+                Please wait while we connect your {label} account...
               </p>
             </div>
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -54,6 +64,7 @@ interface OAuthErrorAction {
 }
 
 interface OAuthErrorStateProps {
+  provider?: OAuthProvider;
   error: DefinedError;
   errorActionPrimary: OAuthErrorAction;
   errorActionSecondary: OAuthErrorAction;
@@ -63,10 +74,13 @@ interface OAuthErrorStateProps {
  * Error state shown when OAuth callback fails (workspace creation failed).
  */
 export function OAuthErrorState({
+  provider = 'intercom',
   error,
   errorActionPrimary,
   errorActionSecondary,
 }: OAuthErrorStateProps) {
+  const { label, icon } = providerConfig[provider];
+
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
       <AuthIcons />
@@ -78,8 +92,8 @@ export function OAuthErrorState({
             <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
             <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
               <Image
-                src={mediaClient.getIntegrationMediaUrl('integrations/intercom.webp')}
-                alt="Intercom"
+                src={mediaClient.getIntegrationMediaUrl(icon)}
+                alt={label}
                 width={32}
                 height={32}
                 className="object-contain"

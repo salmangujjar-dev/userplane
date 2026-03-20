@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@userplane/ui/components/button';
-import { Input } from '@userplane/ui/components/input';
 import { Skeleton } from '@userplane/ui/components/skeleton';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
@@ -9,6 +8,7 @@ import { useState } from 'react';
 
 import { IntegrationPostConnectModal } from '@/components/modals/integration-post-connect-modal';
 import { IntegrationPreConnectModal } from '@/components/modals/integration-pre-connect-modal';
+import { ZendeskSubdomainInput } from '@/components/zendesk-subdomain-input';
 import {
   useIntercomAuthorize,
   useIntercomDisconnect,
@@ -205,15 +205,11 @@ export function IntegrationsSection() {
             <label className="text-sm font-medium" htmlFor="zendesk-subdomain">
               Zendesk Subdomain
             </label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="zendesk-subdomain"
-                placeholder="your-company"
-                value={zendeskSubdomain}
-                onChange={(e) => setZendeskSubdomain(e.target.value)}
-              />
-              <span className="text-sm text-muted-foreground whitespace-nowrap">.zendesk.com</span>
-            </div>
+            <ZendeskSubdomainInput
+              id="zendesk-subdomain"
+              value={zendeskSubdomain}
+              onChange={setZendeskSubdomain}
+            />
           </div>
         </IntegrationPreConnectModal>
       )}
