@@ -406,7 +406,9 @@ storybook\:zendesk\:build: ## Build Storybook for Zendesk app
 	@cd apps/zendesk && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
 
-serve\:zendesk: build\:zendesk ## Build and serve Zendesk app locally (zcli)
+serve\:zendesk: ## Build (dev mode) and serve Zendesk app locally (zcli)
+	@echo "$(BLUE)Building Zendesk app (dev mode)...$(RESET)"
+	@cd apps/zendesk && bun run build:dev
 	@echo "$(MAGENTA)Serving Zendesk app via zcli...$(RESET)"
 	@cd apps/zendesk && bun run start
 

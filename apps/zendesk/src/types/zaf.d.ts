@@ -17,7 +17,17 @@ interface ZAFClientInstance {
 
   /** Get one or more ZAF data paths */
   get(path: string): Promise<Record<string, unknown>>;
-  get(...paths: string[]): Promise<Record<string, unknown>>;
+  get(paths: string[]): Promise<Record<string, unknown>>;
+
+  /** Make an HTTP request via the ZAF proxy */
+  request<T = unknown>(options: {
+    url: string;
+    type?: string;
+    data?: unknown;
+    headers?: Record<string, string>;
+    contentType?: string;
+    secure?: boolean;
+  }): Promise<T>;
 
   /** Set a ZAF data path value */
   set(path: string, value: unknown): Promise<void>;

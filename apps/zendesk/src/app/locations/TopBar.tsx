@@ -16,7 +16,7 @@ import { getErrorMessage } from '@/lib/errors';
 
 export function TopBar({ workspaceId }: { workspaceId: string }) {
   const client = useClient();
-  const { agentEmail, isLoading: agentLoading } = useAgentContext();
+  const { agentEmail, isLoading: agentLoading, error: agentError } = useAgentContext();
 
   const [isCreating, setIsCreating] = useState(false);
   const [createdLink, setCreatedLink] = useState<string | null>(null);
@@ -26,11 +26,23 @@ export function TopBar({ workspaceId }: { workspaceId: string }) {
 
   // Resize popover
   useEffect(() => {
-    client.invoke('resize', { width: '380px', height: '450px' });
+    const resize = () => client.invoke('resize', { width: '380px', height: '450px' });
+    resize();
+    client.on('app.activated', resize);
+    return () => {
+      client.off('app.activated', resize);
+    };
   }, [client]);
 
   const handleCreateLink = useCallback(async () => {
-    if (!workspace.selectedProject || !agentEmail) return;
+    if (!workspace.selectedProject) {
+      setError('Please select a project.');
+      return;
+    }
+    if (!agentEmail) {
+      setError('Could not resolve your email. Please reload the app.');
+      return;
+    }
 
     setIsCreating(true);
     setError(null);
@@ -94,7 +106,7 @@ export function TopBar({ workspaceId }: { workspaceId: string }) {
           onSubmit={handleCreateLink}
           isCreating={isCreating}
           isLoading={false}
-          error={error || workspace.error}
+          error={error || agentError || workspace.error}
           workspaceId={workspaceId}
         />
       ) : (

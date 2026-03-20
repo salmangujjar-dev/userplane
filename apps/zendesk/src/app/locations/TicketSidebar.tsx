@@ -31,7 +31,7 @@ type View = 'opener' | 'creator' | 'success';
 
 export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
   const client = useClient();
-  const { agentEmail, isLoading: agentLoading } = useAgentContext();
+  const { agentEmail, isLoading: agentLoading, error: agentError } = useAgentContext();
   const { requester, ticketId, ticketTags, isLoading: ticketLoading } = useTicketContext();
 
   const [view, setView] = useState<View>('opener');
@@ -43,11 +43,23 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
   const hasRequestedRecording = ticketTags.includes('userplane-recording-requested');
 
   useEffect(() => {
-    client.invoke('resize', { width: '100%', height: '400px' });
+    const resize = () => client.invoke('resize', { width: '100%', height: '400px' });
+    resize();
+    client.on('app.activated', resize);
+    return () => {
+      client.off('app.activated', resize);
+    };
   }, [client]);
 
   const handleCreateLink = useCallback(async () => {
-    if (!workspace.selectedProject || !agentEmail) return;
+    if (!workspace.selectedProject) {
+      setError('Please select a project.');
+      return;
+    }
+    if (!agentEmail) {
+      setError('Could not resolve your email. Please reload the app.');
+      return;
+    }
 
     setIsCreating(true);
     setError(null);
@@ -178,7 +190,7 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
             onSubmit={handleCreateLink}
             isCreating={isCreating}
             isLoading={workspace.isLoading}
-            error={error || workspace.error}
+            error={error || agentError || workspace.error}
             workspaceId={workspaceId}
           />
         </div>
