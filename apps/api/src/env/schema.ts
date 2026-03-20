@@ -81,7 +81,6 @@ export const intercomEnvSchema = z.object({
 /** Zendesk OAuth env vars schema */
 export const zendeskEnvSchema = z.object({
   ZENDESK_CLIENT_ID: z.string().optional().default(''),
-  ZENDESK_CLIENT_SECRET: z.string().optional().default(''),
   ZENDESK_REDIRECT_URI: urlWithDefault(`${DEV_URLS.DASH}${AUTH.ZENDESK_REDIRECT_PATH}`),
 });
 
@@ -456,7 +455,7 @@ export const envConfigSchema = z.object({
   auth: authConfigSchema,
   google: oauthConfigSchema,
   intercom: oauthConfigSchema,
-  zendesk: oauthConfigSchema,
+  zendesk: oauthConfigSchema.omit({ clientSecret: true }),
   dashboard: dashboardConfigSchema,
   billing: billingConfigSchema,
   payments: paymentsConfigSchema,

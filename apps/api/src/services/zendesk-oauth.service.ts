@@ -67,13 +67,13 @@ export class ZendeskService {
     workspaceId?: string,
     source?: ZendeskOAuthSource
   ): { authorizationUrl: string; state: string } {
-    const state = this.deps.tokenService.signZendeskOAuthState(
+    const { state, codeChallenge } = this.deps.tokenService.signZendeskOAuthState(
       userId,
       subdomain,
       workspaceId,
       source
     );
-    const authorizationUrl = getAuthorizationUrl(subdomain, state);
+    const authorizationUrl = getAuthorizationUrl(subdomain, state, codeChallenge);
 
     return { authorizationUrl, state };
   }
@@ -96,7 +96,7 @@ export class ZendeskService {
       throw provisionerError.ZENDESK_OAUTH_STATE_INVALID();
     }
 
-    const { subdomain } = statePayload;
+    const { subdomain, codeVerifier } = statePayload;
 
     // 2. Check if workspace already has a Zendesk integration
     const existingWorkspaceIntegration =
@@ -106,7 +106,7 @@ export class ZendeskService {
     }
 
     // 3. Exchange code for access token
-    const tokenResponse = await exchangeCodeForToken(subdomain, code);
+    const tokenResponse = await exchangeCodeForToken(subdomain, code, codeVerifier);
     if (!tokenResponse) {
       throw provisionerError.ZENDESK_TOKEN_EXCHANGE_FAILED();
     }
@@ -133,6 +133,7 @@ export class ZendeskService {
     const apiToken = nanoid(48);
 
     // 7. Create integration record
+    const now = Date.now();
     await this.deps.integrationRepo.create({
       id: generateIntegrationId(),
       workspaceId,
@@ -141,6 +142,13 @@ export class ZendeskService {
       providerToken: createProviderToken('zendesk', {
         accessToken: tokenResponse.access_token,
         apiToken,
+        refreshToken: tokenResponse.refresh_token,
+        tokenExpiresAt: tokenResponse.expires_in
+          ? new Date(now + tokenResponse.expires_in * 1000).toISOString()
+          : undefined,
+        refreshTokenExpiresAt: tokenResponse.refresh_token_expires_in
+          ? new Date(now + tokenResponse.refresh_token_expires_in * 1000).toISOString()
+          : undefined,
       }),
       providerMeta: createProviderMeta('zendesk', { subdomain }),
     });
@@ -176,10 +184,10 @@ export class ZendeskService {
       throw provisionerError.ZENDESK_OAUTH_STATE_INVALID();
     }
 
-    const { subdomain } = statePayload;
+    const { subdomain, codeVerifier } = statePayload;
 
     // 2. Exchange code for access token
-    const tokenResponse = await exchangeCodeForToken(subdomain, code);
+    const tokenResponse = await exchangeCodeForToken(subdomain, code, codeVerifier);
     if (!tokenResponse) {
       throw provisionerError.ZENDESK_TOKEN_EXCHANGE_FAILED();
     }
@@ -227,6 +235,7 @@ export class ZendeskService {
     const apiToken = nanoid(48);
 
     // 8. Create integration record
+    const now = Date.now();
     await this.deps.integrationRepo.create({
       id: generateIntegrationId(),
       workspaceId: result.workspaceId,
@@ -235,6 +244,13 @@ export class ZendeskService {
       providerToken: createProviderToken('zendesk', {
         accessToken: tokenResponse.access_token,
         apiToken,
+        refreshToken: tokenResponse.refresh_token,
+        tokenExpiresAt: tokenResponse.expires_in
+          ? new Date(now + tokenResponse.expires_in * 1000).toISOString()
+          : undefined,
+        refreshTokenExpiresAt: tokenResponse.refresh_token_expires_in
+          ? new Date(now + tokenResponse.refresh_token_expires_in * 1000).toISOString()
+          : undefined,
       }),
       providerMeta: createProviderMeta('zendesk', { subdomain }),
     });

@@ -511,6 +511,7 @@ export interface ZendeskOAuthStatePayload {
   workspaceId?: string;
   subdomain: string;
   source?: ZendeskOAuthSource;
+  codeVerifier: string;
   timestamp: number;
   nonce: string;
   iat: number;

@@ -30,6 +30,9 @@ const ZendeskTokenResponseSchema = z.object({
   access_token: z.string(),
   token_type: z.string(),
   scope: z.string(),
+  refresh_token: z.string().optional(),
+  expires_in: z.number().optional(),
+  refresh_token_expires_in: z.number().optional(),
 });
 
 export type ZendeskTokenResponse = z.infer<typeof ZendeskTokenResponseSchema>;
@@ -55,17 +58,30 @@ export type ZendeskMeResponse = z.infer<typeof ZendeskMeResponseSchema>;
  * Build Zendesk OAuth authorization URL
  * Zendesk requires subdomain for per-account OAuth endpoints
  */
-export function getAuthorizationUrl(subdomain: string, state: string): string {
+export function getAuthorizationUrl(
+  subdomain: string,
+  state: string,
+  codeChallenge: string
+): string {
   const validatedSubdomain = validateSubdomain(subdomain);
-  const params = new URLSearchParams({
+  // Zendesk requires %20 for spaces in scopes (not +) and literal colons
+  // for resource-specific scopes (e.g. tickets:write). URLSearchParams
+  // encodes spaces as + and colons as %3A, so we build the query manually.
+  const params: Record<string, string> = {
     response_type: 'code',
     client_id: env.zendesk.clientId,
     redirect_uri: env.zendesk.redirectUri,
     scope: 'read tickets:write',
     state,
-  });
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+  };
+  const query = Object.entries(params)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&')
+    .replace(/%3A/gi, ':');
 
-  return `https://${validatedSubdomain}.zendesk.com/oauth/authorizations/new?${params.toString()}`;
+  return `https://${validatedSubdomain}.zendesk.com/oauth/authorizations/new?${query}`;
 }
 
 /**
@@ -73,7 +89,8 @@ export function getAuthorizationUrl(subdomain: string, state: string): string {
  */
 export async function exchangeCodeForToken(
   subdomain: string,
-  code: string
+  code: string,
+  codeVerifier: string
 ): Promise<ZendeskTokenResponse | null> {
   const validatedSubdomain = validateSubdomain(subdomain);
   try {
@@ -86,7 +103,7 @@ export async function exchangeCodeForToken(
         grant_type: 'authorization_code',
         code,
         client_id: env.zendesk.clientId,
-        client_secret: env.zendesk.clientSecret,
+        code_verifier: codeVerifier,
         redirect_uri: env.zendesk.redirectUri,
         scope: 'read tickets:write',
       }),
@@ -169,6 +186,69 @@ export async function addTicketComment(
       ticket_id: ticketId,
     });
     return false;
+  }
+}
+
+export type RefreshResult =
+  | { ok: true; data: ZendeskTokenResponse }
+  | { ok: false; permanent: boolean };
+
+/**
+ * Refresh an expired access token using a refresh token.
+ * Returns a discriminated union so callers can distinguish permanent failures
+ * (expired/revoked token) from transient ones (network issues, 5xx).
+ */
+export async function refreshAccessToken(
+  subdomain: string,
+  refreshToken: string
+): Promise<RefreshResult> {
+  const validatedSubdomain = validateSubdomain(subdomain);
+  try {
+    const response = await fetch(`https://${validatedSubdomain}.zendesk.com/oauth/tokens`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: env.zendesk.clientId,
+        scope: 'read tickets:write',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn({ status: response.status, error: errorText }, 'Token refresh failed');
+      captureException(new Error('token refresh failed with Zendesk'), undefined, {
+        operation: 'zendesk_token_refresh',
+        status: response.status,
+        error_text: errorText,
+      });
+
+      // Determine if this is a permanent failure (expired/revoked token)
+      let permanent = false;
+      if (response.status === 400 || response.status === 401) {
+        try {
+          const errorBody = JSON.parse(errorText);
+          const errorCode = errorBody.error;
+          if (errorCode === 'invalid_grant' || errorCode === 'invalid_token') {
+            permanent = true;
+          }
+        } catch {
+          // Could not parse error body — treat as transient
+        }
+      }
+
+      return { ok: false, permanent };
+    }
+
+    const data = ZendeskTokenResponseSchema.parse(await response.json());
+    return { ok: true, data };
+  } catch (error) {
+    logger.error({ error }, 'Token refresh error');
+    captureException(error, undefined, { operation: 'zendesk_token_refresh' });
+    return { ok: false, permanent: false };
   }
 }
 

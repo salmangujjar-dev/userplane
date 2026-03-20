@@ -8,6 +8,7 @@ import jwt, { type SignOptions } from 'jsonwebtoken';
 import { nanoid } from 'nanoid';
 
 import { env } from '@/api/env';
+import { generatePKCE } from '@/api/lib/pkce';
 import type {
   AccessRequestTokenPayload,
   DomainVerificationTokenPayload,
@@ -331,7 +332,8 @@ export class TokenService {
     subdomain: string,
     workspaceId?: string,
     source?: ZendeskOAuthSource
-  ): string {
+  ): { state: string; codeChallenge: string } {
+    const { codeVerifier, codeChallenge } = generatePKCE();
     const now = Math.floor(Date.now() / 1000);
     const payload: ZendeskOAuthStatePayload = {
       iss: this.jwtIssuer,
@@ -339,13 +341,15 @@ export class TokenService {
       ...(workspaceId && { workspaceId }),
       subdomain,
       ...(source && { source }),
+      codeVerifier,
       timestamp: now,
       nonce: nanoid(16),
       iat: now,
       exp: now + ZENDESK_OAUTH_STATE_EXPIRES_IN,
     };
 
-    return jwt.sign(payload, this.jwtSecret, { algorithm: 'HS256' });
+    const state = jwt.sign(payload, this.jwtSecret, { algorithm: 'HS256' });
+    return { state, codeChallenge };
   }
 
   /**

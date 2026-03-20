@@ -228,6 +228,20 @@ export class IntegrationRepository {
   }
 
   /**
+   * Update the providerToken for an existing integration
+   * Used to persist refreshed OAuth tokens
+   */
+  async updateProviderToken<P extends IntegrationProvider>(
+    id: string,
+    providerToken: ProviderTokenFor<P>
+  ): Promise<void> {
+    await this.db
+      .update(integrations)
+      .set({ providerToken })
+      .where(and(eq(integrations.id, id), eq(integrations.isDeleted, false)));
+  }
+
+  /**
    * Restore a soft-deleted integration by workspace ID and provider
    * Sets isDeleted to false and clears deletedAt timestamp
    * Restores only the record matching the specific deletedAt timestamp

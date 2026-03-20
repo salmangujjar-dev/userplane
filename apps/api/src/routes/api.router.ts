@@ -75,7 +75,10 @@ export type { WorkspaceContext } from '@/api/middleware/workspace.orpc';
  * Implemented procedures
  */
 const intercomNotificationService = new IntercomNotificationService({ integrationRepo });
-const zendeskNotificationService = new ZendeskNotificationService({ integrationRepo });
+const zendeskNotificationService = new ZendeskNotificationService({
+  integrationRepo,
+  cacheService,
+});
 const sessionProcedures = createSessionProcedures(
   sessionService,
   recordingRepo,

@@ -15,7 +15,9 @@ const skipTransform = process.env.NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM === 'true';
 
 export default function cloudflareLoader({ src, width }: ImageLoaderProps): string {
   if (skipTransform) {
-    return src;
+    // Include width in URL so Next.js sees the loader implements it
+    const separator = src.includes('?') ? '&' : '?';
+    return `${src}${separator}w=${width}`;
   }
 
   const hasTransform = src.includes('/cdn-cgi/image/');
