@@ -3,13 +3,51 @@
  * Reads current Zendesk location from ZAF client context and renders the appropriate component
  */
 
-import { useEffect, useState } from 'react';
+import { Component, type ReactNode, useEffect, useState } from 'react';
 
 import { initApiClient } from '@/api/client';
 
 import { useClient } from './hooks/useClient';
 import { TicketSidebar } from './locations/TicketSidebar';
 import { TopBar } from './locations/TopBar';
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '16px', textAlign: 'center', fontSize: '13px' }}>
+          <p style={{ color: '#2f3941', marginBottom: '12px' }}>
+            Something went wrong. Please reload.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '8px 16px',
+              background: '#1f73b7',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '13px',
+            }}
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export function App() {
   const client = useClient();
@@ -52,17 +90,21 @@ export function App() {
     return <div style={{ padding: '16px', textAlign: 'center', color: '#68737d' }}>Loading...</div>;
   }
 
-  switch (location) {
-    case 'ticket_sidebar':
-    case 'new_ticket_sidebar':
-      return <TicketSidebar workspaceId={workspaceId} />;
-    case 'top_bar':
-      return <TopBar workspaceId={workspaceId} />;
-    default:
-      return (
-        <div style={{ padding: '16px', color: '#68737d', fontSize: '13px' }}>
-          Unsupported location: {location}
-        </div>
-      );
-  }
+  const content = (() => {
+    switch (location) {
+      case 'ticket_sidebar':
+      case 'new_ticket_sidebar':
+        return <TicketSidebar workspaceId={workspaceId} />;
+      case 'top_bar':
+        return <TopBar workspaceId={workspaceId} />;
+      default:
+        return (
+          <div style={{ padding: '16px', color: '#68737d', fontSize: '13px' }}>
+            Unsupported location: {location}
+          </div>
+        );
+    }
+  })();
+
+  return <ErrorBoundary>{content}</ErrorBoundary>;
 }

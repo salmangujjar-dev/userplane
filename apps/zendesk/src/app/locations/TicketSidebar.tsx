@@ -3,14 +3,29 @@
  * Shows in the ticket sidebar — mirrors Intercom's opener → link creator → success flow
  */
 
-import type { ZendeskDomain, ZendeskProject } from '@userplane/contract';
 import { useCallback, useEffect, useState } from 'react';
 
 import { getApiClient } from '@/api/client';
+import { ErrorMessage } from '@/app/components/ErrorMessage';
+import { LinkCreatorForm } from '@/app/components/LinkCreatorForm';
+import { LinkSuccess } from '@/app/components/LinkSuccess';
+import { OpenerView } from '@/app/components/OpenerView';
+import { RecordingRequestedBadge } from '@/app/components/RecordingRequestedBadge';
+import { RequesterBanner } from '@/app/components/RequesterBanner';
 import { useAgentContext } from '@/app/hooks/useAgentContext';
 import { useClient } from '@/app/hooks/useClient';
 import { useTicketContext } from '@/app/hooks/useTicketContext';
+import { useWorkspaceData } from '@/app/hooks/useWorkspaceData';
 import { DASHBOARD_URL } from '@/lib/constants';
+import { getErrorMessage } from '@/lib/errors';
+
+function escapeHtmlAttr(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 type View = 'opener' | 'creator' | 'success';
 
@@ -20,60 +35,19 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
   const { requester, ticketId, ticketTags, isLoading: ticketLoading } = useTicketContext();
 
   const [view, setView] = useState<View>('opener');
-  const [projects, setProjects] = useState<ZendeskProject[]>([]);
-  const [domains, setDomains] = useState<ZendeskDomain[]>([]);
-  const [selectedProject, setSelectedProject] = useState('');
-  const [selectedDomain, setSelectedDomain] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [createdLink, setCreatedLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [dataLoading, setDataLoading] = useState(false);
 
+  const workspace = useWorkspaceData({ workspaceId, enabled: view === 'creator' });
   const hasRequestedRecording = ticketTags.includes('userplane-recording-requested');
 
-  // Auto-resize
   useEffect(() => {
     client.invoke('resize', { width: '100%', height: '400px' });
   }, [client]);
 
-  // Load projects and domains when entering creator view
-  useEffect(() => {
-    if (view !== 'creator') return;
-
-    async function loadData() {
-      setDataLoading(true);
-      try {
-        const api = getApiClient();
-        const [projectsRes, domainsRes] = await Promise.all([
-          api.getProjects(workspaceId),
-          api.getDomains(workspaceId),
-        ]);
-
-        if (projectsRes.success) {
-          setProjects(projectsRes.data.projects);
-          if (projectsRes.data.projects.length > 0 && projectsRes.data.projects[0]) {
-            setSelectedProject(projectsRes.data.projects[0].id);
-          }
-        }
-        if (domainsRes.success) {
-          const verified = domainsRes.data.domains.filter((d) => d.verified);
-          setDomains(verified);
-          if (verified.length > 0 && verified[0]) {
-            setSelectedDomain(verified[0].id);
-          }
-        }
-      } catch {
-        setError('Failed to load workspace data');
-      } finally {
-        setDataLoading(false);
-      }
-    }
-
-    loadData();
-  }, [workspaceId, view]);
-
   const handleCreateLink = useCallback(async () => {
-    if (!selectedProject || !agentEmail) return;
+    if (!workspace.selectedProject || !agentEmail) return;
 
     setIsCreating(true);
     setError(null);
@@ -82,8 +56,8 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
       const api = getApiClient();
       const result = await api.createLink({
         workspaceId,
-        projectId: selectedProject,
-        domainId: selectedDomain,
+        projectId: workspace.selectedProject,
+        domainId: workspace.selectedDomain,
         agentEmail,
         ticketId: ticketId ?? undefined,
       });
@@ -96,25 +70,48 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
         setError('Failed to create link');
         client.invoke('notify', 'Failed to create link', 'error');
       }
-    } catch {
-      setError('Failed to create link');
-      client.invoke('notify', 'Failed to create link', 'error');
+    } catch (err) {
+      const message = getErrorMessage(err);
+      setError(message);
+      client.invoke('notify', message, 'error');
     } finally {
       setIsCreating(false);
     }
-  }, [workspaceId, selectedProject, selectedDomain, ticketId, agentEmail, client]);
+  }, [
+    workspaceId,
+    workspace.selectedProject,
+    workspace.selectedDomain,
+    ticketId,
+    agentEmail,
+    client,
+  ]);
+
+  const handleCopy = useCallback(async () => {
+    if (!createdLink) return;
+    await navigator.clipboard.writeText(createdLink);
+    client.invoke('notify', 'Link copied to clipboard', 'notice');
+  }, [client, createdLink]);
 
   const handleAppendToComment = useCallback(async () => {
     if (!createdLink) return;
 
-    const html = `<p>Please record your screen using this link: <a href="${createdLink}" target="_blank">${createdLink}</a></p>`;
-    await client.invoke('comment.appendHtml', html);
-    client.invoke('notify', 'Link added to comment', 'notice');
+    const safeLink = escapeHtmlAttr(createdLink);
+    const html = `<p>Please record your screen using this link: <a href="${safeLink}" target="_blank">${safeLink}</a></p>`;
+    try {
+      await client.invoke('comment.appendHtml', html);
+      client.invoke('notify', 'Link added to comment', 'notice');
+    } catch {
+      client.invoke('notify', 'Failed to add link to comment', 'error');
+    }
   }, [client, createdLink]);
 
   const handleAddTag = useCallback(async () => {
-    await client.invoke('ticket.tags.add', 'userplane-recording-requested');
-    client.invoke('notify', 'Tag added to ticket', 'notice');
+    try {
+      await client.invoke('ticket.tags.add', 'userplane-recording-requested');
+      client.invoke('notify', 'Tag added to ticket', 'notice');
+    } catch {
+      client.invoke('notify', 'Failed to add tag to ticket', 'error');
+    }
   }, [client]);
 
   const handleCreateAnother = useCallback(() => {
@@ -134,74 +131,17 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div style={{ padding: '16px', fontFamily: 'system-ui, sans-serif', fontSize: '14px' }}>
-      {requester && (
-        <div
-          style={{
-            marginBottom: '16px',
-            padding: '8px',
-            background: '#f8f9f9',
-            borderRadius: '4px',
-          }}
-        >
-          <div style={{ fontSize: '12px', color: '#68737d' }}>Requester</div>
-          <div style={{ fontWeight: 500 }}>{requester.name || requester.email}</div>
-        </div>
-      )}
+      {requester && <RequesterBanner name={requester.name} email={requester.email} />}
 
-      {hasRequestedRecording && (
-        <div
-          style={{
-            marginBottom: '12px',
-            padding: '6px 8px',
-            background: '#fff7ed',
-            borderRadius: '4px',
-            fontSize: '12px',
-            color: '#92400e',
-          }}
-        >
-          Recording already requested for this ticket
-        </div>
-      )}
+      {hasRequestedRecording && <RecordingRequestedBadge />}
 
-      {/* Opener view — two action buttons */}
       {view === 'opener' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button
-            onClick={() => setView('creator')}
-            style={{
-              width: '100%',
-              padding: '10px 16px',
-              background: '#1f73b7',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 500,
-            }}
-          >
-            Request screen recording
-          </button>
-          <button
-            onClick={handleViewRecordings}
-            style={{
-              width: '100%',
-              padding: '10px 16px',
-              background: 'white',
-              color: '#1f73b7',
-              border: '1px solid #1f73b7',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 500,
-            }}
-          >
-            View recordings
-          </button>
-        </div>
+        <OpenerView
+          onRequestRecording={() => setView('creator')}
+          onViewRecordings={handleViewRecordings}
+        />
       )}
 
-      {/* Creator view — project/domain form */}
       {view === 'creator' && (
         <div>
           <div
@@ -228,194 +168,35 @@ export function TicketSidebar({ workspaceId }: { workspaceId: string }) {
             </button>
           </div>
 
-          {dataLoading ? (
-            <div style={{ textAlign: 'center', color: '#68737d', padding: '16px' }}>Loading...</div>
-          ) : (
-            <>
-              <div style={{ marginBottom: '8px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '12px',
-                    color: '#68737d',
-                    marginBottom: '4px',
-                  }}
-                >
-                  Project
-                </label>
-                <select
-                  value={selectedProject}
-                  onChange={(e) => setSelectedProject(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #d8dcde',
-                    borderRadius: '4px',
-                    fontSize: '13px',
-                  }}
-                >
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {domains.length > 0 && (
-                <div style={{ marginBottom: '8px' }}>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: '12px',
-                      color: '#68737d',
-                      marginBottom: '4px',
-                    }}
-                  >
-                    Domain
-                  </label>
-                  <select
-                    value={selectedDomain}
-                    onChange={(e) => setSelectedDomain(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      border: '1px solid #d8dcde',
-                      borderRadius: '4px',
-                      fontSize: '13px',
-                    }}
-                  >
-                    {domains.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.url}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <button
-                onClick={handleCreateLink}
-                disabled={isCreating || !selectedProject}
-                style={{
-                  width: '100%',
-                  padding: '8px 16px',
-                  background: isCreating ? '#87929d' : '#1f73b7',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: isCreating ? 'not-allowed' : 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                }}
-              >
-                {isCreating ? 'Creating...' : 'Create Link'}
-              </button>
-            </>
-          )}
-
-          {error && (
-            <div
-              style={{
-                marginTop: '8px',
-                padding: '8px',
-                background: '#fff0f1',
-                color: '#cc3340',
-                borderRadius: '4px',
-                fontSize: '12px',
-              }}
-            >
-              {error}
-            </div>
-          )}
+          <LinkCreatorForm
+            projects={workspace.projects}
+            domains={workspace.domains}
+            selectedProject={workspace.selectedProject}
+            selectedDomain={workspace.selectedDomain}
+            onProjectChange={workspace.setSelectedProject}
+            onDomainChange={workspace.setSelectedDomain}
+            onSubmit={handleCreateLink}
+            isCreating={isCreating}
+            isLoading={workspace.isLoading}
+            error={error || workspace.error}
+            workspaceId={workspaceId}
+          />
         </div>
       )}
 
-      {/* Success view — link created */}
       {view === 'success' && createdLink && (
-        <div>
-          <div
-            style={{
-              padding: '12px',
-              background: '#edf8f4',
-              borderRadius: '4px',
-              marginBottom: '12px',
-            }}
-          >
-            <div
-              style={{
-                fontSize: '12px',
-                color: '#038153',
-                marginBottom: '8px',
-                fontWeight: 500,
-              }}
-            >
-              Link created
-            </div>
-            <div
-              style={{
-                padding: '6px 8px',
-                background: 'white',
-                borderRadius: '4px',
-                fontSize: '12px',
-                wordBreak: 'break-all',
-                border: '1px solid #d1e8df',
-              }}
-            >
-              {createdLink}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button
-              onClick={handleAppendToComment}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                background: '#1f73b7',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                fontWeight: 500,
-              }}
-            >
-              Add to ticket comment
-            </button>
-            <button
-              onClick={handleAddTag}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                background: 'white',
-                color: '#1f73b7',
-                border: '1px solid #1f73b7',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px',
-              }}
-            >
-              Add tag
-            </button>
-            <button
-              onClick={handleCreateAnother}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                background: 'white',
-                color: '#2f3941',
-                border: '1px solid #d8dcde',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px',
-              }}
-            >
-              Create another
-            </button>
-          </div>
-        </div>
+        <LinkSuccess
+          linkUrl={createdLink}
+          actions={[
+            { label: 'Add to ticket comment', onClick: handleAppendToComment, variant: 'primary' },
+            { label: 'Copy link', onClick: handleCopy, variant: 'secondary' },
+            { label: 'Add tag', onClick: handleAddTag, variant: 'secondary' },
+            { label: 'Create another', onClick: handleCreateAnother, variant: 'ghost' },
+          ]}
+        />
       )}
+
+      {view !== 'creator' && error && <ErrorMessage message={error} />}
     </div>
   );
 }

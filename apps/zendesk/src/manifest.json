@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "author": {
     "name": "Userplane",
-    "email": "support@userplane.com",
-    "url": "https://userplane.com"
+    "email": "support@userplane.io",
+    "url": "https://userplane.io"
   },
   "defaultLocale": "en",
   "private": true,
@@ -43,5 +43,5 @@
       "required": true
     }
   ],
-  "domainWhitelist": ["*.userplane.com", "*.userplane.io"]
+  "domainWhitelist": ["*.userplane.io"]
 }

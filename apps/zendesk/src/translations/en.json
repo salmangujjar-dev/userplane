@@ -2,6 +2,16 @@
   "app": {
     "name": "Userplane",
     "short_description": "Request screen recordings from Zendesk tickets",
-    "long_description": "Userplane lets you request and view screen recordings directly from Zendesk Support. Create recording links from ticket sidebars or the top bar, and share them with customers to capture screen recordings."
+    "long_description": "Userplane lets you request and view screen recordings directly from Zendesk Support. Create recording links from ticket sidebars or the top bar, and share them with customers to capture screen recordings.",
+    "parameters": {
+      "apiToken": {
+        "label": "API Token",
+        "helpText": "The API token from your Userplane workspace integration settings."
+      },
+      "workspaceId": {
+        "label": "Workspace ID",
+        "helpText": "Your Userplane workspace ID. Found in your workspace integration settings."
+      }
+    }
   }
 }
