@@ -9,12 +9,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.next();
-  }
-
   const sessionCookie = request.cookies.get('better-auth.session_token');
   if (!sessionCookie) {
+    // API routes get 401, pages get redirected to login
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
