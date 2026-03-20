@@ -4,13 +4,14 @@ import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
+  root: 'src',
   plugins: [
     react(),
     viteStaticCopy({
       targets: [
-        { src: 'src/manifest.json', dest: '.' },
-        { src: 'src/translations', dest: '.' },
-        { src: 'src/assets/*', dest: 'assets' },
+        { src: 'manifest.json', dest: '..' },
+        { src: 'translations', dest: '..' },
+        { src: 'assets/*', dest: '.' },
       ],
     }),
   ],
@@ -19,12 +20,13 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
+  base: './',
   build: {
-    outDir: 'dist/assets',
+    outDir: resolve(__dirname, 'dist/assets'),
+    emptyOutDir: true,
+    assetsDir: '.',
     rollupOptions: {
-      input: {
-        iframe: resolve(__dirname, 'src/index.html'),
-      },
+      input: resolve(__dirname, 'src/index.html'),
     },
   },
 });

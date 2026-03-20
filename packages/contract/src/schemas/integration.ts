@@ -31,6 +31,9 @@ export type IntercomRegion = z.infer<typeof IntercomRegionSchema>;
 export const ZendeskTokenSchema = z.object({
   accessToken: z.string(),
   apiToken: z.string(),
+  refreshToken: z.string().optional(),
+  tokenExpiresAt: z.string().datetime().optional(),
+  refreshTokenExpiresAt: z.string().datetime().optional(),
 });
 export type ZendeskToken = z.infer<typeof ZendeskTokenSchema>;
 

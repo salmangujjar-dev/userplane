@@ -1,8 +1,7 @@
 {
   "extends": "@userplane/typescript-config/react-library",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
+    "noEmit": true,
     "baseUrl": ".",
     "types": ["vite/client"],
     "paths": {
