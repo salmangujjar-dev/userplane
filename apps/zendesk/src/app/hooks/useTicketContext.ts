@@ -26,12 +26,12 @@ export function useTicketContext(): TicketContext {
   useEffect(() => {
     async function fetchTicketData() {
       try {
-        const data = await client.get(
+        const data = await client.get([
           'ticket.requester',
           'ticket.id',
           'ticket.subject',
-          'ticket.tags'
-        );
+          'ticket.tags',
+        ]);
 
         const requesterData = data['ticket.requester'] as
           | { email?: string; name?: string }
