@@ -29,18 +29,6 @@ export function verifyZafJwt(
   secret: string
 ): { workspaceId: string; subdomain: string } | null {
   try {
-    // Debug: decode without verification to inspect claims
-    const decoded = jwt.decode(token, { complete: true });
-    logger.debug(
-      {
-        header: decoded?.header,
-        payload: decoded?.payload,
-        secretLength: secret.length,
-        secretPreview: `${secret.slice(0, 4)}...`,
-      },
-      'ZAF JWT debug: incoming token'
-    );
-
     const payload = jwt.verify(token, secret, {
       algorithms: ['HS256'],
     }) as { ws_id?: string; subdomain?: string };
