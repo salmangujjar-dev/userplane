@@ -31,6 +31,9 @@ dist/
 .astro/
 .trigger/
 
+# Zendesk manifest packaging output
+*.zip
+
 # Copied build artifacts
 apps/recorder/public/bridge-worker.js
 packages/postbridge/src/bridge-worker.js
