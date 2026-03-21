@@ -10,14 +10,19 @@ import { useZendeskClient } from '@/hooks/zendesk/use-client';
 import { useTicketContext } from '@/hooks/zendesk/use-ticket-context';
 import { useWorkspaceData } from '@/hooks/zendesk/use-workspace-data';
 import { getZendeskApiClient } from '@/lib/zendesk/api-client';
-import { getErrorMessage } from '@/lib/zendesk/errors';
+import type { ErrorView } from '@/lib/zendesk/errors';
+import { getErrorMessage, getErrorView } from '@/lib/zendesk/errors';
 
+import { AccessRequestedScreen } from './AccessRequestedScreen';
 import { ErrorMessage } from './ErrorMessage';
 import { UserplaneIcon } from './Icons';
+import { LimitExceededScreen } from './LimitExceededScreen';
 import { LinkCreatorForm } from './LinkCreatorForm';
 import { LinkSuccess } from './LinkSuccess';
 import { OpenerView } from './OpenerView';
+import { ReconnectScreen } from './ReconnectScreen';
 import { ScreenHeader } from './ScreenHeader';
+import { SignupScreen } from './SignupScreen';
 
 function escapeHtml(str: string): string {
   return str
@@ -33,7 +38,7 @@ function generateDefaultMessage(agentName: string | null): string {
     : 'Your support team has requested a screen recording from you';
 }
 
-type View = 'opener' | 'creator' | 'success' | 'error';
+type View = 'opener' | 'creator' | 'success' | 'error' | ErrorView;
 
 export function TicketSidebar({
   workspaceId,
@@ -73,6 +78,19 @@ export function TicketSidebar({
     }
   }, [agentError]);
 
+  // Route workspace data errors to dedicated screens
+  useEffect(() => {
+    if (workspace.rawError) {
+      const errorView = getErrorView(workspace.rawError);
+      if (errorView) {
+        setView(errorView);
+      } else if (workspace.error) {
+        setError(workspace.error);
+        setView('error');
+      }
+    }
+  }, [workspace.rawError, workspace.error]);
+
   const handleCreateLink = useCallback(async () => {
     if (!workspace.selectedProject) {
       setError('Please select a project.');
@@ -111,7 +129,7 @@ export function TicketSidebar({
 
         const safeLink = escapeHtml(result.data.linkUrl);
         const safeMsg = escapeHtml(customMessage);
-        const html = `<p>${safeMsg}: <a href="${safeLink}" target="_blank">${safeLink}</a></p>`;
+        const html = `<p>${safeMsg}</p><p><a href="${safeLink}" target="_blank">Click here to record your screen</a></p>`;
         client.invoke('comment.appendHtml', html).catch(() => {
           client.invoke('notify', 'Could not add link to comment draft', 'error');
         });
@@ -124,10 +142,15 @@ export function TicketSidebar({
         client.invoke('notify', 'Failed to create link', 'error');
       }
     } catch (err) {
-      const message = getErrorMessage(err);
-      setError(message);
-      setView('error');
-      client.invoke('notify', message, 'error');
+      const errorView = getErrorView(err);
+      if (errorView) {
+        setView(errorView);
+      } else {
+        const message = getErrorMessage(err);
+        setError(message);
+        setView('error');
+        client.invoke('notify', message, 'error');
+      }
     } finally {
       setIsCreating(false);
     }
@@ -163,6 +186,11 @@ export function TicketSidebar({
     const url = `${dashboardUrl}/workspace/${workspaceId}/recordings`;
     window.open(url, '_blank');
   }, [workspaceId, dashboardUrl]);
+
+  const handleGoBackToOpener = useCallback(() => {
+    setError(null);
+    setView('opener');
+  }, []);
 
   if (ticketLoading || agentLoading) {
     return (
@@ -214,6 +242,28 @@ export function TicketSidebar({
         />
       )}
 
+      {view === 'signup' && <SignupScreen agentEmail={agentEmail} dashboardUrl={dashboardUrl} />}
+
+      {view === 'access_requested' && (
+        <AccessRequestedScreen agentEmail={agentEmail} dashboardUrl={dashboardUrl} />
+      )}
+
+      {view === 'limit_exceeded' && (
+        <LimitExceededScreen
+          workspaceId={workspaceId}
+          dashboardUrl={dashboardUrl}
+          onGoBack={handleGoBackToOpener}
+        />
+      )}
+
+      {view === 'reconnect' && (
+        <ReconnectScreen
+          agentEmail={agentEmail}
+          workspaceId={workspaceId}
+          dashboardUrl={dashboardUrl}
+        />
+      )}
+
       {view === 'error' && error && (
         <ErrorMessage
           message={error}
@@ -221,10 +271,7 @@ export function TicketSidebar({
             setError(null);
             setView('creator');
           }}
-          onGoBack={() => {
-            setError(null);
-            setView('opener');
-          }}
+          onGoBack={handleGoBackToOpener}
         />
       )}
     </div>

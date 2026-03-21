@@ -54,14 +54,16 @@ export function LinkSuccess({ linkUrl, description, actions }: LinkSuccessProps)
           background: '#f8f9f9',
           borderRadius: '4px',
           fontSize: '12px',
-          wordBreak: 'break-all',
           border: '1px solid #d8dcde',
           cursor: 'pointer',
           color: copied ? '#038153' : '#2f3941',
           textAlign: 'left',
           transition: 'color 0.15s',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
         }}
-        title="Click to copy"
+        title={linkUrl}
       >
         {copied ? 'Copied!' : linkUrl}
       </button>

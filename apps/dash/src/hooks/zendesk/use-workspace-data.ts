@@ -17,6 +17,8 @@ interface UseWorkspaceDataReturn {
   setSelectedDomain: (id: string) => void;
   isLoading: boolean;
   error: string | null;
+  /** The raw error object, preserved for view routing */
+  rawError: unknown;
 }
 
 export function useWorkspaceData({
@@ -29,6 +31,7 @@ export function useWorkspaceData({
   const [selectedDomain, setSelectedDomain] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rawError, setRawError] = useState<unknown>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -36,6 +39,7 @@ export function useWorkspaceData({
     async function loadData() {
       setIsLoading(true);
       setError(null);
+      setRawError(null);
 
       try {
         const api = getZendeskApiClient();
@@ -58,6 +62,7 @@ export function useWorkspaceData({
           }
         }
       } catch (err) {
+        setRawError(err);
         if (err instanceof ZendeskApiError && err.status === 401) {
           setError('Integration disconnected. Reconnect from the Userplane dashboard.');
         } else {
@@ -80,5 +85,6 @@ export function useWorkspaceData({
     setSelectedDomain,
     isLoading,
     error,
+    rawError,
   };
 }

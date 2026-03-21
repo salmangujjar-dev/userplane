@@ -6,18 +6,22 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useAgentContext } from '@/hooks/zendesk/use-agent-context';
-import { useZendeskClient } from '@/hooks/zendesk/use-client';
 import { useWorkspaceData } from '@/hooks/zendesk/use-workspace-data';
 import { getZendeskApiClient } from '@/lib/zendesk/api-client';
-import { getErrorMessage } from '@/lib/zendesk/errors';
+import type { ErrorView } from '@/lib/zendesk/errors';
+import { getErrorMessage, getErrorView } from '@/lib/zendesk/errors';
 
+import { AccessRequestedScreen } from './AccessRequestedScreen';
 import { ErrorMessage } from './ErrorMessage';
 import { UserplaneIcon } from './Icons';
+import { LimitExceededScreen } from './LimitExceededScreen';
 import { LinkCreatorForm } from './LinkCreatorForm';
 import { LinkSuccess } from './LinkSuccess';
+import { ReconnectScreen } from './ReconnectScreen';
 import { ScreenHeader } from './ScreenHeader';
+import { SignupScreen } from './SignupScreen';
 
-type View = 'creator' | 'success' | 'error';
+type View = 'creator' | 'success' | 'error' | ErrorView;
 
 export function TopBar({
   workspaceId,
@@ -26,7 +30,6 @@ export function TopBar({
   workspaceId: string;
   dashboardUrl: string;
 }) {
-  const client = useZendeskClient();
   const { agentEmail, isLoading: agentLoading, error: agentError } = useAgentContext();
 
   const [view, setView] = useState<View>('creator');
@@ -42,6 +45,19 @@ export function TopBar({
       setView('error');
     }
   }, [agentError]);
+
+  // Route workspace data errors to dedicated screens
+  useEffect(() => {
+    if (workspace.rawError) {
+      const errorView = getErrorView(workspace.rawError);
+      if (errorView) {
+        setView(errorView);
+      } else if (workspace.error) {
+        setError(workspace.error);
+        setView('error');
+      }
+    }
+  }, [workspace.rawError, workspace.error]);
 
   const handleCreateLink = useCallback(async () => {
     if (!workspace.selectedProject) {
@@ -76,8 +92,13 @@ export function TopBar({
         setView('error');
       }
     } catch (err) {
-      setError(getErrorMessage(err));
-      setView('error');
+      const errorView = getErrorView(err);
+      if (errorView) {
+        setView(errorView);
+      } else {
+        setError(getErrorMessage(err));
+        setView('error');
+      }
     } finally {
       setIsCreating(false);
     }
@@ -131,6 +152,28 @@ export function TopBar({
             { label: 'Create another', onClick: handleReset, variant: 'primary' },
             { label: 'Open in Dashboard', onClick: handleOpenDashboard, variant: 'secondary' },
           ]}
+        />
+      )}
+
+      {view === 'signup' && <SignupScreen agentEmail={agentEmail} dashboardUrl={dashboardUrl} />}
+
+      {view === 'access_requested' && (
+        <AccessRequestedScreen agentEmail={agentEmail} dashboardUrl={dashboardUrl} />
+      )}
+
+      {view === 'limit_exceeded' && (
+        <LimitExceededScreen
+          workspaceId={workspaceId}
+          dashboardUrl={dashboardUrl}
+          onGoBack={handleReset}
+        />
+      )}
+
+      {view === 'reconnect' && (
+        <ReconnectScreen
+          agentEmail={agentEmail}
+          workspaceId={workspaceId}
+          dashboardUrl={dashboardUrl}
         />
       )}
 
