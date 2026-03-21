@@ -56,6 +56,7 @@ import { IntercomService } from '@/api/services/intercom-oauth.service';
 import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
 import { NotificationService } from '@/api/services/notification.service';
+import { OAuthProviderService } from '@/api/services/oauth-provider.service';
 import { PlanMetadataResolver } from '@/api/services/plan-metadata-resolver';
 import { ProjectService } from '@/api/services/project.service';
 import { ProvisionerService } from '@/api/services/provisioner.service';
@@ -66,7 +67,6 @@ import { UserService } from '@/api/services/user.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 // Services
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
-import { OAuthProviderService } from '@/api/services/oauth-provider.service';
 import { ZendeskAppService } from '@/api/services/zendesk-app.service';
 import { ZendeskService } from '@/api/services/zendesk-oauth.service';
 

@@ -106,6 +106,7 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       host: raw.HOST,
       nodeEnv: raw.NODE_ENV,
       appEnv: parseAppEnv(raw.APP_ENV),
+      internalApiKey: raw.INTERNAL_API_KEY,
     },
     cors: {
       origins: raw.CORS_ORIGINS,

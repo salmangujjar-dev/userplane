@@ -26,18 +26,18 @@ import {
 } from '@/api/handlers/intercom-canvas.handler';
 import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.handler';
 import { createUninstallHandler } from '@/api/handlers/intercom-uninstall.handler';
-import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
-import { createZendeskIframeHandler } from '@/api/handlers/zendesk-iframe.handler';
 import {
   createOAuthCompleteHandler,
   createOAuthInitiateHandler,
 } from '@/api/handlers/oauth-provider.handler';
+import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import {
   createCreateLinkHandler,
   createGetDomainsHandler,
   createGetMeHandler,
   createGetProjectsHandler,
   createGetStatusHandler,
+  createResolveHandler,
 } from '@/api/handlers/zendesk-app.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
@@ -281,6 +281,9 @@ function getZendeskWorkspaceId(c: Context): string {
   return workspaceId ? `zendesk:${workspaceId}` : getClientIP(c);
 }
 
+// Resolve endpoint — called server-to-server from dashboard, secured by internal API key
+app.get('/api/v1/zendesk/resolve', createResolveHandler({ integrationRepo }));
+
 const zendeskAuthMiddleware = createZendeskAuthMiddleware({ integrationRepo });
 const zendeskRouter = new Hono();
 zendeskRouter.use('*', zendeskAuthMiddleware);
@@ -301,23 +304,6 @@ zendeskRouter.get('/domains', createGetDomainsHandler(zendeskAppService));
 zendeskRouter.get('/status', createGetStatusHandler());
 
 app.route('/api/v1/zendesk', zendeskRouter);
-
-// Zendesk Iframe (Server-side app)
-// ===========================
-// Serves the Zendesk app HTML with server-injected config.
-// Built React app assets are served from /zendesk/assets/.
-const ZENDESK_APP_DIST_DIR = './zendesk-app-dist';
-app.get(
-  '/zendesk/iframe',
-  createZendeskIframeHandler({ integrationRepo, zendeskAppDistDir: ZENDESK_APP_DIST_DIR })
-);
-app.use(
-  '/zendesk/assets/*',
-  serveStatic({
-    root: ZENDESK_APP_DIST_DIR,
-    rewriteRequestPath: (path) => path.replace('/zendesk/assets', ''),
-  })
-);
 
 // Workspace logo upload route (multipart/form-data - handled before OpenAPI)
 // This route handles file uploads which require special multipart handling
