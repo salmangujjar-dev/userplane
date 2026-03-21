@@ -71,7 +71,7 @@ export function getAuthorizationUrl(
     response_type: 'code',
     client_id: env.zendesk.clientId,
     redirect_uri: env.zendesk.redirectUri,
-    scope: 'read tickets:write',
+    scope: 'read tickets:write apps:write',
     state,
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',
@@ -105,7 +105,7 @@ export async function exchangeCodeForToken(
         client_id: env.zendesk.clientId,
         code_verifier: codeVerifier,
         redirect_uri: env.zendesk.redirectUri,
-        scope: 'read tickets:write',
+        scope: 'read tickets:write apps:write',
       }),
     });
 
@@ -189,6 +189,59 @@ export async function addTicketComment(
   }
 }
 
+/**
+ * Set secure settings on a Zendesk app installation
+ * Used during OAuth to configure the jwt_secret for ZAF JWT auth
+ */
+export async function setInstallationSettings(
+  subdomain: string,
+  accessToken: string,
+  installationId: number,
+  settings: Record<string, string>
+): Promise<boolean> {
+  const validatedSubdomain = validateSubdomain(subdomain);
+  try {
+    const response = await fetch(
+      `https://${validatedSubdomain}.zendesk.com/api/v2/apps/installations/${installationId}.json`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ settings }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn(
+        { status: response.status, error: errorText, subdomain, installationId },
+        'Set installation settings failed'
+      );
+      captureException(new Error('failed to set Zendesk installation settings'), undefined, {
+        operation: 'zendesk_set_installation_settings',
+        status: response.status,
+        error_text: errorText,
+        subdomain,
+        installation_id: installationId,
+      });
+      return false;
+    }
+
+    logger.debug({ subdomain, installationId }, 'Zendesk installation settings updated');
+    return true;
+  } catch (error) {
+    logger.error({ error, subdomain, installationId }, 'Set installation settings error');
+    captureException(error, undefined, {
+      operation: 'zendesk_set_installation_settings',
+      subdomain,
+      installation_id: installationId,
+    });
+    return false;
+  }
+}
+
 export type RefreshResult =
   | { ok: true; data: ZendeskTokenResponse }
   | { ok: false; permanent: boolean };
@@ -213,7 +266,7 @@ export async function refreshAccessToken(
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
         client_id: env.zendesk.clientId,
-        scope: 'read tickets:write',
+        scope: 'read tickets:write apps:write',
       }),
     });
 

@@ -40,14 +40,8 @@ export function createResolveHandler(deps: { integrationRepo: IntegrationReposit
         return c.json({ connected: false, subdomain });
       }
 
-      const apiToken = (integration.providerToken as { apiToken?: string })?.apiToken;
-      if (!apiToken) {
-        return c.json({ connected: false, subdomain });
-      }
-
       return c.json({
         connected: true,
-        apiToken,
         workspaceId: integration.workspaceId,
         subdomain,
       });

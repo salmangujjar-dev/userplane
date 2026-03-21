@@ -134,6 +134,7 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       clientId: raw.ZENDESK_CLIENT_ID,
       clientSecret: raw.ZENDESK_CLIENT_SECRET,
       redirectUri: raw.ZENDESK_REDIRECT_URI,
+      jwtSecret: raw.ZENDESK_JWT_SECRET,
     },
     dashboard: {
       baseUrl: raw.INVITE_APP_URL,
@@ -330,6 +331,11 @@ function validateSecrets(config: EnvConfig): void {
       value: config.token.shareSecret,
       devValue: DEV_SECRETS.SHARE,
       envVar: 'SHARE_TOKEN_SECRET',
+    },
+    {
+      value: config.zendesk.jwtSecret,
+      devValue: DEV_SECRETS.ZENDESK_JWT,
+      envVar: 'ZENDESK_JWT_SECRET',
     },
   ];
 

@@ -18,7 +18,12 @@ import {
 } from '@userplane/contract';
 import { nanoid } from 'nanoid';
 
-import { exchangeCodeForToken, getAuthorizationUrl, getMe } from '@/api/clients/zendesk';
+import {
+  exchangeCodeForToken,
+  getAuthorizationUrl,
+  getMe,
+  setInstallationSettings,
+} from '@/api/clients/zendesk';
 import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
@@ -51,7 +56,6 @@ interface PendingAuth {
 
 interface AuthCodeData {
   integrationId: string;
-  apiToken: string;
   workspaceId: string;
 }
 
@@ -60,6 +64,7 @@ export interface OAuthProviderServiceDeps {
   tokenService: TokenService;
   integrationRepo: IntegrationRepository;
   cacheService: CacheService;
+  jwtSecret: string;
 }
 
 export class OAuthProviderService {
@@ -86,6 +91,7 @@ export class OAuthProviderService {
     outerRedirectUri?: string;
     outerState?: string;
     outerClientId?: string;
+    installationId?: number;
   }): Promise<{ pendingId: string; zendeskAuthUrl: string }> {
     const {
       userId,
@@ -95,6 +101,7 @@ export class OAuthProviderService {
       outerRedirectUri,
       outerState,
       outerClientId,
+      installationId,
     } = params;
 
     // Check if workspace already has a Zendesk integration
@@ -138,7 +145,8 @@ export class OAuthProviderService {
       subdomain,
       workspaceId,
       'app-oauth',
-      pendingId
+      pendingId,
+      installationId
     );
 
     const zendeskAuthUrl = getAuthorizationUrl(subdomain, state, codeChallenge);
@@ -171,7 +179,7 @@ export class OAuthProviderService {
       throw provisionerError.ZENDESK_OAUTH_STATE_INVALID();
     }
 
-    const { subdomain, codeVerifier, pendingId } = statePayload;
+    const { subdomain, codeVerifier, pendingId, installationId } = statePayload;
     if (!pendingId) {
       throw new Error('Missing pendingId in OAuth state');
     }
@@ -220,11 +228,8 @@ export class OAuthProviderService {
       throw workspaceError.INTEGRATION_PROVIDER_WORKSPACE_CONFLICT();
     }
 
-    // 6. Generate API token for iframe→API auth
-    const apiToken = nanoid(48);
+    // 6. Create integration record
     const integrationId = generateIntegrationId();
-
-    // 7. Create integration record with both tokens
     const now = Date.now();
     await this.deps.integrationRepo.create({
       id: integrationId,
@@ -233,7 +238,6 @@ export class OAuthProviderService {
       providerWorkspaceId: subdomain,
       providerToken: createProviderToken('zendesk', {
         accessToken: tokenResponse.access_token,
-        apiToken,
         refreshToken: tokenResponse.refresh_token,
         tokenExpiresAt: tokenResponse.expires_in
           ? new Date(now + tokenResponse.expires_in * 1000).toISOString()
@@ -244,6 +248,27 @@ export class OAuthProviderService {
       }),
       providerMeta: createProviderMeta('zendesk', { subdomain }),
     });
+
+    // 7. Set jwt_secret on Zendesk app installation for ZAF JWT auth
+    if (installationId) {
+      const ok = await setInstallationSettings(
+        subdomain,
+        tokenResponse.access_token,
+        installationId,
+        { jwt_secret: this.deps.jwtSecret }
+      );
+      if (!ok) {
+        logger.error(
+          { subdomain, installationId },
+          'Failed to set jwt_secret on Zendesk installation — ZAF JWT auth will not work'
+        );
+      }
+    } else {
+      logger.warn(
+        { subdomain },
+        'No installationId provided — jwt_secret not set on Zendesk installation'
+      );
+    }
 
     // 8. Warm cache
     await this.deps.cacheService.setIntegrationByProviderWorkspace('zendesk', subdomain, {
@@ -266,7 +291,6 @@ export class OAuthProviderService {
     const outerCode = nanoid(32);
     const codeData: AuthCodeData = {
       integrationId,
-      apiToken,
       workspaceId: pending.workspaceId,
     };
     await redis.set(`oauth:code:${outerCode}`, JSON.stringify(codeData), { ex: AUTH_CODE_TTL });

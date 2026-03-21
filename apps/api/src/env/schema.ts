@@ -94,6 +94,8 @@ export const zendeskEnvSchema = z.object({
   ZENDESK_CLIENT_SECRET: z.string().optional().default(''),
   /** Where Zendesk redirects back after admin authorizes us */
   ZENDESK_REDIRECT_URI: urlWithDefault(`${DEV_URLS.DASH}${AUTH.ZENDESK_REDIRECT_PATH}`),
+  /** Shared secret for Zendesk App JWT auth (HS256). Set as Zendesk secure setting during OAuth. */
+  ZENDESK_JWT_SECRET: z.string().optional().default('zendesk-jwt-secret-dev-only'),
 });
 
 /** Dashboard env vars schema */
@@ -469,7 +471,9 @@ export const envConfigSchema = z.object({
   auth: authConfigSchema,
   google: oauthConfigSchema,
   intercom: oauthConfigSchema,
-  zendesk: oauthConfigSchema,
+  zendesk: oauthConfigSchema.extend({
+    jwtSecret: z.string(),
+  }),
   dashboard: dashboardConfigSchema,
   billing: billingConfigSchema,
   payments: paymentsConfigSchema,

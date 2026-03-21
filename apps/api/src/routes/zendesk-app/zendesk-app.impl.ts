@@ -12,7 +12,6 @@ import {
   createZendeskAppRateLimitMiddleware,
   type ZendeskAppContext,
 } from '@/api/middleware/zendesk-app.orpc';
-import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import type { ZendeskAppService } from '@/api/services/zendesk-app.service';
 
 // =============================================================================
@@ -131,7 +130,7 @@ const getStatusImpl = (zendeskAuth: ZendeskMiddleware, zendeskRateLimit: Zendesk
 };
 
 /**
- * GET /zendesk/me — Returns workspace context from apiToken
+ * GET /zendesk/me — Returns workspace context from session JWT
  */
 const getMeImpl = (zendeskAuth: ZendeskMiddleware, zendeskRateLimit: ZendeskRateLimit) => {
   return base.zendeskApp.getMe
@@ -153,10 +152,10 @@ const getMeImpl = (zendeskAuth: ZendeskMiddleware, zendeskRateLimit: ZendeskRate
 
 export const createZendeskAppProcedures = (
   zendeskAppService: ZendeskAppService,
-  integrationRepo: IntegrationRepository,
+  jwtSecret: string,
   rateLimiter: RateLimiter
 ) => {
-  const zendeskAuth = createZendeskAppAuthMiddleware({ integrationRepo });
+  const zendeskAuth = createZendeskAppAuthMiddleware({ jwtSecret });
   const zendeskRateLimit = createZendeskAppRateLimitMiddleware(rateLimiter);
 
   return {

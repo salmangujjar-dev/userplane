@@ -174,7 +174,7 @@ const diagnosticsProcedures = createDiagnosticsProcedures(
 
 const zendeskAppProcedures = createZendeskAppProcedures(
   zendeskAppService,
-  integrationRepo,
+  env.zendesk.jwtSecret,
   rateLimiter
 );
 

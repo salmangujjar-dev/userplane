@@ -516,6 +516,8 @@ export interface ZendeskOAuthStatePayload {
   source?: ZendeskOAuthSource;
   /** Pending OAuth authorization ID for app-oauth flow */
   pendingId?: string;
+  /** Zendesk app installation ID — used to set jwt_secret secure setting after OAuth */
+  installationId?: number;
   codeVerifier: string;
   timestamp: number;
   nonce: string;

@@ -39,7 +39,15 @@ export function createOAuthInitiateHandler(service: OAuthProviderService) {
       }
 
       const body = await c.req.json();
-      const { workspaceId, subdomain, mode, outerRedirectUri, outerState, outerClientId } = body;
+      const {
+        workspaceId,
+        subdomain,
+        mode,
+        outerRedirectUri,
+        outerState,
+        outerClientId,
+        installationId,
+      } = body;
 
       if (!workspaceId || !subdomain) {
         return c.json({ error: 'Missing required parameters' }, 400);
@@ -58,6 +66,7 @@ export function createOAuthInitiateHandler(service: OAuthProviderService) {
         outerRedirectUri,
         outerState,
         outerClientId,
+        installationId: installationId ? Number(installationId) : undefined,
       });
 
       return c.json({ success: true, data: result });

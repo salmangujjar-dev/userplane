@@ -332,7 +332,8 @@ export class TokenService {
     subdomain: string,
     workspaceId?: string,
     source?: ZendeskOAuthSource,
-    pendingId?: string
+    pendingId?: string,
+    installationId?: number
   ): { state: string; codeChallenge: string } {
     const { codeVerifier, codeChallenge } = generatePKCE();
     const now = Math.floor(Date.now() / 1000);
@@ -343,6 +344,7 @@ export class TokenService {
       subdomain,
       ...(source && { source }),
       ...(pendingId && { pendingId }),
+      ...(installationId && { installationId }),
       codeVerifier,
       timestamp: now,
       nonce: nanoid(16),

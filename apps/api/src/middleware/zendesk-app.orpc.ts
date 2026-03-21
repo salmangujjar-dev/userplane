@@ -1,14 +1,14 @@
 /**
  * Zendesk App oRPC middleware
- * Authentication (Bearer token) and rate limiting for Zendesk iframe endpoints
+ * Authentication (session JWT verification) and rate limiting for Zendesk iframe endpoints
  */
 
-import type { RateLimiter } from '@userplane/cache';
 import { ORPCError } from '@orpc/server';
+import type { RateLimiter } from '@userplane/cache';
 import { zendeskAppError } from '@userplane/contract';
 
 import { createLogger } from '@/api/lib/logger';
-import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import { verifySessionJwt } from '@/api/lib/zendesk-jwt';
 
 import type { InitialContext } from './auth.orpc';
 import { base } from './auth.orpc';
@@ -22,33 +22,34 @@ export type ZendeskAppContext = InitialContext & {
 };
 
 /**
- * Create Zendesk app Bearer token authentication middleware
- * Reads Authorization header, validates apiToken, attaches workspace context
+ * Create Zendesk app session JWT authentication middleware
+ * Verifies short-lived session JWTs (signed by our session endpoint)
+ * Stateless — no database lookup required
  */
-export function createZendeskAppAuthMiddleware(deps: { integrationRepo: IntegrationRepository }) {
+export function createZendeskAppAuthMiddleware(deps: { jwtSecret: string }) {
   return base.middleware(async ({ context, next }) => {
     const authHeader = context.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       throw zendeskAppError.ZENDESK_APP_UNAUTHORIZED();
     }
 
-    const apiToken = authHeader.slice(7);
-    if (!apiToken) {
+    const token = authHeader.slice(7);
+    if (!token) {
       throw zendeskAppError.ZENDESK_APP_UNAUTHORIZED();
     }
 
-    const integration = await deps.integrationRepo.findByApiToken('zendesk', apiToken);
+    const payload = verifySessionJwt(token, deps.jwtSecret);
 
-    if (!integration) {
-      logger.warn('Invalid API token - no matching integration found');
+    if (!payload) {
+      logger.warn('Invalid or expired session JWT');
       throw zendeskAppError.ZENDESK_APP_UNAUTHORIZED();
     }
 
     return next({
       context: {
-        workspaceId: integration.workspaceId,
-        integrationId: integration.id,
-        subdomain: (integration.providerMeta as { subdomain: string }).subdomain,
+        workspaceId: payload.workspaceId,
+        integrationId: payload.integrationId,
+        subdomain: payload.subdomain,
       },
     });
   });
@@ -56,7 +57,7 @@ export function createZendeskAppAuthMiddleware(deps: { integrationRepo: Integrat
 
 /**
  * Create rate limiting middleware for Zendesk app routes
- * Uses webhook tier (1000 req/min) keyed by workspace ID — matches the old Hono behavior
+ * Uses webhook tier (1000 req/min) keyed by workspace ID
  */
 export function createZendeskAppRateLimitMiddleware(limiter: RateLimiter) {
   return base.$context<ZendeskAppContext>().middleware(async ({ context, next }) => {
