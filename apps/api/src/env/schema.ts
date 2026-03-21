@@ -46,6 +46,8 @@ export const serverEnvSchema = z.object({
   APP_ENV: z.enum(['development', 'production']).default('development'),
   PORT: integerWithDefault(SERVER.PORT),
   HOST: stringWithDefault(SERVER.HOST),
+  /** Shared secret for server-to-server calls (dashboard → API) */
+  INTERNAL_API_KEY: z.string().optional().default(''),
 });
 
 /** CORS env vars schema */
@@ -283,6 +285,8 @@ export const serverConfigSchema = z.object({
   host: z.string(),
   nodeEnv: z.enum(['development', 'production', 'test']),
   appEnv: z.enum(['development', 'production']),
+  /** Shared secret for server-to-server API calls (e.g. dashboard → API) */
+  internalApiKey: z.string().optional().default(''),
 });
 
 /** CORS configuration schema */

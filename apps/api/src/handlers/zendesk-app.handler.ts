@@ -6,7 +6,9 @@
 import { ZendeskCreateLinkBodySchema, ZendeskWorkspaceQuerySchema } from '@userplane/contract';
 import type { Context } from 'hono';
 
+import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
+import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import { ZendeskAppError, type ZendeskAppService } from '@/api/services/zendesk-app.service';
 import type { ZendeskAppEnv } from '@/api/types/internal';
 
@@ -33,7 +35,8 @@ export function createCreateLinkHandler(service: ZendeskAppService) {
 
     try {
       const subdomain = c.get('subdomain');
-      const { workspaceId: _, ...linkParams } = parsed.data;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { workspaceId: _workspaceId, ...linkParams } = parsed.data;
       const result = await service.createLink({
         ...linkParams,
         workspaceId,
@@ -152,5 +155,51 @@ export function createGetMeHandler() {
       success: true,
       data: { workspaceId, subdomain, status: 'connected' },
     });
+  };
+}
+
+/**
+ * GET /api/v1/zendesk/resolve?subdomain=X - Resolve integration config by subdomain
+ * Called server-to-server from the dashboard (Next.js server component).
+ * Secured via X-Internal-Key header.
+ */
+export function createResolveHandler(deps: { integrationRepo: IntegrationRepository }) {
+  return async (c: Context) => {
+    // Verify internal API key
+    const internalKey = c.req.header('X-Internal-Key');
+    if (!internalKey || internalKey !== env.server.internalApiKey) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const subdomain = c.req.query('subdomain');
+    if (!subdomain) {
+      return c.json({ error: 'Missing subdomain parameter' }, 400);
+    }
+
+    try {
+      const integration = await deps.integrationRepo.findByProviderWorkspaceId(
+        'zendesk',
+        subdomain
+      );
+
+      if (!integration) {
+        return c.json({ connected: false, subdomain });
+      }
+
+      const apiToken = (integration.providerToken as { apiToken?: string })?.apiToken;
+      if (!apiToken) {
+        return c.json({ connected: false, subdomain });
+      }
+
+      return c.json({
+        connected: true,
+        apiToken,
+        workspaceId: integration.workspaceId,
+        subdomain,
+      });
+    } catch (err) {
+      logger.error({ err, subdomain }, 'Failed to resolve integration');
+      return c.json({ connected: false, subdomain });
+    }
   };
 }
