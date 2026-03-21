@@ -71,6 +71,11 @@ export type ShareClient = UserplaneClient['share'];
 export type SessionClient = UserplaneClient['session'];
 
 /**
+ * Zendesk App API types
+ */
+export type ZendeskAppClient = UserplaneClient['zendeskApp'];
+
+/**
  * Re-export contract types
  */
 export type {
@@ -86,4 +91,5 @@ export type {
   ShareContract,
   StatusContract,
   WorkspaceContract,
+  ZendeskAppContract,
 } from '@userplane/contract';

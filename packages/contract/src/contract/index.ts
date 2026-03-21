@@ -19,6 +19,7 @@ import * as session from './session';
 import * as share from './share';
 import * as status from './status';
 import * as workspace from './workspace';
+import * as zendeskApp from './zendesk-app';
 
 /**
  * Status contract
@@ -309,6 +310,18 @@ export const diagnosticsContract = {
 };
 
 /**
+ * Zendesk App contract
+ * Endpoints called from the Zendesk iframe app (Bearer token auth)
+ */
+export const zendeskAppContract = {
+  createLink: zendeskApp.createLink,
+  getProjects: zendeskApp.getProjects,
+  getDomains: zendeskApp.getDomains,
+  getStatus: zendeskApp.getStatus,
+  getMe: zendeskApp.getMe,
+};
+
+/**
  * Complete API contract
  * Combines all domain contracts for full API implementation
  */
@@ -327,6 +340,7 @@ export const contract = {
   recording: recordingContract,
   share: shareContract,
   session: sessionContract,
+  zendeskApp: zendeskAppContract,
 };
 
 /**
@@ -346,4 +360,5 @@ export type LinkContract = typeof linkContract;
 export type RecordingContract = typeof recordingContract;
 export type ShareContract = typeof shareContract;
 export type SessionContract = typeof sessionContract;
+export type ZendeskAppContract = typeof zendeskAppContract;
 export type Contract = typeof contract;

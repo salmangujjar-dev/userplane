@@ -1,13 +1,10 @@
 import { createMockZAFClient } from '@stories/mocks/zaf-client';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 
-import { initZendeskApiClient } from '@/lib/zendesk/api-client';
+import { ZendeskApiProvider } from '@/hooks/zendesk/use-zendesk-api';
 
 import { ClientContext } from './ClientProvider';
 import { TopBar } from './TopBar';
-
-// Initialize a mock API client for stories
-initZendeskApiClient('mock-token', 'https://api-dev.userplane.io');
 
 const topBarContainer: Decorator = (Story) => (
   <div
@@ -26,9 +23,11 @@ const topBarContainer: Decorator = (Story) => (
 const withMockClient: Decorator = (Story) => {
   const client = createMockZAFClient();
   return (
-    <ClientContext.Provider value={client}>
-      <Story />
-    </ClientContext.Provider>
+    <ZendeskApiProvider apiToken="mock-token" apiUrl="https://api-dev.userplane.io">
+      <ClientContext.Provider value={client}>
+        <Story />
+      </ClientContext.Provider>
+    </ZendeskApiProvider>
   );
 };
 

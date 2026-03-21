@@ -154,7 +154,8 @@ export type {
 /**
  * Re-export oRPC error handling utilities
  */
-export { createSafeClient, isDefinedError, safe } from '@orpc/client';
+export { createSafeClient, isDefinedError, ORPCError, safe } from '@orpc/client';
+export type { SafeClient } from '@orpc/client';
 
 /**
  * Re-export domain-specific client types
@@ -183,4 +184,6 @@ export type {
   UserplaneClient,
   WorkspaceClient,
   WorkspaceContract,
+  ZendeskAppClient,
+  ZendeskAppContract,
 } from './types';

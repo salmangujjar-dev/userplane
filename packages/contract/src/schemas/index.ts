@@ -39,3 +39,4 @@ export * from './token';
 export * from './workspace';
 export * from './workspace.errors';
 export * from './zendesk';
+export * from './zendesk-app.errors';
