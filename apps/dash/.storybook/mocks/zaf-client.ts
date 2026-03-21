@@ -3,7 +3,7 @@
  * Simulates the Zendesk Apps Framework SDK for testing zendesk components outside Zendesk.
  */
 
-import type { ZAFClientInstance, ZAFMetadata } from '../../src/lib/zendesk/types';
+import type { ZAFClientInstance, ZAFMetadata } from '@/lib/zendesk/types';
 
 type MockOverrides = Partial<{
   context: ZAFClientInstance['context'];

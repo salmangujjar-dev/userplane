@@ -1,9 +1,10 @@
-import type { Decorator, Meta, StoryObj } from '@storybook/react';
+import { createMockZAFClient } from '@stories/mocks/zaf-client';
+import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 
-import { createMockZAFClient } from '../../../../.storybook/mocks/zaf-client';
-import { initZendeskApiClient } from '../../../lib/zendesk/api-client';
-import { ClientContext } from '../ClientProvider';
-import { TopBar } from '../TopBar';
+import { initZendeskApiClient } from '@/lib/zendesk/api-client';
+
+import { ClientContext } from './ClientProvider';
+import { TopBar } from './TopBar';
 
 // Initialize a mock API client for stories
 initZendeskApiClient('mock-token', 'https://api-dev.userplane.io');
