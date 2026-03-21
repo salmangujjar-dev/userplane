@@ -49,7 +49,6 @@ export class BrowserLogger {
     const consoleMethod = level === 'fatal' ? 'error' : level;
 
     if (typeof console[consoleMethod] === 'function') {
-      // eslint-disable-next-line no-console
       console[consoleMethod](`[${level.toUpperCase()}]`, output);
     }
   }
@@ -103,7 +102,7 @@ export function createBrowserAppLogger(context: string): BrowserLogger {
           process.env?.NEXT_PUBLIC_LOG_LEVEL ||
           process.env?.LOG_LEVEL)) ||
       (typeof import.meta !== 'undefined' &&
-        (import.meta as Record<string, Record<string, string>>).env?.VITE_LOG_LEVEL);
+        (import.meta as unknown as Record<string, Record<string, string>>).env?.VITE_LOG_LEVEL);
 
     if (envLevel && envLevel in LEVEL_ORDER) {
       level = envLevel as LogLevel;
@@ -112,7 +111,7 @@ export function createBrowserAppLogger(context: string): BrowserLogger {
       const isDev =
         (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') ||
         (typeof import.meta !== 'undefined' &&
-          (import.meta as Record<string, Record<string, boolean>>).env?.DEV);
+          (import.meta as unknown as Record<string, Record<string, boolean>>).env?.DEV);
       if (isDev) {
         level = 'debug';
       }

@@ -1,12 +1,15 @@
 /**
  * App - Location router
- * Reads current Zendesk location from ZAF client context and renders the appropriate component
+ * Reads current Zendesk location from ZAF client context and renders the appropriate component.
+ * Initializes the API client with ZAF secure proxy and fetches workspace context from /me.
  */
 
-import { Component, type ReactNode, useEffect, useState } from 'react';
+import { Component, type ReactNode, useCallback, useEffect, useState } from 'react';
 
-import { initApiClient } from '@/api/client';
+import { ApiError, initApiClient } from '@/api/client';
 
+import { UserplaneIcon } from './components/Icons';
+import { ScreenHeader } from './components/ScreenHeader';
 import { useClient } from './hooks/useClient';
 import { TicketSidebar } from './locations/TicketSidebar';
 import { TopBar } from './locations/TopBar';
@@ -53,34 +56,51 @@ export function App() {
   const client = useClient();
   const [location, setLocation] = useState<string | null>(null);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [subdomain, setSubdomain] = useState<string | null>(null);
+  const [needsSetup, setNeedsSetup] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
-  useEffect(() => {
-    async function init() {
-      try {
-        // Get app metadata (secure settings)
-        const metadata = await client.metadata();
-        const { apiToken, workspaceId: wsId } = metadata.settings;
+  const init = useCallback(async () => {
+    try {
+      setError(null);
+      setNeedsSetup(false);
 
-        if (!apiToken || !wsId) {
-          setError('Missing apiToken or workspaceId in app settings.');
-          return;
-        }
+      // Initialize API client with ZAF client (uses secure proxy for auth)
+      const api = initApiClient(client);
 
-        // Initialize API client with the secure apiToken
-        initApiClient(apiToken);
-        setWorkspaceId(wsId);
+      // Get context early so we have the subdomain for the setup screen
+      const ctx = await client.context();
+      setSubdomain(((ctx as Record<string, unknown>).subdomain as string) ?? null);
 
-        // Get current location
-        const ctx = await client.context();
-        setLocation(ctx.location);
-      } catch {
+      // Fetch workspace context from /me endpoint
+      // The token is injected by Zendesk's proxy — we never see it
+      const me = await api.getMe();
+      setWorkspaceId(me.data.workspaceId);
+      setLocation(ctx.location);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        // OAuth not completed — show setup screen
+        setNeedsSetup(true);
+      } else {
         setError('Failed to initialize app.');
       }
     }
-
-    init();
   }, [client]);
+
+  useEffect(() => {
+    init();
+  }, [init]);
+
+  const handleRetry = useCallback(async () => {
+    setRetrying(true);
+    await init();
+    setRetrying(false);
+  }, [init]);
+
+  if (needsSetup) {
+    return <SetupScreen subdomain={subdomain} onRetry={handleRetry} retrying={retrying} />;
+  }
 
   if (error) {
     return <div style={{ padding: '16px', color: '#cc3340', fontSize: '13px' }}>{error}</div>;
@@ -107,4 +127,85 @@ export function App() {
   })();
 
   return <ErrorBoundary>{content}</ErrorBoundary>;
+}
+
+/**
+ * Setup screen shown when OAuth is not completed or the integration is disconnected.
+ * Directs the admin to the app settings page where they can authorize via the built-in OAuth flow.
+ */
+function SetupScreen({
+  subdomain,
+  onRetry,
+  retrying,
+}: {
+  subdomain: string | null;
+  onRetry: () => void;
+  retrying: boolean;
+}) {
+  const settingsUrl = subdomain
+    ? `https://${subdomain}.zendesk.com/admin/apps-integrations/apps/support-apps`
+    : null;
+
+  return (
+    <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <ScreenHeader
+        icon={<UserplaneIcon size={40} />}
+        title="Connect to Userplane"
+        description="Sign in with your Userplane account to start requesting screen recordings from tickets."
+      />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {settingsUrl ? (
+          <a
+            href={settingsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 500,
+              background: '#000',
+              color: 'white',
+              border: 'none',
+              textAlign: 'center',
+              textDecoration: 'none',
+            }}
+          >
+            Open App Settings
+          </a>
+        ) : (
+          <p style={{ fontSize: '12px', color: '#68737d', textAlign: 'center' }}>
+            Go to <strong>Admin Center &rarr; Apps &rarr; Userplane &rarr; Change Settings</strong>{' '}
+            to sign in.
+          </p>
+        )}
+
+        <button
+          onClick={onRetry}
+          disabled={retrying}
+          style={{
+            width: '100%',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            cursor: retrying ? 'default' : 'pointer',
+            fontSize: '12px',
+            background: 'white',
+            color: '#2f3941',
+            border: '1px solid #d8dcde',
+            opacity: retrying ? 0.6 : 1,
+          }}
+        >
+          {retrying ? 'Checking...' : 'I\u2019ve connected \u2014 retry'}
+        </button>
+      </div>
+
+      <p style={{ fontSize: '11px', color: '#87929d', textAlign: 'center', lineHeight: 1.4 }}>
+        After signing in via app settings, come back here and click retry.
+      </p>
+    </div>
+  );
 }

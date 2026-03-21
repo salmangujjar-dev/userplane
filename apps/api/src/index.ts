@@ -28,8 +28,14 @@ import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.h
 import { createUninstallHandler } from '@/api/handlers/intercom-uninstall.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import {
+  createOAuthCompleteHandler,
+  createOAuthInitiateHandler,
+  createOAuthTokenHandler,
+} from '@/api/handlers/oauth-provider.handler';
+import {
   createCreateLinkHandler,
   createGetDomainsHandler,
+  createGetMeHandler,
   createGetProjectsHandler,
   createGetStatusHandler,
 } from '@/api/handlers/zendesk-app.handler';
@@ -43,6 +49,7 @@ import {
   integrationRepo,
   intercomCanvasService,
   intercomHealthCheckService,
+  oauthProviderService,
   zendeskAppService,
 } from '@/api/services';
 
@@ -93,6 +100,26 @@ app.use(
   cors({
     origin: '*',
     credentials: false,
+    maxAge: env.cors.maxAge,
+  })
+);
+
+// OAuth token endpoint - called by Zendesk backend (server-to-server, no browser origin)
+app.use(
+  '/api/v1/oauth/token',
+  cors({
+    origin: '*',
+    credentials: false,
+    maxAge: env.cors.maxAge,
+  })
+);
+
+// OAuth initiate/complete - called from dashboard (needs credentials for session cookies)
+app.use(
+  '/api/v1/oauth/zendesk/*',
+  cors({
+    origin: env.cors.origins,
+    credentials: true,
     maxAge: env.cors.maxAge,
   })
 );
@@ -244,6 +271,19 @@ app.route('/api/v1/intercom/canvas/inbox', inboxRouter);
 app.route('/api/v1/intercom/health-check', healthCheckRouter);
 app.route('/api/v1/intercom/uninstall', uninstallRouter);
 
+// OAuth Provider Routes (Userplane as OAuth provider for Zendesk built-in app OAuth)
+// ===========================
+const oauthProviderRouter = new Hono();
+// Token exchange endpoint - public, called by Zendesk backend
+oauthProviderRouter.post('/token', createOAuthTokenHandler(oauthProviderService));
+// Initiate and complete endpoints - authenticated via Better Auth session
+// Note: These are called from the dashboard, so they use the session middleware
+// from the OpenAPI handler. We mount them here for the /api/v1/oauth prefix.
+oauthProviderRouter.post('/zendesk/initiate', createOAuthInitiateHandler(oauthProviderService));
+oauthProviderRouter.post('/zendesk/complete', createOAuthCompleteHandler(oauthProviderService));
+
+app.route('/api/v1/oauth', oauthProviderRouter);
+
 // Zendesk App Routes
 // ===========================
 // Called from Zendesk iframe app, authenticated via apiToken
@@ -269,6 +309,7 @@ if (rateLimiter.isAvailable()) {
     })
   );
 }
+zendeskRouter.get('/me', createGetMeHandler());
 zendeskRouter.post('/links', createCreateLinkHandler(zendeskAppService));
 zendeskRouter.get('/projects', createGetProjectsHandler(zendeskAppService));
 zendeskRouter.get('/domains', createGetDomainsHandler(zendeskAppService));

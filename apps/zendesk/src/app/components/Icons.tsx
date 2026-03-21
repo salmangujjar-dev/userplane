@@ -1,8 +1,8 @@
+import userplaneSrc from '@/assets/icon.svg';
 import errorSrc from '@/assets/icon-error.svg';
 import recordingSrc from '@/assets/icon-recording.svg';
 import recordingsListSrc from '@/assets/icon-recordings-list.svg';
 import successSrc from '@/assets/icon-success.svg';
-import userplaneSrc from '@/assets/icon.svg';
 
 interface IconProps {
   size?: number;

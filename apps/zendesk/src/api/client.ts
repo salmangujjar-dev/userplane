@@ -1,6 +1,7 @@
 /**
  * HTTP client for Userplane API
- * Authenticated via apiToken from Zendesk app secure parameters
+ * Uses Zendesk's secure proxy via client.request() with {{setting.access_token}}.
+ * The actual token is injected server-side by Zendesk — never visible in the browser.
  */
 
 import type {
@@ -13,10 +14,6 @@ import type {
 
 import { API_BASE_URL } from '@/lib/constants';
 
-interface ApiClientOptions {
-  apiToken: string;
-}
-
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -28,35 +25,58 @@ export class ApiError extends Error {
   }
 }
 
+/** Response from GET /api/v1/zendesk/me */
+export interface ZendeskMeResponse {
+  success: boolean;
+  data: {
+    workspaceId: string;
+    subdomain: string;
+    status: 'connected';
+  };
+}
+
 class ApiClient {
-  private apiToken: string;
+  private zafClient: ZAFClientInstance;
   private baseUrl: string;
 
-  constructor(options: ApiClientOptions) {
-    this.apiToken = options.apiToken;
+  constructor(zafClient: ZAFClientInstance) {
+    this.zafClient = zafClient;
     this.baseUrl = API_BASE_URL;
   }
 
-  private async request<T>(path: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.baseUrl}/api/v1/zendesk${path}`, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${this.apiToken}`,
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-    });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({ error: 'Request failed' }));
-      throw new ApiError(
-        body.error || `HTTP ${response.status}`,
-        body.code || 'UNKNOWN_ERROR',
-        response.status
-      );
+  private async request<T>(
+    path: string,
+    options?: { method?: string; body?: unknown }
+  ): Promise<T> {
+    try {
+      const result = await this.zafClient.request<T>({
+        url: `${this.baseUrl}/api/v1/zendesk${path}`,
+        type: options?.method ?? 'GET',
+        contentType: 'application/json',
+        headers: {
+          Authorization: 'Bearer {{setting.access_token}}',
+        },
+        data: options?.body ? JSON.stringify(options.body) : undefined,
+        secure: true,
+      });
+      return result;
+    } catch (err: unknown) {
+      // ZAF request errors include status and responseJSON
+      const zafError = err as { status?: number; responseJSON?: { error?: string; code?: string } };
+      if (zafError.status && zafError.responseJSON) {
+        throw new ApiError(
+          zafError.responseJSON.error ?? `HTTP ${zafError.status}`,
+          zafError.responseJSON.code ?? 'UNKNOWN_ERROR',
+          zafError.status
+        );
+      }
+      throw err;
     }
+  }
 
-    return response.json();
+  /** Get workspace context from the authenticated token (no params needed) */
+  async getMe() {
+    return this.request<ZendeskMeResponse>('/me');
   }
 
   async getProjects(workspaceId: string) {
@@ -70,7 +90,7 @@ class ApiClient {
   async createLink(params: ZendeskCreateLinkBody) {
     return this.request<ZendeskCreateLinkResponse>('/links', {
       method: 'POST',
-      body: JSON.stringify(params),
+      body: params,
     });
   }
 
@@ -81,8 +101,8 @@ class ApiClient {
 
 let clientInstance: ApiClient | null = null;
 
-export function initApiClient(apiToken: string): ApiClient {
-  clientInstance = new ApiClient({ apiToken });
+export function initApiClient(zafClient: ZAFClientInstance): ApiClient {
+  clientInstance = new ApiClient(zafClient);
   return clientInstance;
 }
 

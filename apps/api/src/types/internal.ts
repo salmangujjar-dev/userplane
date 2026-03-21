@@ -496,7 +496,10 @@ export interface IntercomOAuthStatePayload {
  * - marketplace: user came from Zendesk Marketplace (/install/zendesk)
  * - integration: user connecting Zendesk to an existing workspace
  */
-export type ZendeskOAuthSource = z.infer<typeof ZendeskOAuthSourceSchema> | 'integration';
+export type ZendeskOAuthSource =
+  | z.infer<typeof ZendeskOAuthSourceSchema>
+  | 'integration'
+  | 'app-oauth';
 
 /**
  * Zendesk OAuth state payload for CSRF protection
@@ -511,6 +514,8 @@ export interface ZendeskOAuthStatePayload {
   workspaceId?: string;
   subdomain: string;
   source?: ZendeskOAuthSource;
+  /** Pending OAuth authorization ID for app-oauth flow */
+  pendingId?: string;
   codeVerifier: string;
   timestamp: number;
   nonce: string;

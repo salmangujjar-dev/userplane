@@ -137,3 +137,20 @@ export function createGetStatusHandler() {
     return c.json({ success: true, data: { status: 'healthy', workspaceId } });
   };
 }
+
+/**
+ * GET /api/v1/zendesk/me - Returns workspace context from apiToken auth
+ * No query params required — workspaceId is derived from the authenticated token.
+ * Used by the Zendesk app after built-in OAuth to discover its workspace context.
+ */
+export function createGetMeHandler() {
+  return async (c: Context<ZendeskAppEnv>) => {
+    const workspaceId = c.get('workspaceId');
+    const subdomain = c.get('subdomain');
+
+    return c.json({
+      success: true,
+      data: { workspaceId, subdomain, status: 'connected' },
+    });
+  };
+}
