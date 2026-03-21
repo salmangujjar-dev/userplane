@@ -12,21 +12,26 @@ import {
   provisionerError,
   workspaceError,
 } from '@userplane/contract';
-import { nanoid } from 'nanoid';
+import { setInstallationSettings } from '@/api/clients/zendesk';
 
 import { exchangeCodeForToken, getAuthorizationUrl, getMe } from '@/api/clients/zendesk';
 import { generateIntegrationId } from '@/api/lib/id';
+import { createLogger } from '@/api/lib/logger';
 import { deriveWorkspaceName, deriveWorkspaceUrl } from '@/api/lib/workspace';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
 import type { ZendeskOAuthSource } from '@/api/types';
 
+const logger = createLogger('zendesk-oauth');
+
 export interface ZendeskServiceDeps {
   tokenService: TokenService;
   integrationRepo: IntegrationRepository;
   provisionerService: ProvisionerService;
   cacheService: CacheService;
+  /** Shared secret for Zendesk App JWT auth — set on installation during OAuth */
+  jwtSecret: string;
 }
 
 type WorkspaceCreationResult =
@@ -65,13 +70,16 @@ export class ZendeskService {
     userId: string,
     subdomain: string,
     workspaceId?: string,
-    source?: ZendeskOAuthSource
+    source?: ZendeskOAuthSource,
+    installationId?: number
   ): { authorizationUrl: string; state: string } {
     const { state, codeChallenge } = this.deps.tokenService.signZendeskOAuthState(
       userId,
       subdomain,
       workspaceId,
-      source
+      source,
+      undefined, // pendingId
+      installationId
     );
     const authorizationUrl = getAuthorizationUrl(subdomain, state, codeChallenge);
 
@@ -96,7 +104,7 @@ export class ZendeskService {
       throw provisionerError.ZENDESK_OAUTH_STATE_INVALID();
     }
 
-    const { subdomain, codeVerifier } = statePayload;
+    const { subdomain, codeVerifier, installationId } = statePayload;
 
     // 2. Check if workspace already has a Zendesk integration
     const existingWorkspaceIntegration =
@@ -129,10 +137,7 @@ export class ZendeskService {
       throw workspaceError.INTEGRATION_PROVIDER_WORKSPACE_CONFLICT();
     }
 
-    // 6. Generate API token for iframe→API auth
-    const apiToken = nanoid(48);
-
-    // 7. Create integration record
+    // 6. Create integration record
     const now = Date.now();
     await this.deps.integrationRepo.create({
       id: generateIntegrationId(),
@@ -141,7 +146,6 @@ export class ZendeskService {
       providerWorkspaceId,
       providerToken: createProviderToken('zendesk', {
         accessToken: tokenResponse.access_token,
-        apiToken,
         refreshToken: tokenResponse.refresh_token,
         tokenExpiresAt: tokenResponse.expires_in
           ? new Date(now + tokenResponse.expires_in * 1000).toISOString()
@@ -153,7 +157,28 @@ export class ZendeskService {
       providerMeta: createProviderMeta('zendesk', { subdomain }),
     });
 
-    // 8. Warm cache
+    // 7. Set jwt_secret on Zendesk app installation for ZAF JWT auth
+    if (installationId) {
+      const ok = await setInstallationSettings(
+        subdomain,
+        tokenResponse.access_token,
+        installationId,
+        { jwt_secret: this.deps.jwtSecret }
+      );
+      if (!ok) {
+        logger.error(
+          { subdomain, installationId },
+          'Failed to set jwt_secret on Zendesk installation — ZAF JWT auth will not work'
+        );
+      }
+    } else {
+      logger.warn(
+        { subdomain },
+        'No installationId provided — jwt_secret not set on Zendesk installation'
+      );
+    }
+
+    // 9. Warm cache
     await this.deps.cacheService.setIntegrationByProviderWorkspace('zendesk', providerWorkspaceId, {
       workspaceId,
     });
@@ -184,7 +209,7 @@ export class ZendeskService {
       throw provisionerError.ZENDESK_OAUTH_STATE_INVALID();
     }
 
-    const { subdomain, codeVerifier } = statePayload;
+    const { subdomain, codeVerifier, installationId } = statePayload;
 
     // 2. Exchange code for access token
     const tokenResponse = await exchangeCodeForToken(subdomain, code, codeVerifier);
@@ -231,10 +256,7 @@ export class ZendeskService {
       throw provisionerError.PROVISIONER_WORKSPACE_CREATE_FAILED();
     }
 
-    // 7. Generate API token for iframe→API auth
-    const apiToken = nanoid(48);
-
-    // 8. Create integration record
+    // 7. Create integration record
     const now = Date.now();
     await this.deps.integrationRepo.create({
       id: generateIntegrationId(),
@@ -243,7 +265,6 @@ export class ZendeskService {
       providerWorkspaceId,
       providerToken: createProviderToken('zendesk', {
         accessToken: tokenResponse.access_token,
-        apiToken,
         refreshToken: tokenResponse.refresh_token,
         tokenExpiresAt: tokenResponse.expires_in
           ? new Date(now + tokenResponse.expires_in * 1000).toISOString()
@@ -255,7 +276,14 @@ export class ZendeskService {
       providerMeta: createProviderMeta('zendesk', { subdomain }),
     });
 
-    // 9. Warm cache
+    // 9. Set jwt_secret on Zendesk app installation for ZAF JWT auth
+    if (installationId) {
+      await setInstallationSettings(subdomain, tokenResponse.access_token, installationId, {
+        jwt_secret: this.deps.jwtSecret,
+      });
+    }
+
+    // 10. Warm cache
     await this.deps.cacheService.setIntegrationByProviderWorkspace('zendesk', providerWorkspaceId, {
       workspaceId: result.workspaceId,
     });

@@ -1737,7 +1737,9 @@ export const zendeskIntegrationAuthorizeImpl = (
       const { authorizationUrl, state } = zendeskService.generateAuthorizationUrl(
         context.user.id,
         input.query.subdomain,
-        input.params.workspaceId
+        input.params.workspaceId,
+        undefined,
+        input.query.installationId
       );
 
       return {

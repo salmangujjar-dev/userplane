@@ -53,6 +53,7 @@ export const DEV_SECRETS = {
   RECORDER: 'dev-recorder-secret-change-in-production',
   DOMAIN_VERIFICATION: 'dev-domain-verification-secret-change-in-production',
   SHARE: 'dev-share-secret-change-in-production',
+  ZENDESK_JWT: 'zendesk-jwt-secret-dev-only',
 } as const;
 
 // =============================================================================

@@ -138,7 +138,8 @@ export const zendeskAuthorizeImpl = (zendeskService: ZendeskService) => {
       context.user.id,
       input.query.subdomain,
       undefined,
-      input.query.source
+      input.query.source,
+      input.query.installationId
     );
 
     return {

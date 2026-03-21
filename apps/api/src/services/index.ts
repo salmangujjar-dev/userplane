@@ -305,6 +305,7 @@ export const zendeskService = new ZendeskService({
   integrationRepo,
   provisionerService,
   cacheService,
+  jwtSecret: env.zendesk.jwtSecret,
 });
 
 // Zendesk App service
@@ -323,6 +324,7 @@ export const oauthProviderService = new OAuthProviderService({
   tokenService,
   integrationRepo,
   cacheService,
+  jwtSecret: env.zendesk.jwtSecret,
 });
 
 // Intercom Canvas service

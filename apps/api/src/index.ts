@@ -32,6 +32,7 @@ import {
 } from '@/api/handlers/oauth-provider.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import { createResolveHandler } from '@/api/handlers/zendesk-app.handler';
+import { createZendeskSessionHandler } from '@/api/handlers/zendesk-session.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
 import { captureException } from '@/api/posthog';
@@ -262,10 +263,18 @@ app.route('/api/v1/oauth', oauthProviderRouter);
 
 // Zendesk App Routes
 // ===========================
-// Called from Zendesk iframe app, authenticated via apiToken
+// Called from Zendesk iframe app, authenticated via ZAF JWT session
 // Zendesk resolve endpoint — called server-to-server from dashboard, secured by internal API key
 // Note: Zendesk app endpoints (links, projects, domains, status, me) are now ORPC routes
 app.get('/api/v1/zendesk/resolve', createResolveHandler({ integrationRepo }));
+
+// Zendesk session endpoint — exchanges ZAF-signed JWT for short-lived session JWT
+// Rate limiting is done inside the handler (after JWT verification) keyed by workspace,
+// because the Zendesk proxy shares IPs across all customers.
+app.post(
+  '/api/v1/zendesk/session',
+  createZendeskSessionHandler({ jwtSecret: env.zendesk.jwtSecret, integrationRepo, rateLimiter })
+);
 
 // Workspace logo upload route (multipart/form-data - handled before OpenAPI)
 // This route handles file uploads which require special multipart handling
