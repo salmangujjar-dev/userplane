@@ -10,12 +10,15 @@ type Props = {
  * Server component for the Zendesk iframe page.
  * Extracts subdomain from origin param, resolves integration config from API,
  * and passes it to the client component.
+ *
+ * Note: No apiToken is passed to the client — session auth is handled
+ * client-side via ZAF JWT (see use-zendesk-session hook).
  */
 export default async function ZendeskIframePage({ searchParams }: Props) {
   const params = await searchParams;
   const subdomain = extractSubdomain(params.origin ?? '');
 
-  let config: { apiToken: string; workspaceId: string; subdomain: string } | null = null;
+  let config: { workspaceId: string; subdomain: string } | null = null;
 
   if (subdomain) {
     try {
@@ -33,7 +36,6 @@ export default async function ZendeskIframePage({ searchParams }: Props) {
         const data = await res.json();
         if (data.connected) {
           config = {
-            apiToken: data.apiToken,
             workspaceId: data.workspaceId,
             subdomain: data.subdomain,
           };

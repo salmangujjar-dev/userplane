@@ -49,7 +49,7 @@ export const NeedsSetup: Story = {
 
 export const Connected: Story = {
   args: {
-    config: { apiToken: 'mock-token', workspaceId: 'ws_mock123', subdomain: 'd3v-userplane' },
+    config: { workspaceId: 'ws_mock123', subdomain: 'd3v-userplane' },
     subdomain: 'd3v-userplane',
     apiUrl: 'https://api-dev.userplane.io',
     dashboardUrl: 'https://dash-dev.userplane.io',

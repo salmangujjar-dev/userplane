@@ -22,6 +22,12 @@ export interface ZAFClientInstance {
     headers?: Record<string, string>;
     contentType?: string;
     secure?: boolean;
+    jwt?: {
+      algorithm: 'HS256';
+      secret_key: string;
+      expiry?: number;
+      claims?: Record<string, unknown>;
+    };
   }): Promise<T>;
   set(path: string, value: unknown): Promise<void>;
   invoke(name: 'resize', options: { width: string; height: string }): Promise<void>;
