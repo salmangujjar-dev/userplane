@@ -2,8 +2,12 @@
 
 /**
  * Client component for the Zendesk iframe app.
- * Handles ZAF initialization, location routing, and the OAuth popup setup screen.
- * Config (apiToken, workspaceId) is passed from the server component.
+ * Handles ZAF initialization, location routing, session auth, and the OAuth popup setup screen.
+ *
+ * Auth flow:
+ * 1. Server component resolves config (workspaceId, subdomain) — NO static apiToken
+ * 2. ZAF JWT session hook exchanges ZAF-signed JWT for short-lived session token
+ * 3. Session token used for ORPC API calls (auto-refreshes every 12 min)
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -15,16 +19,17 @@ import { TicketSidebar } from '@/components/zendesk/TicketSidebar';
 import { TopBar } from '@/components/zendesk/TopBar';
 import { useZendeskClient } from '@/hooks/zendesk/use-client';
 import { ZendeskApiProvider } from '@/hooks/zendesk/use-zendesk-api';
+import { useZendeskSession } from '@/hooks/zendesk/use-zendesk-session';
 
 interface ZendeskAppProps {
-  config: { apiToken: string; workspaceId: string; subdomain: string } | null;
+  config: { workspaceId: string; subdomain: string } | null;
   subdomain: string | null;
   apiUrl: string;
   dashboardUrl: string;
 }
 
 export function ZendeskApp({ config, subdomain, apiUrl, dashboardUrl }: ZendeskAppProps) {
-  const inner = (
+  return (
     <ClientProvider>
       <ZendeskAppInner
         config={config}
@@ -34,26 +39,17 @@ export function ZendeskApp({ config, subdomain, apiUrl, dashboardUrl }: ZendeskA
       />
     </ClientProvider>
   );
-
-  // Wrap with ORPC API provider when config is available
-  if (config) {
-    return (
-      <ZendeskApiProvider apiToken={config.apiToken} apiUrl={apiUrl}>
-        {inner}
-      </ZendeskApiProvider>
-    );
-  }
-
-  return inner;
 }
 
-function ZendeskAppInner({ config, subdomain, dashboardUrl }: ZendeskAppProps) {
+function ZendeskAppInner({ config, subdomain, apiUrl, dashboardUrl }: ZendeskAppProps) {
   const client = useZendeskClient();
   const [location, setLocation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Session auth via ZAF JWT — only active when config is available
+  const session = useZendeskSession(apiUrl, config?.workspaceId ?? '', config?.subdomain ?? '');
+
   // Fetch location + resize for ALL views (setup, loading, app).
-  // This runs once on mount regardless of config, so every state gets proper sizing.
   useEffect(() => {
     let sizeForReactivation: { width: string; height: string } | null = null;
 
@@ -88,23 +84,75 @@ function ZendeskAppInner({ config, subdomain, dashboardUrl }: ZendeskAppProps) {
     return <div style={{ padding: '16px', color: '#cc3340', fontSize: '13px' }}>{error}</div>;
   }
 
-  if (!location) {
+  if (!location || session.isLoading) {
     return <div style={{ padding: '16px', textAlign: 'center', color: '#68737d' }}>Loading...</div>;
   }
 
-  switch (location) {
-    case 'ticket_sidebar':
-    case 'new_ticket_sidebar':
-      return <TicketSidebar workspaceId={config.workspaceId} dashboardUrl={dashboardUrl} />;
-    case 'top_bar':
-      return <TopBar workspaceId={config.workspaceId} dashboardUrl={dashboardUrl} />;
-    default:
-      return (
-        <div style={{ padding: '16px', color: '#68737d', fontSize: '13px' }}>
-          Unsupported location: {location}
-        </div>
-      );
+  if (session.error) {
+    return (
+      <div
+        style={{
+          padding: '24px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          alignItems: 'center',
+          textAlign: 'center',
+        }}
+      >
+        <ScreenHeader
+          icon={<UserplaneIcon size={40} />}
+          title="Connection issue"
+          description="Unable to authenticate with Userplane. Try reconnecting your account."
+        />
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            width: '100%',
+            padding: '8px 12px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '12px',
+            fontWeight: 500,
+            background: '#000',
+            color: 'white',
+            border: 'none',
+          }}
+        >
+          Retry
+        </button>
+        <p style={{ fontSize: '11px', color: '#87929d', lineHeight: 1.4 }}>
+          If the issue persists, disconnect and reconnect from your Userplane workspace settings.
+        </p>
+      </div>
+    );
   }
+
+  if (!session.sessionToken) {
+    return <div style={{ padding: '16px', textAlign: 'center', color: '#68737d' }}>Loading...</div>;
+  }
+
+  return (
+    <ZendeskApiProvider sessionToken={session.sessionToken} apiUrl={apiUrl}>
+      <div>
+        {(() => {
+          switch (location) {
+            case 'ticket_sidebar':
+            case 'new_ticket_sidebar':
+              return <TicketSidebar workspaceId={config.workspaceId} dashboardUrl={dashboardUrl} />;
+            case 'top_bar':
+              return <TopBar workspaceId={config.workspaceId} dashboardUrl={dashboardUrl} />;
+            default:
+              return (
+                <div style={{ padding: '16px', color: '#68737d', fontSize: '13px' }}>
+                  Unsupported location: {location}
+                </div>
+              );
+          }
+        })()}
+      </div>
+    </ZendeskApiProvider>
+  );
 }
 
 type SetupView = 'connect' | 'waiting';
@@ -116,18 +164,30 @@ function SetupScreen({
   subdomain: string | null;
   dashboardUrl: string;
 }) {
+  const zafClient = useZendeskClient();
   const [view, setView] = useState<SetupView>('connect');
 
-  const handleConnect = useCallback(() => {
+  const handleConnect = useCallback(async () => {
     const params = new URLSearchParams({ mode: 'popup' });
     if (subdomain) params.set('subdomain', subdomain);
+
+    // Pass installationId so OAuth flow can set jwt_secret on the installation
+    try {
+      const metadata = await zafClient.metadata();
+      if (metadata.installationId) {
+        params.set('installationId', String(metadata.installationId));
+      }
+    } catch {
+      // If metadata fails, proceed without installationId
+    }
+
     window.open(
       `${dashboardUrl}/oauth/zendesk/authorize?${params.toString()}`,
       'userplane-oauth',
       'width=500,height=650'
     );
     setView('waiting');
-  }, [subdomain, dashboardUrl]);
+  }, [subdomain, dashboardUrl, zafClient]);
 
   if (view === 'waiting') {
     return (

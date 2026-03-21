@@ -23,7 +23,7 @@ const topBarContainer: Decorator = (Story) => (
 const withMockClient: Decorator = (Story) => {
   const client = createMockZAFClient();
   return (
-    <ZendeskApiProvider apiToken="mock-token" apiUrl="https://api-dev.userplane.io">
+    <ZendeskApiProvider sessionToken="mock-session-token" apiUrl="https://api-dev.userplane.io">
       <ClientContext.Provider value={client}>
         <Story />
       </ClientContext.Provider>

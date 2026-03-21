@@ -128,6 +128,11 @@ function OAuthZendeskAuthorizeContent() {
         subdomain: subdomain.trim(),
         mode: isPopupMode ? 'popup' : 'oauth',
       };
+      // Pass installationId from ZAF iframe for jwt_secret provisioning
+      const installationId = searchParams.get('installationId');
+      if (installationId) {
+        body.installationId = installationId;
+      }
       if (!isPopupMode) {
         body.outerRedirectUri = redirectUri;
         body.outerState = state;
