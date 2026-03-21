@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useAgentContext } from '@/hooks/zendesk/use-agent-context';
 import { useWorkspaceData } from '@/hooks/zendesk/use-workspace-data';
-import { getZendeskApiClient } from '@/lib/zendesk/api-client';
+import { useZendeskApi } from '@/hooks/zendesk/use-zendesk-api';
 import type { ErrorView } from '@/lib/zendesk/errors';
 import { getErrorMessage, getErrorView } from '@/lib/zendesk/errors';
 
@@ -31,6 +31,7 @@ export function TopBar({
   dashboardUrl: string;
 }) {
   const { agentEmail, isLoading: agentLoading, error: agentError } = useAgentContext();
+  const api = useZendeskApi();
 
   const [view, setView] = useState<View>('creator');
   const [isCreating, setIsCreating] = useState(false);
@@ -75,23 +76,18 @@ export function TopBar({
     setError(null);
     setCreatedLink(null);
 
-    try {
-      const api = getZendeskApiClient();
-      const result = await api.createLink({
-        workspaceId,
+    const [err, result] = await api.zendeskApp.createLink({
+      query: { workspaceId },
+      body: {
         projectId: workspace.selectedProject,
         domainId: workspace.selectedDomain,
         agentEmail,
-      });
+      },
+    });
 
-      if (result.success) {
-        setCreatedLink(result.data.linkUrl);
-        setView('success');
-      } else {
-        setError('Failed to create link. Please try again.');
-        setView('error');
-      }
-    } catch (err) {
+    setIsCreating(false);
+
+    if (err) {
       const errorView = getErrorView(err);
       if (errorView) {
         setView(errorView);
@@ -99,10 +95,12 @@ export function TopBar({
         setError(getErrorMessage(err));
         setView('error');
       }
-    } finally {
-      setIsCreating(false);
+      return;
     }
-  }, [workspaceId, workspace.selectedProject, workspace.selectedDomain, agentEmail]);
+
+    setCreatedLink(result.data.linkUrl);
+    setView('success');
+  }, [workspaceId, workspace.selectedProject, workspace.selectedDomain, agentEmail, api]);
 
   const handleOpenDashboard = useCallback(() => {
     const url = `${dashboardUrl}/workspace/${workspaceId}/recordings`;

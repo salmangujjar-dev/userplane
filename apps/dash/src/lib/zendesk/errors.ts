@@ -1,17 +1,9 @@
 /**
- * Shared error handling utilities for Zendesk app
+ * Zendesk app error handling utilities
+ * Uses contract-defined error codes from ORPC errors
  */
 
-import { ZendeskApiError } from './api-client';
-
-// Error codes returned by the Zendesk API
-export const ZENDESK_ERROR_CODES = {
-  RECORDING_LIMIT_EXCEEDED: 'RECORDING_LIMIT_EXCEEDED',
-  AGENT_NOT_FOUND: 'AGENT_NOT_FOUND',
-  AGENT_NOT_MEMBER: 'AGENT_NOT_MEMBER',
-} as const;
-
-export type ZendeskErrorCode = (typeof ZENDESK_ERROR_CODES)[keyof typeof ZENDESK_ERROR_CODES];
+import { ORPCError } from '@userplane/client';
 
 /**
  * Dedicated view types for specific error codes.
@@ -20,29 +12,28 @@ export type ZendeskErrorCode = (typeof ZENDESK_ERROR_CODES)[keyof typeof ZENDESK
 export type ErrorView = 'signup' | 'access_requested' | 'limit_exceeded' | 'reconnect';
 
 export function getErrorView(err: unknown): ErrorView | null {
-  if (err instanceof ZendeskApiError) {
-    if (err.status === 401) return 'reconnect';
-    switch (err.code) {
-      case ZENDESK_ERROR_CODES.AGENT_NOT_FOUND:
-        return 'signup';
-      case ZENDESK_ERROR_CODES.AGENT_NOT_MEMBER:
-        return 'access_requested';
-      case ZENDESK_ERROR_CODES.RECORDING_LIMIT_EXCEEDED:
-        return 'limit_exceeded';
-    }
+  if (!(err instanceof ORPCError)) return null;
+
+  switch (err.code) {
+    case 'ZENDESK_APP_UNAUTHORIZED':
+      return 'reconnect';
+    case 'ZENDESK_APP_AGENT_NOT_FOUND':
+      return 'signup';
+    case 'ZENDESK_APP_AGENT_NOT_MEMBER':
+      return 'access_requested';
+    case 'ZENDESK_APP_RECORDING_LIMIT_EXCEEDED':
+      return 'limit_exceeded';
+    default:
+      return null;
   }
-  return null;
 }
 
-const ERROR_MESSAGES: Record<string, string> = {
-  RECORDING_LIMIT_EXCEEDED: 'Recording limit exceeded. Upgrade your plan in the dashboard.',
-  AGENT_NOT_FOUND: 'Your email is not registered with Userplane. Contact your admin.',
-  AGENT_NOT_MEMBER: 'You are not a member of this workspace. Contact your admin.',
-};
-
 export function getErrorMessage(err: unknown): string {
-  if (err instanceof ZendeskApiError && err.code in ERROR_MESSAGES) {
-    return ERROR_MESSAGES[err.code]!;
+  if (err instanceof ORPCError) {
+    return err.message;
   }
-  return 'Failed to create link';
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return 'An unexpected error occurred';
 }

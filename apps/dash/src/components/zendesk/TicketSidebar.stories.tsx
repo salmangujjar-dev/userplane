@@ -1,22 +1,19 @@
 import { createMockZAFClient } from '@stories/mocks/zaf-client';
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 
-import { initZendeskApiClient } from '@/lib/zendesk/api-client';
+import { ZendeskApiProvider } from '@/hooks/zendesk/use-zendesk-api';
 
 import { ClientContext } from './ClientProvider';
 import { TicketSidebar } from './TicketSidebar';
 
-// Initialize a mock API client for stories
-initZendeskApiClient('mock-token', 'https://api-dev.userplane.io');
-
-// Mock fetch for API calls used by the sidebar
+// Mock fetch for API calls used by the sidebar (ORPC uses fetch under the hood)
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === 'string' ? input : input.toString();
 
   if (url.includes('/zendesk/projects')) {
     return Response.json({
-      success: true,
+      message: 'Projects retrieved',
       data: {
         projects: [
           { id: 'proj_1', name: 'Default Project' },
@@ -27,13 +24,13 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   }
   if (url.includes('/zendesk/domains')) {
     return Response.json({
-      success: true,
+      message: 'Domains retrieved',
       data: { domains: [{ id: 'dom_1', url: 'example.com', verified: true }] },
     });
   }
   if (url.includes('/zendesk/links')) {
     return Response.json({
-      success: true,
+      message: 'Recording link created',
       data: { linkId: 'link_mock', linkUrl: 'https://rec.userplane.io/abc123' },
     });
   }
@@ -58,9 +55,11 @@ const sidebarContainer: Decorator = (Story) => (
 const withMockClient: Decorator = (Story) => {
   const client = createMockZAFClient();
   return (
-    <ClientContext.Provider value={client}>
-      <Story />
-    </ClientContext.Provider>
+    <ZendeskApiProvider apiToken="mock-token" apiUrl="https://api-dev.userplane.io">
+      <ClientContext.Provider value={client}>
+        <Story />
+      </ClientContext.Provider>
+    </ZendeskApiProvider>
   );
 };
 

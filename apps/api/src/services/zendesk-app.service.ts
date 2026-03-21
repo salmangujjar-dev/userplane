@@ -4,7 +4,7 @@
  */
 
 import type { ZendeskDomain, ZendeskProject } from '@userplane/contract';
-import { createLinkProviderData } from '@userplane/contract';
+import { createLinkProviderData, zendeskAppError } from '@userplane/contract';
 
 import { createLogger } from '@/api/lib/logger';
 import type { DomainRepository } from '@/api/repositories/domains.repository';
@@ -15,21 +15,6 @@ import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { LinkService } from '@/api/services/link.service';
 
 const logger = createLogger('zendesk-app-service');
-
-export type ZendeskAppErrorCode =
-  | 'RECORDING_LIMIT_EXCEEDED'
-  | 'AGENT_NOT_FOUND'
-  | 'AGENT_NOT_MEMBER';
-
-export class ZendeskAppError extends Error {
-  constructor(
-    message: string,
-    public code: ZendeskAppErrorCode
-  ) {
-    super(message);
-    this.name = 'ZendeskAppError';
-  }
-}
 
 export interface ZendeskAppServiceDeps {
   projectRepo: ProjectRepository;
@@ -51,13 +36,13 @@ export class ZendeskAppService {
     const user = await this.deps.userRepo.findByEmail(agentEmail);
     if (!user) {
       logger.warn({ agentEmail, workspaceId }, 'Agent email not found');
-      throw new ZendeskAppError('Agent not found as a Userplane user', 'AGENT_NOT_FOUND');
+      throw zendeskAppError.ZENDESK_APP_AGENT_NOT_FOUND();
     }
 
     const member = await this.deps.workspaceMemberRepo.findByUserAndWorkspace(user.id, workspaceId);
     if (!member) {
       logger.warn({ agentEmail, workspaceId }, 'Agent is not a workspace member');
-      throw new ZendeskAppError('Agent is not a member of this workspace', 'AGENT_NOT_MEMBER');
+      throw zendeskAppError.ZENDESK_APP_AGENT_NOT_MEMBER();
     }
 
     return member.workspaceMemberId;
@@ -86,10 +71,7 @@ export class ZendeskAppService {
     // Check recording limit before creating link
     const hasRoom = await this.deps.entitlementService.hasCapacity(params.workspaceId, 'links');
     if (!hasRoom) {
-      throw new ZendeskAppError(
-        'Recording limit exceeded for this workspace',
-        'RECORDING_LIMIT_EXCEEDED'
-      );
+      throw zendeskAppError.ZENDESK_APP_RECORDING_LIMIT_EXCEEDED();
     }
 
     const workspaceMemberId = await this.resolveAgentToMember(agentEmail, params.workspaceId);

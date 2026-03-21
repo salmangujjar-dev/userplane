@@ -20,6 +20,7 @@ export {
   shareContract,
   statusContract,
   workspaceContract,
+  zendeskAppContract,
 } from './contract';
 
 // Export contract types
@@ -37,6 +38,7 @@ export type {
   ShareContract,
   StatusContract,
   WorkspaceContract,
+  ZendeskAppContract,
 } from './contract';
 
 // Export all schemas for custom usage

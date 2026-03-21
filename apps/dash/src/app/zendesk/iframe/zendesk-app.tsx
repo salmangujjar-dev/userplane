@@ -14,7 +14,7 @@ import { ScreenHeader } from '@/components/zendesk/ScreenHeader';
 import { TicketSidebar } from '@/components/zendesk/TicketSidebar';
 import { TopBar } from '@/components/zendesk/TopBar';
 import { useZendeskClient } from '@/hooks/zendesk/use-client';
-import { initZendeskApiClient } from '@/lib/zendesk/api-client';
+import { ZendeskApiProvider } from '@/hooks/zendesk/use-zendesk-api';
 
 interface ZendeskAppProps {
   config: { apiToken: string; workspaceId: string; subdomain: string } | null;
@@ -24,7 +24,7 @@ interface ZendeskAppProps {
 }
 
 export function ZendeskApp({ config, subdomain, apiUrl, dashboardUrl }: ZendeskAppProps) {
-  return (
+  const inner = (
     <ClientProvider>
       <ZendeskAppInner
         config={config}
@@ -34,9 +34,20 @@ export function ZendeskApp({ config, subdomain, apiUrl, dashboardUrl }: ZendeskA
       />
     </ClientProvider>
   );
+
+  // Wrap with ORPC API provider when config is available
+  if (config) {
+    return (
+      <ZendeskApiProvider apiToken={config.apiToken} apiUrl={apiUrl}>
+        {inner}
+      </ZendeskApiProvider>
+    );
+  }
+
+  return inner;
 }
 
-function ZendeskAppInner({ config, subdomain, apiUrl, dashboardUrl }: ZendeskAppProps) {
+function ZendeskAppInner({ config, subdomain, dashboardUrl }: ZendeskAppProps) {
   const client = useZendeskClient();
   const [location, setLocation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,13 +79,6 @@ function ZendeskAppInner({ config, subdomain, apiUrl, dashboardUrl }: ZendeskApp
       client.off('app.activated', handleActivated);
     };
   }, [client]);
-
-  // Initialize API client when config is available
-  useEffect(() => {
-    if (config) {
-      initZendeskApiClient(config.apiToken, apiUrl);
-    }
-  }, [config, apiUrl]);
 
   if (!config) {
     return <SetupScreen subdomain={subdomain} dashboardUrl={dashboardUrl} />;

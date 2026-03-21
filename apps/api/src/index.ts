@@ -31,17 +31,9 @@ import {
   createOAuthInitiateHandler,
 } from '@/api/handlers/oauth-provider.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
-import {
-  createCreateLinkHandler,
-  createGetDomainsHandler,
-  createGetMeHandler,
-  createGetProjectsHandler,
-  createGetStatusHandler,
-  createResolveHandler,
-} from '@/api/handlers/zendesk-app.handler';
+import { createResolveHandler } from '@/api/handlers/zendesk-app.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
-import { createZendeskAuthMiddleware } from '@/api/middleware/zendesk-auth';
 import { captureException } from '@/api/posthog';
 import { apiRouter } from '@/api/routes/api.router';
 import { billingWebhookRoute } from '@/api/routes/billing/billing-webhook.route.setup';
@@ -50,7 +42,6 @@ import {
   intercomCanvasService,
   intercomHealthCheckService,
   oauthProviderService,
-  zendeskAppService,
 } from '@/api/services';
 
 const app = new Hono();
@@ -272,38 +263,9 @@ app.route('/api/v1/oauth', oauthProviderRouter);
 // Zendesk App Routes
 // ===========================
 // Called from Zendesk iframe app, authenticated via apiToken
-/**
- * Extract workspace ID from Zendesk auth context for rate limiting.
- * Falls back to IP if workspace ID not available.
- */
-function getZendeskWorkspaceId(c: Context): string {
-  const workspaceId = c.get('workspaceId') as string | undefined;
-  return workspaceId ? `zendesk:${workspaceId}` : getClientIP(c);
-}
-
-// Resolve endpoint — called server-to-server from dashboard, secured by internal API key
+// Zendesk resolve endpoint — called server-to-server from dashboard, secured by internal API key
+// Note: Zendesk app endpoints (links, projects, domains, status, me) are now ORPC routes
 app.get('/api/v1/zendesk/resolve', createResolveHandler({ integrationRepo }));
-
-const zendeskAuthMiddleware = createZendeskAuthMiddleware({ integrationRepo });
-const zendeskRouter = new Hono();
-zendeskRouter.use('*', zendeskAuthMiddleware);
-// Rate limit after auth (which sets workspaceId)
-if (rateLimiter.isAvailable()) {
-  zendeskRouter.use(
-    '*',
-    createRateLimitMiddleware(rateLimiter, {
-      tier: 'webhook',
-      getIdentifier: getZendeskWorkspaceId,
-    })
-  );
-}
-zendeskRouter.get('/me', createGetMeHandler());
-zendeskRouter.post('/links', createCreateLinkHandler(zendeskAppService));
-zendeskRouter.get('/projects', createGetProjectsHandler(zendeskAppService));
-zendeskRouter.get('/domains', createGetDomainsHandler(zendeskAppService));
-zendeskRouter.get('/status', createGetStatusHandler());
-
-app.route('/api/v1/zendesk', zendeskRouter);
 
 // Workspace logo upload route (multipart/form-data - handled before OpenAPI)
 // This route handles file uploads which require special multipart handling

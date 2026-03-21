@@ -9,7 +9,7 @@ import { useAgentContext } from '@/hooks/zendesk/use-agent-context';
 import { useZendeskClient } from '@/hooks/zendesk/use-client';
 import { useTicketContext } from '@/hooks/zendesk/use-ticket-context';
 import { useWorkspaceData } from '@/hooks/zendesk/use-workspace-data';
-import { getZendeskApiClient } from '@/lib/zendesk/api-client';
+import { useZendeskApi } from '@/hooks/zendesk/use-zendesk-api';
 import type { ErrorView } from '@/lib/zendesk/errors';
 import { getErrorMessage, getErrorView } from '@/lib/zendesk/errors';
 
@@ -48,6 +48,7 @@ export function TicketSidebar({
   dashboardUrl: string;
 }) {
   const client = useZendeskClient();
+  const api = useZendeskApi();
   const { agentEmail, agentName, isLoading: agentLoading, error: agentError } = useAgentContext();
   const {
     requester,
@@ -106,10 +107,9 @@ export function TicketSidebar({
     setIsCreating(true);
     setError(null);
 
-    try {
-      const api = getZendeskApiClient();
-      const result = await api.createLink({
-        workspaceId,
+    const [err, result] = await api.zendeskApp.createLink({
+      query: { workspaceId },
+      body: {
         projectId: workspace.selectedProject,
         domainId: workspace.selectedDomain,
         agentEmail,
@@ -121,27 +121,12 @@ export function TicketSidebar({
         requesterName: requester?.name ?? undefined,
         requesterEmail: requester?.email ?? undefined,
         agentName: agentName ?? undefined,
-      });
+      },
+    });
 
-      if (result.success) {
-        setCreatedLink(result.data.linkUrl);
-        setView('success');
+    setIsCreating(false);
 
-        const safeLink = escapeHtml(result.data.linkUrl);
-        const safeMsg = escapeHtml(customMessage);
-        const html = `<p>${safeMsg}</p><p><a href="${safeLink}" target="_blank">Click here to record your screen</a></p>`;
-        client.invoke('comment.appendHtml', html).catch(() => {
-          client.invoke('notify', 'Could not add link to comment draft', 'error');
-        });
-
-        client.invoke('ticket.tags.add', 'userplane-recording-requested').catch(() => {});
-        client.invoke('notify', 'Link created and added to comment', 'notice');
-      } else {
-        setError('Failed to create link. Please try again.');
-        setView('error');
-        client.invoke('notify', 'Failed to create link', 'error');
-      }
-    } catch (err) {
+    if (err) {
       const errorView = getErrorView(err);
       if (errorView) {
         setView(errorView);
@@ -151,9 +136,21 @@ export function TicketSidebar({
         setView('error');
         client.invoke('notify', message, 'error');
       }
-    } finally {
-      setIsCreating(false);
+      return;
     }
+
+    setCreatedLink(result.data.linkUrl);
+    setView('success');
+
+    const safeLink = escapeHtml(result.data.linkUrl);
+    const safeMsg = escapeHtml(customMessage);
+    const html = `<p>${safeMsg}</p><p><a href="${safeLink}" target="_blank">Click here to record your screen</a></p>`;
+    client.invoke('comment.appendHtml', html).catch(() => {
+      client.invoke('notify', 'Could not add link to comment draft', 'error');
+    });
+
+    client.invoke('ticket.tags.add', 'userplane-recording-requested').catch(() => {});
+    client.invoke('notify', 'Link created and added to comment', 'notice');
   }, [
     workspaceId,
     workspace.selectedProject,
@@ -168,6 +165,7 @@ export function TicketSidebar({
     agentName,
     customMessage,
     client,
+    api,
   ]);
 
   const handleCreateAnother = useCallback(() => {

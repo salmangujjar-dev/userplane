@@ -1,7 +1,7 @@
 import type { ZendeskDomain, ZendeskProject } from '@userplane/contract';
 import { useEffect, useState } from 'react';
 
-import { getZendeskApiClient, ZendeskApiError } from '@/lib/zendesk/api-client';
+import { useZendeskApi } from './use-zendesk-api';
 
 interface UseWorkspaceDataArgs {
   workspaceId: string;
@@ -25,6 +25,7 @@ export function useWorkspaceData({
   workspaceId,
   enabled,
 }: UseWorkspaceDataArgs): UseWorkspaceDataReturn {
+  const api = useZendeskApi();
   const [projects, setProjects] = useState<ZendeskProject[]>([]);
   const [domains, setDomains] = useState<ZendeskDomain[]>([]);
   const [selectedProject, setSelectedProject] = useState('');
@@ -41,40 +42,41 @@ export function useWorkspaceData({
       setError(null);
       setRawError(null);
 
-      try {
-        const api = getZendeskApiClient();
-        const [projectsRes, domainsRes] = await Promise.all([
-          api.getProjects(workspaceId),
-          api.getDomains(workspaceId),
-        ]);
+      const [projectsResult, domainsResult] = await Promise.all([
+        api.zendeskApp.getProjects({ query: { workspaceId } }),
+        api.zendeskApp.getDomains({ query: { workspaceId } }),
+      ]);
 
-        if (projectsRes.success) {
-          setProjects(projectsRes.data.projects);
-          if (projectsRes.data.projects.length > 0 && projectsRes.data.projects[0]) {
-            setSelectedProject(projectsRes.data.projects[0].id);
-          }
-        }
-        if (domainsRes.success) {
-          const verified = domainsRes.data.domains.filter((d) => d.verified);
-          setDomains(verified);
-          if (verified.length > 0 && verified[0]) {
-            setSelectedDomain(verified[0].id);
-          }
-        }
-      } catch (err) {
+      const [projectsErr, projectsRes] = projectsResult;
+      const [domainsErr, domainsRes] = domainsResult;
+
+      if (projectsErr || domainsErr) {
+        const err = projectsErr || domainsErr;
         setRawError(err);
-        if (err instanceof ZendeskApiError && err.status === 401) {
-          setError('Integration disconnected. Reconnect from the Userplane dashboard.');
-        } else {
-          setError('Failed to load workspace data');
-        }
-      } finally {
+        setError(err instanceof Error ? err.message : 'Failed to load workspace data');
         setIsLoading(false);
+        return;
       }
+
+      if (projectsRes) {
+        setProjects(projectsRes.data.projects);
+        if (projectsRes.data.projects.length > 0 && projectsRes.data.projects[0]) {
+          setSelectedProject(projectsRes.data.projects[0].id);
+        }
+      }
+      if (domainsRes) {
+        const verified = domainsRes.data.domains.filter((d) => d.verified);
+        setDomains(verified);
+        if (verified.length > 0 && verified[0]) {
+          setSelectedDomain(verified[0].id);
+        }
+      }
+
+      setIsLoading(false);
     }
 
     loadData();
-  }, [workspaceId, enabled]);
+  }, [workspaceId, enabled, api]);
 
   return {
     projects,

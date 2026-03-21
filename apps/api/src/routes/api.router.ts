@@ -16,7 +16,7 @@
 
 // Services and Repositories
 import { getDodoClient } from '@/api/clients/dodo';
-import { cacheService } from '@/api/clients/redis';
+import { cacheService, rateLimiter } from '@/api/clients/redis';
 import { env } from '@/api/env';
 import {
   adminPlanService,
@@ -46,6 +46,7 @@ import {
   workspaceMemberRepo,
   workspaceMemberService,
   workspaceService,
+  zendeskAppService,
   zendeskService,
 } from '@/api/services';
 import { IntercomNotificationService } from '@/api/services/intercom-notification.service';
@@ -66,6 +67,7 @@ import { createSessionProcedures } from './session/session.impl';
 import { createShareProcedures } from './share/share.impl';
 import { createStatusProcedures } from './status/status.impl';
 import { createWorkspaceProcedures } from './workspace/workspace.impl';
+import { createZendeskAppProcedures } from './zendesk-app/zendesk-app.impl';
 
 // Export context types for use in implementations
 export type { AuthContext, InitialContext } from '@/api/middleware/auth.orpc';
@@ -170,6 +172,12 @@ const diagnosticsProcedures = createDiagnosticsProcedures(
   integrationRepo
 );
 
+const zendeskAppProcedures = createZendeskAppProcedures(
+  zendeskAppService,
+  integrationRepo,
+  rateLimiter
+);
+
 /**
  * Complete router export
  *
@@ -187,6 +195,7 @@ const diagnosticsProcedures = createDiagnosticsProcedures(
  * - invite: Public invite validation and acceptance
  * - billing: Subscription management and billing operations
  * - diagnostics: Workspace diagnostics and maintenance operations
+ * - zendeskApp: Zendesk iframe app endpoints (Bearer token auth)
  */
 export const apiRouter = {
   status: statusProcedures,
@@ -203,6 +212,7 @@ export const apiRouter = {
   link: linkProcedures,
   domain: domainProcedures,
   invite: inviteProcedures,
+  zendeskApp: zendeskAppProcedures,
 };
 
 export type ApiRouter = typeof apiRouter;
