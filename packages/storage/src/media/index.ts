@@ -21,6 +21,7 @@ export type {
   PreviewAssetKey,
   SpotlightAssetKey,
   TileAssetKey,
+  ZendeskAssetKey,
 } from './types';
 
 // =============================================================================

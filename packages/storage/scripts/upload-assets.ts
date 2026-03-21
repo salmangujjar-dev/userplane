@@ -38,6 +38,7 @@ type AssetCategory =
   | 'integrations'
   | 'auth'
   | 'intercom-canvas'
+  | 'zendesk'
   | 'icons'
   | 'features'
   | 'hero'
@@ -94,6 +95,7 @@ const CATEGORIES: AssetCategory[] = [
   'integrations',
   'auth',
   'intercom-canvas',
+  'zendesk',
   'icons',
   'features',
   'hero',
