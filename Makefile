@@ -72,7 +72,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)build:share$(WHITE)                   ║$(RESET) Build Share URL shortener only                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:home$(WHITE)                    ║$(RESET) Build home app only                                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:ramp$(WHITE)                    ║$(RESET) Build Ramp app only                                                $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)build:zendesk$(WHITE)                 ║$(RESET) Build Zendesk app (dev)                                             $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)package:zendesk$(WHITE)               ║$(RESET) Package Zendesk manifest .zip (dev)                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)preview:home$(WHITE)                  ║$(RESET) Preview home production build (Cloudflare)                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home$(WHITE)                   ║$(RESET) Deploy home app (preview)                                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home:production$(WHITE)        ║$(RESET) Deploy home app (production)                                      $(WHITE)║$(RESET)"
@@ -105,16 +105,13 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)storybook:sdk:build$(WHITE)           ║$(RESET) Build Storybook for SDK package                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:embed$(WHITE)               ║$(RESET) Run Storybook for embed package                                   $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:embed:build$(WHITE)         ║$(RESET) Build Storybook for embed package                                 $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)storybook:zendesk$(WHITE)             ║$(RESET) Run Storybook for Zendesk app                                     $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)storybook:zendesk:build$(WHITE)       ║$(RESET) Build Storybook for Zendesk app                                   $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:dash$(WHITE)                ║$(RESET) Run Storybook for dashboard (incl. Zendesk)                       $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:dash:build$(WHITE)          ║$(RESET) Build Storybook for dashboard                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)ZENDESK$(WHITE)                                                                                            ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)build:zendesk$(WHITE)                 ║$(RESET) Build Zendesk app + manifest (dev)                                  $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)build:zendesk:prod$(WHITE)            ║$(RESET) Build Zendesk app + manifest (production)                          $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)deploy:zendesk$(WHITE)                ║$(RESET) Deploy built app assets to API server dir                           $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)package:zendesk$(WHITE)               ║$(RESET) Package manifest .zip for Zendesk upload (dev)                     $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)package:zendesk:prod$(WHITE)          ║$(RESET) Package manifest .zip for Zendesk upload (prod)                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)package:zendesk$(WHITE)               ║$(RESET) Package Zendesk manifest .zip (dev)                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)package:zendesk:prod$(WHITE)          ║$(RESET) Package Zendesk manifest .zip (prod)                               $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)RAMP$(WHITE)                                                                                              ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -249,15 +246,15 @@ build\:ramp: ## Build Ramp app only
 	@cd apps/ramp && bun run build
 	@echo "$(GREEN)Ramp app built!$(RESET)"
 
-build\:zendesk: ## Build Zendesk app (dev)
-	@echo "$(BLUE)Building Zendesk app (dev)...$(RESET)"
-	@cd apps/zendesk && bun run build:dev
-	@echo "$(GREEN)Zendesk app built!$(RESET)"
+package\:zendesk: ## Package Zendesk manifest .zip (dev)
+	@echo "$(BLUE)Packaging Zendesk manifest (dev)...$(RESET)"
+	@cd packages/zendesk && bun run package:dev
+	@echo "$(GREEN)Zendesk manifest packaged (dev)!$(RESET)"
 
-build\:zendesk\:prod: ## Build Zendesk app (production)
-	@echo "$(BLUE)Building Zendesk app (production)...$(RESET)"
-	@cd apps/zendesk && bun run build
-	@echo "$(GREEN)Zendesk app built (production)!$(RESET)"
+package\:zendesk\:prod: ## Package Zendesk manifest .zip (prod)
+	@echo "$(BLUE)Packaging Zendesk manifest (production)...$(RESET)"
+	@cd packages/zendesk && bun run package
+	@echo "$(GREEN)Zendesk manifest packaged (production)!$(RESET)"
 
 preview\:home: ## Preview home production build (Cloudflare)
 	@echo "$(MAGENTA)Previewing Home production build...$(RESET)"
@@ -405,29 +402,14 @@ storybook\:logger\:build: ## Build Storybook for logger package
 	@cd packages/logger && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
 
-storybook\:zendesk: ## Run Storybook for Zendesk app
-	@echo "$(MAGENTA)Starting Storybook for Zendesk...$(RESET)"
-	@cd apps/zendesk && bun run storybook
+storybook\:dash: ## Run Storybook for dashboard (incl. Zendesk)
+	@echo "$(MAGENTA)Starting Storybook for dashboard...$(RESET)"
+	@cd apps/dash && bun run storybook
 
-storybook\:zendesk\:build: ## Build Storybook for Zendesk app
-	@echo "$(BLUE)Building Storybook for Zendesk...$(RESET)"
-	@cd apps/zendesk && bun run build-storybook
+storybook\:dash\:build: ## Build Storybook for dashboard
+	@echo "$(BLUE)Building Storybook for dashboard...$(RESET)"
+	@cd apps/dash && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
-
-deploy\:zendesk: build\:zendesk ## Deploy built Zendesk app assets to API server dir
-	@echo "$(BLUE)Deploying Zendesk app to API server...$(RESET)"
-	@cd apps/zendesk && bun run deploy:app
-	@echo "$(GREEN)Zendesk app deployed!$(RESET)"
-
-package\:zendesk: ## Package Zendesk manifest .zip for upload (dev)
-	@echo "$(BLUE)Packaging Zendesk manifest (dev)...$(RESET)"
-	@cd apps/zendesk && bun run package:dev
-	@echo "$(GREEN)Zendesk manifest packaged (dev)!$(RESET)"
-
-package\:zendesk\:prod: ## Package Zendesk manifest .zip for upload (prod)
-	@echo "$(BLUE)Packaging Zendesk manifest (production)...$(RESET)"
-	@cd apps/zendesk && bun run package
-	@echo "$(GREEN)Zendesk manifest packaged (production)!$(RESET)"
 
 # Assets commands
 assets\:upload: ## Upload assets to R2 CDN (dev)

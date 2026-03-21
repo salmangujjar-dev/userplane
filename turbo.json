@@ -4,6 +4,8 @@
   "globalEnv": [
     "NODE_ENV",
     "LOG_LEVEL",
+    "PUBLIC_LOG_LEVEL",
+    "NEXT_PUBLIC_LOG_LEVEL",
     "OBFUSCATE_MODE",
     "OPTIMIZE_MODE",
     "R2_CDN_ACCOUNT_ID",
@@ -13,7 +15,8 @@
     "R2_ASSETS_ACCOUNT_ID",
     "R2_ASSETS_ACCESS_KEY_ID",
     "R2_ASSETS_SECRET_ACCESS_KEY",
-    "R2_ASSETS_BUCKET_NAME"
+    "R2_ASSETS_BUCKET_NAME",
+    "INTERNAL_API_KEY"
   ],
   "tasks": {
     "build": {
@@ -155,12 +158,14 @@
         "PUBLIC_CLOUDFLARE_IMAGE_ZONE",
         "SDK_RECORDER_BASE_URL",
         "SDK_VERIFICATION_BASE_URL",
-        "DEV"
+        "DEV",
+        "INTERNAL_API_KEY"
       ]
     },
     "lint": {
       "inputs": ["$TURBO_DEFAULT$", "eslint.config.*"],
-      "outputs": []
+      "outputs": [],
+      "env": ["INTERNAL_API_KEY"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
