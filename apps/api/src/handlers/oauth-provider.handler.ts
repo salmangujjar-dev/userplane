@@ -1,10 +1,9 @@
 /**
  * OAuth Provider handlers
- * Endpoints for Zendesk built-in app OAuth where Userplane is the OAuth provider.
+ * Endpoints for Zendesk app OAuth where Userplane is the OAuth provider.
  *
- * POST /api/v1/oauth/token - Public token exchange (called by Zendesk backend)
- * POST /api/v1/oauth/zendesk/initiate - Authenticated, starts the nested OAuth flow
- * POST /api/v1/oauth/zendesk/complete - Authenticated, completes the nested OAuth flow
+ * POST /api/v1/oauth/zendesk/initiate - Authenticated, starts the OAuth flow
+ * POST /api/v1/oauth/zendesk/complete - Authenticated, completes the OAuth flow
  */
 
 import type { Context } from 'hono';
@@ -27,54 +26,6 @@ async function getSessionUserId(c: Context): Promise<string | null> {
 }
 
 /**
- * POST /api/v1/oauth/token
- * OAuth 2.0 token exchange endpoint. Called by Zendesk's backend
- * with application/x-www-form-urlencoded body.
- */
-export function createOAuthTokenHandler(service: OAuthProviderService) {
-  return async (c: Context) => {
-    try {
-      const contentType = c.req.header('Content-Type') ?? '';
-      let grantType: string;
-      let code: string;
-      let clientId: string;
-      let clientSecret: string;
-
-      if (contentType.includes('application/x-www-form-urlencoded')) {
-        const body = await c.req.parseBody();
-        grantType = body.grant_type as string;
-        code = body.code as string;
-        clientId = body.client_id as string;
-        clientSecret = body.client_secret as string;
-      } else {
-        const body = await c.req.json();
-        grantType = body.grant_type;
-        code = body.code;
-        clientId = body.client_id;
-        clientSecret = body.client_secret;
-      }
-
-      if (grantType !== 'authorization_code') {
-        return c.json({ error: 'unsupported_grant_type' }, 400);
-      }
-
-      if (!code || !clientId || !clientSecret) {
-        return c.json(
-          { error: 'invalid_request', error_description: 'Missing required parameters' },
-          400
-        );
-      }
-
-      const result = await service.exchangeAuthCode({ code, clientId, clientSecret });
-      return c.json(result);
-    } catch (error) {
-      logger.error({ error }, 'OAuth token exchange failed');
-      return c.json({ error: 'invalid_grant', error_description: 'Token exchange failed' }, 400);
-    }
-  };
-}
-
-/**
  * POST /api/v1/oauth/zendesk/initiate
  * Starts the nested OAuth flow. Called from the dashboard authorize page.
  * Authenticated via Better Auth session cookies.
@@ -88,16 +39,22 @@ export function createOAuthInitiateHandler(service: OAuthProviderService) {
       }
 
       const body = await c.req.json();
-      const { workspaceId, subdomain, outerRedirectUri, outerState, outerClientId } = body;
+      const { workspaceId, subdomain, mode, outerRedirectUri, outerState, outerClientId } = body;
 
-      if (!workspaceId || !subdomain || !outerRedirectUri || !outerState || !outerClientId) {
+      if (!workspaceId || !subdomain) {
         return c.json({ error: 'Missing required parameters' }, 400);
+      }
+
+      // In OAuth mode (built-in), outer params are required
+      if (mode !== 'popup' && (!outerRedirectUri || !outerState || !outerClientId)) {
+        return c.json({ error: 'Missing required OAuth parameters' }, 400);
       }
 
       const result = await service.initiatePendingAuth({
         userId,
         workspaceId,
         subdomain,
+        mode: mode === 'popup' ? 'popup' : 'oauth',
         outerRedirectUri,
         outerState,
         outerClientId,

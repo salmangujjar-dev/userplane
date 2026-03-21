@@ -1,33 +1,24 @@
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   root: 'src',
   envDir: resolve(__dirname),
-  plugins: [
-    react(),
-    viteStaticCopy({
-      targets: [
-        { src: 'manifest.json', dest: '..' },
-        { src: 'translations', dest: '..' },
-        { src: 'assets/*', dest: '.' },
-      ],
-    }),
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
     },
   },
-  base: './',
+  base: '/zendesk/assets/',
   build: {
-    outDir: resolve(__dirname, 'dist/assets'),
+    outDir: resolve(__dirname, 'dist/app'),
     emptyOutDir: true,
     assetsDir: '.',
     rollupOptions: {
       input: resolve(__dirname, 'src/index.html'),
     },
+    manifest: true,
   },
 });

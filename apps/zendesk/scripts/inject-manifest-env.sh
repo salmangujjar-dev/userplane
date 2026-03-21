@@ -13,7 +13,7 @@
 #
 set -euo pipefail
 
-MANIFEST="dist/manifest.json"
+MANIFEST="dist/package/manifest.json"
 ENV_FILE="${1:-}"
 
 if [ ! -f "$MANIFEST" ]; then
@@ -41,9 +41,6 @@ fi
 # List of variables to substitute in the manifest
 VARS=(
   VITE_API_BASE_URL
-  VITE_DASHBOARD_URL
-  ZENDESK_APP_OAUTH_CLIENT_ID
-  ZENDESK_APP_OAUTH_CLIENT_SECRET
   ZENDESK_DOMAIN_WHITELIST
 )
 

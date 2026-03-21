@@ -19,7 +19,6 @@ import {
 import { nanoid } from 'nanoid';
 
 import { exchangeCodeForToken, getAuthorizationUrl, getMe } from '@/api/clients/zendesk';
-import { env } from '@/api/env';
 import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
@@ -41,9 +40,10 @@ const PENDING_AUTH_TTL = 15 * 60;
 const AUTH_CODE_TTL = 5 * 60;
 
 interface PendingAuth {
-  outerRedirectUri: string;
-  outerState: string;
-  outerClientId: string;
+  mode: 'popup' | 'oauth';
+  outerRedirectUri?: string;
+  outerState?: string;
+  outerClientId?: string;
   userId: string;
   workspaceId: string;
   subdomain: string;
@@ -82,34 +82,20 @@ export class OAuthProviderService {
     userId: string;
     workspaceId: string;
     subdomain: string;
-    outerRedirectUri: string;
-    outerState: string;
-    outerClientId: string;
+    mode?: 'popup' | 'oauth';
+    outerRedirectUri?: string;
+    outerState?: string;
+    outerClientId?: string;
   }): Promise<{ pendingId: string; zendeskAuthUrl: string }> {
-    const { userId, workspaceId, subdomain, outerRedirectUri, outerState, outerClientId } = params;
-
-    // Validate outer client ID matches our configured app OAuth client
-    if (outerClientId !== env.zendesk.appOAuthClientId) {
-      throw new Error('Invalid OAuth client ID');
-    }
-
-    // Validate outerRedirectUri to prevent open redirect attacks
-    // Only allow redirect URIs on known Zendesk domains
-    try {
-      const redirectUrl = new URL(outerRedirectUri);
-      const isZendeskDomain =
-        redirectUrl.hostname.endsWith('.zendesk.com') ||
-        redirectUrl.hostname.endsWith('.zdassets.com') ||
-        redirectUrl.hostname.endsWith('.zis.zendesk.com');
-      if (!isZendeskDomain) {
-        throw new Error('Invalid redirect URI');
-      }
-    } catch (err) {
-      if (err instanceof TypeError) {
-        throw new Error('Invalid redirect URI format');
-      }
-      throw err;
-    }
+    const {
+      userId,
+      workspaceId,
+      subdomain,
+      mode = 'oauth',
+      outerRedirectUri,
+      outerState,
+      outerClientId,
+    } = params;
 
     // Check if workspace already has a Zendesk integration
     const existing = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
@@ -132,6 +118,7 @@ export class OAuthProviderService {
     // Generate pending ID and store in Redis
     const pendingId = nanoid(32);
     const pending: PendingAuth = {
+      mode,
       outerRedirectUri,
       outerState,
       outerClientId,
@@ -172,7 +159,10 @@ export class OAuthProviderService {
     innerCode: string;
     innerState: string;
     userId: string;
-  }): Promise<{ outerCode: string; outerRedirectUri: string; outerState: string }> {
+  }): Promise<
+    | { mode: 'popup' }
+    | { mode: 'oauth'; outerCode: string; outerRedirectUri: string; outerState: string }
+  > {
     const { innerCode, innerState, userId } = params;
 
     // 1. Verify inner state JWT
@@ -260,7 +250,19 @@ export class OAuthProviderService {
       workspaceId: pending.workspaceId,
     });
 
-    // 9. Generate outer auth code and store in Redis
+    // 9. Clean up pending auth
+    await redis.del(`oauth:pending:${pendingId}`);
+
+    logger.info(
+      { pendingId, subdomain, workspaceId: pending.workspaceId, integrationId, mode: pending.mode },
+      'Completed pending OAuth authorization'
+    );
+
+    // 10. In popup mode, just return success. In OAuth mode, generate outer auth code.
+    if (pending.mode === 'popup') {
+      return { mode: 'popup' as const };
+    }
+
     const outerCode = nanoid(32);
     const codeData: AuthCodeData = {
       integrationId,
@@ -269,57 +271,11 @@ export class OAuthProviderService {
     };
     await redis.set(`oauth:code:${outerCode}`, JSON.stringify(codeData), { ex: AUTH_CODE_TTL });
 
-    // 10. Clean up pending auth
-    await redis.del(`oauth:pending:${pendingId}`);
-
-    logger.info(
-      { pendingId, subdomain, workspaceId: pending.workspaceId, integrationId },
-      'Completed pending OAuth authorization'
-    );
-
     return {
+      mode: 'oauth' as const,
       outerCode,
-      outerRedirectUri: pending.outerRedirectUri,
-      outerState: pending.outerState,
-    };
-  }
-
-  /**
-   * Exchange an outer auth code for an apiToken.
-   * Called by Zendesk's backend during the built-in OAuth token exchange.
-   */
-  async exchangeAuthCode(params: {
-    code: string;
-    clientId: string;
-    clientSecret: string;
-  }): Promise<{ access_token: string; token_type: string }> {
-    const { code, clientId, clientSecret } = params;
-
-    // Validate client credentials
-    if (
-      clientId !== env.zendesk.appOAuthClientId ||
-      clientSecret !== env.zendesk.appOAuthClientSecret
-    ) {
-      throw new Error('Invalid client credentials');
-    }
-
-    // Look up auth code in Redis
-    const redis = this.getRedis();
-    const codeRaw = await redis.get<string>(`oauth:code:${code}`);
-    if (!codeRaw) {
-      throw new Error('Invalid or expired authorization code');
-    }
-
-    const codeData: AuthCodeData = typeof codeRaw === 'string' ? JSON.parse(codeRaw) : codeRaw;
-
-    // Delete the code (one-time use)
-    await redis.del(`oauth:code:${code}`);
-
-    logger.info({ workspaceId: codeData.workspaceId }, 'Exchanged OAuth auth code for apiToken');
-
-    return {
-      access_token: codeData.apiToken,
-      token_type: 'bearer',
+      outerRedirectUri: pending.outerRedirectUri!,
+      outerState: pending.outerState!,
     };
   }
 }

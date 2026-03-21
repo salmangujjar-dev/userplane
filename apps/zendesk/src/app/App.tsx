@@ -1,12 +1,14 @@
 /**
  * App - Location router
- * Reads current Zendesk location from ZAF client context and renders the appropriate component.
- * Initializes the API client with ZAF secure proxy and fetches workspace context from /me.
+ * Reads server-injected config from window.__ZENDESK_CONFIG__ and renders the appropriate component.
+ * If not connected, shows a setup screen with an in-app OAuth popup flow.
  */
 
-import { Component, type ReactNode, useCallback, useEffect, useState } from 'react';
+import { Component, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
-import { ApiError, initApiClient } from '@/api/client';
+import { initApiClient } from '@/api/client';
+import { getZendeskConfig, isConfigured } from '@/lib/config';
+import { DASHBOARD_URL } from '@/lib/constants';
 
 import { UserplaneIcon } from './components/Icons';
 import { ScreenHeader } from './components/ScreenHeader';
@@ -56,50 +58,29 @@ export function App() {
   const client = useClient();
   const [location, setLocation] = useState<string | null>(null);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
-  const [subdomain, setSubdomain] = useState<string | null>(null);
-  const [needsSetup, setNeedsSetup] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [retrying, setRetrying] = useState(false);
 
-  const init = useCallback(async () => {
-    try {
-      setError(null);
-      setNeedsSetup(false);
+  const windowConfig = getZendeskConfig();
 
-      // Initialize API client with ZAF client (uses secure proxy for auth)
-      const api = initApiClient(client);
-
-      // Get context early so we have the subdomain for the setup screen
-      const ctx = await client.context();
-      setSubdomain(((ctx as Record<string, unknown>).subdomain as string) ?? null);
-
-      // Fetch workspace context from /me endpoint
-      // The token is injected by Zendesk's proxy — we never see it
-      const me = await api.getMe();
-      setWorkspaceId(me.data.workspaceId);
-      setLocation(ctx.location);
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        // OAuth not completed — show setup screen
-        setNeedsSetup(true);
-      } else {
-        setError('Failed to initialize app.');
-      }
-    }
-  }, [client]);
+  // Narrow: if configured, extract the typed config for use in the effect
+  const appConfig = isConfigured(windowConfig) ? windowConfig : null;
 
   useEffect(() => {
-    init();
-  }, [init]);
+    if (!appConfig) return;
 
-  const handleRetry = useCallback(async () => {
-    setRetrying(true);
-    await init();
-    setRetrying(false);
-  }, [init]);
+    const { apiToken, workspaceId: wsId } = appConfig;
 
-  if (needsSetup) {
-    return <SetupScreen subdomain={subdomain} onRetry={handleRetry} retrying={retrying} />;
+    initApiClient(apiToken);
+    setWorkspaceId(wsId);
+
+    client
+      .context()
+      .then((ctx) => setLocation(ctx.location))
+      .catch(() => setError('Failed to initialize app.'));
+  }, [client, appConfig]);
+
+  if (!appConfig) {
+    return <SetupScreen subdomain={windowConfig.subdomain} />;
   }
 
   if (error) {
@@ -130,21 +111,38 @@ export function App() {
 }
 
 /**
- * Setup screen shown when OAuth is not completed or the integration is disconnected.
- * Directs the admin to the app settings page where they can authorize via the built-in OAuth flow.
+ * Setup screen shown when no integration exists for this Zendesk instance.
+ * Opens a popup to the dashboard OAuth authorize page.
+ * After OAuth completes, the popup sends a postMessage and we reload the iframe.
  */
-function SetupScreen({
-  subdomain,
-  onRetry,
-  retrying,
-}: {
-  subdomain: string | null;
-  onRetry: () => void;
-  retrying: boolean;
-}) {
-  const settingsUrl = subdomain
-    ? `https://${subdomain}.zendesk.com/admin/apps-integrations/apps/support-apps`
-    : null;
+function SetupScreen({ subdomain }: { subdomain: string | null }) {
+  const popupRef = useRef<Window | null>(null);
+
+  const handleConnect = useCallback(() => {
+    const params = new URLSearchParams({ mode: 'popup' });
+    if (subdomain) params.set('subdomain', subdomain);
+    popupRef.current = window.open(
+      `${DASHBOARD_URL}/oauth/zendesk/authorize?${params.toString()}`,
+      'userplane-oauth',
+      'width=500,height=650'
+    );
+  }, [subdomain]);
+
+  // Listen for OAuth completion from the popup
+  useEffect(() => {
+    const dashboardOrigin = new URL(DASHBOARD_URL).origin;
+
+    function onMessage(event: MessageEvent) {
+      if (event.origin !== dashboardOrigin) return;
+      if (event.data?.type === 'zendesk-oauth-complete') {
+        // Integration created — reload iframe to pick up server-injected token
+        window.location.reload();
+      }
+    }
+
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
 
   return (
     <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -155,56 +153,26 @@ function SetupScreen({
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {settingsUrl ? (
-          <a
-            href={settingsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'block',
-              width: '100%',
-              padding: '8px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: 500,
-              background: '#000',
-              color: 'white',
-              border: 'none',
-              textAlign: 'center',
-              textDecoration: 'none',
-            }}
-          >
-            Open App Settings
-          </a>
-        ) : (
-          <p style={{ fontSize: '12px', color: '#68737d', textAlign: 'center' }}>
-            Go to <strong>Admin Center &rarr; Apps &rarr; Userplane &rarr; Change Settings</strong>{' '}
-            to sign in.
-          </p>
-        )}
-
         <button
-          onClick={onRetry}
-          disabled={retrying}
+          onClick={handleConnect}
           style={{
             width: '100%',
             padding: '8px 12px',
             borderRadius: '4px',
-            cursor: retrying ? 'default' : 'pointer',
+            cursor: 'pointer',
             fontSize: '12px',
-            background: 'white',
-            color: '#2f3941',
-            border: '1px solid #d8dcde',
-            opacity: retrying ? 0.6 : 1,
+            fontWeight: 500,
+            background: '#000',
+            color: 'white',
+            border: 'none',
           }}
         >
-          {retrying ? 'Checking...' : 'I\u2019ve connected \u2014 retry'}
+          Connect to Userplane
         </button>
       </div>
 
       <p style={{ fontSize: '11px', color: '#87929d', textAlign: 'center', lineHeight: 1.4 }}>
-        After signing in via app settings, come back here and click retry.
+        A popup will open to sign in. Once connected, this app will load automatically.
       </p>
     </div>
   );

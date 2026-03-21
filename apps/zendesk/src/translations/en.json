@@ -2,12 +2,6 @@
   "app": {
     "name": "Userplane",
     "short_description": "Request screen recordings from Zendesk tickets",
-    "long_description": "Userplane lets you request and view screen recordings directly from Zendesk Support. Create recording links from ticket sidebars or the top bar, and share them with customers to capture screen recordings.",
-    "parameters": {
-      "access_token": {
-        "label": "Userplane Account",
-        "helpText": "Click 'Sign in' to connect your Userplane workspace."
-      }
-    }
+    "long_description": "Userplane lets you request and view screen recordings directly from Zendesk Support. Create recording links from ticket sidebars or the top bar, and share them with customers to capture screen recordings."
   }
 }

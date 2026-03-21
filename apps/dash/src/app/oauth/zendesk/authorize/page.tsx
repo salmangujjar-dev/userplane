@@ -33,7 +33,11 @@ function OAuthZendeskAuthorizeContent() {
   const { data: workspacesResult } = useWorkspaces();
   const createWorkspace = useCreateWorkspace();
 
-  // Outer OAuth params from Zendesk
+  // Mode: 'popup' = in-app OAuth (from Zendesk iframe), otherwise = built-in OAuth
+  const mode = searchParams.get('mode');
+  const isPopupMode = mode === 'popup';
+
+  // Outer OAuth params (only used in built-in OAuth mode)
   const clientId = searchParams.get('client_id') ?? '';
   const redirectUri = searchParams.get('redirect_uri') ?? '';
   const state = searchParams.get('state') ?? '';
@@ -41,7 +45,7 @@ function OAuthZendeskAuthorizeContent() {
 
   // Form state
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
-  const [subdomain, setSubdomain] = useState('');
+  const [subdomain, setSubdomain] = useState(searchParams.get('subdomain') ?? '');
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [newWorkspaceUrl, setNewWorkspaceUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,13 +70,15 @@ function OAuthZendeskAuthorizeContent() {
     }
   }, [session, sessionLoading, router, searchParams]);
 
-  // Validate outer params
-  if (responseType && responseType !== 'code') {
-    return <ErrorScreen message="Invalid response_type. Only 'code' is supported." />;
-  }
+  // Validate outer params (only in built-in OAuth mode)
+  if (!isPopupMode) {
+    if (responseType && responseType !== 'code') {
+      return <ErrorScreen message="Invalid response_type. Only 'code' is supported." />;
+    }
 
-  if (!clientId || !redirectUri || !state) {
-    return <ErrorScreen message="Missing required OAuth parameters." />;
+    if (!clientId || !redirectUri || !state) {
+      return <ErrorScreen message="Missing required OAuth parameters." />;
+    }
   }
 
   if (sessionLoading) {
@@ -114,18 +120,23 @@ function OAuthZendeskAuthorizeContent() {
         return;
       }
 
-      // Call API to initiate the nested OAuth flow
+      // Call API to initiate the OAuth flow
+      const body: Record<string, string> = {
+        workspaceId,
+        subdomain: subdomain.trim(),
+        mode: isPopupMode ? 'popup' : 'oauth',
+      };
+      if (!isPopupMode) {
+        body.outerRedirectUri = redirectUri;
+        body.outerState = state;
+        body.outerClientId = clientId;
+      }
+
       const response = await fetch(`${env.api.url}/api/v1/oauth/zendesk/initiate`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspaceId,
-          subdomain: subdomain.trim(),
-          outerRedirectUri: redirectUri,
-          outerState: state,
-          outerClientId: clientId,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
