@@ -105,6 +105,7 @@ storybook-static
 
 # Agent files
 .agent/
+.agents/
 .claude/
 .cursor/
 .gemini/

@@ -278,9 +278,25 @@ export class ZendeskService {
 
     // 9. Set jwt_secret on Zendesk app installation for ZAF JWT auth
     if (installationId) {
-      await setInstallationSettings(subdomain, tokenResponse.access_token, installationId, {
-        jwt_secret: this.deps.jwtSecret,
-      });
+      const ok = await setInstallationSettings(
+        subdomain,
+        tokenResponse.access_token,
+        installationId,
+        {
+          jwt_secret: this.deps.jwtSecret,
+        }
+      );
+      if (!ok) {
+        logger.error(
+          { subdomain, installationId },
+          'Failed to set jwt_secret on Zendesk installation — ZAF JWT auth will not work'
+        );
+      }
+    } else {
+      logger.warn(
+        { subdomain },
+        'No installationId provided — jwt_secret not set on Zendesk installation'
+      );
     }
 
     // 10. Warm cache
