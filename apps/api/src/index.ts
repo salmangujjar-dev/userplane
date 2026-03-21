@@ -27,10 +27,10 @@ import {
 import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.handler';
 import { createUninstallHandler } from '@/api/handlers/intercom-uninstall.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
+import { createZendeskIframeHandler } from '@/api/handlers/zendesk-iframe.handler';
 import {
   createOAuthCompleteHandler,
   createOAuthInitiateHandler,
-  createOAuthTokenHandler,
 } from '@/api/handlers/oauth-provider.handler';
 import {
   createCreateLinkHandler,
@@ -104,17 +104,7 @@ app.use(
   })
 );
 
-// OAuth token endpoint - called by Zendesk backend (server-to-server, no browser origin)
-app.use(
-  '/api/v1/oauth/token',
-  cors({
-    origin: '*',
-    credentials: false,
-    maxAge: env.cors.maxAge,
-  })
-);
-
-// OAuth initiate/complete - called from dashboard (needs credentials for session cookies)
+// OAuth initiate/complete - called from dashboard popup (needs credentials for session cookies)
 app.use(
   '/api/v1/oauth/zendesk/*',
   cors({
@@ -271,14 +261,9 @@ app.route('/api/v1/intercom/canvas/inbox', inboxRouter);
 app.route('/api/v1/intercom/health-check', healthCheckRouter);
 app.route('/api/v1/intercom/uninstall', uninstallRouter);
 
-// OAuth Provider Routes (Userplane as OAuth provider for Zendesk built-in app OAuth)
+// OAuth Provider Routes (popup OAuth flow from Zendesk iframe app)
 // ===========================
 const oauthProviderRouter = new Hono();
-// Token exchange endpoint - public, called by Zendesk backend
-oauthProviderRouter.post('/token', createOAuthTokenHandler(oauthProviderService));
-// Initiate and complete endpoints - authenticated via Better Auth session
-// Note: These are called from the dashboard, so they use the session middleware
-// from the OpenAPI handler. We mount them here for the /api/v1/oauth prefix.
 oauthProviderRouter.post('/zendesk/initiate', createOAuthInitiateHandler(oauthProviderService));
 oauthProviderRouter.post('/zendesk/complete', createOAuthCompleteHandler(oauthProviderService));
 
@@ -316,6 +301,23 @@ zendeskRouter.get('/domains', createGetDomainsHandler(zendeskAppService));
 zendeskRouter.get('/status', createGetStatusHandler());
 
 app.route('/api/v1/zendesk', zendeskRouter);
+
+// Zendesk Iframe (Server-side app)
+// ===========================
+// Serves the Zendesk app HTML with server-injected config.
+// Built React app assets are served from /zendesk/assets/.
+const ZENDESK_APP_DIST_DIR = './zendesk-app-dist';
+app.get(
+  '/zendesk/iframe',
+  createZendeskIframeHandler({ integrationRepo, zendeskAppDistDir: ZENDESK_APP_DIST_DIR })
+);
+app.use(
+  '/zendesk/assets/*',
+  serveStatic({
+    root: ZENDESK_APP_DIST_DIR,
+    rewriteRequestPath: (path) => path.replace('/zendesk/assets', ''),
+  })
+);
 
 // Workspace logo upload route (multipart/form-data - handled before OpenAPI)
 // This route handles file uploads which require special multipart handling

@@ -4,13 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rm -rf dist && tsc && vite build && ./scripts/inject-manifest-env.sh .env.production",
-    "build:dev": "rm -rf dist && tsc && vite build --mode development && ./scripts/inject-manifest-env.sh .env.development",
-    "start": "zcli apps:server dist",
-    "serve": "bun run build:dev && bun run start",
-    "serve:prod": "bun run build && bun run start",
-    "package": "bun run build && zcli apps:package dist",
-    "package:dev": "bun run build:dev && zcli apps:package dist",
+    "build:app": "rm -rf dist/app && tsc && vite build",
+    "build:app:dev": "rm -rf dist/app && tsc && vite build --mode development",
+    "build:manifest": "rm -rf dist/package && mkdir -p dist/package/assets && cp src/manifest.json dist/package/ && cp -r src/translations dist/package/ && cp src/assets/icon.svg dist/package/assets/",
+    "build": "bun run build:app && bun run build:manifest && ./scripts/inject-manifest-env.sh .env.production",
+    "build:dev": "bun run build:app:dev && bun run build:manifest && ./scripts/inject-manifest-env.sh .env.development",
+    "package": "bun run build:manifest && ./scripts/inject-manifest-env.sh .env.production && cd dist/package && zip -r ../userplane.zip .",
+    "package:dev": "bun run build:manifest && ./scripts/inject-manifest-env.sh .env.development && cd dist/package && zip -r ../userplane.zip .",
+    "deploy:app": "rm -rf ../api/zendesk-app-dist && cp -r dist/app ../api/zendesk-app-dist",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
@@ -35,7 +36,6 @@
     "eslint": "^9.32.0",
     "storybook": "^10.1.11",
     "typescript": "^5.7.0",
-    "vite": "^6.0.0",
-    "vite-plugin-static-copy": "^2.2.0"
+    "vite": "^6.0.0"
   }
 }

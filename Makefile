@@ -110,12 +110,11 @@ help: ## Show this help message
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)ZENDESK$(WHITE)                                                                                            ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)build:zendesk$(WHITE)                 ║$(RESET) Build Zendesk app (dev)                                             $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)build:zendesk:prod$(WHITE)            ║$(RESET) Build Zendesk app (production)                                     $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)serve:zendesk$(WHITE)                 ║$(RESET) Build (dev) and serve Zendesk app locally (zcli)                   $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)serve:zendesk:prod$(WHITE)            ║$(RESET) Build (prod) and serve Zendesk app locally (zcli)                  $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)package:zendesk$(WHITE)               ║$(RESET) Package Zendesk app for upload (dev .zip)                          $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)package:zendesk:prod$(WHITE)          ║$(RESET) Package Zendesk app for upload (prod .zip)                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)build:zendesk$(WHITE)                 ║$(RESET) Build Zendesk app + manifest (dev)                                  $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)build:zendesk:prod$(WHITE)            ║$(RESET) Build Zendesk app + manifest (production)                          $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)deploy:zendesk$(WHITE)                ║$(RESET) Deploy built app assets to API server dir                           $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)package:zendesk$(WHITE)               ║$(RESET) Package manifest .zip for Zendesk upload (dev)                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)package:zendesk:prod$(WHITE)          ║$(RESET) Package manifest .zip for Zendesk upload (prod)                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)RAMP$(WHITE)                                                                                              ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -415,23 +414,20 @@ storybook\:zendesk\:build: ## Build Storybook for Zendesk app
 	@cd apps/zendesk && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
 
-serve\:zendesk: ## Build (dev) and serve Zendesk app locally (zcli)
-	@echo "$(BLUE)Building and serving Zendesk app (dev)...$(RESET)"
-	@cd apps/zendesk && bun run serve
+deploy\:zendesk: build\:zendesk ## Deploy built Zendesk app assets to API server dir
+	@echo "$(BLUE)Deploying Zendesk app to API server...$(RESET)"
+	@cd apps/zendesk && bun run deploy:app
+	@echo "$(GREEN)Zendesk app deployed!$(RESET)"
 
-serve\:zendesk\:prod: ## Build (prod) and serve Zendesk app locally (zcli)
-	@echo "$(BLUE)Building and serving Zendesk app (production)...$(RESET)"
-	@cd apps/zendesk && bun run serve:prod
-
-package\:zendesk: ## Package Zendesk app for upload (dev .zip)
-	@echo "$(BLUE)Packaging Zendesk app (dev)...$(RESET)"
+package\:zendesk: ## Package Zendesk manifest .zip for upload (dev)
+	@echo "$(BLUE)Packaging Zendesk manifest (dev)...$(RESET)"
 	@cd apps/zendesk && bun run package:dev
-	@echo "$(GREEN)Zendesk app packaged (dev)!$(RESET)"
+	@echo "$(GREEN)Zendesk manifest packaged (dev)!$(RESET)"
 
-package\:zendesk\:prod: build\:zendesk\:prod ## Package Zendesk app for upload (prod .zip)
-	@echo "$(BLUE)Packaging Zendesk app (production)...$(RESET)"
+package\:zendesk\:prod: ## Package Zendesk manifest .zip for upload (prod)
+	@echo "$(BLUE)Packaging Zendesk manifest (production)...$(RESET)"
 	@cd apps/zendesk && bun run package
-	@echo "$(GREEN)Zendesk app packaged (production)!$(RESET)"
+	@echo "$(GREEN)Zendesk manifest packaged (production)!$(RESET)"
 
 # Assets commands
 assets\:upload: ## Upload assets to R2 CDN (dev)

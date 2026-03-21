@@ -133,8 +133,6 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       clientId: raw.ZENDESK_CLIENT_ID,
       clientSecret: raw.ZENDESK_CLIENT_SECRET,
       redirectUri: raw.ZENDESK_REDIRECT_URI,
-      appOAuthClientId: raw.ZENDESK_APP_OAUTH_CLIENT_ID,
-      appOAuthClientSecret: raw.ZENDESK_APP_OAUTH_CLIENT_SECRET,
     },
     dashboard: {
       baseUrl: raw.INVITE_APP_URL,

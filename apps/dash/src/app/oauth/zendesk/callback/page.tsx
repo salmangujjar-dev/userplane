@@ -66,7 +66,18 @@ function OAuthZendeskCallbackContent() {
 
       const { data } = await response.json();
 
-      // Redirect to Zendesk's built-in OAuth callback with our auth code
+      if (data.mode === 'popup' || window.opener) {
+        // Popup mode: notify the Zendesk iframe and close this window.
+        // The iframe is served from the API origin (api.userplane.io/zendesk/iframe).
+        if (window.opener) {
+          const apiOrigin = new URL(env.api.url).origin;
+          window.opener.postMessage({ type: 'zendesk-oauth-complete' }, apiOrigin);
+        }
+        window.close();
+        return;
+      }
+
+      // Built-in OAuth mode: redirect to Zendesk's callback with our auth code
       const url = new URL(data.outerRedirectUri);
       url.searchParams.set('code', data.outerCode);
       url.searchParams.set('state', data.outerState);
