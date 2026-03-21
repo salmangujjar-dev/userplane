@@ -30,5 +30,12 @@
       }
     }
   },
+  "parameters": [
+    {
+      "name": "jwt_secret",
+      "type": "hidden",
+      "secure": true
+    }
+  ],
   "domainWhitelist": ["{{ZENDESK_DOMAIN_WHITELIST}}"]
 }

@@ -1292,6 +1292,8 @@ export const ZendeskIntegrationAuthorizeSchema = z.object({
   }),
   query: z.object({
     subdomain: z.string().min(1),
+    /** Zendesk app installation ID — passed from ZAF iframe for jwt_secret provisioning */
+    installationId: z.coerce.number().optional(),
   }),
 });
 

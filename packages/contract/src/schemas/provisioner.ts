@@ -100,6 +100,8 @@ export const ZendeskAuthorizeQuerySchema = z.object({
     .string()
     .min(1)
     .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/, 'Invalid Zendesk subdomain'),
+  /** Zendesk app installation ID — passed from ZAF iframe for jwt_secret provisioning */
+  installationId: z.coerce.number().optional(),
 });
 
 /**
