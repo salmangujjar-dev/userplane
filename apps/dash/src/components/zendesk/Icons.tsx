@@ -59,3 +59,25 @@ export function RecordingsListIcon({ size = 24 }: IconProps) {
     />
   );
 }
+
+export function LockIcon({ size = 24 }: IconProps) {
+  return (
+    <img
+      src={mediaClient.getZendeskMediaUrl('zendesk/icon-lock.svg')}
+      width={size}
+      height={size}
+      alt=""
+    />
+  );
+}
+
+export function UpgradeIcon({ size = 24 }: IconProps) {
+  return (
+    <img
+      src={mediaClient.getZendeskMediaUrl('zendesk/icon-upgrade.svg')}
+      width={size}
+      height={size}
+      alt=""
+    />
+  );
+}
