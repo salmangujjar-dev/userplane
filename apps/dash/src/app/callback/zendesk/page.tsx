@@ -26,7 +26,7 @@ export default async function ZendeskCallbackPage({ searchParams }: Props) {
 
   // Decode JWT state token (naive base64 decode of payload)
   // Full cryptographic verification happens on the API when the callback is processed
-  let payload: { workspaceId?: string; source?: string };
+  let payload: { workspaceId?: string; source?: string; pendingId?: string };
   try {
     const parts = state.split('.');
     if (parts.length !== 3 || !parts[1]) {
@@ -39,6 +39,12 @@ export default async function ZendeskCallbackPage({ searchParams }: Props) {
   }
 
   const queryParams = new URLSearchParams({ code, state });
+
+  // App OAuth flow — nested Zendesk OAuth returning during Zendesk built-in app install.
+  // Must be checked BEFORE the workspaceId check since this flow also has a workspaceId.
+  if (payload.source === 'app-oauth') {
+    redirect(`/oauth/zendesk/callback?${queryParams.toString()}`);
+  }
 
   if (payload.workspaceId) {
     // Integration flow - redirect to workspace integration callback

@@ -78,10 +78,31 @@ export const intercomEnvSchema = z.object({
   INTERCOM_REDIRECT_URI: urlWithDefault(`${DEV_URLS.DASH}${AUTH.INTERCOM_REDIRECT_PATH}`),
 });
 
-/** Zendesk OAuth env vars schema */
+/**
+ * Zendesk env vars schema — TWO separate OAuth flows:
+ *
+ * 1. "Outbound" OAuth (Userplane → Zendesk)
+ *    We are the CLIENT. We redirect admins to Zendesk to authorize us.
+ *    Gives us a Zendesk access_token to call Zendesk APIs on their behalf.
+ *    Uses: ZENDESK_CLIENT_ID, ZENDESK_CLIENT_SECRET, ZENDESK_REDIRECT_URI
+ *
+ * 2. "Inbound" App OAuth (Zendesk app → Userplane)
+ *    We are the PROVIDER. The Zendesk iframe app authenticates with us
+ *    via Zendesk's built-in OAuth parameter type in the manifest.
+ *    Gives the app an apiToken to call our API through Zendesk's secure proxy.
+ *    Uses: ZENDESK_APP_OAUTH_CLIENT_ID, ZENDESK_APP_OAUTH_CLIENT_SECRET
+ */
 export const zendeskEnvSchema = z.object({
+  /** Outbound: Our client ID registered with Zendesk (zdg-* prefix) */
   ZENDESK_CLIENT_ID: z.string().optional().default(''),
+  /** Outbound: Our client secret from Zendesk OAuth client config */
+  ZENDESK_CLIENT_SECRET: z.string().optional().default(''),
+  /** Outbound: Where Zendesk redirects back after admin authorizes us */
   ZENDESK_REDIRECT_URI: urlWithDefault(`${DEV_URLS.DASH}${AUTH.ZENDESK_REDIRECT_PATH}`),
+  /** Inbound: Client ID we define for the Zendesk app manifest oauth block */
+  ZENDESK_APP_OAUTH_CLIENT_ID: z.string().optional().default(''),
+  /** Inbound: Client secret we define — Zendesk stores it and sends it during token exchange */
+  ZENDESK_APP_OAUTH_CLIENT_SECRET: z.string().optional().default(''),
 });
 
 /** Dashboard env vars schema */
@@ -455,7 +476,12 @@ export const envConfigSchema = z.object({
   auth: authConfigSchema,
   google: oauthConfigSchema,
   intercom: oauthConfigSchema,
-  zendesk: oauthConfigSchema.omit({ clientSecret: true }),
+  zendesk: oauthConfigSchema.extend({
+    /** Inbound app OAuth — client ID in the Zendesk app manifest */
+    appOAuthClientId: z.string(),
+    /** Inbound app OAuth — client secret for token exchange */
+    appOAuthClientSecret: z.string(),
+  }),
   dashboard: dashboardConfigSchema,
   billing: billingConfigSchema,
   payments: paymentsConfigSchema,

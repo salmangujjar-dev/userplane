@@ -30,18 +30,18 @@
       }
     }
   },
+  "oauth": {
+    "client_id": "{{ZENDESK_APP_OAUTH_CLIENT_ID}}",
+    "client_secret": "{{ZENDESK_APP_OAUTH_CLIENT_SECRET}}",
+    "authorize_uri": "{{VITE_DASHBOARD_URL}}/oauth/zendesk/authorize",
+    "access_token_uri": "{{VITE_API_BASE_URL}}/api/v1/oauth/token",
+    "scope": "zendesk:read zendesk:write"
+  },
   "parameters": [
     {
-      "name": "apiToken",
-      "type": "text",
-      "secure": true,
-      "required": true
-    },
-    {
-      "name": "workspaceId",
-      "type": "text",
-      "required": true
+      "name": "access_token",
+      "type": "oauth"
     }
   ],
-  "domainWhitelist": ["*.userplane.io"]
+  "domainWhitelist": ["{{ZENDESK_DOMAIN_WHITELIST}}"]
 }

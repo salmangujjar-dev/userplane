@@ -5,7 +5,7 @@
 
 /** Metadata returned by `client.metadata()` */
 interface ZAFMetadata {
-  settings: { apiToken: string; workspaceId: string };
+  settings: Record<string, string>;
   appId: number;
   name: string;
   installationId: number;

@@ -11,7 +11,7 @@
 
 import { db } from '@/api/clients/db';
 import { getDodoClient } from '@/api/clients/dodo';
-import { cacheService } from '@/api/clients/redis';
+import { cacheService, redis } from '@/api/clients/redis';
 import {
   getClientActionsStorage,
   getConsoleLogsStorage,
@@ -66,6 +66,7 @@ import { UserService } from '@/api/services/user.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
 // Services
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
+import { OAuthProviderService } from '@/api/services/oauth-provider.service';
 import { ZendeskAppService } from '@/api/services/zendesk-app.service';
 import { ZendeskService } from '@/api/services/zendesk-oauth.service';
 
@@ -314,6 +315,14 @@ export const zendeskAppService = new ZendeskAppService({
   userRepo,
   workspaceMemberRepo,
   entitlementService,
+});
+
+// OAuth Provider service (Userplane as OAuth provider for Zendesk built-in app OAuth)
+export const oauthProviderService = new OAuthProviderService({
+  redis,
+  tokenService,
+  integrationRepo,
+  cacheService,
 });
 
 // Intercom Canvas service
