@@ -73,6 +73,22 @@ const nextConfig = {
   },
   // Turbopack doesn't need the webpack externals config
   // It properly handles server-only imports out of the box
+
+  // Custom headers for specific routes
+  async headers() {
+    return [
+      {
+        // Zendesk iframe must be frameable by Zendesk
+        source: '/zendesk/iframe',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: 'frame-ancestors https://*.zendesk.com',
+          },
+        ],
+      },
+    ];
+  },
 }
 
 // Export with or without PostHog based on environment

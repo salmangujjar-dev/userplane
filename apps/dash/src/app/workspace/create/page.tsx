@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SUPPORT_EMAIL_MAILTO } from '@userplane/shared';
+import type { IntegrationAssetKey } from '@userplane/storage/media';
 import { Button } from '@userplane/ui/components/button';
 import { Label } from '@userplane/ui/components/label';
 import Logo from '@userplane/ui/components/logo';
@@ -13,8 +14,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Control, Controller, FieldErrors, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import type { IntegrationAssetKey } from '@userplane/storage/media';
-
 import { apiClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
 import {
@@ -23,8 +22,8 @@ import {
   OAuthErrorState,
   OAuthLoadingState,
 } from '@/components/integrations/intercom';
-import { ZendeskSubdomainInput } from '@/components/zendesk-subdomain-input';
 import { URLInput } from '@/components/url-input';
+import { ZendeskSubdomainInput } from '@/components/zendesk-subdomain-input';
 import { useAccount } from '@/features/account';
 import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
