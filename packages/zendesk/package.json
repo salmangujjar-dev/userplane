@@ -1,0 +1,10 @@
+{
+  "name": "@userplane/zendesk",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Zendesk app manifest packaging (UI lives in apps/dash)",
+  "scripts": {
+    "package": "rm -rf dist && mkdir -p dist/assets && cp src/manifest.json dist/ && cp -r src/translations dist/ && cp src/assets/icon.svg dist/assets/ && ./scripts/inject-manifest-env.sh .env.production && cd dist && zip -r ../userplane.zip .",
+    "package:dev": "rm -rf dist && mkdir -p dist/assets && cp src/manifest.json dist/ && cp -r src/translations dist/ && cp src/assets/icon.svg dist/assets/ && ./scripts/inject-manifest-env.sh .env.development && cd dist && zip -r ../userplane.zip ."
+  }
+}

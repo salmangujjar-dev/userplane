@@ -1,0 +1,34 @@
+{
+  "name": "Userplane",
+  "version": "0.2.0",
+  "author": {
+    "name": "Userplane",
+    "email": "support@userplane.io",
+    "url": "https://userplane.io"
+  },
+  "defaultLocale": "en",
+  "private": true,
+  "frameworkVersion": "2.0",
+  "location": {
+    "support": {
+      "ticket_sidebar": {
+        "url": "{{ZENDESK_IFRAME_URL}}",
+        "autoLoad": true,
+        "flexible": true
+      },
+      "new_ticket_sidebar": {
+        "url": "{{ZENDESK_IFRAME_URL}}",
+        "autoLoad": true,
+        "flexible": true
+      },
+      "top_bar": {
+        "url": "{{ZENDESK_IFRAME_URL}}",
+        "size": {
+          "width": "400px",
+          "height": "500px"
+        }
+      }
+    }
+  },
+  "domainWhitelist": ["{{ZENDESK_DOMAIN_WHITELIST}}"]
+}

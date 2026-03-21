@@ -25,6 +25,7 @@ import type {
   PreviewAssetKey,
   SpotlightAssetKey,
   TileAssetKey,
+  ZendeskAssetKey,
 } from './types';
 
 // =============================================================================
@@ -203,6 +204,11 @@ export class MediaClient {
 
   /** Get CDN URL for an intercom canvas asset */
   getIntercomCanvasMediaUrl(key: IntercomCanvasAssetKey, options?: GetMediaUrlOptions): string {
+    return this.getMediaUrl(key, options);
+  }
+
+  /** Get CDN URL for a zendesk app asset */
+  getZendeskMediaUrl(key: ZendeskAssetKey, options?: GetMediaUrlOptions): string {
     return this.getMediaUrl(key, options);
   }
 
