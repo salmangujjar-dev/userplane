@@ -4,8 +4,8 @@ import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 
-import { useSession } from '@/features/auth';
 import { env } from '@/env';
+import { useSession } from '@/features/auth';
 
 /**
  * Nested Zendesk OAuth Callback Page
@@ -66,13 +66,8 @@ function OAuthZendeskCallbackContent() {
 
       const { data } = await response.json();
 
-      if (data.mode === 'popup' || window.opener) {
-        // Popup mode: notify the Zendesk iframe and close this window.
-        // The iframe is served from the API origin (api.userplane.io/zendesk/iframe).
-        if (window.opener) {
-          const apiOrigin = new URL(env.api.url).origin;
-          window.opener.postMessage({ type: 'zendesk-oauth-complete' }, apiOrigin);
-        }
+      if (data.mode === 'popup') {
+        // Popup mode: close the window. User clicks "Refresh" in the iframe.
         window.close();
         return;
       }

@@ -6,11 +6,11 @@ import { Label } from '@userplane/ui/components/label';
 import Logo from '@userplane/ui/components/logo';
 import { ArrowLeftRight, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 
+import { env } from '@/env';
 import { useSession } from '@/features/auth';
 import { useCreateWorkspace, useWorkspaces } from '@/features/workspace';
-import { env } from '@/env';
 
 /**
  * OAuth Authorize Page
@@ -52,8 +52,10 @@ function OAuthZendeskAuthorizeContent() {
   const [error, setError] = useState<string | null>(null);
 
   // useWorkspaces returns SafeResult wrapping workspace list
-  const workspacesData = workspacesResult?.success ? workspacesResult.data : null;
-  const workspaces = workspacesData?.workspaces ?? [];
+  const workspaces = useMemo(() => {
+    const data = workspacesResult?.success ? workspacesResult.data : null;
+    return data?.workspaces ?? [];
+  }, [workspacesResult]);
 
   // Auto-select first workspace
   useEffect(() => {
