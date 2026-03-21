@@ -27,10 +27,13 @@ export const INTERCOM_REGIONS = ['US', 'EU', 'AU'] as const;
 export const IntercomRegionSchema = z.enum(INTERCOM_REGIONS);
 export type IntercomRegion = z.infer<typeof IntercomRegionSchema>;
 
-// Zendesk token - access token + API token for iframe→API auth
+// Zendesk token - access token for Zendesk API calls
+// Note: apiToken is deprecated (kept optional for existing DB records).
+// Session auth now uses ZAF JWT → short-lived session JWT flow.
 export const ZendeskTokenSchema = z.object({
   accessToken: z.string(),
-  apiToken: z.string(),
+  /** @deprecated No longer used for auth — session JWT flow replaces this */
+  apiToken: z.string().optional(),
   refreshToken: z.string().optional(),
   tokenExpiresAt: z.string().datetime().optional(),
   refreshTokenExpiresAt: z.string().datetime().optional(),
