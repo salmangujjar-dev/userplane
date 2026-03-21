@@ -1,14 +1,15 @@
-import type { Decorator, Meta, StoryObj } from '@storybook/react';
+import { createMockZAFClient } from '@stories/mocks/zaf-client';
+import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 
-import { createMockZAFClient } from '../../../../.storybook/mocks/zaf-client';
-import { initZendeskApiClient } from '../../../lib/zendesk/api-client';
-import { ClientContext } from '../ClientProvider';
-import { TicketSidebar } from '../TicketSidebar';
+import { initZendeskApiClient } from '@/lib/zendesk/api-client';
+
+import { ClientContext } from './ClientProvider';
+import { TicketSidebar } from './TicketSidebar';
 
 // Initialize a mock API client for stories
 initZendeskApiClient('mock-token', 'https://api-dev.userplane.io');
 
-// Mock fetch for API calls
+// Mock fetch for API calls used by the sidebar
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === 'string' ? input : input.toString();
