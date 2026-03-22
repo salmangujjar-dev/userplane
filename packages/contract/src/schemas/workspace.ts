@@ -1283,51 +1283,6 @@ export const ZendeskIntegrationStatusDataSchema = z.object({
 });
 
 /**
- * Zendesk integration authorize request
- * Requires subdomain since Zendesk OAuth URLs are per-account
- */
-export const ZendeskIntegrationAuthorizeSchema = z.object({
-  params: z.object({
-    workspaceId: WorkspaceIdSchema,
-  }),
-  query: z.object({
-    subdomain: z.string().min(1),
-    /** Zendesk app installation ID — passed from ZAF iframe for jwt_secret provisioning */
-    installationId: z.coerce.number().optional(),
-  }),
-});
-
-/**
- * Zendesk integration authorize response
- */
-export const ZendeskIntegrationAuthorizeDataSchema = z.object({
-  authorizationUrl: z.string().url(),
-  state: z.string(),
-});
-
-/**
- * Zendesk integration callback request
- */
-export const ZendeskIntegrationCallbackSchema = z.object({
-  params: z.object({
-    workspaceId: WorkspaceIdSchema,
-  }),
-  query: z.object({
-    code: z.string(),
-    state: z.string(),
-  }),
-});
-
-/**
- * Zendesk integration callback response
- */
-export const ZendeskIntegrationCallbackDataSchema = z.object({
-  workspaceId: WorkspaceIdSchema,
-  connected: z.literal(true),
-  providerWorkspaceId: z.string(),
-});
-
-/**
  * Delete Zendesk integration request
  */
 export const DeleteZendeskIntegrationSchema = z.object({

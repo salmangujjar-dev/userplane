@@ -103,10 +103,6 @@ import {
   WorkspaceStatusDataSchema,
   WorkspaceTeamDataSchema,
   WorkspaceTeamQuerySchema,
-  ZendeskIntegrationAuthorizeDataSchema,
-  ZendeskIntegrationAuthorizeSchema,
-  ZendeskIntegrationCallbackDataSchema,
-  ZendeskIntegrationCallbackSchema,
   ZendeskIntegrationStatusDataSchema,
 } from '../schemas';
 
@@ -1303,59 +1299,6 @@ export const getZendeskIntegration = oc
   })
   .input(GetZendeskIntegrationSchema)
   .output(ApiResponseSchema(ZendeskIntegrationStatusDataSchema));
-
-/**
- * GET /workspace/{workspaceId}/integrations/zendesk/authorize
- * Initiate Zendesk OAuth flow for an existing workspace
- * Requires admin or owner role
- */
-export const zendeskIntegrationAuthorize = oc
-  .route({
-    method: 'GET',
-    path: '/workspace/{workspaceId}/integrations/zendesk/authorize',
-    inputStructure: 'detailed',
-    summary: 'Initiate Zendesk OAuth for workspace',
-    description: 'Generate Zendesk OAuth authorization URL with workspace-scoped CSRF state token',
-    tags: ['Workspaces', 'Integrations'],
-  })
-  .errors({
-    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
-    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
-    INTEGRATION_ALREADY_CONNECTED: WorkspaceErrors.INTEGRATION_ALREADY_CONNECTED,
-  })
-  .input(ZendeskIntegrationAuthorizeSchema)
-  .output(ApiResponseSchema(ZendeskIntegrationAuthorizeDataSchema));
-
-/**
- * GET /workspace/{workspaceId}/integrations/zendesk/callback
- * Handle Zendesk OAuth callback for an existing workspace
- * Requires admin or owner role
- */
-export const zendeskIntegrationCallback = oc
-  .route({
-    method: 'GET',
-    path: '/workspace/{workspaceId}/integrations/zendesk/callback',
-    inputStructure: 'detailed',
-    summary: 'Handle Zendesk OAuth callback for workspace',
-    description: 'Exchange authorization code for access token and connect to existing workspace',
-    tags: ['Workspaces', 'Integrations'],
-  })
-  .errors({
-    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
-    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
-    INTEGRATION_ALREADY_CONNECTED: WorkspaceErrors.INTEGRATION_ALREADY_CONNECTED,
-    INTEGRATION_PROVIDER_WORKSPACE_CONFLICT:
-      WorkspaceErrors.INTEGRATION_PROVIDER_WORKSPACE_CONFLICT,
-    ZENDESK_OAUTH_STATE_INVALID: ProvisionerErrors.ZENDESK_OAUTH_STATE_INVALID,
-    ZENDESK_TOKEN_EXCHANGE_FAILED: ProvisionerErrors.ZENDESK_TOKEN_EXCHANGE_FAILED,
-    ZENDESK_USER_INFO_FAILED: ProvisionerErrors.ZENDESK_USER_INFO_FAILED,
-  })
-  .input(ZendeskIntegrationCallbackSchema)
-  .output(ApiResponseSchema(ZendeskIntegrationCallbackDataSchema));
 
 /**
  * DELETE /workspace/{workspaceId}/integrations/zendesk
