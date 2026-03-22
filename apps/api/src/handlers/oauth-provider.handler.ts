@@ -41,6 +41,7 @@ export function createOAuthInitiateHandler(service: OAuthProviderService) {
       const body = await c.req.json();
       const {
         workspaceId,
+        workspaceUrl,
         subdomain,
         mode,
         outerRedirectUri,
@@ -49,7 +50,7 @@ export function createOAuthInitiateHandler(service: OAuthProviderService) {
         installationId,
       } = body;
 
-      if (!workspaceId || !subdomain) {
+      if (!subdomain) {
         return c.json({ error: 'Missing required parameters' }, 400);
       }
 
@@ -61,6 +62,7 @@ export function createOAuthInitiateHandler(service: OAuthProviderService) {
       const result = await service.initiatePendingAuth({
         userId,
         workspaceId,
+        workspaceUrl,
         subdomain,
         mode: mode === 'popup' ? 'popup' : 'oauth',
         outerRedirectUri,

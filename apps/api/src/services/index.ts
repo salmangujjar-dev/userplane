@@ -303,7 +303,6 @@ export const intercomHealthCheckService = new IntercomHealthCheckService({
 export const zendeskService = new ZendeskService({
   tokenService,
   integrationRepo,
-  provisionerService,
   cacheService,
   jwtSecret: env.zendesk.jwtSecret,
 });
@@ -323,6 +322,7 @@ export const oauthProviderService = new OAuthProviderService({
   redis,
   tokenService,
   integrationRepo,
+  provisionerService,
   cacheService,
   jwtSecret: env.zendesk.jwtSecret,
 });

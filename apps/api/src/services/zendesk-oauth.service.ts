@@ -12,14 +12,12 @@ import {
   provisionerError,
   workspaceError,
 } from '@userplane/contract';
-import { setInstallationSettings } from '@/api/clients/zendesk';
 
+import { setInstallationSettings } from '@/api/clients/zendesk';
 import { exchangeCodeForToken, getAuthorizationUrl, getMe } from '@/api/clients/zendesk';
 import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
-import { deriveWorkspaceName, deriveWorkspaceUrl } from '@/api/lib/workspace';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
-import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
 import type { ZendeskOAuthSource } from '@/api/types';
 
@@ -28,15 +26,10 @@ const logger = createLogger('zendesk-oauth');
 export interface ZendeskServiceDeps {
   tokenService: TokenService;
   integrationRepo: IntegrationRepository;
-  provisionerService: ProvisionerService;
   cacheService: CacheService;
   /** Shared secret for Zendesk App JWT auth — set on installation during OAuth */
   jwtSecret: string;
 }
-
-type WorkspaceCreationResult =
-  | { created: false; workspaceUrl?: string }
-  | { created: true; workspaceId: string; workspaceName: string };
 
 /**
  * Integration status result
@@ -186,128 +179,6 @@ export class ZendeskService {
     return {
       connected: true,
       providerWorkspaceId,
-    };
-  }
-
-  /**
-   * Handle OAuth callback for onboarding flow
-   * Creates a new workspace and connects Zendesk integration
-   */
-  async handleCallback(params: {
-    code: string;
-    state: string;
-    userId: string;
-    userName?: string;
-    userEmail: string;
-    userRole?: string | null;
-  }): Promise<WorkspaceCreationResult> {
-    const { code, state, userId, userName, userEmail, userRole } = params;
-
-    // 1. Validate state token (no workspaceId for onboarding)
-    const statePayload = this.deps.tokenService.verifyZendeskOAuthState(state, userId);
-    if (!statePayload) {
-      throw provisionerError.ZENDESK_OAUTH_STATE_INVALID();
-    }
-
-    const { subdomain, codeVerifier, installationId } = statePayload;
-
-    // 2. Exchange code for access token
-    const tokenResponse = await exchangeCodeForToken(subdomain, code, codeVerifier);
-    if (!tokenResponse) {
-      throw provisionerError.ZENDESK_TOKEN_EXCHANGE_FAILED();
-    }
-
-    // 3. Get user info from Zendesk
-    const meResult = await getMe(subdomain, tokenResponse.access_token);
-    if (!meResult) {
-      throw provisionerError.ZENDESK_USER_INFO_FAILED();
-    }
-
-    if (!meResult.user.email) {
-      throw provisionerError.ZENDESK_USER_INFO_FAILED();
-    }
-
-    // Use Zendesk account subdomain as the provider workspace ID
-    const providerWorkspaceId = subdomain;
-
-    // 4. Check if this Zendesk account is already connected to another workspace
-    const existingProviderIntegration = await this.deps.integrationRepo.findByProviderWorkspaceId(
-      'zendesk',
-      providerWorkspaceId
-    );
-    if (existingProviderIntegration) {
-      throw provisionerError.ZENDESK_WORKSPACE_ALREADY_CONNECTED();
-    }
-
-    // 5. Derive workspace URL from Zendesk user's email
-    const workspaceUrl = deriveWorkspaceUrl(meResult.user.email);
-
-    // 6. Create workspace using ProvisionerService
-    const result = await this.deps.provisionerService.createWorkspaceByURLAndName({
-      url: workspaceUrl,
-      workspaceName: deriveWorkspaceName(subdomain, userName),
-      userId,
-      userName,
-      userEmail,
-      userRole,
-    });
-
-    if (!result.created) {
-      throw provisionerError.PROVISIONER_WORKSPACE_CREATE_FAILED();
-    }
-
-    // 7. Create integration record
-    const now = Date.now();
-    await this.deps.integrationRepo.create({
-      id: generateIntegrationId(),
-      workspaceId: result.workspaceId,
-      provider: 'zendesk',
-      providerWorkspaceId,
-      providerToken: createProviderToken('zendesk', {
-        accessToken: tokenResponse.access_token,
-        refreshToken: tokenResponse.refresh_token,
-        tokenExpiresAt: tokenResponse.expires_in
-          ? new Date(now + tokenResponse.expires_in * 1000).toISOString()
-          : undefined,
-        refreshTokenExpiresAt: tokenResponse.refresh_token_expires_in
-          ? new Date(now + tokenResponse.refresh_token_expires_in * 1000).toISOString()
-          : undefined,
-      }),
-      providerMeta: createProviderMeta('zendesk', { subdomain }),
-    });
-
-    // 9. Set jwt_secret on Zendesk app installation for ZAF JWT auth
-    if (installationId) {
-      const ok = await setInstallationSettings(
-        subdomain,
-        tokenResponse.access_token,
-        installationId,
-        {
-          jwt_secret: this.deps.jwtSecret,
-        }
-      );
-      if (!ok) {
-        logger.error(
-          { subdomain, installationId },
-          'Failed to set jwt_secret on Zendesk installation — ZAF JWT auth will not work'
-        );
-      }
-    } else {
-      logger.warn(
-        { subdomain },
-        'No installationId provided — jwt_secret not set on Zendesk installation'
-      );
-    }
-
-    // 10. Warm cache
-    await this.deps.cacheService.setIntegrationByProviderWorkspace('zendesk', providerWorkspaceId, {
-      workspaceId: result.workspaceId,
-    });
-
-    return {
-      created: true,
-      workspaceId: result.workspaceId,
-      workspaceName: result.workspaceName,
     };
   }
 

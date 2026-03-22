@@ -110,10 +110,6 @@ export const provisionerContract = {
     authorize: provisioner.intercomAuthorize,
     callback: provisioner.intercomCallback,
   },
-  zendesk: {
-    authorize: provisioner.zendeskAuthorize,
-    callback: provisioner.zendeskCallback,
-  },
 };
 
 /**

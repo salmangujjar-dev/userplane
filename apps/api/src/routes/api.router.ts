@@ -121,8 +121,7 @@ const inviteProcedures = createInviteProcedures(inviteService);
 const provisionerProcedures = createProvisionerProcedures(
   provisionerService,
   emailService,
-  intercomService,
-  zendeskService
+  intercomService
 );
 const statusProcedures = createStatusProcedures();
 const adminProcedures = createAdminProcedures(

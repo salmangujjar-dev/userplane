@@ -26,7 +26,9 @@ import {
 } from '@/api/clients/zendesk';
 import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
+import { deriveWorkspaceName, deriveWorkspaceUrl } from '@/api/lib/workspace';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
 
 const logger = createLogger('oauth-provider');
@@ -50,7 +52,10 @@ interface PendingAuth {
   outerState?: string;
   outerClientId?: string;
   userId: string;
-  workspaceId: string;
+  /** When undefined, workspace is created during completePendingAuth */
+  workspaceId?: string;
+  /** Workspace URL provided by user — used when creating workspace during OAuth */
+  workspaceUrl?: string;
   subdomain: string;
 }
 
@@ -63,6 +68,7 @@ export interface OAuthProviderServiceDeps {
   redis: RedisClient | null;
   tokenService: TokenService;
   integrationRepo: IntegrationRepository;
+  provisionerService: ProvisionerService;
   cacheService: CacheService;
   jwtSecret: string;
 }
@@ -85,7 +91,8 @@ export class OAuthProviderService {
    */
   async initiatePendingAuth(params: {
     userId: string;
-    workspaceId: string;
+    workspaceId?: string;
+    workspaceUrl?: string;
     subdomain: string;
     mode?: 'popup' | 'oauth';
     outerRedirectUri?: string;
@@ -96,6 +103,7 @@ export class OAuthProviderService {
     const {
       userId,
       workspaceId,
+      workspaceUrl,
       subdomain,
       mode = 'oauth',
       outerRedirectUri,
@@ -104,13 +112,15 @@ export class OAuthProviderService {
       installationId,
     } = params;
 
-    // Check if workspace already has a Zendesk integration
-    const existing = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
-      workspaceId,
-      'zendesk'
-    );
-    if (existing) {
-      throw workspaceError.INTEGRATION_ALREADY_CONNECTED();
+    // Check if workspace already has a Zendesk integration (skip if no workspace yet)
+    if (workspaceId) {
+      const existing = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
+        workspaceId,
+        'zendesk'
+      );
+      if (existing) {
+        throw workspaceError.INTEGRATION_ALREADY_CONNECTED();
+      }
     }
 
     // Check if subdomain is already connected to another workspace
@@ -131,6 +141,7 @@ export class OAuthProviderService {
       outerClientId,
       userId,
       workspaceId,
+      workspaceUrl,
       subdomain,
     };
 
@@ -168,7 +179,7 @@ export class OAuthProviderService {
     innerState: string;
     userId: string;
   }): Promise<
-    | { mode: 'popup' }
+    | { mode: 'popup'; workspaceId: string }
     | { mode: 'oauth'; outerCode: string; outerRedirectUri: string; outerState: string }
   > {
     const { innerCode, innerState, userId } = params;
@@ -211,13 +222,40 @@ export class OAuthProviderService {
       throw provisionerError.ZENDESK_USER_INFO_FAILED();
     }
 
-    // 5. Re-check for duplicate integrations (race condition guard)
-    const existingWorkspace = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
-      pending.workspaceId,
-      'zendesk'
-    );
-    if (existingWorkspace) {
-      throw workspaceError.INTEGRATION_ALREADY_CONNECTED();
+    // 5. Resolve workspace — create one if the user had none when OAuth started
+    let resolvedWorkspaceId = pending.workspaceId;
+
+    if (!resolvedWorkspaceId) {
+      // Use workspace URL from the form, or fall back to deriving from Zendesk email
+      const wsUrl =
+        pending.workspaceUrl ||
+        (meResult.user.email ? deriveWorkspaceUrl(meResult.user.email) : null);
+      if (!wsUrl) {
+        throw provisionerError.ZENDESK_USER_INFO_FAILED();
+      }
+      const wsResult = await this.deps.provisionerService.createWorkspaceByURLAndName({
+        url: wsUrl,
+        workspaceName: deriveWorkspaceName(subdomain, undefined),
+        userId: pending.userId,
+        userName: undefined,
+        userEmail: meResult.user.email ?? '',
+        userRole: undefined,
+      });
+      if (!wsResult.created) {
+        throw provisionerError.PROVISIONER_WORKSPACE_CREATE_FAILED();
+      }
+      resolvedWorkspaceId = wsResult.workspaceId;
+    }
+
+    // 6. Re-check for duplicate integrations (race condition guard)
+    if (pending.workspaceId) {
+      const existingWorkspace = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
+        resolvedWorkspaceId,
+        'zendesk'
+      );
+      if (existingWorkspace) {
+        throw workspaceError.INTEGRATION_ALREADY_CONNECTED();
+      }
     }
 
     const existingProvider = await this.deps.integrationRepo.findByProviderWorkspaceId(
@@ -228,12 +266,12 @@ export class OAuthProviderService {
       throw workspaceError.INTEGRATION_PROVIDER_WORKSPACE_CONFLICT();
     }
 
-    // 6. Create integration record
+    // 7. Create integration record
     const integrationId = generateIntegrationId();
     const now = Date.now();
     await this.deps.integrationRepo.create({
       id: integrationId,
-      workspaceId: pending.workspaceId,
+      workspaceId: resolvedWorkspaceId,
       provider: 'zendesk',
       providerWorkspaceId: subdomain,
       providerToken: createProviderToken('zendesk', {
@@ -270,28 +308,28 @@ export class OAuthProviderService {
       );
     }
 
-    // 8. Warm cache
+    // 9. Warm cache
     await this.deps.cacheService.setIntegrationByProviderWorkspace('zendesk', subdomain, {
-      workspaceId: pending.workspaceId,
+      workspaceId: resolvedWorkspaceId,
     });
 
-    // 9. Clean up pending auth
+    // 10. Clean up pending auth
     await redis.del(`oauth:pending:${pendingId}`);
 
     logger.info(
-      { pendingId, subdomain, workspaceId: pending.workspaceId, integrationId, mode: pending.mode },
+      { pendingId, subdomain, workspaceId: resolvedWorkspaceId, integrationId, mode: pending.mode },
       'Completed pending OAuth authorization'
     );
 
-    // 10. In popup mode, just return success. In OAuth mode, generate outer auth code.
+    // 11. In popup mode, just return success. In OAuth mode, generate outer auth code.
     if (pending.mode === 'popup') {
-      return { mode: 'popup' as const };
+      return { mode: 'popup' as const, workspaceId: resolvedWorkspaceId };
     }
 
     const outerCode = nanoid(32);
     const codeData: AuthCodeData = {
       integrationId,
-      workspaceId: pending.workspaceId,
+      workspaceId: resolvedWorkspaceId,
     };
     await redis.set(`oauth:code:${outerCode}`, JSON.stringify(codeData), { ex: AUTH_CODE_TTL });
 
