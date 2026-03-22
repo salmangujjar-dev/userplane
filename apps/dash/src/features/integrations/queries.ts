@@ -119,38 +119,6 @@ export function useZendeskIntegration() {
 }
 
 /**
- * Hook to initiate Zendesk OAuth authorization flow
- * Requires subdomain parameter
- */
-export function useZendeskAuthorize() {
-  const workspaceId = useWorkspaceId();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (subdomain: string) => {
-      if (!workspaceId) {
-        throw new Error('No workspace ID available');
-      }
-      const [error, response] = await apiClient.workspace.integrations.zendesk.authorize({
-        params: { workspaceId },
-        query: { subdomain },
-      });
-      return handleSafeResult(error, response?.data ?? null);
-    },
-    onSuccess: (result) => {
-      if (!result.success) {
-        showErrorToastToast(result.error);
-        return;
-      }
-      window.location.href = result.data.authorizationUrl;
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: integrationKeys.zendesk(workspaceId ?? '') });
-    },
-  });
-}
-
-/**
  * Hook to disconnect Zendesk integration from the workspace
  */
 export function useZendeskDisconnect() {

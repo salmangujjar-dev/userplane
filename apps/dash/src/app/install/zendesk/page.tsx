@@ -12,5 +12,5 @@ export const metadata: Metadata = {
  * This route exists to preserve the URL configured in the Zendesk Marketplace.
  */
 export default function InstallZendeskPage() {
-  redirect('/workspace/create?flow=zendesk-marketplace');
+  redirect('/workspace/create?flow=zendesk');
 }
