@@ -1712,83 +1712,6 @@ export const getZendeskIntegrationImpl = (
 };
 
 /**
- * GET /workspace/:workspaceId/integrations/zendesk/authorize - Initiate Zendesk OAuth
- * Requires admin or owner role
- */
-export const zendeskIntegrationAuthorizeImpl = (
-  zendeskService: ZendeskService,
-  workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
-) => {
-  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
-    workspaceMemberService,
-    workspaceService,
-    ['admin', 'owner']
-  );
-
-  return authorizedRateLimited.workspace.integrations.zendesk.authorize
-    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
-    .handler(async ({ input, context }) => {
-      const existingStatus = await zendeskService.getIntegrationStatus(input.params.workspaceId);
-      if (existingStatus.connected) {
-        throw workspaceError.INTEGRATION_ALREADY_CONNECTED();
-      }
-
-      const { authorizationUrl, state } = zendeskService.generateAuthorizationUrl(
-        context.user.id,
-        input.query.subdomain,
-        input.params.workspaceId,
-        undefined,
-        input.query.installationId
-      );
-
-      return {
-        message: 'Authorization URL generated successfully',
-        data: {
-          authorizationUrl,
-          state,
-        },
-      };
-    });
-};
-
-/**
- * GET /workspace/:workspaceId/integrations/zendesk/callback - Handle Zendesk OAuth callback
- * Requires admin or owner role
- */
-export const zendeskIntegrationCallbackImpl = (
-  zendeskService: ZendeskService,
-  workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
-) => {
-  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
-    workspaceMemberService,
-    workspaceService,
-    ['admin', 'owner']
-  );
-
-  return authorizedRateLimited.workspace.integrations.zendesk.callback
-    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
-    .handler(async ({ input, context }) => {
-      const result = await zendeskService.handleIntegrationCallback({
-        code: input.query.code,
-        state: input.query.state,
-        userId: context.user.id,
-        workspaceId: input.params.workspaceId,
-      });
-
-      return {
-        message: 'Zendesk connected successfully',
-        data: {
-          workspaceId: input.params.workspaceId,
-          connected: result.connected,
-          providerWorkspaceId: result.providerWorkspaceId,
-        },
-      };
-    });
-};
-
-/**
  * DELETE /workspace/:workspaceId/integrations/zendesk - Disconnect Zendesk integration
  * Requires admin or owner role
  */
@@ -1965,16 +1888,6 @@ export const createWorkspaceProcedures = (
       },
       zendesk: {
         get: getZendeskIntegrationImpl(zendeskService, workspaceMemberService, workspaceService),
-        authorize: zendeskIntegrationAuthorizeImpl(
-          zendeskService,
-          workspaceMemberService,
-          workspaceService
-        ),
-        callback: zendeskIntegrationCallbackImpl(
-          zendeskService,
-          workspaceMemberService,
-          workspaceService
-        ),
         delete: deleteZendeskIntegrationImpl(
           zendeskService,
           workspaceMemberService,

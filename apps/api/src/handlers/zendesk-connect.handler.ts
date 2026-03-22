@@ -1,18 +1,18 @@
 /**
- * OAuth Provider handlers
- * Endpoints for Zendesk app OAuth where Userplane is the OAuth provider.
+ * Zendesk Connect handlers
+ * Endpoints for the connect flow where users connect Zendesk from the iframe app.
  *
- * POST /api/v1/oauth/zendesk/initiate - Authenticated, starts the OAuth flow
- * POST /api/v1/oauth/zendesk/complete - Authenticated, completes the OAuth flow
+ * POST /api/v1/zendesk/connect - Authenticated, starts the connect OAuth flow
+ * POST /api/v1/zendesk/connect/complete - Authenticated, completes the connect OAuth flow
  */
 
 import type { Context } from 'hono';
 
 import { auth } from '@/api/clients/auth';
 import { createLogger } from '@/api/lib/logger';
-import type { OAuthProviderService } from '@/api/services/oauth-provider.service';
+import type { ZendeskConnectService } from '@/api/services/zendesk-connect.service';
 
-const logger = createLogger('oauth-provider-handler');
+const logger = createLogger('zendesk-connect-handler');
 
 /**
  * Extract authenticated userId from Better Auth session cookies.
@@ -26,11 +26,11 @@ async function getSessionUserId(c: Context): Promise<string | null> {
 }
 
 /**
- * POST /api/v1/oauth/zendesk/initiate
- * Starts the nested OAuth flow. Called from the dashboard authorize page.
+ * POST /api/v1/zendesk/connect
+ * Starts the Zendesk connect OAuth flow. Called from the dashboard authorize page.
  * Authenticated via Better Auth session cookies.
  */
-export function createOAuthInitiateHandler(service: OAuthProviderService) {
+export function createConnectInitiateHandler(service: ZendeskConnectService) {
   return async (c: Context) => {
     try {
       const userId = await getSessionUserId(c);
@@ -39,54 +39,36 @@ export function createOAuthInitiateHandler(service: OAuthProviderService) {
       }
 
       const body = await c.req.json();
-      const {
-        workspaceId,
-        workspaceUrl,
-        subdomain,
-        mode,
-        outerRedirectUri,
-        outerState,
-        outerClientId,
-        installationId,
-      } = body;
+      const { workspaceId, workspaceUrl, subdomain, installationId } = body;
 
       if (!subdomain) {
         return c.json({ error: 'Missing required parameters' }, 400);
       }
 
-      // In OAuth mode (built-in), outer params are required
-      if (mode !== 'popup' && (!outerRedirectUri || !outerState || !outerClientId)) {
-        return c.json({ error: 'Missing required OAuth parameters' }, 400);
-      }
-
-      const result = await service.initiatePendingAuth({
+      const result = await service.initiate({
         userId,
         workspaceId,
         workspaceUrl,
         subdomain,
-        mode: mode === 'popup' ? 'popup' : 'oauth',
-        outerRedirectUri,
-        outerState,
-        outerClientId,
         installationId: installationId ? Number(installationId) : undefined,
       });
 
       return c.json({ success: true, data: result });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to initiate OAuth';
-      logger.error({ error }, 'OAuth initiation failed');
+      logger.error({ error }, 'Connect initiation failed');
       return c.json({ error: message }, 400);
     }
   };
 }
 
 /**
- * POST /api/v1/oauth/zendesk/complete
- * Completes the nested OAuth flow after Zendesk OAuth callback.
+ * POST /api/v1/zendesk/connect/complete
+ * Completes the Zendesk connect OAuth flow after Zendesk OAuth callback.
  * Called from the dashboard callback page.
  * Authenticated via Better Auth session cookies.
  */
-export function createOAuthCompleteHandler(service: OAuthProviderService) {
+export function createConnectCompleteHandler(service: ZendeskConnectService) {
   return async (c: Context) => {
     try {
       const userId = await getSessionUserId(c);
@@ -95,22 +77,22 @@ export function createOAuthCompleteHandler(service: OAuthProviderService) {
       }
 
       const body = await c.req.json();
-      const { innerCode, innerState } = body;
+      const { zendeskCode, zendeskState } = body;
 
-      if (!innerCode || !innerState) {
+      if (!zendeskCode || !zendeskState) {
         return c.json({ error: 'Missing required parameters' }, 400);
       }
 
-      const result = await service.completePendingAuth({
-        innerCode,
-        innerState,
+      const result = await service.complete({
+        zendeskCode,
+        zendeskState,
         userId,
       });
 
       return c.json({ success: true, data: result });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to complete OAuth';
-      logger.error({ error }, 'OAuth completion failed');
+      logger.error({ error }, 'Connect completion failed');
       return c.json({ error: message }, 400);
     }
   };

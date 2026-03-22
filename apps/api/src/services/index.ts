@@ -56,7 +56,6 @@ import { IntercomService } from '@/api/services/intercom-oauth.service';
 import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
 import { NotificationService } from '@/api/services/notification.service';
-import { OAuthProviderService } from '@/api/services/oauth-provider.service';
 import { PlanMetadataResolver } from '@/api/services/plan-metadata-resolver';
 import { ProjectService } from '@/api/services/project.service';
 import { ProvisionerService } from '@/api/services/provisioner.service';
@@ -68,6 +67,8 @@ import { WorkspaceService } from '@/api/services/workspace.service';
 // Services
 import { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { ZendeskAppService } from '@/api/services/zendesk-app.service';
+import { ZendeskAppOAuthService } from '@/api/services/zendesk-app-oauth.service';
+import { ZendeskConnectService } from '@/api/services/zendesk-connect.service';
 import { ZendeskService } from '@/api/services/zendesk-oauth.service';
 
 // Initialize repositories
@@ -301,10 +302,8 @@ export const intercomHealthCheckService = new IntercomHealthCheckService({
 
 // Zendesk OAuth service
 export const zendeskService = new ZendeskService({
-  tokenService,
   integrationRepo,
   cacheService,
-  jwtSecret: env.zendesk.jwtSecret,
 });
 
 // Zendesk App service
@@ -317,8 +316,18 @@ export const zendeskAppService = new ZendeskAppService({
   entitlementService,
 });
 
-// OAuth Provider service (Userplane as OAuth provider for Zendesk built-in app OAuth)
-export const oauthProviderService = new OAuthProviderService({
+// Zendesk Connect service (connect flow from Zendesk iframe app)
+export const zendeskConnectService = new ZendeskConnectService({
+  redis,
+  tokenService,
+  integrationRepo,
+  provisionerService,
+  cacheService,
+  jwtSecret: env.zendesk.jwtSecret,
+});
+
+// Zendesk App OAuth service (built-in app OAuth flow)
+export const zendeskAppOAuthService = new ZendeskAppOAuthService({
   redis,
   tokenService,
   integrationRepo,
