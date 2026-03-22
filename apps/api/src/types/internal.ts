@@ -26,7 +26,6 @@ import {
   UploadTokenPayloadSchema,
   VideoSourceSchema,
   WorkspaceCreateInviteTokenPayloadSchema,
-  ZendeskOAuthSourceSchema,
 } from '@userplane/contract';
 import type { Link } from '@userplane/db';
 import type {
@@ -491,15 +490,12 @@ export interface IntercomOAuthStatePayload {
 
 /**
  * Source of the Zendesk OAuth flow.
- * Derives from the contract schema and extends with 'integration' for workspace flow.
- * - inapp: user initiated from /workspace/create (onboarding)
- * - marketplace: user came from Zendesk Marketplace (/install/zendesk)
+ * - inapp: user initiated from /workspace/create (onboarding) [deprecated]
+ * - marketplace: user came from Zendesk Marketplace [deprecated]
  * - integration: user connecting Zendesk to an existing workspace
+ * - app-oauth: user connecting from Zendesk iframe app (popup OAuth)
  */
-export type ZendeskOAuthSource =
-  | z.infer<typeof ZendeskOAuthSourceSchema>
-  | 'integration'
-  | 'app-oauth';
+export type ZendeskOAuthSource = 'inapp' | 'marketplace' | 'integration' | 'app-oauth';
 
 /**
  * Zendesk OAuth state payload for CSRF protection

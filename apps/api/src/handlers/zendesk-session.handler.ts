@@ -10,9 +10,8 @@
  * 5. Returns a short-lived session JWT (15 min) for subsequent ORPC calls
  */
 
-import type { Context } from 'hono';
-
 import type { RateLimiter } from '@userplane/cache';
+import type { Context } from 'hono';
 
 import { createLogger } from '@/api/lib/logger';
 import { signSessionJwt, verifyZafJwt } from '@/api/lib/zendesk-jwt';

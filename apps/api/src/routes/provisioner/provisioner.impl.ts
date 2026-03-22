@@ -7,7 +7,6 @@ import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import type { EmailService } from '@/api/services/email.service';
 import type { IntercomService } from '@/api/services/intercom-oauth.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
-import type { ZendeskService } from '@/api/services/zendesk-oauth.service';
 
 /**
  * POST /workspace - Create a new workspace
@@ -128,78 +127,18 @@ export const intercomCallbackImpl = (
 };
 
 /**
- * GET /provisioner/zendesk/authorize - Initiate Zendesk OAuth flow
- * Returns authorization URL and state token for CSRF protection
- * Requires subdomain since Zendesk OAuth is per-account
- */
-export const zendeskAuthorizeImpl = (zendeskService: ZendeskService) => {
-  return authorizedRateLimited.provisioner.zendesk.authorize.handler(async ({ input, context }) => {
-    const { authorizationUrl, state } = zendeskService.generateAuthorizationUrl(
-      context.user.id,
-      input.query.subdomain,
-      undefined,
-      input.query.source,
-      input.query.installationId
-    );
-
-    return {
-      message: 'Authorization URL generated',
-      data: { authorizationUrl, state },
-    };
-  });
-};
-
-/**
- * GET /provisioner/zendesk/callback - Handle Zendesk OAuth callback
- * Exchanges code for token and creates workspace (onboarding flow only)
- */
-export const zendeskCallbackImpl = (zendeskService: ZendeskService, emailService: EmailService) => {
-  return authorizedRateLimited.provisioner.zendesk.callback.handler(async ({ input, context }) => {
-    const result = await zendeskService.handleCallback({
-      code: input.query.code,
-      state: input.query.state,
-      userId: context.user.id,
-      userName: context.user.name,
-      userEmail: context.user.email,
-      userRole: context.user.role,
-    });
-
-    // Send welcome email if workspace was created
-    if (result.created) {
-      await emailService.sendSafeWelcomeEmailSubscription(
-        { to: context.user.email },
-        {
-          workspaceName: result.workspaceName,
-          workspaceId: result.workspaceId,
-        }
-      );
-    }
-
-    return {
-      message: 'Workspace created successfully',
-      data: result,
-    };
-  });
-};
-
-/**
  * Create the provisioner procedures object
  */
 export const createProvisionerProcedures = (
   provisionerService: ProvisionerService,
   emailService: EmailService,
-  intercomService: IntercomService,
-  zendeskService: ZendeskService
+  intercomService: IntercomService
 ) => {
   return {
     createWorkspace: createWorkspaceImpl(provisionerService, emailService),
     intercom: {
       authorize: intercomAuthorizeImpl(intercomService),
       callback: intercomCallbackImpl(intercomService, emailService),
-    },
-    zendesk: {
-      authorize: zendeskAuthorizeImpl(zendeskService),
-      callback: zendeskCallbackImpl(zendeskService, emailService),
     },
   };
 };
