@@ -35,16 +35,6 @@ function OAuthZendeskAuthorizeContent() {
   const { session, isPending: sessionLoading } = useSession();
   const { data: workspacesResult, isLoading: workspacesLoading } = useWorkspaces();
 
-  // Mode: 'popup' = in-app OAuth (from Zendesk iframe), otherwise = built-in OAuth
-  const mode = searchParams.get('mode');
-  const isPopupMode = mode === 'popup';
-
-  // Outer OAuth params (only used in built-in OAuth mode)
-  const clientId = searchParams.get('client_id') ?? '';
-  const redirectUri = searchParams.get('redirect_uri') ?? '';
-  const state = searchParams.get('state') ?? '';
-  const responseType = searchParams.get('response_type') ?? '';
-
   // Zendesk params from ZAF iframe
   const subdomainParam = searchParams.get('subdomain') ?? '';
   const installationIdParam = searchParams.get('installationId') ?? '';
@@ -83,7 +73,7 @@ function OAuthZendeskAuthorizeContent() {
     if (hasRedirectedRef.current) return;
     hasRedirectedRef.current = true;
 
-    const createParams = new URLSearchParams({ flow: 'zendesk', mode: 'popup' });
+    const createParams = new URLSearchParams({ flow: 'zendesk' });
     if (subdomainParam) createParams.set('subdomain', subdomainParam);
     if (installationIdParam) createParams.set('installationId', installationIdParam);
     router.replace(`/workspace/create?${createParams.toString()}`);
@@ -95,17 +85,6 @@ function OAuthZendeskAuthorizeContent() {
     installationIdParam,
     router,
   ]);
-
-  // Validate outer params (only in built-in OAuth mode)
-  if (!isPopupMode) {
-    if (responseType && responseType !== 'code') {
-      return <ErrorScreen message="Invalid response_type. Only 'code' is supported." />;
-    }
-
-    if (!clientId || !redirectUri || !state) {
-      return <ErrorScreen message="Missing required OAuth parameters." />;
-    }
-  }
 
   if (sessionLoading || workspacesLoading) {
     return <LoadingScreen message="Loading..." />;
@@ -121,7 +100,7 @@ function OAuthZendeskAuthorizeContent() {
   }
 
   function handleCreateWorkspace() {
-    const createParams = new URLSearchParams({ flow: 'zendesk', mode: 'popup' });
+    const createParams = new URLSearchParams({ flow: 'zendesk' });
     if (subdomainParam) createParams.set('subdomain', subdomainParam);
     if (installationIdParam) createParams.set('installationId', installationIdParam);
     router.push(`/workspace/create?${createParams.toString()}`);
@@ -141,18 +120,12 @@ function OAuthZendeskAuthorizeContent() {
       const body: Record<string, string> = {
         workspaceId: selectedWorkspaceId,
         subdomain: subdomainParam,
-        mode: isPopupMode ? 'popup' : 'oauth',
       };
       if (installationIdParam) {
         body.installationId = installationIdParam;
       }
-      if (!isPopupMode) {
-        body.outerRedirectUri = redirectUri;
-        body.outerState = state;
-        body.outerClientId = clientId;
-      }
 
-      const response = await fetch(`${env.api.url}/api/v1/oauth/zendesk/initiate`, {
+      const response = await fetch(`${env.api.url}/api/v1/zendesk/connect`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

@@ -6,6 +6,8 @@ export interface IntegrationConfig {
   name: string;
   description: string;
   permissions: IntegrationPermission[];
+  /** What the user can do after connecting — shown in the post-connect modal */
+  capabilities: string[];
 }
 
 export const integrationPermissions: Record<string, IntegrationConfig> = {
@@ -18,6 +20,13 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
       { text: 'View team and teammates' },
       { text: 'Access and receive data in Intercom apps' },
     ],
+    capabilities: [
+      'Request screen recordings directly from Intercom conversations',
+      'Create recording links and view recordings from the inbox sidebar',
+      'Use Cmd+K shortcut to create links without leaving the conversation',
+      'Insert reusable recording links into Intercom macros',
+      'Recordings are automatically linked to conversations for easy access',
+    ],
   },
   Zendesk: {
     name: 'Zendesk',
@@ -27,6 +36,13 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
       { text: 'Access end-user and organization profiles' },
       { text: 'Add comments and attachments to tickets' },
       { text: 'Receive webhook notifications for ticket events' },
+    ],
+    capabilities: [
+      'Request screen recordings directly from Zendesk tickets',
+      'Create recording links from the ticket sidebar or top bar',
+      'Recording links are automatically posted as internal notes',
+      'View recordings linked to tickets for quick context',
+      'Works across ticket sidebar and top bar locations',
     ],
   },
   Jira: {
@@ -38,6 +54,7 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
       { text: 'Edit and transition issue status' },
       { text: 'Access project members and roles' },
     ],
+    capabilities: [],
   },
   Linear: {
     name: 'Linear',
@@ -48,6 +65,7 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
       { text: 'Add attachments and comments to issues' },
       { text: 'Access team members and labels' },
     ],
+    capabilities: [],
   },
   Slack: {
     name: 'Slack',
@@ -58,6 +76,7 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
       { text: 'Access workspace user and channel info' },
       { text: 'Receive events for messages and reactions' },
     ],
+    capabilities: [],
   },
   Asana: {
     name: 'Asana',
@@ -68,6 +87,7 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
       { text: 'Update task status and assignees' },
       { text: 'Add comments and followers to tasks' },
     ],
+    capabilities: [],
   },
   Notion: {
     name: 'Notion',
@@ -78,6 +98,7 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
       { text: 'Access databases and their entries' },
       { text: 'Search across your workspace' },
     ],
+    capabilities: [],
   },
   HubSpot: {
     name: 'HubSpot',
@@ -88,6 +109,7 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
       { text: 'Add notes, attachments, and activities' },
       { text: 'Read deal and pipeline information' },
     ],
+    capabilities: [],
   },
   Salesforce: {
     name: 'Salesforce',
@@ -98,6 +120,7 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
       { text: 'Attach files and notes to records' },
       { text: 'Create and read activity history' },
     ],
+    capabilities: [],
   },
 };
 
@@ -112,6 +135,7 @@ export function getIntegrationConfig(name: string): IntegrationConfig {
         { text: 'Add attachments and comments' },
         { text: 'Receive event notifications' },
       ],
+      capabilities: [],
     }
   );
 }
