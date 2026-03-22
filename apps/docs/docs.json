@@ -23,6 +23,10 @@
     {
       "source": "/recording/reusable-links",
       "destination": "/recording-links/reusable"
+    },
+    {
+      "source": "/getting-started/intercom-setup",
+      "destination": "/getting-started/helpdesk-setup"
     }
   ],
   "navigation": {
@@ -45,7 +49,7 @@
             "group": "Setup & Onboarding",
             "pages": [
               "getting-started/workspace-setup",
-              "getting-started/intercom-setup",
+              "getting-started/helpdesk-setup",
               "getting-started/for-support-agents",
               "getting-started/for-support-engineers",
               "getting-started/for-developers"
@@ -180,17 +184,32 @@
         "tab": "Integrations",
         "groups": [
           {
-            "group": "AI Agents",
-            "pages": ["integrations/mcp", "integrations/agent-skills"]
+            "group": "Help Desk",
+            "pages": [
+              {
+                "group": "Intercom",
+                "pages": [
+                  "integrations/intercom",
+                  "integrations/intercom-inbox",
+                  "integrations/intercom-shortcuts",
+                  "integrations/intercom-macros"
+                ]
+              },
+              {
+                "group": "Zendesk",
+                "pages": [
+                  "integrations/zendesk",
+                  "integrations/zendesk-ticket-sidebar",
+                  "integrations/zendesk-ticket-editor",
+                  "integrations/zendesk-top-bar",
+                  "integrations/zendesk-notifications"
+                ]
+              }
+            ]
           },
           {
-            "group": "Intercom",
-            "pages": [
-              "integrations/intercom",
-              "integrations/intercom-inbox",
-              "integrations/intercom-shortcuts",
-              "integrations/intercom-macros"
-            ]
+            "group": "AI Agents",
+            "pages": ["integrations/mcp", "integrations/agent-skills"]
           }
         ]
       }

@@ -1,13 +1,13 @@
 ---
 title: Support Agent Onboarding
-description: Start collecting screen recordings from customers and reviewing sessions inside Intercom
+description: Start collecting screen recordings from customers and reviewing sessions inside your help desk
 ---
 
-You're the one talking to customers. This guide gets you from zero to sending your first recording request — without leaving Intercom.
+You're the one talking to customers. This guide gets you from zero to sending your first recording request — without leaving your help desk.
 
 ## What you'll be able to do
 
-- Send recording links to customers directly from Intercom conversations
+- Send recording links to customers directly from Intercom or Zendesk
 - Review screen recordings with console logs and network data alongside the video
 - Use shortcuts and macros to request recordings in seconds
 
@@ -20,54 +20,91 @@ Your workspace admin will send you an invite link via email. Click it to create 
   email — no invite needed.
 </Note>
 
-## Step 2: Find Userplane in Intercom
+## Step 2: Find Userplane in your help desk
 
-Userplane lives in your Intercom inbox as a sidebar app. To pin it:
+<Tabs>
+  <Tab title="Intercom">
+    Userplane lives in your Intercom inbox as a sidebar app. To pin it:
 
-<Steps>
-  <Step title="Open any conversation in Intercom">
-    Go to your Intercom inbox and open a customer conversation.
-  </Step>
-  <Step title="Open the Apps panel">
-    Click **Edit app** in the right sidebar to see available apps.
-  </Step>
-  <Step title="Pin Userplane">
-    Find Userplane in the list and pin it so it's always visible in the sidebar.
-  </Step>
-</Steps>
+    <Steps>
+      <Step title="Open any conversation in Intercom">
+        Go to your Intercom inbox and open a customer conversation.
+      </Step>
+      <Step title="Open the Apps panel">
+        Click **Edit app** in the right sidebar to see available apps.
+      </Step>
+      <Step title="Pin Userplane">
+        Find Userplane in the list and pin it so it's always visible in the sidebar.
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="Zendesk">
+    Userplane appears automatically in every Zendesk ticket — as a **sidebar app**, a **button in the reply editor**, and in the **top bar**. No pinning required.
+  </Tab>
+</Tabs>
 
 ## Step 3: Request a recording from a customer
 
-<Steps>
-  <Step title="Open a conversation">
-    Go to the Intercom conversation where the customer is reporting an issue.
-  </Step>
-  <Step title="Create a recording link">
-    In the Userplane sidebar app, click **Create Link**. Choose a project, add a reference (like a
-    ticket number), and click **Create**.
-  </Step>
-  <Step title="Send the link">
-    Copy the link and paste it into the conversation — or use an Intercom shortcut to insert it in
-    one click.
-  </Step>
-  <Step title="Customer records">
-    The customer clicks the link, records their screen, and submits. No installs required on their
-    end.
-  </Step>
-</Steps>
+<Tabs>
+  <Tab title="Intercom">
+    <Steps>
+      <Step title="Open a conversation">
+        Go to the Intercom conversation where the customer is reporting an issue.
+      </Step>
+      <Step title="Create a recording link">
+        In the Userplane sidebar app, click **Create Link**. Choose a project, add a reference (like a
+        ticket number), and click **Create**.
+      </Step>
+      <Step title="Send the link">
+        Copy the link and paste it into the conversation — or use an Intercom shortcut to insert it in
+        one click.
+      </Step>
+      <Step title="Customer records">
+        The customer clicks the link, records their screen, and submits. No installs required on their
+        end.
+      </Step>
+    </Steps>
 
-<Tip>
-  Use **Intercom Shortcuts** (`Cmd+K` / `Ctrl+K`) to insert a recording link into the conversation
-  without opening the sidebar. See [Intercom Shortcuts](/integrations/intercom-shortcuts) for setup.
-</Tip>
+    <Tip>
+      Use **Intercom Shortcuts** (`Cmd+K` / `Ctrl+K`) to insert a recording link into the conversation
+      without opening the sidebar. See [Intercom Shortcuts](/integrations/intercom-shortcuts) for setup.
+    </Tip>
+
+  </Tab>
+  <Tab title="Zendesk">
+    <Steps>
+      <Step title="Open a ticket">
+        Go to the Zendesk ticket where the customer is reporting an issue.
+      </Step>
+      <Step title="Create a recording link">
+        Click **Userplane** in the ticket sidebar and click **Request Recording**. Select a project and
+        domain, then click **Create Link**.
+      </Step>
+      <Step title="Share the link">
+        The recording link is ready to share with the customer. You can also use the **ticket editor button** to insert a link directly into your reply draft.
+      </Step>
+      <Step title="Customer records">
+        The customer clicks the link, records their screen, and submits. No installs required on their
+        end.
+      </Step>
+    </Steps>
+
+    <Tip>
+      Use the **ticket editor button** in the reply toolbar to insert a recording link directly into
+      your reply — without opening the sidebar. See [Zendesk Ticket Editor](/integrations/zendesk-ticket-editor).
+    </Tip>
+
+  </Tab>
+</Tabs>
 
 ## Step 4: Review the recording
 
-Once the customer submits, you'll see the recording appear in Userplane — both in the Intercom sidebar and in the Userplane dashboard.
+Once the customer submits, the recording appears in the Userplane dashboard.
 
 <Steps>
   <Step title="Open the recording">
-    In the Intercom sidebar, click the recording thumbnail to open it. Or go to [Recordings](https://dash.userplane.io/_/recordings) in the dashboard.
+    Go to [Recordings](https://dash.userplane.io/_/recordings) in the dashboard and find the recording.
   </Step>
   <Step title="Watch the session">
     The video plays back exactly what the customer saw. Use the timeline scrubber to jump to specific moments.
@@ -90,8 +127,9 @@ Once the customer submits, you'll see the recording appear in Userplane — both
 
 ## Speed up your workflow
 
-- **Macros** — embed reusable recording links in Intercom macros so you can request recordings with one click. See [Intercom Macros](/integrations/intercom-macros).
-- **Shortcuts** — use `Cmd+K` inside a conversation to insert a link instantly. See [Intercom Shortcuts](/integrations/intercom-shortcuts).
+- **Intercom Macros** — embed reusable recording links in Intercom macros so you can request recordings with one click. See [Intercom Macros](/integrations/intercom-macros).
+- **Intercom Shortcuts** — use `Cmd+K` inside a conversation to insert a link instantly. See [Intercom Shortcuts](/integrations/intercom-shortcuts).
+- **Zendesk locations** — use the ticket sidebar, editor button, or top bar to create links from anywhere in Zendesk. See [Zendesk Ticket Sidebar](/integrations/zendesk-ticket-sidebar).
 - **Projects** — organize recordings by product area, customer tier, or issue type. See [Projects](/recording/projects).
 
 ## Next steps
@@ -105,6 +143,9 @@ Once the customer submits, you'll see the recording appear in Userplane — both
   </Card>
   <Card title="Intercom Integration" icon="message" href="/integrations/intercom-inbox">
     Full guide to using Userplane from inside Intercom
+  </Card>
+  <Card title="Zendesk Integration" icon="ticket" href="/integrations/zendesk-ticket-sidebar">
+    Full guide to using Userplane from inside Zendesk
   </Card>
   <Card title="Issue Analyzer" icon="magnifying-glass" href="/recording/issue-analyzer">
     Automatically surface root causes from session data
