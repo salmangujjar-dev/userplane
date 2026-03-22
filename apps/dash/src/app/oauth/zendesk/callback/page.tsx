@@ -4,8 +4,12 @@ import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 
+import { InviteLoadingState, InviteTeammatesView } from '@/components/integrations/intercom';
+import { DinoError } from '@/components/shared/dino-error';
 import { env } from '@/env';
 import { useSession } from '@/features/auth';
+import { useFirstWorkspaceDomain } from '@/features/domains';
+import { useInvitePolicy } from '@/features/workspace';
 
 /**
  * Nested Zendesk OAuth Callback Page
@@ -32,6 +36,7 @@ function OAuthZendeskCallbackContent() {
   const searchParams = useSearchParams();
   const { session, isPending: sessionLoading } = useSession();
   const [error, setError] = useState<string | null>(null);
+  const [completedWorkspaceId, setCompletedWorkspaceId] = useState<string | null>(null);
   const completedRef = useRef(false);
 
   const code = searchParams.get('code');
@@ -67,8 +72,12 @@ function OAuthZendeskCallbackContent() {
       const { data } = await response.json();
 
       if (data.mode === 'popup') {
-        // Popup mode: close the window. User clicks "Refresh" in the iframe.
-        window.close();
+        // Show invite teammates view before closing
+        if (data.workspaceId) {
+          setCompletedWorkspaceId(data.workspaceId);
+        } else {
+          window.close();
+        }
         return;
       }
 
@@ -82,20 +91,20 @@ function OAuthZendeskCallbackContent() {
     }
   }
 
+  // Show invite teammates after connection
+  if (completedWorkspaceId) {
+    return <PostConnectionInviteView workspaceId={completedWorkspaceId} />;
+  }
+
   if (error) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12 bg-background">
-        <div className="flex flex-col items-center gap-4 max-w-md text-center">
-          <h1 className="text-xl font-medium text-foreground">Authorization Failed</h1>
-          <p className="text-sm text-destructive">{error}</p>
-          <button
-            type="button"
-            className="text-xs text-muted-foreground hover:underline mt-2"
-            onClick={() => window.close()}
-          >
-            Close
-          </button>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+        <DinoError
+          title="Authorization Failed"
+          description={error}
+          onRetry={() => window.location.reload()}
+          onGoBack={() => window.close()}
+        />
       </div>
     );
   }
@@ -107,5 +116,38 @@ function OAuthZendeskCallbackContent() {
         <p className="text-sm text-muted-foreground">Completing setup...</p>
       </div>
     </div>
+  );
+}
+
+/**
+ * Post-connection invite view shown in the popup after Zendesk OAuth completes.
+ * Reuses the InviteTeammatesView with empty teammates (manual email entry only).
+ */
+function PostConnectionInviteView({ workspaceId }: { workspaceId: string }) {
+  const { data: domainsData, isLoading: domainsLoading } = useFirstWorkspaceDomain(workspaceId);
+  const { data: policyData, isLoading: policyLoading } = useInvitePolicy(workspaceId);
+
+  const isLoading = domainsLoading || policyLoading;
+
+  if (isLoading) {
+    return <InviteLoadingState />;
+  }
+
+  const firstDomain = domainsData?.success ? domainsData.data.domains[0] : null;
+  const invitePolicy = policyData?.success ? policyData.data.workspaceInvitePolicy : 'private';
+  const allowedDomains = policyData?.success ? policyData.data.workspaceInviteDomains : null;
+
+  return (
+    <InviteTeammatesView
+      workspaceId={workspaceId}
+      teammates={[]}
+      invitePolicy={invitePolicy}
+      allowedDomains={allowedDomains}
+      initialDomainId={firstDomain?.domainId ?? null}
+      initialDomainUrl={firstDomain?.domainUrl ?? ''}
+      completionLabel="Done"
+      onComplete={() => window.close()}
+      onSkip={() => window.close()}
+    />
   );
 }

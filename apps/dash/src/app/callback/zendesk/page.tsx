@@ -5,15 +5,9 @@ type Props = {
 };
 
 /**
- * Generic Zendesk OAuth callback dispatcher
- * Decodes the JWT state token and redirects to the appropriate callback page based on:
- * - workspaceId: present -> existing workspace integration flow
- * - source: 'marketplace' -> workspace creation via Zendesk Marketplace
- * - source: 'inapp' or absent -> workspace creation via in-app onboarding
- *
- * This keeps separation of concerns:
- * - This page: Simple redirect logic based on state
- * - Domain pages: Handle their respective API calls and flows
+ * Zendesk OAuth callback dispatcher
+ * Decodes the JWT state token and routes to the popup OAuth callback.
+ * All Zendesk connections go through the popup OAuth flow (app-oauth source).
  */
 export default async function ZendeskCallbackPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -40,20 +34,13 @@ export default async function ZendeskCallbackPage({ searchParams }: Props) {
 
   const queryParams = new URLSearchParams({ code, state });
 
-  // App OAuth flow — nested Zendesk OAuth returning during Zendesk built-in app install.
-  // Must be checked BEFORE the workspaceId check since this flow also has a workspaceId.
-  if (payload.source === 'app-oauth') {
+  // App OAuth flow — nested Zendesk OAuth completing during popup/built-in app install.
+  // All Zendesk connection flows now go through the popup OAuth path.
+  if (payload.source === 'app-oauth' || payload.source === 'integration') {
     redirect(`/oauth/zendesk/callback?${queryParams.toString()}`);
   }
 
-  if (payload.workspaceId) {
-    // Integration flow - redirect to workspace integration callback
-    redirect(
-      `/workspace/${payload.workspaceId}/settings/integrations/zendesk/callback?${queryParams.toString()}`
-    );
-  }
-
-  // Workspace creation flow - route based on source
-  const flow = payload.source === 'marketplace' ? 'zendesk-marketplace' : 'zendesk-inapp';
-  redirect(`/workspace/create/callback?flow=${flow}&${queryParams.toString()}`);
+  // Legacy provisioner flows (marketplace/inapp) are no longer supported.
+  // Zendesk connection now happens from within the Zendesk app.
+  redirect('/workspace/create');
 }

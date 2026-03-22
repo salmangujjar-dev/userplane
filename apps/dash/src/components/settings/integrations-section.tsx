@@ -8,22 +8,20 @@ import { useState } from 'react';
 
 import { IntegrationPostConnectModal } from '@/components/modals/integration-post-connect-modal';
 import { IntegrationPreConnectModal } from '@/components/modals/integration-pre-connect-modal';
-import { ZendeskSubdomainInput } from '@/components/zendesk-subdomain-input';
 import {
   useIntercomAuthorize,
   useIntercomDisconnect,
   useIntercomIntegration,
-  useZendeskAuthorize,
   useZendeskDisconnect,
   useZendeskIntegration,
 } from '@/features/integrations';
 import { mediaClient } from '@/lib/media';
 import { showIntercomDisconnectedToast, showZendeskDisconnectedToast } from '@/lib/toasts';
+import { ZENDESK_MARKETPLACE_APP_URL } from '@/lib/zendesk-install';
 
 export function IntegrationsSection() {
   const [showIntercomModal, setShowIntercomModal] = useState(false);
   const [showZendeskModal, setShowZendeskModal] = useState(false);
-  const [zendeskSubdomain, setZendeskSubdomain] = useState('');
 
   // Intercom hooks
   const { data: intercomData, isLoading: intercomLoading } = useIntercomIntegration();
@@ -32,7 +30,6 @@ export function IntegrationsSection() {
 
   // Zendesk hooks
   const { data: zendeskData, isLoading: zendeskLoading } = useZendeskIntegration();
-  const authorizeZendesk = useZendeskAuthorize();
   const disconnectZendesk = useZendeskDisconnect();
 
   const isIntercomConnected = intercomData?.success && intercomData.data.integration.connected;
@@ -51,11 +48,6 @@ export function IntegrationsSection() {
         }
       },
     });
-  };
-
-  const handleZendeskConnect = async () => {
-    if (!zendeskSubdomain.trim()) return;
-    authorizeZendesk.mutate(zendeskSubdomain.trim());
   };
 
   const handleZendeskDisconnect = async () => {
@@ -156,16 +148,9 @@ export function IntegrationsSection() {
             size="sm"
             className="rounded-full min-w-[120px]"
             onClick={() => setShowZendeskModal(true)}
-            disabled={authorizeZendesk.isPending}
           >
-            {authorizeZendesk.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                {isZendeskConnected ? 'Connected' : 'Connect'}
-                <ChevronRight className="h-4 w-4" />
-              </>
-            )}
+            {isZendeskConnected ? 'Connected' : 'Connect'}
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -199,19 +184,8 @@ export function IntegrationsSection() {
           onOpenChange={setShowZendeskModal}
           integrationName="Zendesk"
           integrationImage={mediaClient.getIntegrationMediaUrl('integrations/zendesk.webp')}
-          onConnect={handleZendeskConnect}
-        >
-          <div className="space-y-2 mt-4">
-            <label className="text-sm font-medium" htmlFor="zendesk-subdomain">
-              Zendesk Subdomain
-            </label>
-            <ZendeskSubdomainInput
-              id="zendesk-subdomain"
-              value={zendeskSubdomain}
-              onChange={setZendeskSubdomain}
-            />
-          </div>
-        </IntegrationPreConnectModal>
+          onConnect={() => window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank')}
+        />
       )}
 
       {isZendeskConnected && (

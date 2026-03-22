@@ -8,7 +8,7 @@ import { Label } from '@userplane/ui/components/label';
 import Logo from '@userplane/ui/components/logo';
 import { ArrowLeftRight, Check, Circle, Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryState } from 'nuqs';
 import { useEffect, useRef, useState } from 'react';
 import { Control, Controller, FieldErrors, useForm } from 'react-hook-form';
@@ -23,14 +23,15 @@ import {
   OAuthLoadingState,
 } from '@/components/integrations/intercom';
 import { URLInput } from '@/components/url-input';
-import { ZendeskSubdomainInput } from '@/components/zendesk-subdomain-input';
+import { env } from '@/env';
 import { useAccount } from '@/features/account';
 import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
 import { type DefinedError, handleSafeResult, showErrorToastToast } from '@/lib/errors';
 import { mediaClient } from '@/lib/media';
-import { showIntercomConnectionFailedToast, showZendeskConnectionFailedToast } from '@/lib/toasts';
+import { showIntercomConnectionFailedToast } from '@/lib/toasts';
+import { ZENDESK_MARKETPLACE_APP_URL } from '@/lib/zendesk-install';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -286,7 +287,7 @@ function ProviderSelectFlow() {
 
   const handleConnect = async () => {
     if (selectedProvider === 'zendesk') {
-      router.push('/workspace/create?flow=zendesk-inapp');
+      window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank');
       return;
     }
 
@@ -309,8 +310,6 @@ function ProviderSelectFlow() {
       setIsConnecting(false);
     }
   };
-
-  const providerLabel = selectedProvider === 'intercom' ? 'Intercom' : 'Zendesk';
 
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 pb-32 lg:pb-12 bg-background overflow-hidden">
@@ -348,7 +347,9 @@ function ProviderSelectFlow() {
             size="lg"
             className="w-full rounded-full px-7 py-6"
           >
-            {isConnecting ? 'Connecting...' : `Connect to ${providerLabel}`}
+            {isConnecting
+              ? 'Connecting...'
+              : `Connect to ${selectedProvider === 'intercom' ? 'Intercom' : 'Zendesk'}`}
           </Button>
 
           <div className="flex justify-center">
@@ -427,79 +428,128 @@ function IntercomMarketplaceFlow() {
   return <OAuthLoadingState />;
 }
 
-const zendeskSubdomainSchema = z.object({
-  subdomain: z
-    .string()
-    .min(1, 'Subdomain is required')
-    .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/, 'Invalid subdomain format'),
-});
+export default function CreateWorkspacePage() {
+  const [flow] = useQueryState('flow', { defaultValue: 'intercom-inapp' });
 
-type ZendeskSubdomainValues = z.infer<typeof zendeskSubdomainSchema>;
+  if (flow === 'zendesk') {
+    return <ZendeskAuthFlow />;
+  }
+
+  if (flow === 'intercom-marketplace') {
+    return <IntercomMarketplaceFlow />;
+  }
+
+  if (flow === 'intercom-inapp') {
+    return <ProviderSelectFlow />;
+  }
+
+  // Direct create flow (flow=direct or any other value)
+  return <DirectCreateFlow />;
+}
 
 /**
- * Zendesk subdomain flow — shared by marketplace and in-app onboarding.
- * Unlike Intercom, Zendesk OAuth requires a subdomain before the authorization URL
- * can be built, so this flow collects the subdomain first.
+ * Zendesk auth flow — shown when user arrives from the Zendesk app
+ * with subdomain + installationId in the URL.
+ * Asks for workspace URL, then kicks off OAuth which creates workspace + integration.
+ * Without params (e.g. from /install/zendesk) → sends to marketplace.
  */
-function ZendeskSubdomainFlow({ source }: { source: 'marketplace' | 'inapp' }) {
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<DefinedError | null>(null);
+function ZendeskAuthFlow() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { data: accountResult } = useAccount();
   const { signOut } = useAuth();
 
-  const account = accountResult?.success ? accountResult.data : null;
+  const subdomainParam = searchParams.get('subdomain') ?? '';
+  const installationIdParam = searchParams.get('installationId') ?? '';
+  const modeParam = searchParams.get('mode');
+
+  // Prerequisites met when we have subdomain + installationId (from Zendesk app)
+  const hasPrereqs = !!subdomainParam && !!installationIdParam;
+
+  // If no prereqs, redirect to marketplace
+  const hasRedirectedRef = useRef(false);
+  useEffect(() => {
+    if (hasPrereqs || hasRedirectedRef.current) return;
+    hasRedirectedRef.current = true;
+    window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank');
+  }, [hasPrereqs]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     control,
     handleSubmit,
     formState: { errors: formErrors, isValid },
-  } = useForm<ZendeskSubdomainValues>({
-    resolver: zodResolver(zendeskSubdomainSchema),
+  } = useForm({
+    resolver: zodResolver(workspaceFormSchema),
     mode: 'onTouched',
-    defaultValues: { subdomain: '' },
+    defaultValues: { workspace: '' },
   });
 
-  const handleConnect = async (data: ZendeskSubdomainValues) => {
-    setIsConnecting(true);
-    setError(null);
-    try {
-      const [apiError, response] = await apiClient.provisioner.zendesk.authorize({
-        query: { source, subdomain: data.subdomain },
-      });
-      const result = handleSafeResult(apiError, response?.data ?? null);
+  const account = accountResult?.success ? accountResult.data : null;
 
-      if (!result.success) {
-        setError(result.error);
-        return;
+  const handleConnect = async (data: { workspace: string }) => {
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const body: Record<string, string> = {
+        subdomain: subdomainParam,
+        workspaceUrl: data.workspace,
+        mode: modeParam === 'popup' ? 'popup' : 'oauth',
+      };
+      if (installationIdParam) {
+        body.installationId = installationIdParam;
       }
 
-      window.location.href = result.data.authorizationUrl;
+      const response = await fetch(`${env.api.url}/api/v1/oauth/zendesk/initiate`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const respBody = await response.json().catch(() => ({}));
+        throw new Error(respBody.error || `Request failed (${response.status})`);
+      }
+
+      const { data: respData } = await response.json();
+      window.location.href = respData.zendeskAuthUrl;
     } catch (err) {
-      showZendeskConnectionFailedToast(err instanceof Error ? err.message : undefined);
-    } finally {
-      setIsConnecting(false);
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setIsSubmitting(false);
     }
   };
 
-  if (error) {
+  if (!hasPrereqs) {
     return (
-      <OAuthErrorState
-        provider="zendesk"
-        error={error}
-        errorActionPrimary={{
-          label: 'Try Again',
-          callback: () => {
-            setError(null);
-          },
-        }}
-        errorActionSecondary={{
-          label: 'Contact Support',
-          callback: () => {
-            window.open(SUPPORT_EMAIL_MAILTO, '_blank');
-          },
-        }}
-      />
+      <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 pb-32 lg:pb-12 bg-background overflow-hidden">
+        <AuthIcons />
+        <div className="w-full max-w-md space-y-10 relative z-10">
+          <PageHeader
+            title="Install Zendesk app first"
+            subtitle="Install the Userplane app from the Zendesk Marketplace, then connect from within a ticket."
+          />
+          <Button
+            onClick={() => window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank')}
+            size="lg"
+            className="w-full rounded-full px-7 py-6"
+          >
+            Go to Zendesk Marketplace
+          </Button>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => router.push('/workspace/create?flow=direct')}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Configure userplane manually
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -536,84 +586,43 @@ function ZendeskSubdomainFlow({ source }: { source: 'marketplace' | 'inapp' }) {
         </div>
 
         <form onSubmit={handleSubmit(handleConnect)} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="subdomain">Zendesk subdomain</Label>
-            <p className="text-xs text-muted-foreground">
-              Enter the subdomain from your Zendesk URL
-            </p>
-            <Controller
-              name="subdomain"
-              control={control}
-              render={({ field }) => (
-                <ZendeskSubdomainInput
-                  id="subdomain"
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  error={!!formErrors.subdomain}
-                  disabled={isConnecting}
-                />
-              )}
-            />
-            <p
-              className={`text-sm text-destructive ${formErrors.subdomain ? 'visible' : 'invisible'}`}
-            >
-              {formErrors.subdomain?.message ?? '\u00A0'}
-            </p>
-          </div>
+          <WorkspaceUrlField control={control} errors={formErrors} isPending={isSubmitting} />
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button
             type="submit"
-            disabled={!isValid || isConnecting}
+            disabled={!isValid || isSubmitting}
             size="lg"
             className="w-full rounded-full px-7 py-6"
           >
-            {isConnecting ? (
+            {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 Connecting...
               </>
             ) : (
-              'Connect to Zendesk'
+              'Authorize & Connect'
             )}
           </Button>
 
           <div className="flex justify-center">
             <button
               type="button"
-              onClick={() => router.push('/workspace/create?flow=direct')}
+              onClick={() =>
+                modeParam === 'popup'
+                  ? window.close()
+                  : router.push('/workspace/create?flow=direct')
+              }
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Configure userplane manually
+              {modeParam === 'popup' ? 'Cancel' : 'Configure userplane manually'}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-}
-
-export default function CreateWorkspacePage() {
-  const [flow] = useQueryState('flow', { defaultValue: 'intercom-inapp' });
-
-  if (flow === 'zendesk-marketplace') {
-    return <ZendeskSubdomainFlow source="marketplace" />;
-  }
-
-  if (flow === 'zendesk-inapp') {
-    return <ZendeskSubdomainFlow source="inapp" />;
-  }
-
-  if (flow === 'intercom-marketplace') {
-    return <IntercomMarketplaceFlow />;
-  }
-
-  if (flow === 'intercom-inapp') {
-    return <ProviderSelectFlow />;
-  }
-
-  // Direct create flow (flow=direct or any other value)
-  return <DirectCreateFlow />;
 }
 
 // Direct workspace creation flow
