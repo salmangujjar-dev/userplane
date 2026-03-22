@@ -200,8 +200,6 @@ export const workspaceContract = {
     },
     zendesk: {
       get: workspace.getZendeskIntegration,
-      authorize: workspace.zendeskIntegrationAuthorize,
-      callback: workspace.zendeskIntegrationCallback,
       delete: workspace.deleteZendeskIntegration,
     },
   },

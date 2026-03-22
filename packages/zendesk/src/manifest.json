@@ -27,6 +27,9 @@
           "width": "400px",
           "height": "500px"
         }
+      },
+      "ticket_editor": {
+        "url": "{{ZENDESK_IFRAME_URL}}"
       }
     }
   },
