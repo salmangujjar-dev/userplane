@@ -490,12 +490,9 @@ export interface IntercomOAuthStatePayload {
 
 /**
  * Source of the Zendesk OAuth flow.
- * - inapp: user initiated from /workspace/create (onboarding) [deprecated]
- * - marketplace: user came from Zendesk Marketplace [deprecated]
- * - integration: user connecting Zendesk to an existing workspace
- * - app-oauth: user connecting from Zendesk iframe app (popup OAuth)
+ * - marketplace: user connecting from Zendesk marketplace app
  */
-export type ZendeskOAuthSource = 'inapp' | 'marketplace' | 'integration' | 'app-oauth';
+export type ZendeskOAuthSource = 'marketplace';
 
 /**
  * Zendesk OAuth state payload for CSRF protection

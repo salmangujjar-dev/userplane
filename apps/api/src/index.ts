@@ -26,12 +26,16 @@ import {
 } from '@/api/handlers/intercom-canvas.handler';
 import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.handler';
 import { createUninstallHandler } from '@/api/handlers/intercom-uninstall.handler';
-import {
-  createOAuthCompleteHandler,
-  createOAuthInitiateHandler,
-} from '@/api/handlers/oauth-provider.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import { createResolveHandler } from '@/api/handlers/zendesk-app.handler';
+import {
+  createAppOAuthCompleteHandler,
+  createAppOAuthInitiateHandler,
+} from '@/api/handlers/zendesk-app-oauth.handler';
+import {
+  createConnectCompleteHandler,
+  createConnectInitiateHandler,
+} from '@/api/handlers/zendesk-connect.handler';
 import { createZendeskSessionHandler } from '@/api/handlers/zendesk-session.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
@@ -42,7 +46,8 @@ import {
   integrationRepo,
   intercomCanvasService,
   intercomHealthCheckService,
-  oauthProviderService,
+  zendeskAppOAuthService,
+  zendeskConnectService,
 } from '@/api/services';
 
 const app = new Hono();
@@ -96,17 +101,24 @@ app.use(
   })
 );
 
-// OAuth initiate/complete - called from dashboard popup (needs credentials for session cookies)
-app.use(
-  '/api/v1/oauth/zendesk/*',
-  cors({
-    origin: env.cors.origins,
-    credentials: true,
-    maxAge: env.cors.maxAge,
-  })
-);
+// Zendesk connect + app OAuth — called from dashboard popup (needs credentials for session cookies)
+// Must come before the permissive /api/v1/zendesk/* rule
+for (const path of [
+  '/api/v1/zendesk/connect',
+  '/api/v1/zendesk/connect/*',
+  '/api/v1/zendesk/app/*',
+]) {
+  app.use(
+    path,
+    cors({
+      origin: env.cors.origins,
+      credentials: true,
+      maxAge: env.cors.maxAge,
+    })
+  );
+}
 
-// Zendesk app endpoints need permissive CORS (called from Zendesk iframe)
+// Zendesk iframe endpoints need permissive CORS (called from Zendesk iframe via ZAF proxy)
 app.use(
   '/api/v1/zendesk/*',
   cors({
@@ -253,13 +265,21 @@ app.route('/api/v1/intercom/canvas/inbox', inboxRouter);
 app.route('/api/v1/intercom/health-check', healthCheckRouter);
 app.route('/api/v1/intercom/uninstall', uninstallRouter);
 
-// OAuth Provider Routes (popup OAuth flow from Zendesk iframe app)
+// Zendesk Connect Routes (popup OAuth flow from Zendesk iframe app)
 // ===========================
-const oauthProviderRouter = new Hono();
-oauthProviderRouter.post('/zendesk/initiate', createOAuthInitiateHandler(oauthProviderService));
-oauthProviderRouter.post('/zendesk/complete', createOAuthCompleteHandler(oauthProviderService));
+const zendeskConnectRouter = new Hono();
+zendeskConnectRouter.post('/', createConnectInitiateHandler(zendeskConnectService));
+zendeskConnectRouter.post('/complete', createConnectCompleteHandler(zendeskConnectService));
 
-app.route('/api/v1/oauth', oauthProviderRouter);
+app.route('/api/v1/zendesk/connect', zendeskConnectRouter);
+
+// Zendesk App OAuth Routes (built-in app OAuth flow)
+// ===========================
+const zendeskAppOAuthRouter = new Hono();
+zendeskAppOAuthRouter.post('/app/authorize', createAppOAuthInitiateHandler(zendeskAppOAuthService));
+zendeskAppOAuthRouter.post('/app/token', createAppOAuthCompleteHandler(zendeskAppOAuthService));
+
+app.route('/api/v1/zendesk', zendeskAppOAuthRouter);
 
 // Zendesk App Routes
 // ===========================

@@ -41,7 +41,9 @@ export class ZendeskNotificationService {
    * Disconnects the integration on permanent refresh failures (expired/revoked token).
    * Falls back to the existing token on transient failures.
    */
-  private async getValidAccessToken(integration: TypedIntegration<'zendesk'>): Promise<string> {
+  private async getValidAccessToken(
+    integration: TypedIntegration<'zendesk'>
+  ): Promise<string | null> {
     const token = integration.providerToken as ZendeskToken;
     const { accessToken, refreshToken, tokenExpiresAt } = token;
 
@@ -60,7 +62,7 @@ export class ZendeskNotificationService {
         'Zendesk token expired, no refresh token, disconnecting'
       );
       await this.disconnectIntegration(integration);
-      return accessToken;
+      return null;
     }
 
     // Check if refresh token is known-expired before making a network call
@@ -72,7 +74,7 @@ export class ZendeskNotificationService {
           'Zendesk refresh token expired, disconnecting'
         );
         await this.disconnectIntegration(integration);
-        return accessToken;
+        return null;
       }
     }
 
@@ -156,6 +158,13 @@ export class ZendeskNotificationService {
       }
 
       const accessToken = await this.getValidAccessToken(integration);
+      if (!accessToken) {
+        logger.warn(
+          { workspaceId, ticketId },
+          'No valid Zendesk access token, skipping notification'
+        );
+        return;
+      }
       const subdomain = integration.providerMeta.subdomain;
 
       const safeUrl = escapeHtmlAttr(recordingUrl);

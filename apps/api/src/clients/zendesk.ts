@@ -11,6 +11,9 @@ import { captureException } from '@/api/posthog';
 
 const logger = createLogger('zendesk-client');
 
+/** OAuth scopes requested from Zendesk: read all, write tickets + app installations */
+const ZENDESK_OAUTH_SCOPES = 'read tickets:write apps:write';
+
 /**
  * Validate and normalize a Zendesk subdomain.
  * Subdomains must be alphanumeric with optional hyphens (not leading/trailing).
@@ -71,7 +74,7 @@ export function getAuthorizationUrl(
     response_type: 'code',
     client_id: env.zendesk.clientId,
     redirect_uri: env.zendesk.redirectUri,
-    scope: 'read tickets:write apps:write',
+    scope: ZENDESK_OAUTH_SCOPES,
     state,
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',
@@ -105,7 +108,7 @@ export async function exchangeCodeForToken(
         client_id: env.zendesk.clientId,
         code_verifier: codeVerifier,
         redirect_uri: env.zendesk.redirectUri,
-        scope: 'read tickets:write apps:write',
+        scope: ZENDESK_OAUTH_SCOPES,
       }),
     });
 
@@ -266,7 +269,7 @@ export async function refreshAccessToken(
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
         client_id: env.zendesk.clientId,
-        scope: 'read tickets:write apps:write',
+        scope: ZENDESK_OAUTH_SCOPES,
       }),
     });
 
