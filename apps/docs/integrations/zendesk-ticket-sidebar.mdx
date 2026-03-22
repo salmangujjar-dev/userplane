@@ -1,0 +1,61 @@
+---
+title: Zendesk Ticket Sidebar
+description: Create recording links and view recordings from the Zendesk ticket sidebar
+---
+
+After [connecting Zendesk](/integrations/zendesk), a Userplane sidebar app appears in every ticket. This is the primary surface for creating recording links, viewing recordings, and managing ticket context — all without leaving the ticket.
+
+## Creating a recording link
+
+<Steps>
+  <Step title="Open a ticket">Open a ticket in Zendesk.</Step>
+  <Step title="Open the sidebar app">Click the **Userplane** app in the ticket sidebar.</Step>
+  <Step title="Request a recording">
+    Click **Request Recording**, select a **project** and **domain** from the dropdowns, and
+    optionally customize the message to the customer.
+  </Step>
+  <Step title="Create the link">
+    Click **Create Link**. The recording link is created and ready to share with the customer.
+  </Step>
+</Steps>
+
+## Viewing recordings
+
+Click **View Recordings** in the sidebar opener to open your Userplane dashboard, where you can browse and review all recordings for your workspace.
+
+## Ticket context capture
+
+When you create a recording link from a ticket, Userplane automatically captures:
+
+- **Ticket ID** and **subject**
+- **Priority** and **type**
+- **Tags**
+- **Requester** name and email
+- **Agent** name and email
+
+This metadata appears in the recording's **Info** tab, making it easy to trace recordings back to the original support conversation.
+
+## Automatic ticket tagging
+
+When a recording link is created from a ticket, Userplane adds the tag `userplane-recording-requested` to the ticket. You can use this tag in Zendesk views, triggers, and automations to track which tickets have pending recording requests.
+
+## Using the ticket editor instead
+
+<Tip>
+  If you prefer a faster workflow, use the **ticket editor button** to create and insert a recording
+  link directly into your reply draft — without opening the sidebar. See [Zendesk Ticket
+  Editor](/integrations/zendesk-ticket-editor) for details.
+</Tip>
+
+## Requirements
+
+- The Zendesk integration must be [connected](/integrations/zendesk).
+- The agent must be a member of the Userplane workspace.
+- Domains must be [verified](/workspace/domain-verification) to appear in the domain dropdown.
+
+## Related articles
+
+- [Zendesk Integration](/integrations/zendesk) — overview and connection guide.
+- [Zendesk Ticket Editor](/integrations/zendesk-ticket-editor) — insert links from the reply editor toolbar.
+- [Zendesk Notifications](/integrations/zendesk-notifications) — automatic internal notes when recordings arrive.
+- [Requesting a Recording](/recording/requesting) — creating links from the Userplane dashboard.

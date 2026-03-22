@@ -1,0 +1,61 @@
+---
+title: Zendesk Integration
+description: Connect Userplane to Zendesk for in-ticket screen recording requests
+---
+
+The Zendesk integration lets your support team request and review screen recordings directly from Zendesk tickets. Agents can create recording links, insert them into replies, and get notified when recordings arrive — all without leaving Zendesk.
+
+## What the integration does
+
+- Installs a **ticket sidebar app** for creating recording links and viewing recordings.
+- Adds a **ticket editor button** so agents can insert recording links directly into reply drafts.
+- Adds a **top bar app** for quick link creation from anywhere in Zendesk.
+- Automatically **tags tickets** with `userplane-recording-requested` when a link is created.
+- Posts **internal notes** to tickets when recordings are received.
+- Captures **ticket context** — ID, subject, priority, type, tags, and requester info — with each recording link.
+
+## Connecting Zendesk
+
+<Steps>
+  <Step title="Install from the Zendesk Marketplace">
+    Find Userplane in the Zendesk Marketplace and install it to your Zendesk account.
+  </Step>
+  <Step title="Open the Userplane app">
+    Open any ticket in Zendesk. Click the **Userplane** app in the ticket sidebar.
+  </Step>
+  <Step title="Connect to Userplane">
+    Click **Connect to Userplane**. You'll be redirected to authorize the connection and select your
+    workspace.
+  </Step>
+  <Step title="Done">
+    After authorization, the Userplane app is active across all three locations — ticket sidebar,
+    ticket editor, and top bar.
+  </Step>
+</Steps>
+
+<Note>Only workspace **owners** and **admins** can authorize the Zendesk connection.</Note>
+
+## Permissions granted
+
+When you authorize the Zendesk connection, Userplane receives the following permissions:
+
+- Read ticket data to capture context and associate recordings with tickets.
+- Manage ticket tags to mark tickets with `userplane-recording-requested`.
+- Post internal comments to notify agents when recordings arrive.
+
+## Disconnecting Zendesk
+
+1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+2. Click **Disconnect** next to Zendesk.
+
+<Note>
+  Disconnecting removes the Userplane app from Zendesk. Existing recordings and links are preserved.
+</Note>
+
+## Related articles
+
+- [Help Desk Setup](/getting-started/helpdesk-setup) — setup guide for connecting your help desk.
+- [Zendesk Ticket Sidebar](/integrations/zendesk-ticket-sidebar) — create links and view recordings from the ticket sidebar.
+- [Zendesk Ticket Editor](/integrations/zendesk-ticket-editor) — insert recording links directly into replies.
+- [Zendesk Top Bar](/integrations/zendesk-top-bar) — create links from anywhere in Zendesk.
+- [Zendesk Notifications](/integrations/zendesk-notifications) — automatic internal notes when recordings arrive.
