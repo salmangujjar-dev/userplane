@@ -456,20 +456,16 @@ export class WebhookProcessorService {
         billingCadence,
       });
     } else {
-      // Truly new subscription — reset consumption
+      // New subscription (e.g. free → paid) — preserve any existing consumption (seats)
       logger.debug(
         { workspaceId, planId, billingCadence },
-        'Provisioning entitlements (new subscription)'
+        'Provisioning entitlements (new subscription, preserving existing consumption)'
       );
-      await this.deps.entitlementService.provisionFromMetadata(
-        workspaceId,
-        metadata.featureLimits,
-        {
-          tx,
-          addons: incomingAddons,
-          billingCadence,
-        }
-      );
+      await this.deps.entitlementService.updateFromMetadata(workspaceId, metadata.featureLimits, {
+        tx,
+        addons: incomingAddons,
+        billingCadence,
+      });
     }
 
     await this.deps.webhookEventsRepo.markProcessed(

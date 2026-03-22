@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef } from 'react';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -37,12 +37,10 @@ export function WorkspaceDomainsSection({ value, onChange }: WorkspaceDomainsSec
     },
   });
 
-  // Sync external value changes to form during render
-  const prevValueRef = useRef(value);
-  if (prevValueRef.current !== value) {
-    prevValueRef.current = value;
+  // Sync external value changes to form after render
+  useEffect(() => {
     setValue('domainUrl', value);
-  }
+  }, [value, setValue]);
 
   return (
     <div className="space-y-3">
