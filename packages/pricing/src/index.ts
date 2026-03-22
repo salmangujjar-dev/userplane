@@ -1155,7 +1155,7 @@ export const FREE_PLAN_FEATURE_GATES: PlanFeatureGates = {
   captureServerLogs: false,
   customizeRecordingLink: false,
   customizeRetentionPolicy: false,
-  sendOutboundEmails: false,
+  sendOutboundEmails: true,
   samlSso: false,
 };
 
