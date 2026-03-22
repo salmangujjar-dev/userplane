@@ -1,0 +1,234 @@
+/**
+ * Ticket Editor location
+ * Toolbar button in the reply editor — creates a recording link
+ * and inserts it directly into the editor content.
+ */
+
+import { useCallback, useEffect, useState } from 'react';
+
+import { useAgentContext } from '@/hooks/zendesk/use-agent-context';
+import { useZendeskClient } from '@/hooks/zendesk/use-client';
+import { useTicketContext } from '@/hooks/zendesk/use-ticket-context';
+import { useWorkspaceData } from '@/hooks/zendesk/use-workspace-data';
+import { useZendeskApi } from '@/hooks/zendesk/use-zendesk-api';
+import type { ErrorView } from '@/lib/zendesk/errors';
+import { getErrorMessage, getErrorView } from '@/lib/zendesk/errors';
+
+import { AccessRequestedScreen } from './AccessRequestedScreen';
+import { ErrorMessage } from './ErrorMessage';
+import { UserplaneIcon } from './Icons';
+import { LimitExceededScreen } from './LimitExceededScreen';
+import { LinkCreatorForm } from './LinkCreatorForm';
+import { ReconnectScreen } from './ReconnectScreen';
+import { ScreenHeader } from './ScreenHeader';
+import { SignupScreen } from './SignupScreen';
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function generateDefaultMessage(agentName: string | null): string {
+  return agentName
+    ? `${agentName} has requested a screen recording from you`
+    : 'Your support team has requested a screen recording from you';
+}
+
+type View = 'creator' | 'success' | 'error' | ErrorView;
+
+export function TicketEditor({
+  workspaceId,
+  dashboardUrl,
+}: {
+  workspaceId: string;
+  dashboardUrl: string;
+}) {
+  const client = useZendeskClient();
+  const api = useZendeskApi();
+  const { agentEmail, agentName, isLoading: agentLoading, error: agentError } = useAgentContext();
+  const {
+    requester,
+    ticketId,
+    ticketSubject,
+    ticketPriority,
+    ticketType,
+    ticketTags,
+    isLoading: ticketLoading,
+  } = useTicketContext();
+
+  const [view, setView] = useState<View>('creator');
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [customMessage, setCustomMessage] = useState(() => generateDefaultMessage(agentName));
+
+  const workspace = useWorkspaceData({ workspaceId, enabled: true });
+
+  useEffect(() => {
+    setCustomMessage(generateDefaultMessage(agentName));
+  }, [agentName]);
+
+  useEffect(() => {
+    if (agentError) {
+      setError(agentError);
+      setView('error');
+    }
+  }, [agentError]);
+
+  useEffect(() => {
+    if (workspace.rawError) {
+      const errorView = getErrorView(workspace.rawError);
+      if (errorView) {
+        setView(errorView);
+      } else if (workspace.error) {
+        setError(workspace.error);
+        setView('error');
+      }
+    }
+  }, [workspace.rawError, workspace.error]);
+
+  const handleCreateLink = useCallback(async () => {
+    if (!workspace.selectedProject) {
+      setError('Please select a project.');
+      setView('error');
+      return;
+    }
+    if (!agentEmail) {
+      setError('Could not resolve your email. Please reload the app.');
+      setView('error');
+      return;
+    }
+
+    setIsCreating(true);
+    setError(null);
+
+    const [err, result] = await api.zendeskApp.createLink({
+      query: { workspaceId },
+      body: {
+        projectId: workspace.selectedProject,
+        domainId: workspace.selectedDomain,
+        agentEmail,
+        ticketId: ticketId ?? undefined,
+        ticketSubject: ticketSubject ?? undefined,
+        ticketPriority: ticketPriority ?? undefined,
+        ticketType: ticketType ?? undefined,
+        ticketTags: ticketTags.length > 0 ? ticketTags : undefined,
+        requesterName: requester?.name ?? undefined,
+        requesterEmail: requester?.email ?? undefined,
+        agentName: agentName ?? undefined,
+      },
+    });
+
+    setIsCreating(false);
+
+    if (err) {
+      const errorView = getErrorView(err);
+      if (errorView) {
+        setView(errorView);
+      } else {
+        const message = getErrorMessage(err);
+        setError(message);
+        setView('error');
+      }
+      return;
+    }
+
+    // Insert the recording link directly into the editor
+    const safeLink = escapeHtml(result.data.linkUrl);
+    const safeMsg = escapeHtml(customMessage);
+    const html = `<p>${safeMsg}</p><p><a href="${safeLink}" target="_blank">Click here to record your screen</a></p>`;
+
+    client.invoke('ticket.editor.insert', html).catch(() => {
+      client.invoke('notify', 'Could not insert link into editor', 'error');
+    });
+
+    client.invoke('ticket.tags.add', 'userplane-recording-requested').catch(() => {});
+    client.invoke('notify', 'Recording link inserted', 'notice');
+
+    // Close the editor popover
+    client.invoke('app.close');
+  }, [
+    workspaceId,
+    workspace.selectedProject,
+    workspace.selectedDomain,
+    ticketId,
+    ticketSubject,
+    ticketPriority,
+    ticketType,
+    ticketTags,
+    requester,
+    agentEmail,
+    agentName,
+    customMessage,
+    client,
+    api,
+  ]);
+
+  if (workspace.isLoading || agentLoading || ticketLoading) {
+    return (
+      <div style={{ padding: '16px', textAlign: 'center' }}>
+        <ScreenHeader
+          icon={<UserplaneIcon size={32} />}
+          title="Loading..."
+          description="Fetching your workspace data"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '16px', fontFamily: 'system-ui, sans-serif', fontSize: '14px' }}>
+      {view === 'creator' && (
+        <LinkCreatorForm
+          projects={workspace.projects}
+          domains={workspace.domains}
+          selectedProject={workspace.selectedProject}
+          selectedDomain={workspace.selectedDomain}
+          onProjectChange={workspace.setSelectedProject}
+          onDomainChange={workspace.setSelectedDomain}
+          onSubmit={handleCreateLink}
+          isCreating={isCreating}
+          isLoading={workspace.isLoading}
+          workspaceId={workspaceId}
+          customMessage={customMessage}
+          onCustomMessageChange={setCustomMessage}
+          compact
+        />
+      )}
+
+      {view === 'signup' && <SignupScreen agentEmail={agentEmail} dashboardUrl={dashboardUrl} />}
+
+      {view === 'access_requested' && (
+        <AccessRequestedScreen agentEmail={agentEmail} dashboardUrl={dashboardUrl} />
+      )}
+
+      {view === 'limit_exceeded' && (
+        <LimitExceededScreen
+          workspaceId={workspaceId}
+          dashboardUrl={dashboardUrl}
+          onGoBack={() => setView('creator')}
+        />
+      )}
+
+      {view === 'reconnect' && (
+        <ReconnectScreen
+          agentEmail={agentEmail}
+          workspaceId={workspaceId}
+          dashboardUrl={dashboardUrl}
+        />
+      )}
+
+      {view === 'error' && error && (
+        <ErrorMessage
+          message={error}
+          onRetry={() => {
+            setError(null);
+            setView('creator');
+          }}
+        />
+      )}
+    </div>
+  );
+}

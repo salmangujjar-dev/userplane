@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ClientProvider } from '@/components/zendesk/ClientProvider';
 import { UserplaneIcon } from '@/components/zendesk/Icons';
 import { ScreenHeader } from '@/components/zendesk/ScreenHeader';
+import { TicketEditor } from '@/components/zendesk/TicketEditor';
 import { TicketSidebar } from '@/components/zendesk/TicketSidebar';
 import { TopBar } from '@/components/zendesk/TopBar';
 import { useZendeskClient } from '@/hooks/zendesk/use-client';
@@ -60,7 +61,9 @@ function ZendeskAppInner({ config, subdomain, apiUrl, dashboardUrl }: ZendeskApp
         const size =
           ctx.location === 'top_bar'
             ? { width: '380px', height: '450px' }
-            : { width: '100%', height: '400px' };
+            : ctx.location === 'ticket_editor'
+              ? { width: '400px', height: '320px' }
+              : { width: '100%', height: '400px' };
         sizeForReactivation = size;
         client.invoke('resize', size);
       })
@@ -142,6 +145,8 @@ function ZendeskAppInner({ config, subdomain, apiUrl, dashboardUrl }: ZendeskApp
               return <TicketSidebar workspaceId={config.workspaceId} dashboardUrl={dashboardUrl} />;
             case 'top_bar':
               return <TopBar workspaceId={config.workspaceId} dashboardUrl={dashboardUrl} />;
+            case 'ticket_editor':
+              return <TicketEditor workspaceId={config.workspaceId} dashboardUrl={dashboardUrl} />;
             default:
               return (
                 <div style={{ padding: '16px', color: '#68737d', fontSize: '13px' }}>
@@ -168,7 +173,7 @@ function SetupScreen({
   const [view, setView] = useState<SetupView>('connect');
 
   const handleConnect = useCallback(async () => {
-    const params = new URLSearchParams({ mode: 'popup' });
+    const params = new URLSearchParams();
     if (subdomain) params.set('subdomain', subdomain);
 
     // Pass installationId so OAuth flow can set jwt_secret on the installation

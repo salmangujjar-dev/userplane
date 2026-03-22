@@ -22,8 +22,6 @@ interface IntegrationPreConnectModalProps {
   integrationName: string;
   integrationImage: string;
   onConnect?: () => void;
-  /** Override the default "Connect" button label */
-  connectLabel?: string;
   children?: React.ReactNode;
 }
 
@@ -33,7 +31,6 @@ export function IntegrationPreConnectModal({
   integrationName,
   integrationImage,
   onConnect,
-  connectLabel,
   children,
 }: IntegrationPreConnectModalProps) {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -120,7 +117,7 @@ export function IntegrationPreConnectModal({
               onClick={handleConnect}
               disabled={isConnecting}
             >
-              {isConnecting ? 'Connecting...' : (connectLabel ?? 'Connect')}
+              {isConnecting ? 'Connecting...' : 'Connect'}
             </Button>
           </div>
         </DialogFooter>

@@ -21,6 +21,8 @@ interface LinkCreatorFormProps {
   workspaceId: string;
   customMessage?: string;
   onCustomMessageChange?: (msg: string) => void;
+  /** Hide the header icon/title/description for compact locations like ticket_editor */
+  compact?: boolean;
 }
 
 export function LinkCreatorForm({
@@ -37,6 +39,7 @@ export function LinkCreatorForm({
   workspaceId,
   customMessage,
   onCustomMessageChange,
+  compact = false,
 }: LinkCreatorFormProps) {
   if (isLoading) {
     return (
@@ -95,7 +98,9 @@ export function LinkCreatorForm({
         <ScreenHeader
           icon={<UserplaneIcon size={40} />}
           title="Create recording link"
-          description="Select a project and send a recording request to your customer."
+          description={
+            compact ? undefined : 'Select a project and send a recording request to your customer.'
+          }
         />
       </div>
 

@@ -461,7 +461,6 @@ function ZendeskAuthFlow() {
 
   const subdomainParam = searchParams.get('subdomain') ?? '';
   const installationIdParam = searchParams.get('installationId') ?? '';
-  const modeParam = searchParams.get('mode');
 
   // Prerequisites met when we have subdomain + installationId (from Zendesk app)
   const hasPrereqs = !!subdomainParam && !!installationIdParam;
@@ -497,13 +496,12 @@ function ZendeskAuthFlow() {
       const body: Record<string, string> = {
         subdomain: subdomainParam,
         workspaceUrl: data.workspace,
-        mode: modeParam === 'popup' ? 'popup' : 'oauth',
       };
       if (installationIdParam) {
         body.installationId = installationIdParam;
       }
 
-      const response = await fetch(`${env.api.url}/api/v1/oauth/zendesk/initiate`, {
+      const response = await fetch(`${env.api.url}/api/v1/zendesk/connect`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -609,14 +607,10 @@ function ZendeskAuthFlow() {
           <div className="flex justify-center">
             <button
               type="button"
-              onClick={() =>
-                modeParam === 'popup'
-                  ? window.close()
-                  : router.push('/workspace/create?flow=direct')
-              }
+              onClick={() => window.close()}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {modeParam === 'popup' ? 'Cancel' : 'Configure userplane manually'}
+              Cancel
             </button>
           </div>
         </form>

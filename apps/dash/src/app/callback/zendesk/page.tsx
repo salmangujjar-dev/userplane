@@ -36,7 +36,7 @@ export default async function ZendeskCallbackPage({ searchParams }: Props) {
 
   // App OAuth flow — nested Zendesk OAuth completing during popup/built-in app install.
   // All Zendesk connection flows now go through the popup OAuth path.
-  if (payload.source === 'app-oauth' || payload.source === 'integration') {
+  if (payload.source === 'marketplace') {
     redirect(`/oauth/zendesk/callback?${queryParams.toString()}`);
   }
 

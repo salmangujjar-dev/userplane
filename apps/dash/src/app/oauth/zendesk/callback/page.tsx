@@ -55,13 +55,13 @@ function OAuthZendeskCallbackContent() {
     completeOAuth(code, state);
   }, [code, state, session, sessionLoading]);
 
-  async function completeOAuth(innerCode: string, innerState: string) {
+  async function completeOAuth(zendeskCode: string, zendeskState: string) {
     try {
-      const response = await fetch(`${env.api.url}/api/v1/oauth/zendesk/complete`, {
+      const response = await fetch(`${env.api.url}/api/v1/zendesk/connect/complete`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ innerCode, innerState }),
+        body: JSON.stringify({ zendeskCode, zendeskState }),
       });
 
       if (!response.ok) {
@@ -71,21 +71,11 @@ function OAuthZendeskCallbackContent() {
 
       const { data } = await response.json();
 
-      if (data.mode === 'popup') {
-        // Show invite teammates view before closing
-        if (data.workspaceId) {
-          setCompletedWorkspaceId(data.workspaceId);
-        } else {
-          window.close();
-        }
-        return;
+      if (data.workspaceId) {
+        setCompletedWorkspaceId(data.workspaceId);
+      } else {
+        window.close();
       }
-
-      // Built-in OAuth mode: redirect to Zendesk's callback with our auth code
-      const url = new URL(data.outerRedirectUri);
-      url.searchParams.set('code', data.outerCode);
-      url.searchParams.set('state', data.outerState);
-      window.location.href = url.toString();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete authorization');
     }
@@ -145,8 +135,11 @@ function PostConnectionInviteView({ workspaceId }: { workspaceId: string }) {
       allowedDomains={allowedDomains}
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
-      completionLabel="Done"
-      onComplete={() => window.close()}
+      completionLabel="Go to dashboard"
+      onComplete={() => {
+        window.open(`/workspace/${workspaceId}`, '_blank');
+        window.close();
+      }}
       onSkip={() => window.close()}
     />
   );

@@ -17,11 +17,12 @@ import { UserplaneIcon } from './Icons';
 import { LimitExceededScreen } from './LimitExceededScreen';
 import { LinkCreatorForm } from './LinkCreatorForm';
 import { LinkSuccess } from './LinkSuccess';
+import { OpenerView } from './OpenerView';
 import { ReconnectScreen } from './ReconnectScreen';
 import { ScreenHeader } from './ScreenHeader';
 import { SignupScreen } from './SignupScreen';
 
-type View = 'creator' | 'success' | 'error' | ErrorView;
+type View = 'opener' | 'creator' | 'success' | 'error' | ErrorView;
 
 export function TopBar({
   workspaceId,
@@ -30,13 +31,26 @@ export function TopBar({
   workspaceId: string;
   dashboardUrl: string;
 }) {
-  const { agentEmail, isLoading: agentLoading, error: agentError } = useAgentContext();
+  const { agentEmail, agentName, isLoading: agentLoading, error: agentError } = useAgentContext();
   const api = useZendeskApi();
 
-  const [view, setView] = useState<View>('creator');
+  const [view, setView] = useState<View>('opener');
   const [isCreating, setIsCreating] = useState(false);
   const [createdLink, setCreatedLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [customMessage, setCustomMessage] = useState(() =>
+    agentName
+      ? `${agentName} has requested a screen recording from you`
+      : 'Your support team has requested a screen recording from you'
+  );
+
+  useEffect(() => {
+    setCustomMessage(
+      agentName
+        ? `${agentName} has requested a screen recording from you`
+        : 'Your support team has requested a screen recording from you'
+    );
+  }, [agentName]);
 
   const workspace = useWorkspaceData({ workspaceId, enabled: true });
 
@@ -110,7 +124,7 @@ export function TopBar({
   const handleReset = useCallback(() => {
     setCreatedLink(null);
     setError(null);
-    setView('creator');
+    setView('opener');
   }, []);
 
   if (workspace.isLoading || agentLoading) {
@@ -127,6 +141,13 @@ export function TopBar({
 
   return (
     <div style={{ padding: '20px', fontFamily: 'system-ui, sans-serif', fontSize: '14px' }}>
+      {view === 'opener' && (
+        <OpenerView
+          onRequestRecording={() => setView('creator')}
+          onViewRecordings={handleOpenDashboard}
+        />
+      )}
+
       {view === 'creator' && (
         <LinkCreatorForm
           projects={workspace.projects}
@@ -136,19 +157,30 @@ export function TopBar({
           onProjectChange={workspace.setSelectedProject}
           onDomainChange={workspace.setSelectedDomain}
           onSubmit={handleCreateLink}
+          onGoBack={() => setView('opener')}
           isCreating={isCreating}
           isLoading={false}
           workspaceId={workspaceId}
+          customMessage={customMessage}
+          onCustomMessageChange={setCustomMessage}
         />
       )}
 
       {view === 'success' && createdLink && (
         <LinkSuccess
           linkUrl={createdLink}
+          copyText={`${customMessage}\n${createdLink}`}
           description="Copy or share the recording link."
           actions={[
-            { label: 'Create another', onClick: handleReset, variant: 'primary' },
-            { label: 'Open in Dashboard', onClick: handleOpenDashboard, variant: 'secondary' },
+            {
+              label: 'Create another',
+              onClick: () => {
+                setCreatedLink(null);
+                setView('creator');
+              },
+              variant: 'primary',
+            },
+            { label: 'Done', onClick: handleReset, variant: 'secondary' },
           ]}
         />
       )}
@@ -180,11 +212,11 @@ export function TopBar({
           message={error}
           onRetry={() => {
             setError(null);
-            setView('creator');
+            setView('opener');
           }}
           onGoBack={() => {
             setError(null);
-            setView('creator');
+            setView('opener');
           }}
         />
       )}

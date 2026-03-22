@@ -11,6 +11,8 @@ interface LinkSuccessAction {
 
 interface LinkSuccessProps {
   linkUrl: string;
+  /** Optional formatted text to copy instead of the raw URL */
+  copyText?: string;
   description: string;
   actions: LinkSuccessAction[];
 }
@@ -28,11 +30,11 @@ const variantStyles: Record<LinkSuccessAction['variant'], React.CSSProperties> =
   },
 };
 
-export function LinkSuccess({ linkUrl, description, actions }: LinkSuccessProps) {
+export function LinkSuccess({ linkUrl, copyText, description, actions }: LinkSuccessProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(linkUrl);
+    await navigator.clipboard.writeText(copyText ?? linkUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
