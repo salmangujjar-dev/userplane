@@ -3,7 +3,7 @@
  * All defaults are defined here to eliminate sprawl and ensure consistency
  */
 
-import { DEFAULT_TRIAL_PERIOD_DAYS } from '@userplane/contract';
+import { DEFAULT_TRIAL_PERIOD_DAYS, DOCS_URL } from '@userplane/contract';
 import { SUPPORT_EMAIL as SHARED_SUPPORT_EMAIL } from '@userplane/shared';
 
 // =============================================================================
@@ -36,7 +36,7 @@ export const DEV_URLS = {
   DASH: 'https://dash-dev.userplane.io',
   HOME: 'https://home-dev.userplane.io',
   RECORDER: 'https://recorder-dev.userplane.io',
-  DOCS: 'https://home-dev.userplane.io/help',
+  DOCS: DOCS_URL,
   CALENDAR: 'https://cal.com/userplane/intro',
 } as const;
 

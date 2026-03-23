@@ -41,9 +41,7 @@ export const POSTHOG = {
 } as const;
 
 // =============================================================================
-// Support Defaults
+// Docs Defaults
 // =============================================================================
 
-export const SUPPORT = {
-  DOCS_URL: 'https://userplane.io/help',
-} as const;
+export { DOCS_URL } from '@userplane/contract';

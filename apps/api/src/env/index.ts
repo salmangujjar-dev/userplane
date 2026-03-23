@@ -18,6 +18,7 @@ import {
   type CorsConfig,
   type DashboardConfig,
   type DatabaseConfig,
+  type DocsConfig,
   type EmailConfig,
   type EmailInboxes,
   type EnvConfig,
@@ -48,6 +49,7 @@ export type {
   CorsConfig,
   DashboardConfig,
   DatabaseConfig,
+  DocsConfig,
   EmailConfig,
   EmailInboxes,
   EnvConfig,
@@ -177,8 +179,10 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     recorder: {
       baseUrl: raw.RECORDER_URL,
     },
+    docs: {
+      url: raw.DOCS_URL,
+    },
     support: {
-      docsUrl: raw.DOCS_URL,
       supportEmail: raw.SUPPORT_EMAIL,
       calendarUrl: raw.CALENDAR_URL,
     },
@@ -470,7 +474,7 @@ export function logConfig(): void {
       urls: {
         dashboard: env.dashboard.baseUrl,
         recorder: env.recorder.baseUrl,
-        docs: env.support.docsUrl,
+        docs: env.docs.url,
       },
       tokenExpiry: {
         invite: formatDuration(env.token.inviteExpiresIn),

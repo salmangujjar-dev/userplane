@@ -4,6 +4,7 @@
  */
 
 export * from './billing';
+export * from './docs';
 export * from './headers';
 export * from './pagination';
 export * from './retention';
