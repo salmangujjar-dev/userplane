@@ -2,13 +2,8 @@ import type { HelpTopic } from '@/constants/help';
 
 import TopicCard from './TopicCard';
 
-interface TopicWithCount {
-  topic: HelpTopic;
-  articleCount: number;
-}
-
 interface TopicGridProps {
-  topics: TopicWithCount[];
+  topics: HelpTopic[];
 }
 
 /**
@@ -25,8 +20,8 @@ export default function TopicGrid({ topics }: TopicGridProps) {
         className="grid gap-6"
         style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))' }}
       >
-        {topics.map((t) => (
-          <TopicCard key={t.topic.slug} topic={t.topic} articleCount={t.articleCount} />
+        {topics.map((topic) => (
+          <TopicCard key={topic.href} topic={topic} />
         ))}
       </div>
     </div>

@@ -20,14 +20,4 @@ const legal = defineCollection({
   }),
 });
 
-const help = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/help' }),
-  schema: z.object({
-    title: z.string(),
-    excerpt: z.string(),
-    order: z.number().default(0),
-    lastUpdated: z.coerce.date().optional(),
-  }),
-});
-
-export const collections = { blog, legal, help };
+export const collections = { blog, legal };
