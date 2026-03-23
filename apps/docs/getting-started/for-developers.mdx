@@ -31,9 +31,10 @@ Add this to the `<head>` of every page where you want recordings to work:
 
 ### npm
 
-```bash
-npm install @userplane/sdk
-```
+<Frame caption="Userplane SDK on npm">
+  <img src="/media/developer/npm/userplane-sdk.png" />
+</Frame>
+```bash npm install @userplane/sdk ```
 
 ```ts
 import { initialize } from '@userplane/sdk';
@@ -52,6 +53,11 @@ Domain verification is required before your support team can create branded reco
   <Step title="Add your domain in the dashboard">
     Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=domains) and click
     **Add Domain**.
+
+    <Frame caption="Add domain dialog">
+      <img src="/media/workspace/domain/agent-browser-add-domain-modal.png" />
+    </Frame>
+
   </Step>
   <Step title="Deploy the script">
     The embed script from Step 1 is what Userplane checks for during verification. Make sure it is
@@ -62,6 +68,15 @@ Domain verification is required before your support team can create branded reco
     Click **Verify** in the dashboard (or ask your workspace admin to do it). Verification runs
     immediately. The verification token expires after 5 minutes, so trigger it once the script is
     live.
+    <Frame caption="Domain pending verification">
+      <img src="/media/workspace/domain/verify-domain/domain-configure-pending.png" />
+    </Frame>
+    <Frame caption="Domain verification in progress">
+      <img src="/media/workspace/domain/verify-domain/domain-verification-in-progress.png" />
+    </Frame>
+    <Frame caption="Domain verified">
+      <img src="/media/workspace/domain/verify-domain/domain-configure-verified.png" />
+    </Frame>
   </Step>
 </Steps>
 
@@ -115,6 +130,10 @@ Add `data-userplane-blur` to any element you want blurred in the recording:
 <input type="password" data-userplane-blur />
 <div class="credit-card-number" data-userplane-blur>4242 4242 4242 4242</div>
 ```
+
+<Frame caption="Blur in action">
+  <img src="/media/recorder/recorder-data-blurr-in-action-part-1.png" />
+</Frame>
 
 See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for the full list of privacy controls — including CSS class and meta tag approaches, and third-party selector compatibility.
 

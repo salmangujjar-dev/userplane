@@ -22,15 +22,33 @@ Userplane integrates with Intercom and Zendesk so your support agents can create
   <Step title="Open Integrations settings">
     Go to [Workspace Settings >
     Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+    <Frame caption="Open Integration settings">
+      <img src="/media/workspace/integrations/pending-connections.png" />
+    </Frame>
   </Step>
   <Step title="Click Connect Intercom">
     Click **Connect Intercom**. You'll be redirected to Intercom to authorize the connection.
+
+    <Frame caption="Connect Intercom">
+      <img src="/media/intercom/workspace-settings/pre-connection-modal.png" />
+    </Frame>
+
   </Step>
   <Step title="Authorize">
     Userplane requests permissions to read conversations and manage the inbox sidebar app.
+
+    <Frame caption="Intercom authorization">
+      <img src="/media/intercom/intercom-oauth/intercom-oauth-consent.png" />
+    </Frame>
+
   </Step>
   <Step title="Done">
     After authorizing, you'll be redirected back to Userplane and the connection is active.
+
+    <Frame caption="Intercom connected successfully">
+      <img src="/media/intercom/intercom-oauth/intercom-oauth-successful.png" />
+    </Frame>
+
   </Step>
 </Steps>
 
@@ -42,6 +60,10 @@ Userplane integrates with Intercom and Zendesk so your support agents can create
 
 <Note>Only workspace **owners** and **admins** can manage the Intercom integration.</Note>
 
+<Frame caption="Intercom connection active">
+  <img src="/media/intercom/workspace-settings/post-connection-modal.png" />
+</Frame>
+
 See [Intercom Integration](/integrations/intercom) for the full reference.
 
 ## Connect Zendesk
@@ -49,6 +71,11 @@ See [Intercom Integration](/integrations/intercom) for the full reference.
 <Steps>
   <Step title="Install from the Zendesk Marketplace">
     Find Userplane in the Zendesk Marketplace and install it to your Zendesk account.
+
+    <Frame caption="Connect Zendesk">
+      <img src="/media/zendesk/workspace-settings/pre-connection-modal.png" />
+    </Frame>
+
   </Step>
   <Step title="Open the Userplane app">
     Open any ticket in Zendesk. Click the **Userplane** app in the ticket sidebar.
@@ -60,15 +87,32 @@ See [Intercom Integration](/integrations/intercom) for the full reference.
   <Step title="Done">
     After authorization, the Userplane app is active across the ticket sidebar, ticket editor, and
     top bar.
+
+    <Frame caption="Zendesk connection active">
+      <img src="/media/zendesk/workspace-settings/post-connection-modal.png" />
+    </Frame>
+
   </Step>
 </Steps>
 
 ### What happens when you connect
 
 - A **ticket sidebar app** appears in every ticket for creating links and viewing recordings.
+  <Frame caption="Zendesk ticket sidebar app">
+    <img src="/media/zendesk/zendesk-app/sidebar/create-link-form.png" />
+  </Frame>
 - A **ticket editor button** is added to the reply toolbar for inserting links directly into drafts.
+  <Frame caption="Zendesk ticket editor button">
+    <img src="/media/zendesk/zendesk-app/editor/create-link-form.png" />
+  </Frame>
 - A **top bar app** provides quick link creation from anywhere in Zendesk.
+  <Frame caption="Zendesk top bar app">
+    <img src="/media/zendesk/zendesk-app/navbar/create-link-form.png" />
+  </Frame>
 - Tickets are automatically tagged with `userplane-recording-requested` when a link is created.
+  <Frame caption="Zendesk ticket tagging`">
+    <img src="/media/zendesk/zendesk-app/sidebar/link-created-view.png" />
+  </Frame>
 - **Internal notes** are posted to tickets when recordings arrive.
 
 <Note>Only workspace **owners** and **admins** can authorize the Zendesk connection.</Note>
@@ -80,12 +124,20 @@ See [Zendesk Integration](/integrations/zendesk) for the full reference.
 Once connected, invite your help desk agents to your Userplane workspace so they can use the integration:
 
 <Steps>
-  <Step title="Select members to invite">
-    Go to [Workspace Settings > Team](https://dash.userplane.io/_/recordings?invite=true) and click
-    **Invite Member**.
-  </Step>
   <Step title="Enter email addresses">
     Enter the email addresses of the agents you want to invite.
+
+    <Frame caption="Invite your help desk agents">
+      <img src="/media/intercom/intercom-oauth/post-onboarding-invite-teammates.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Select members to invite">
+    Alternatively, go to [Workspace Settings > Team](https://dash.userplane.io/_/recordings?invite=true) and click
+    **Invite Member**.
+    <Frame caption="Go to Team settings">
+      <img src="/media/workspace/team/agent-browser-team-list-roles.png" />
+    </Frame>
   </Step>
   <Step title="Send invitations">
     Invited users will receive an email invitation to join your workspace.
@@ -93,6 +145,9 @@ Once connected, invite your help desk agents to your Userplane workspace so they
   <Step title="Optionally whitelist domains">
     Whitelist specific email domains to enable org-wide access. Approved users can use Userplane
     without individual invites.
+    <Frame caption="Optionally whitelist domains">
+      <img src="/media/onboarding/post-onboarding-settings-preview.png" />
+    </Frame>
   </Step>
 </Steps>
 
@@ -104,7 +159,16 @@ Once connected, invite your help desk agents to your Userplane workspace so they
 ## Disconnect
 
 1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+   <Frame caption="Go to Integration settings">
+     <img src="/media/workspace/integrations/active-connections.png" />
+   </Frame>
 2. Click **Disconnect** next to the integration you want to remove.
+   <Frame caption="Disconnect Zendesk Integration">
+     <img src="/media/zendesk/workspace-settings/post-connection-modal.png" />
+   </Frame>
+   <Frame caption="Disconnect Intercom Integration">
+     <img src="/media/intercom/workspace-settings/post-connection-modal.png" />
+   </Frame>
 
 <Note>
   Disconnecting removes the Userplane app from your help desk. Existing recordings and links are
