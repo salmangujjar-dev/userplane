@@ -369,9 +369,13 @@ export const recorderConfigSchema = z.object({
   baseUrl: z.string().url(),
 });
 
+/** Docs configuration schema */
+export const docsConfigSchema = z.object({
+  url: z.string().url(),
+});
+
 /** Support configuration schema */
 export const supportConfigSchema = z.object({
-  docsUrl: z.string().url(),
   supportEmail: z.string().email(),
   calendarUrl: z.string().url(),
 });
@@ -481,6 +485,7 @@ export const envConfigSchema = z.object({
   session: sessionConfigSchema,
   database: databaseConfigSchema,
   recorder: recorderConfigSchema,
+  docs: docsConfigSchema,
   support: supportConfigSchema,
   email: emailConfigSchema,
   rateLimit: rateLimitConfigSchema,
@@ -508,6 +513,7 @@ export type TokenConfig = z.infer<typeof tokenConfigSchema>;
 export type SessionConfig = z.infer<typeof sessionConfigSchema>;
 export type DatabaseConfig = z.infer<typeof databaseConfigSchema>;
 export type RecorderConfig = z.infer<typeof recorderConfigSchema>;
+export type DocsConfig = z.infer<typeof docsConfigSchema>;
 export type SupportConfig = z.infer<typeof supportConfigSchema>;
 export type EmailInboxes = z.infer<typeof emailInboxesSchema>;
 export type EmailConfig = z.infer<typeof emailConfigSchema>;

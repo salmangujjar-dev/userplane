@@ -21,6 +21,7 @@
   "dependencies": {
     "@react-email/components": "^1.0.4",
     "@userplane/common-logger": "*",
+    "@userplane/contract": "*",
     "@userplane/shared": "*",
     "@userplane/storage": "*",
     "react": "^19.2.0",

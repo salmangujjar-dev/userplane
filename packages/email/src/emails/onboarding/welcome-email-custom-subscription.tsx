@@ -4,6 +4,7 @@
  */
 
 import { Link, Section, Text } from '@react-email/components';
+import { DOCS_URL } from '@userplane/contract';
 import * as React from 'react';
 
 import { copy } from '../../copy/onboarding/welcome-email-custom-subscription';
@@ -47,7 +48,7 @@ export const WelcomeEmailCustomSubscriptionEmail = ({
       <Section style={styles.messageSection}>
         <LinkedText
           text={copy.footer}
-          links={[{ start: 61, end: 89, href: 'https://www.userplane.io/help/support/contact-us' }]}
+          links={[{ start: 61, end: 89, href: `${DOCS_URL}/support/contact` }]}
           style={styles.smallText}
         />
       </Section>

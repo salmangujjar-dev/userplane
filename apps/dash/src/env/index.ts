@@ -11,6 +11,7 @@ import {
   type ApiConfig,
   type AuthConfig,
   type DashboardConfig,
+  type DocsConfig,
   type EnvConfig,
   type HomeConfig,
   type PostHogConfig,
@@ -18,7 +19,6 @@ import {
   rawEnvSchema,
   type RecorderConfig,
   type StorageConfig,
-  type SupportConfig,
 } from './schema';
 
 // Re-export types for external use
@@ -26,12 +26,12 @@ export type {
   ApiConfig,
   AuthConfig,
   DashboardConfig,
+  DocsConfig,
   EnvConfig,
   HomeConfig,
   PostHogConfig,
   RecorderConfig,
   StorageConfig,
-  SupportConfig,
 };
 
 // =============================================================================
@@ -72,7 +72,7 @@ function getExplicitEnv(): Record<string, string | undefined> {
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
 
     // Support
-    NEXT_PUBLIC_SUPPORT_DOCS_URL: process.env.NEXT_PUBLIC_SUPPORT_DOCS_URL,
+    NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL,
   };
 }
 
@@ -138,8 +138,8 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       apiKey: raw.NEXT_PUBLIC_POSTHOG_KEY,
       host: raw.NEXT_PUBLIC_POSTHOG_HOST,
     },
-    support: {
-      docsUrl: raw.NEXT_PUBLIC_SUPPORT_DOCS_URL,
+    docs: {
+      url: raw.NEXT_PUBLIC_DOCS_URL,
     },
   };
 }

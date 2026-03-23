@@ -5,7 +5,7 @@ import { Button } from '@userplane/ui/components/button';
 import { ArrowUpRight, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
-import { env } from '@/env';
+import { SUPPORT_LINKS } from '@/constants';
 import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
 import { useWorkspaceId } from '@/stores/workspace';
 
@@ -16,8 +16,6 @@ interface CaptureGateOverlayProps {
   featureGateKey?: FeatureGate;
   children: React.ReactNode;
 }
-
-const DOMAIN_PREFS_HELP_PATH = '/recording-links/domain-recording-preferences/';
 
 function OverlayAction({
   reason,
@@ -33,11 +31,7 @@ function OverlayAction({
   if (!workspaceId || reason === 'preference-disabled') {
     return (
       <Button variant="secondary" size="default" className="mt-2 rounded-full" asChild>
-        <a
-          href={`${env.support.docsUrl}${DOMAIN_PREFS_HELP_PATH}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a href={SUPPORT_LINKS.domainPreferences} target="_blank" rel="noopener noreferrer">
           <ExternalLink className="h-4 w-4" />
           Learn more
         </a>

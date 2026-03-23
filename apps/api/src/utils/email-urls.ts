@@ -164,7 +164,7 @@ export const supportUrls = {
    * Can optionally include a specific path (e.g., '/domains')
    */
   docs: (path?: string): string => {
-    const base = env.support.docsUrl;
+    const base = env.docs.url;
     return path ? `${base}${path}` : base;
   },
 
