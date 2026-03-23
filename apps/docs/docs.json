@@ -7,6 +7,10 @@
   },
   "favicon": "/static/favicon.svg",
   "theme": "almond",
+  "appearance": {
+    "default": "light",
+    "strict": true
+  },
   "colors": {
     "primary": "#000000",
     "light": "#FAFAFA",
