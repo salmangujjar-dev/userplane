@@ -8,7 +8,7 @@ Domains in Userplane represent the websites where your customers will use record
 ## Why add a domain
 
 - **First-party branding** — recording links appear to come from your own domain rather than a generic Userplane URL.
-- **Per-domain preferences** — configure what data is captured (console logs, network activity, client actions) for each domain.
+- **Per-domain preferences** — configure what data is captured (console logs, network activity, client actions) for each domain. See [Domain Recording Preferences](/recording-links/domain-preferences).
 - **Trust** — customers are more likely to engage with a recording link that matches your brand.
 
 ## Domain statuses
@@ -19,22 +19,149 @@ Domains in Userplane represent the websites where your customers will use record
 | **Verified** | Domain ownership is confirmed. Branded links and per-domain recording preferences are active.                                                     |
 | **Revoked**  | Verification was revoked. The domain must be re-verified to use it.                                                                               |
 
+## Viewing domains
+
+Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) to see all domains. Each domain shows its name, status, and creation date.
+
+<Frame caption="Domain list">
+  <img src="/media/workspace/domain/view-domains/list-domains.png" />
+</Frame>
+
+<Frame caption="Domain list">
+  <img src="/media/workspace/domain/agent-browser-domain-list.png" />
+</Frame>
+
 ## Adding a domain
 
 <Steps>
   <Step title="Open Domain settings">
     Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general).
+
+    <Frame caption="Domain list">
+      <img src="/media/workspace/domain/agent-browser-domain-list.png" />
+    </Frame>
+
   </Step>
-  <Step title="Add the domain">
+  <Step title="Click Add Domain">
     Click **Add Domain** and enter your domain (e.g. `app.example.com`).
+
+    <Frame caption="Add domain dialog">
+      <img src="/media/workspace/domain/add-domain/add-new-domain-modal.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Configure the domain">
+    After adding, the domain appears in a **Pending** state. You can review its configuration before proceeding to verification.
+
+    <Frame caption="Configure added domain">
+      <img src="/media/workspace/domain/add-domain/configure-added-domain.png" />
+    </Frame>
+
+    <Frame caption="Domain pending verification">
+      <img src="/media/workspace/domain/verify-domain/domain-configure-pending.png" />
+    </Frame>
+
   </Step>
   <Step title="Verify ownership">
-    Follow the [domain verification](/workspace/domain-verification) process to confirm ownership.
+    Follow the [domain verification](/workspace/domain-verification) process to confirm ownership and unlock branded links and recording preferences.
   </Step>
 </Steps>
 
+## Verifying a domain
+
+Userplane uses a **token-based verification** process. See [Domain Verification](/workspace/domain-verification) for the full walkthrough.
+
+<Steps>
+  <Step title="Start verification">
+    Select the pending domain and click **Verify**. You can also send the instructions to a developer via email.
+
+    <Frame caption="Send verification instructions">
+      <img src="/media/workspace/domain/verify-domain/domain-send-instructions.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Add the script to your site">
+    Copy the provided script tag and add it to your website's HTML.
+
+    <Frame caption="Verification code">
+      <img src="/media/workspace/domain/verify-domain/domain-verification-code.png" />
+    </Frame>
+
+    <Frame caption="Verification code">
+      <img src="/media/workspace/domain/agent-browser-domain-verification-code.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Trigger the check">
+    Click **Verify** in Userplane to trigger the check. The verification token expires after **5 minutes**.
+
+    <Frame caption="Verification in progress">
+      <img src="/media/workspace/domain/verify-domain/domain-verification-in-progress.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Verification complete">
+    Once the token is found and valid, the domain status changes to **Verified**.
+
+    <Frame caption="Verification successful">
+      <img src="/media/workspace/domain/verify-domain/domain-verification-confirmation.png" />
+    </Frame>
+
+    <Frame caption="Post-verification confirmation">
+      <img src="/media/workspace/domain/verify-domain/post-verification-confirmation.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+## After verification
+
+Once a domain is verified:
+
+- You can create branded recording links using this domain.
+- [Domain recording preferences](/recording-links/domain-preferences) become active.
+- You can remove the verification script tag from your website.
+
+<Frame caption="Verified domain list">
+  <img src="/media/workspace/domain/verify-domain/domain-verified-list-view.png" />
+</Frame>
+
+<Frame caption="Verified domain configuration">
+  <img src="/media/workspace/domain/verify-domain/domain-configure-verified.png" />
+</Frame>
+
+<Frame caption="Domain configuration after verification">
+  <img src="/media/workspace/domain/verify-domain/post-verification-domain-configuration.png" />
+</Frame>
+
+<Frame caption="Domain recording preferences">
+  <img src="/media/workspace/domain/verify-domain/post-verification-domain-preference.png" />
+</Frame>
+
+## Managing domains
+
+Select a domain to view its details, trigger re-verification, or delete it.
+
+<Frame caption="Domain actions menu">
+  <img src="/media/workspace/domain/agent-browser-domain-menu.png" />
+</Frame>
+
+<Frame caption="Edit domain">
+  <img src="/media/workspace/domain/agent-browser-edit-domain.png" />
+</Frame>
+
+<Frame caption="Verified domain configuration">
+  <img src="/media/workspace/domain/agent-browser-domain-verified-config.png" />
+</Frame>
+
+<Warning>
+  Deleting a domain removes it from your workspace. Existing recording links that use this domain
+  will no longer be branded, but the links and recordings themselves are preserved.
+</Warning>
+
 ## Related articles
 
-- [Domain Verification](/workspace/domain-verification) — verify your domain with a token-based flow.
+- [Domain Verification](/workspace/domain-verification) — the full verification walkthrough.
+- [Domain Verification Guide](/developer/domain-verification) — technical guide for developers implementing the script tag.
 - [Managing Domains](/workspace/domain-management) — sort, edit, and delete domains.
 - [Domain Recording Preferences](/recording-links/domain-preferences) — configure capture settings per domain.

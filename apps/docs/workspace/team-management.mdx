@@ -9,35 +9,149 @@ The Team section in Workspace Settings lets you manage who has access to your wo
 
 Go to [Workspace Settings > Team](https://dash.userplane.io/_/settings?tab=team) to see all current workspace members. Each member entry shows their name, avatar, email, and role.
 
+<Frame caption="Team member list with roles">
+  <img src="/media/workspace/team/agent-browser-team-list-roles.png" />
+</Frame>
+
 ## Inviting members
 
-<Steps>
-  <Step title="Open the invite dialog">Click **Invite Member**.</Step>
-  <Step title="Enter email and send">
-    Enter the email address of the person you want to invite, then click **Send Invite**.
-  </Step>
-</Steps>
+You can invite members from the navigation bar or from the Team settings page. Both open the same invite dialog.
 
-The invited person receives an email with a link to join the workspace. Invitations are tied to the workspace's [invite policy](/workspace/invite-policies).
+<Tabs>
+  <Tab title="From navigation bar">
+    <Steps>
+      <Step title="Open the invite dialog">
+        Click the invite button in the navigation bar.
+
+        <Frame caption="Invite from navigation bar">
+          <img src="/media/workspace/team/team-invite-navbar.png" />
+        </Frame>
+      </Step>
+      <Step title="Enter email and send">
+        Enter the email address of the person you want to invite, then click **Send Invite**.
+
+        <Frame caption="Enter email address">
+          <img src="/media/workspace/team/team-invite-add-email.png" />
+        </Frame>
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="From team settings">
+    <Steps>
+      <Step title="Open the invite dialog">
+        Go to [Workspace Settings > Team](https://dash.userplane.io/_/settings?tab=team) and click **Invite Member**.
+
+        <Frame caption="Team member list">
+          <img src="/media/workspace/team/team-list.png" />
+        </Frame>
+      </Step>
+      <Step title="Enter email and send">
+        Enter the email address of the person you want to invite, then click **Send Invite**.
+
+        <Frame caption="Invite member dialog">
+          <img src="/media/workspace/team/agent-browser-invite-dialog.png" />
+        </Frame>
+      </Step>
+    </Steps>
+
+  </Tab>
+</Tabs>
+
+The invited person receives an email with a link to join the workspace.
+
+<Note>
+  Your workspace's [invite policy](/workspace/invite-policies) controls whether your workspace is
+  discoverable and how non-invited people can join — via direct access, email domain whitelist, or
+  access requests. Explicit invitations sent from this dialog work regardless of the policy.
+</Note>
 
 ## Changing roles
 
-1. Find the member in the team list.
-2. Click their role to open the role selector.
-3. Choose the new role.
+<Steps>
+  <Step title="Find the member">
+    Locate the member in the team list.
+
+    <Frame caption="Team member list with roles">
+      <img src="/media/workspace/team/agent-browser-team-list-roles.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Open the role selector">
+    Click their current role to open the role dropdown.
+    <Frame caption="Open the role dropdown">
+      <img src="/media/workspace/team/agent-browser-team-role-dropdown.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Choose the new role">
+    Select the new role. The change takes effect immediately.
+
+    <Frame caption="Changing a member's role">
+      <img src="/media/workspace/team/team-role-change.png" />
+    </Frame>
+
+    <Frame caption="Role updated successfully">
+      <img src="/media/workspace/team/team-role-success.png" />
+    </Frame>
+
+  </Step>
+</Steps>
 
 See [Roles & Permissions](/workspace/roles-permissions) for what each role can do.
 
 ## Removing members
 
-1. Find the member in the team list.
-2. Click **Remove**.
+<Steps>
+  <Step title="Find the member">
+    Locate the member in the team list.
+  </Step>
+  <Step title="Click Remove">
+    Click the actions menu and select **Remove**.
+
+    <Frame caption="Member actions">
+      <img src="/media/workspace/team/team-actions.png" />
+    </Frame>
+
+  </Step>
+</Steps>
 
 Removed members lose access to the workspace immediately. Their past recordings and links remain in the workspace.
 
 ## Seat limits and add-ons
 
-Each plan includes a set number of seats. If your workspace reaches its seat limit, you will need to either remove an existing member or purchase additional seats. See [Seat Add-Ons](/billing/seat-add-ons) for details on purchasing extra seats without upgrading your plan.
+Each plan includes a set number of seats. If your workspace reaches its seat limit, you can purchase additional seats without upgrading your plan. See [Seat Add-Ons](/billing/seat-add-ons) for full details.
+
+<Steps>
+  <Step title="Open Billing settings">
+    Go to [Workspace Settings > Billing](https://dash.userplane.io/_/settings?tab=workspace).
+
+    <Frame caption="Billing settings">
+      <img src="/media/billing/workspace-settings/manage-billing.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Find the Seats section">
+    Locate the **Seats** add-on section in your billing settings.
+
+    <Frame caption="Seat add-ons">
+      <img src="/media/billing/workspace-settings/billing-add-ons.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Add seats">
+    Click **Add Seats**, choose how many additional seats you need, and complete the purchase. The extra seats are available immediately.
+
+    <Frame caption="Seat packs">
+      <img src="/media/billing/agent-browser-seat-packs.png" />
+    </Frame>
+
+    <Frame caption="Seat pack options">
+      <img src="/media/billing/agent-browser-seat-packs-expanded.png" />
+    </Frame>
+
+  </Step>
+</Steps>
 
 ## Related articles
 

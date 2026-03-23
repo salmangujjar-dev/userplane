@@ -9,6 +9,10 @@ Projects are a way to organize your recordings and links into logical groups. Yo
 
 A project is a named container within your workspace. Every recording link is assigned to a project, and the recording it produces inherits that assignment. This lets you filter, browse, and manage recordings by project.
 
+<Frame caption="Project recordings">
+  <img src="/media/projects/view/view-recordings.png" />
+</Frame>
+
 ## Default project
 
 Every workspace has a **default project** that is created automatically. The default project cannot be deleted. Recording links created without specifying a project are assigned to the default project.
@@ -18,18 +22,100 @@ Every workspace has a **default project** that is created automatically. The def
 <Steps>
   <Step title="Open Projects settings">
     Go to [Workspace Settings > Projects](https://dash.userplane.io/_/settings?tab=general).
+
+    <Frame caption="Projects list">
+      <img src="/media/projects/agent-browser-projects-list.png" />
+    </Frame>
+
   </Step>
-  <Step title="Create the project">
-    Click **Create Project**, enter a name for the project, and click **Save**.
+  <Step title="Click Create Project">
+    Click **Create Project** to open the creation dialog.
+
+    <Frame caption="Projects list">
+      <img src="/media/workspace/projects/view-projects.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Enter a name and save">
+    Enter a name for the project and click **Save**.
+
+    <Frame caption="Create project dialog">
+      <img src="/media/projects/agent-browser-create-project-dialog.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+## Editing a project
+
+<Steps>
+  <Step title="Open the project menu">
+    Find the project in the list and click the menu icon.
+
+    <Frame caption="Project actions menu">
+      <img src="/media/projects/agent-browser-project-menu.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Edit project details">
+    Update the project name or other settings.
+
+    <Frame caption="Edit project">
+      <img src="/media/projects/agent-browser-edit-project.png" />
+    </Frame>
+
+    <Frame caption="Edit project">
+      <img src="/media/projects/manage/edit-project.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Configure retention (optional)">
+    Set a retention policy to automatically expire recordings after a specified period.
+    
+    <Frame caption="Configure retention">
+      <img src="/media/workspace/projects/configure-retention.png" />
+    </Frame>
   </Step>
 </Steps>
 
 ## Using projects
 
-- **When creating links** — select a project from the dropdown to assign the link.
-- **When reviewing recordings** — filter by project on the Recordings page to see only relevant recordings.
-- **When managing links** — filter by project on the Links page.
-- **Project views** — switch to a project-scoped view for a focused look at a single project's recordings and links.
+<Tabs>
+  <Tab title="When creating links">
+    Select a project from the **Project** dropdown when [creating a recording link](/recording/requesting). The resulting recording inherits the project assignment, making it easy to find later.
+
+    <Frame caption="Project selection in create link form">
+      <img src="/media/links/create-link/create-link-project-selection.png" />
+    </Frame>
+
+    See [Recording Projects](/recording/projects) for a full walkthrough.
+
+  </Tab>
+  <Tab title="When reviewing recordings">
+    Filter by project on the [Recordings](/recording/reviewing) page to narrow down to only the recordings that matter. You can also filter by project on the [Links](/recording-links/managing) page to find related links.
+
+    <Frame caption="Filter recordings by project">
+      <img src="/media/recordings/list-recording/filter-recording-by-project.png" />
+    </Frame>
+
+    <Frame caption="Filter recordings by project">
+      <img src="/media/recordings/agent-browser-recordings-project-filter.png" />
+    </Frame>
+
+  </Tab>
+</Tabs>
+
+## Using project views
+
+Switch to a project-scoped view for a focused look at a single project's recordings and links. The project view shows all recordings captured under that project, with filters to narrow down results and quick access to individual recording links.
+
+<Frame caption="Filter recordings within a project">
+  <img src="/media/projects/view/view-recordings-filter.png" />
+</Frame>
+
+<Frame caption="View a recording link from a project">
+  <img src="/media/projects/view/view-recording-link.png" />
+</Frame>
 
 ## Related articles
 

@@ -11,14 +11,39 @@ A recording starts with a link. You create a recording link in Userplane, share 
   <Step title="Open the Create Link dialog">
     Click the [Create Link](https://dash.userplane.io/_/recordings?create_link=true) button in the
     top right corner.
+
+    <Frame caption="Create Link button">
+      <img src="/media/links/create-link/create-link.png" />
+    </Frame>
+
   </Step>
   <Step title="Fill in the link details">
     - **Project** — choose which project this recording belongs to. This helps you organize and
-    filter recordings later. - **Domain** — select a verified domain to brand the recording link
-    with your site's identity. Optional but recommended. - **Reference** — add an external reference
+    filter recordings later.
+    - **Domain** — select a verified domain to brand the recording link
+    with your site's identity. Optional but recommended.
+    - **Reference** — add an external reference
     like a ticket number or URL (e.g. `JIRA-456`, a GitHub issue link). This makes it easy to find
-    the recording later. - **Reusable** — toggle whether the link can be used once or multiple
+    the recording later.
+    - **Reusable** — toggle whether the link can be used once or multiple
     times.
+
+    <Frame caption="Create Link form">
+      <img src="/media/links/create-link/create-link-unfilled.png" />
+    </Frame>
+
+    <Frame caption="Project selection">
+      <img src="/media/links/create-link/create-link-project-selection.png" />
+    </Frame>
+
+    <Frame caption="Adding a reference">
+      <img src="/media/links/create-link/create-link-link-reference.png" />
+    </Frame>
+
+    <Frame caption="Reusable link toggle">
+      <img src="/media/links/create-link/create-link-reusable.png" />
+    </Frame>
+
   </Step>
   <Step title="Copy and share">Click **Create** and copy the link.</Step>
 </Steps>
@@ -26,6 +51,10 @@ A recording starts with a link. You create a recording link in Userplane, share 
 ## Share the link
 
 Send the recording link to your customer through any channel — email, live chat, Intercom, or your help desk. When the customer opens the link, they see a branded recording page and can start recording immediately.
+
+<Frame caption="Share link modal">
+  <img src="/media/links/share-link/share-link-modal.png" />
+</Frame>
 
 <Tip>
   If you use Intercom or Zendesk, you can create and send recording links directly from the
@@ -35,11 +64,86 @@ Send the recording link to your customer through any channel — email, live cha
 
 ## What happens next
 
-After the customer finishes recording, the recording appears in your [Recordings](https://dash.userplane.io/_/recordings) page. Incoming recording notifications are opt-in. To receive email alerts when recordings arrive, enable "Incoming recordings" in your [notification preferences](/account/notifications).
+After the customer opens the link, they go through the following flow. The finished recording appears in your [Recordings](https://dash.userplane.io/_/recordings) page.
 
-## Sharing with non-members
+<Steps>
+  <Step title="Customer opens the link">
+    The customer sees a branded recording page and can start recording immediately — no installs required.
 
-You can send a recording link to anyone, including people outside your workspace. However, they need to join the workspace to view the recording. The recording link itself is open to any recipient for recording purposes.
+    <Frame caption="Customer recording page">
+      <img src="/media/recorder/recorder-get-started.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Recording in progress">
+    The customer's screen is captured in real time along with console logs, network activity, and user actions.
+
+    <Frame caption="Recording in progress">
+      <img src="/media/recorder/recording-in-progress.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Review before uploading">
+    After stopping the recording, the customer can review the capture and add notes to describe the issue.
+
+    <Frame caption="Review recording before upload">
+      <img src="/media/recorder/review-recording-prior-upload.png" />
+    </Frame>
+
+    <Frame caption="Adding notes before upload">
+      <img src="/media/recorder/add-notes-prior-upload.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Upload completes">
+    The recording is uploaded and immediately available in your workspace.
+
+    <Frame caption="Upload in progress">
+      <img src="/media/recorder/recording-upload-inprogress.png" />
+    </Frame>
+
+    <Frame caption="Recording uploaded successfully">
+      <img src="/media/recorder/recording-upload-complete.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+<Tip>
+  Incoming recording notifications are opt-in. To receive email alerts when recordings arrive,
+  enable "Incoming recordings" in your [notification preferences](/account/notifications).
+</Tip>
+
+## Sharing a recording
+
+Once a recording lands in your workspace, you can share it with teammates or external collaborators. For the full sharing guide, see [Sharing Recordings](/recording/sharing).
+
+<Frame caption="Sharing options">
+  <img src="/media/recordings/share-recording/share-recording-options.png" />
+</Frame>
+
+<Tabs>
+  <Tab title="Share with teammates">
+    Share a recording link with workspace members. Recipients must have a Userplane account and belong to your workspace.
+
+    <Frame caption="Share with teammates">
+      <img src="/media/recordings/share-recording/share-recording-internal-private.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="Share with collaborators">
+    Generate a temporary public link for anyone — no Userplane account required. The link expires automatically after the selected duration.
+
+    <Frame caption="Select collaborator sharing">
+      <img src="/media/recordings/share-recording/share-recording-collaborator-select.png" />
+    </Frame>
+
+    <Frame caption="Public share link generated">
+      <img src="/media/recordings/share-recording/share-public-temporary-link.png" />
+    </Frame>
+
+  </Tab>
+</Tabs>
 
 ## Related articles
 

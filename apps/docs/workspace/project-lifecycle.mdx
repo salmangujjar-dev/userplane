@@ -10,8 +10,28 @@ Projects can be deleted when they are no longer needed. Userplane uses a soft-de
 <Steps>
   <Step title="Open Projects settings">
     Go to [Workspace Settings > Projects](https://dash.userplane.io/_/settings?tab=general).
+
+    <Frame caption="Projects list">
+      <img src="/media/projects/agent-browser-projects-list.png" />
+    </Frame>
+
   </Step>
-  <Step title="Delete">Select the project you want to delete, then click **Delete**.</Step>
+  <Step title="Open the project menu">
+    Click the menu icon on the project you want to delete.
+
+    <Frame caption="Project actions menu">
+      <img src="/media/projects/agent-browser-project-menu.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Delete the project">
+    Select **Delete** and confirm.
+
+    <Frame caption="Project settings">
+      <img src="/media/projects/manage/edit-project.png" />
+    </Frame>
+
+  </Step>
 </Steps>
 
 When a project is deleted:
@@ -33,11 +53,31 @@ After deleting a project, you have a limited time to restore it:
 
 ## Restoring a project
 
-If a project was recently deleted and is within the restoration window:
+When a project is deleted, the workspace owner receives a confirmation email with a restoration link. This is the only way to restore a deleted project.
 
-1. Go to [Workspace Settings > Projects](https://dash.userplane.io/_/settings?tab=general).
-2. Look for the deleted project in the deleted items section.
-3. Click **Restore**.
+<Steps>
+  <Step title="Check your inbox">
+    After deleting a project, the workspace owner receives an email confirming the deletion. This
+    email contains a time-limited **Restore** link.
+  </Step>
+  <Step title="Click the restore link">
+    Click the **Restore** link in the email. The project and its associated data are recovered based
+    on the [restoration window](#restoration-windows) above.
+  </Step>
+</Steps>
+
+<Warning>
+  The restoration link is time-bound. Once the restoration window expires, the link stops working
+  and the project cannot be recovered. Act promptly if you need to undo a deletion.
+</Warning>
+
+## Retention settings
+
+Projects support automatic retention policies that expire recordings after a specified period. Configure retention when [editing a project](/workspace/projects#editing-a-project).
+
+<Frame caption="Configure project retention">
+  <img src="/media/workspace/projects/configure-retention.png" />
+</Frame>
 
 ## Related articles
 

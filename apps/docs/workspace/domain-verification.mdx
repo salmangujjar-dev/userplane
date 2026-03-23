@@ -18,35 +18,83 @@ Userplane uses a **token-based verification** process:
 
 <Steps>
   <Step title="Open Domain settings">
-    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) and
-    select the domain you want to verify.
+    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) and select the domain you want to verify. It will show a **Pending** status.
+
+    <Frame caption="Domain pending verification">
+      <img src="/media/workspace/domain/verify-domain/domain-configure-pending.png" />
+    </Frame>
+
   </Step>
-  <Step title="Start verification">
-    Click **Verify**. You can also send these instructions to a developer via email using the **Send
-    to Developer** button.
+  <Step title="Click Verify">
+    Click **Verify** to start the verification process. Userplane generates a unique verification token (JWT) for your domain.
+
+    <Frame caption="Verification code">
+      <img src="/media/workspace/domain/verify-domain/domain-verification-code.png" />
+    </Frame>
+
+    <Frame caption="Verification code">
+      <img src="/media/workspace/domain/agent-browser-domain-verification-code.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Send instructions to a developer (optional)">
+    If someone else manages your website, click **Send to Developer** to email them the verification instructions directly.
+
+    <Frame caption="Send verification instructions">
+      <img src="/media/workspace/domain/verify-domain/domain-send-instructions.png" />
+    </Frame>
+
   </Step>
   <Step title="Add the script to your site">
-    Copy the provided script tag and add it to your website's HTML.
+    Copy the provided script tag and add it to your website's HTML. Your domain must allow CORS requests from Userplane for the check to succeed. See the [Domain Verification Guide](/developer/domain-verification) for technical details.
   </Step>
-  <Step title="Trigger the check">Click **Verify** in Userplane to trigger the check.</Step>
+  <Step title="Trigger the check">
+    Once the script is deployed, click **Verify** in Userplane to trigger the check.
+
+    <Frame caption="Verification in progress">
+      <img src="/media/workspace/domain/verify-domain/domain-verification-in-progress.png" />
+    </Frame>
+
+    <Note>
+      The verification token expires after **5 minutes**. If it expires before verification
+      completes, generate a new one and try again.
+    </Note>
+
+  </Step>
+  <Step title="Verification complete">
+    Once the token is found and valid, the domain status changes to **Verified**.
+
+    <Frame caption="Verification successful">
+      <img src="/media/workspace/domain/verify-domain/domain-verification-confirmation.png" />
+    </Frame>
+
+    <Frame caption="Post-verification confirmation">
+      <img src="/media/workspace/domain/verify-domain/post-verification-confirmation.png" />
+    </Frame>
+
+  </Step>
 </Steps>
-
-## Time limit
-
-The verification token expires after **5 minutes**. If the token expires before verification completes, generate a new one and try again.
-
-## CORS requirements
-
-Your domain must allow CORS requests from Userplane during the verification process. The verification request will fail if CORS is blocked. See the [Domain Verification Guide](/developer/domain-verification) for technical details and troubleshooting.
 
 ## After verification
 
-Once verified:
+Once a domain is verified:
 
 - The domain status changes to **Verified**.
 - You can create branded recording links using this domain.
 - [Domain recording preferences](/recording-links/domain-preferences) become active.
 - You can remove the verification script tag from your website.
+
+<Frame caption="Verified domain configuration">
+  <img src="/media/workspace/domain/verify-domain/domain-configure-verified.png" />
+</Frame>
+
+<Frame caption="Domain configuration after verification">
+  <img src="/media/workspace/domain/verify-domain/post-verification-domain-configuration.png" />
+</Frame>
+
+<Frame caption="Domain recording preferences">
+  <img src="/media/workspace/domain/verify-domain/post-verification-domain-preference.png" />
+</Frame>
 
 ## Related articles
 

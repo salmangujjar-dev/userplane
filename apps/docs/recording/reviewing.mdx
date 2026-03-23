@@ -9,13 +9,60 @@ The [Recordings](https://dash.userplane.io/_/recordings) page gives you a grid v
 
 Recordings are displayed in a grid with up to **16 recordings per page**. Each card shows a thumbnail preview along with key details like the project, reference, and timestamp.
 
+<Frame caption="Recordings grid view">
+  <img src="/media/recordings/list-recording/list-recording-view.png" />
+</Frame>
+
 ## Filtering recordings
 
 Use the filter controls to narrow down the list:
 
-- **Project** — show recordings from a specific project.
-- **Member** — show recordings requested by a specific team member.
-- **Link** — show recordings tied to a specific recording link.
+<Tabs>
+  <Tab title="By project">
+    Show recordings from a specific project.
+
+    <Frame caption="Filter by project">
+      <img src="/media/recordings/list-recording/filter-recording-by-project.png" />
+    </Frame>
+
+    <Frame caption="Filter by project">
+      <img src="/media/recordings/agent-browser-recordings-project-filter.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="By member">
+    Show recordings requested by a specific team member.
+
+    <Frame caption="Filter by member">
+      <img src="/media/recordings/list-recording/filter-recording-by-creator.png" />
+    </Frame>
+
+    <Frame caption="Filter by member">
+      <img src="/media/recordings/agent-browser-recordings-member-filter.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="By link">
+    Show recordings tied to a specific recording link.
+
+    <Frame caption="Filter by link">
+      <img src="/media/recordings/list-recording/filter-recording-by-link.png" />
+    </Frame>
+
+    <Frame caption="Filtered recordings">
+      <img src="/media/recordings/list-recording/filtered-recording-by-link.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="List view">
+    Switch to the list view for a compact, scannable layout of your recordings.
+
+    <Frame caption="Recordings list view">
+      <img src="/media/recordings/list-recording/list-recordings-view-alt.png" />
+    </Frame>
+
+  </Tab>
+</Tabs>
 
 ## Sorting
 
@@ -25,10 +72,89 @@ Sort recordings by date to see the most recent first, or adjust the sort order b
 
 Switch to a project-scoped view to see all recordings and links for a single project in one place.
 
+<Frame caption="Project recordings">
+  <img src="/media/projects/view/view-recordings.png" />
+</Frame>
+
+<Frame caption="Filter recordings within a project">
+  <img src="/media/projects/view/view-recordings-filter.png" />
+</Frame>
+
+<Frame caption="View a recording link from a project">
+  <img src="/media/projects/view/view-recording-link.png" />
+</Frame>
+
 ## Pagination
 
 Navigate between pages using the pagination controls at the bottom of the grid. Each page displays up to 16 recordings.
 
 ## Opening a recording
 
-Click any recording card to open the [recording playback](/recording/playback) detail view, where you can watch the video and inspect console logs, network activity, customer notes, and more.
+Click any recording card to open the [recording playback](/recording/playback) detail view, where you can watch the video and inspect the captured data.
+
+<Frame caption="Recording playback">
+  <img src="/media/playback/media/player-playback-screen.png" />
+</Frame>
+
+<Tabs>
+  <Tab title="Console">
+    Inspect captured browser console logs — errors, warnings, and debug messages — with full output, source location, and stack traces.
+
+    <Frame caption="Console log list">
+      <img src="/media/playback/console/console-list-view.png" />
+    </Frame>
+
+    <Frame caption="Console error detail">
+      <img src="/media/playback/console/console-error-detail-view-output.png" />
+    </Frame>
+
+    <Frame caption="Console debug source">
+      <img src="/media/playback/console/console-debug-detail-view-source.png" />
+    </Frame>
+
+    <Frame caption="Console debug stack trace">
+      <img src="/media/playback/console/console-debug-detail-view-stack-trace.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="Network">
+    Review captured network requests and responses — status codes, timing, headers, and payloads.
+
+    <Frame caption="Network request list">
+      <img src="/media/playback/network/network-panel-list-view.png" />
+    </Frame>
+
+    <Frame caption="Network request detail">
+      <img src="/media/playback/network/network-panel-detail-view.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="Actions">
+    See the user actions captured during the recording — clicks, navigations, and other interactions.
+
+    <Frame caption="Actions list">
+      <img src="/media/playback/actions/actions-list-view.png" />
+    </Frame>
+
+    <Frame caption="Action detail">
+      <img src="/media/playback/actions/actions-detail-view.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="Info">
+    View recording metadata — system information, custom metadata, and session details.
+
+    <Frame caption="Info panel">
+      <img src="/media/playback/info/info-panel-metadata-collapsed.png" />
+    </Frame>
+
+    <Frame caption="Metadata expanded">
+      <img src="/media/playback/info/info-panel-metadata-expanded.png" />
+    </Frame>
+
+    <Frame caption="System information">
+      <img src="/media/playback/info/info-panel-system-expanded.png" />
+    </Frame>
+
+  </Tab>
+</Tabs>
