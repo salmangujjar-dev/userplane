@@ -8,35 +8,121 @@ When you [connect Intercom](/integrations/intercom), Userplane is added as an In
 ## Opening the shortcut
 
 <Steps>
-  <Step title="Be in a conversation">
-    Make sure you are in a conversation in the Intercom inbox.
-  </Step>
   <Step title="Open the action menu">
-    Press **Cmd+K** (Mac) or **Ctrl+K** (Windows) to open the action menu.
+    From a conversation in the Intercom inbox, press **Cmd+K** (Mac) or **Ctrl+K** (Windows) to open the action menu.
   </Step>
-  <Step title="Find Userplane">Type **Userplane** to filter the list.</Step>
-  <Step title="Select">
-    Select **Use Userplane** and press **Enter** (or click it). The Userplane shortcut panel opens
-    inline.
+  <Step title="Find Userplane">
+    Type **Userplane** to filter the list, then select **Use Userplane** and press **Enter**.
+
+    <Frame caption="Userplane shortcut in Cmd+K menu">
+      <img src="/media/intercom/intercom-inbox/shortcuts/intercom-userplane-shortcut.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Fill in the link details">
+    Select a **project** and **domain** from the dropdowns. Optionally edit the **message to customer** that accompanies the recording card.
+
+    <Frame caption="Create link form via shortcut">
+      <img src="/media/intercom/intercom-inbox/shortcuts/intercom-create-link-form-shortcut.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Create and send">
+    Click **Create Link**. A recording card is automatically inserted into the conversation. The customer sees a card they can click to start recording.
+
+    <Frame caption="Recording link sent to customer">
+      <img src="/media/intercom/intercom-inbox/intercom-recording-link-sent.png" />
+    </Frame>
+
   </Step>
 </Steps>
-
-## Creating a recording link
-
-Once the shortcut panel is open:
-
-1. Select a **project** from the dropdown.
-2. Select a **domain** from the dropdown.
-3. Optionally edit the **message to customer** that accompanies the recording card.
-4. Click **Create Link**.
-
-A recording card is automatically inserted into the conversation. The customer sees a card they can click to start recording.
 
 ## After the link is created
 
 - You will see a confirmation with a link to the recording.
 - Click **Create another link** to start a new one, or **Done** to close.
 - The recording is linked to the current Intercom conversation and appears in your Userplane dashboard.
+
+<Frame caption="Link created confirmation">
+  <img src="/media/intercom/intercom-inbox/sidebar/intercom-created-link-sidebar.png" />
+</Frame>
+
+## Viewing recordings
+
+When a customer completes a recording, it appears in the conversation automatically.
+
+<Steps>
+  <Step title="Recording received">
+    The customer clicks the link and completes the recording. You receive a notification in the conversation.
+
+    <Frame caption="Recording link received">
+      <img src="/media/intercom/intercom-inbox/intercom-recording-link-received.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Open the recording">
+    Click the recording in the sidebar to view its details, or open it in Userplane for full [playback](/recording/playback).
+
+    <Frame caption="Recording received in sidebar">
+      <img src="/media/intercom/intercom-inbox/intercom-received-recording.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Review the recording">
+    Watch the video and inspect the captured data — console logs, network requests, user actions, and metadata.
+
+    <Tabs>
+      <Tab title="Recording">
+        <Frame caption="Recording playback">
+          <img src="/media/playback/media/player-playback-screen.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Console logs">
+        <Frame caption="Console log list">
+          <img src="/media/playback/console/console-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Network logs">
+        <Frame caption="Network request list">
+          <img src="/media/playback/network/network-panel-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Actions">
+        <Frame caption="Actions list">
+          <img src="/media/playback/actions/actions-list-view.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
+
+## Conversation linking
+
+Recordings created through the shortcut are automatically linked to the conversation. This makes it easy to find the recording later from either Userplane or Intercom.
+
+<Steps>
+  <Step title="Issue resolved">
+    Once you've reviewed the recording and resolved the issue, close the conversation as normal.
+
+    <Frame caption="Issue resolved">
+      <img src="/media/intercom/intercom-inbox/intercom-issue-resolved.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Post-resolution follow-up">
+    The recording remains linked to the conversation for future reference.
+
+    <Frame caption="Post-resolution workflow">
+      <img src="/media/intercom/intercom-inbox/intercom-post-issue-resolution-part-1.png" />
+    </Frame>
+
+    <Frame caption="Post-resolution follow-up">
+      <img src="/media/intercom/intercom-inbox/intercom-post-issue-resolution-part-2.png" />
+    </Frame>
+
+  </Step>
+</Steps>
 
 ## When to use shortcuts vs. the sidebar app
 
@@ -52,7 +138,6 @@ Both surfaces use the same project and domain options, and both create the same 
 
 - The Intercom integration must be [connected](/integrations/intercom).
 - The agent must be a member of the Userplane workspace.
-- Domains must be [verified](/workspace/domain-verification) to appear in the domain dropdown.
 
 ## Related articles
 

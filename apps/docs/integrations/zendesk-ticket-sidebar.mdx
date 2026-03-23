@@ -9,19 +9,85 @@ After [connecting Zendesk](/integrations/zendesk), a Userplane sidebar app appea
 
 <Steps>
   <Step title="Open a ticket">Open a ticket in Zendesk.</Step>
-  <Step title="Open the sidebar app">Click the **Userplane** app in the ticket sidebar.</Step>
+  <Step title="Open the sidebar app">
+    Click the **Userplane** app in the ticket sidebar.
+
+    <Frame caption="Userplane sidebar in Zendesk">
+      <img src="/media/zendesk/zendesk-app/sidebar/opener-view.png" />
+    </Frame>
+
+  </Step>
   <Step title="Request a recording">
     Click **Request Recording**, select a **project** and **domain** from the dropdowns, and
     optionally customize the message to the customer.
+
+    <Frame caption="Create recording link form">
+      <img src="/media/zendesk/zendesk-app/sidebar/create-link-form.png" />
+    </Frame>
+
   </Step>
   <Step title="Create the link">
     Click **Create Link**. The recording link is created and ready to share with the customer.
+
+    <Frame caption="Recording link created">
+      <img src="/media/zendesk/zendesk-app/sidebar/link-created-view.png" />
+    </Frame>
+
   </Step>
 </Steps>
 
-## Viewing recordings
+## Viewing and reviewing recordings
 
-Click **View Recordings** in the sidebar opener to open your Userplane dashboard, where you can browse and review all recordings for your workspace.
+Once a customer completes a recording, there are two ways to access it:
+
+<Steps>
+  <Step title="Find the recording">
+    <Tabs>
+      <Tab title="Via ticket notification">
+        When the recording is received, Userplane posts an **internal note** on the ticket — visible only to agents — with a direct link to the recording playback. Click the link to jump straight to the recording. See [Zendesk Notifications](/integrations/zendesk-notifications) for details.
+
+        <Frame caption="Recording link created in ticket">
+          <img src="/media/zendesk/zendesk-app/sidebar/link-created-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Via Userplane dashboard">
+        Click **View Recordings** in the sidebar opener to browse all recordings for your workspace in the Userplane dashboard.
+
+        <Frame caption="Sidebar opener">
+          <img src="/media/zendesk/zendesk-app/sidebar/opener-view.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
+  <Step title="Review the recording">
+    Watch the video and inspect the captured data — console logs, network requests, user actions, and metadata.
+
+    <Tabs>
+      <Tab title="Recording">
+        <Frame caption="Recording playback">
+          <img src="/media/playback/media/player-playback-screen.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Console logs">
+        <Frame caption="Console log list">
+          <img src="/media/playback/console/console-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Network logs">
+        <Frame caption="Network request list">
+          <img src="/media/playback/network/network-panel-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Actions">
+        <Frame caption="Actions list">
+          <img src="/media/playback/actions/actions-list-view.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
 
 ## Ticket context capture
 
