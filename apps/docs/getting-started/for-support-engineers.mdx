@@ -17,6 +17,9 @@ You're the one who gets things set up so the rest of the support team can work e
 <Steps>
   <Step title="Create a workspace">
     Sign in and click [Create Workspace](https://dash.userplane.io/workspace/create). Enter your company URL to get started.
+    <Frame caption="Create a workspace">
+      <img src="/media/onboarding/manual-onboarding-kickoff.png" />
+    </Frame>
   </Step>
   <Step title="Set your invite policy">
     Go to [Workspace Settings > Invite Policy](https://dash.userplane.io/_/settings?tab=team). Choose the right policy for your org:
@@ -29,9 +32,18 @@ You're the one who gets things set up so the rest of the support team can work e
 
     Whitelist your company email domain so teammates can join without individual invites.
 
+    <Frame caption="Invite policy settings">
+      <img src="/media/workspace/invite-policy/invite-policy-settings.png" />
+    </Frame>
+
   </Step>
   <Step title="Invite your team">
-    Go to [Team Settings](https://dash.userplane.io/_/recordings?invite=true) and invite teammates. Assign roles based on what each person needs to do.
+    Go to [Team Settings](https://dash.userplane.io/_/recordings?invite=true) and invite teammates. Later, you can assign roles based on what each person needs to do.
+
+    <Frame caption="Invite team members">
+      <img src="/media/workspace/team/agent-browser-invite-dialog.png" />
+    </Frame>
+
   </Step>
 </Steps>
 
@@ -44,10 +56,18 @@ See [Roles & Permissions](/workspace/roles-permissions) for a full breakdown of 
     Review the default roles (**Owner**, **Admin**, **Member**, **Viewer**) and assign them to
     teammates. Admins can manage integrations and settings; Members can create links and review
     recordings.
+    <Frame caption="Assign roles">
+      <img src="/media/workspace/team/team-actions.png" />
+    </Frame>
   </Step>
   <Step title="Create projects">
     Go to [Projects](https://dash.userplane.io/_/projects) and create projects for each product
     area, customer segment, or team. Projects keep recordings organized and make filtering easy.
+
+    <Frame caption="Projects list">
+      <img src="/media/projects/agent-browser-projects-list.png" />
+    </Frame>
+
   </Step>
 </Steps>
 
@@ -59,19 +79,37 @@ Domain verification enables first-party branded recording links — customers se
   <Step title="Add your domain">
     Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=domains) and click
     **Add Domain**.
+
+    <Frame caption="Add domain">
+      <img src="/media/workspace/domain/agent-browser-add-domain-modal.png" />
+    </Frame>
+
   </Step>
   <Step title="Send install instructions to your developer">
     Click **Send to Developer** to email the script install instructions to your engineering team.
     They need to add the Userplane embed script to a publicly accessible page on the domain.
+    <Frame caption="Domain verification">
+      <img src="/media/workspace/domain/verify-domain/domain-send-instructions.png" />
+    </Frame>
   </Step>
   <Step title="Verify">
     Once your developer confirms the script is deployed, click **Verify** in the dashboard.
     Verification runs immediately. The verification token expires after 5 minutes, so coordinate
     with your developer before clicking Verify.
+
+    <Frame caption="Domain verification">
+      <img src="/media/workspace/domain/agent-browser-domain-verification-code.png" />
+    </Frame>
+
   </Step>
   <Step title="Configure recording preferences">
     Once verified, set per-domain defaults: which data to capture (console, network, audio), link
     expiry, and branding.
+
+    <Frame caption="Domain recording preferences">
+      <img src="/media/workspace/domain/verify-domain/post-verification-domain-configuration.png" />
+    </Frame>
+
   </Step>
 </Steps>
 
@@ -83,8 +121,7 @@ Before going live, make sure sensitive customer data doesn't appear in recording
 
 <Steps>
   <Step title="Review what gets captured">
-    By default, recordings include screen video, console logs, and network requests. Network request
-    bodies may contain tokens, PII, or internal data.
+    Once enabled, recordings include screen video, console logs, and network requests.
   </Step>
   <Step title="Set up redaction rules">
     Go to [Recording Link Settings](/recording-links/sensitive-data-redaction) and configure: -
@@ -107,16 +144,27 @@ Before going live, make sure sensitive customer data doesn't appear in recording
         Go to [Workspace Settings >
         Integrations](https://dash.userplane.io/_/settings?tab=integrations) and click **Connect
         Intercom**.
+
+        <Frame caption="Integrations overview">
+          <img src="/media/workspace/integrations/agent-browser-integrations-overview.png" />
+        </Frame>
       </Step>
       <Step title="Authorize">
         Complete the OAuth flow. Userplane will appear in your team's Intercom inbox as a sidebar
         app.
+        <Frame caption="Integrations overview">
+          <img src="/media/intercom/intercom-oauth/intercom-oauth-consent.png" />
+        </Frame>
       </Step>
       <Step title="Invite Intercom users">
         After connecting, invite your Intercom teammates to the workspace so they can use Userplane
         inside Intercom.
+        <Frame caption="Integrations overview">
+          <img src="/media/intercom/intercom-oauth/post-onboarding-invite-teammates.png" />
+        </Frame>
       </Step>
     </Steps>
+
   </Tab>
   <Tab title="Zendesk">
     <Steps>
@@ -126,12 +174,20 @@ Before going live, make sure sensitive customer data doesn't appear in recording
       <Step title="Connect to Userplane">
         Open any ticket in Zendesk, click the Userplane app, and follow the prompts to authorize the
         connection and select your workspace.
+
+        <Frame caption="Connect Zendesk">
+          <img src="/media/zendesk/zendesk-oauth/zendesk-workspace-selector.png" />
+        </Frame>
       </Step>
       <Step title="Invite Zendesk agents">
         After connecting, invite your Zendesk agents to the workspace so they can use Userplane
         inside Zendesk.
+        <Frame caption="Integrations overview">
+          <img src="/media/zendesk/zendesk-oauth/post-onboarding-invite-teammates.png" />
+        </Frame>
       </Step>
     </Steps>
+
   </Tab>
 </Tabs>
 

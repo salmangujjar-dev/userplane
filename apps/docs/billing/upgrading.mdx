@@ -19,12 +19,24 @@ The upgrade flow depends on your role:
 
 <Steps>
   <Step title="Open Billing settings">
-    Go to [Workspace Settings >
-    Billing](https://dash.userplane.io/_/settings?tab=plan-usage&plan-modal=detailed).
+    Go to [Workspace Settings > Billing](https://dash.userplane.io/_/settings?tab=plan-usage&plan-modal=detailed).
+
+    <Frame caption="Current plan details">
+      <img src="/media/billing/agent-browser-current-plan.png" />
+    </Frame>
+
   </Step>
-  <Step title="Select a plan">Click **Upgrade** or select a higher plan.</Step>
+  <Step title="Compare plans">
+    Review the available plans and their resource allocations.
+  </Step>
+  <Step title="Select a plan">
+    Click **Upgrade** or select a higher plan. You can choose between monthly and annual billing.
+    <Frame caption="Plan selection">
+      <img src="/media/billing/agent-browser-upgrade-plan-selection.png" />
+    </Frame>
+  </Step>
   <Step title="Complete checkout">
-    If this is your first paid subscription, you are redirected to the Stripe-powered checkout page
+    If this is your first paid subscription, you are redirected to the checkout page
     to enter payment details. Complete the checkout. Your workspace is upgraded immediately.
   </Step>
 </Steps>
@@ -33,12 +45,28 @@ The upgrade flow depends on your role:
 
 Admins can view plan details and pricing, including a preview of the new plan's resource allocations and cost. From there, they are redirected to the checkout flow alongside the owner approval process.
 
+<Frame caption="Current plan details">
+  <img src="/media/billing/workspace-plan/current-plan-details.png" />
+</Frame>
+
 ## Requesting as a member
 
-1. Go to [Workspace Settings > Billing](https://dash.userplane.io/_/settings?tab=plan-usage&plan-modal=detailed).
-2. Click **Request Upgrade**.
-3. An email notification is sent to all workspace owners with details of the requested plan.
-4. An owner can then complete the upgrade.
+<Steps>
+  <Step title="Open Billing settings">
+    Go to [Workspace Settings >
+    Billing](https://dash.userplane.io/_/settings?tab=plan-usage&plan-modal=detailed).
+    <Frame caption="Current plan details">
+      <img src="/media/billing/workspace-plan/current-plan-details.png" />
+    </Frame>
+  </Step>
+  <Step title="Request an upgrade">
+    Click **Request Upgrade**. An email notification is sent to all workspace owners with details of
+    the requested plan.
+  </Step>
+  <Step title="Owner completes the upgrade">
+    An owner reviews the request and completes the upgrade through the checkout flow.
+  </Step>
+</Steps>
 
 ## Plan changes
 
