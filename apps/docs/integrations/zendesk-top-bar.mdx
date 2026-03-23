@@ -8,12 +8,29 @@ The top bar app gives you quick access to Userplane from any page in Zendesk —
 ## Creating a link
 
 <Steps>
-  <Step title="Open the top bar app">Click the **Userplane** icon in the Zendesk top bar.</Step>
+  <Step title="Open the top bar app">
+    Click the **Userplane** icon in the Zendesk top bar.
+
+    <Frame caption="Userplane in Zendesk top bar">
+      <img src="/media/zendesk/zendesk-app/navbar/opener-view.png" />
+    </Frame>
+
+  </Step>
   <Step title="Request a recording">
     Click **Request Recording**, then select a **project** and **domain** from the dropdowns.
+
+    <Frame caption="Create link from top bar">
+      <img src="/media/zendesk/zendesk-app/navbar/create-link-form.png" />
+    </Frame>
+
   </Step>
   <Step title="Create and copy">
     Click **Create Link**. Copy the link URL to share it via email, Slack, or any other channel.
+
+    <Frame caption="Link created from top bar">
+      <img src="/media/zendesk/zendesk-app/navbar/created-link.png" />
+    </Frame>
+
   </Step>
 </Steps>
 
@@ -23,6 +40,59 @@ The top bar app gives you quick access to Userplane from any page in Zendesk —
   sidebar](/integrations/zendesk-ticket-sidebar) or [ticket
   editor](/integrations/zendesk-ticket-editor) instead.
 </Note>
+
+## Reviewing recordings
+
+Once a customer completes a recording, there are two ways to access it:
+
+<Steps>
+  <Step title="Find the recording">
+    <Tabs>
+      <Tab title="Via ticket notification">
+        If the link was created from a ticket, Userplane posts an **internal note** — visible only to agents — with a direct link to the recording playback. Click the link to jump straight to the recording. See [Zendesk Notifications](/integrations/zendesk-notifications) for details.
+
+        <Frame caption="Recording link created in ticket">
+          <img src="/media/zendesk/zendesk-app/sidebar/link-created-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Via Userplane dashboard">
+        Open the Userplane dashboard to browse all recordings for your workspace.
+
+        <Frame caption="Sidebar opener">
+          <img src="/media/zendesk/zendesk-app/sidebar/opener-view.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
+  <Step title="Review the recording">
+    Watch the video and inspect the captured data — console logs, network requests, user actions, and metadata.
+
+    <Tabs>
+      <Tab title="Recording">
+        <Frame caption="Recording playback">
+          <img src="/media/playback/media/player-playback-screen.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Console logs">
+        <Frame caption="Console log list">
+          <img src="/media/playback/console/console-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Network logs">
+        <Frame caption="Network request list">
+          <img src="/media/playback/network/network-panel-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Actions">
+        <Frame caption="Actions list">
+          <img src="/media/playback/actions/actions-list-view.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
 
 ## When to use the top bar
 

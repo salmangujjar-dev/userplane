@@ -16,24 +16,131 @@ The Zendesk integration lets your support team request and review screen recordi
 
 ## Connecting Zendesk
 
-<Steps>
-  <Step title="Install from the Zendesk Marketplace">
-    Find Userplane in the Zendesk Marketplace and install it to your Zendesk account.
-  </Step>
-  <Step title="Open the Userplane app">
-    Open any ticket in Zendesk. Click the **Userplane** app in the ticket sidebar.
-  </Step>
-  <Step title="Connect to Userplane">
-    Click **Connect to Userplane**. You'll be redirected to authorize the connection and select your
-    workspace.
-  </Step>
-  <Step title="Done">
-    After authorization, the Userplane app is active across all three locations — ticket sidebar,
-    ticket editor, and top bar.
-  </Step>
-</Steps>
+There are two ways to connect Userplane to Zendesk — create a new workspace during setup or connect an existing one:
 
 <Note>Only workspace **owners** and **admins** can authorize the Zendesk connection.</Note>
+
+<Tabs>
+  <Tab title="Create a new workspace">
+    Install the Zendesk app and create a new Userplane workspace during the authorization flow.
+
+    <Steps>
+      <Step title="Install from the Zendesk Marketplace">
+        Find Userplane in the Zendesk Marketplace and install it to your Zendesk account.
+
+        <Frame caption="Zendesk Marketplace install">
+          <img src="/media/zendesk/zendesk-app/marketplace/post-install-view.png" />
+        </Frame>
+      </Step>
+      <Step title="Open the Userplane app">
+        Open any ticket in Zendesk and click the **Userplane** app in the ticket sidebar.
+
+        <Frame caption="Sidebar opener">
+          <img src="/media/zendesk/zendesk-app/sidebar/opener-view.png" />
+        </Frame>
+      </Step>
+      <Step title="Create a workspace">
+        Click **Connect to Userplane** and choose to create a new workspace.
+
+        <Frame caption="Create a workspace">
+          <img src="/media/zendesk/zendesk-oauth/zendesk-create-workspace.png" />
+        </Frame>
+      </Step>
+      <Step title="Invite teammates">
+        Invite your support team to the new Userplane workspace.
+
+        <Frame caption="Invite teammates">
+          <img src="/media/zendesk/zendesk-oauth/post-onboarding-invite-teammates.png" />
+        </Frame>
+      </Step>
+      <Step title="Review your setup">
+        Confirm the integration is connected in your workspace settings.
+
+        <Frame caption="Integration connected">
+          <img src="/media/zendesk/zendesk-oauth/post-onboarding-settings-preview.png" />
+        </Frame>
+      </Step>
+      <Step title="Start using the integration">
+        The Userplane app is now available across Zendesk — ticket sidebar, ticket editor, and top bar.
+
+        <Tabs>
+          <Tab title="Sidebar">
+            <Frame caption="Zendesk sidebar app">
+              <img src="/media/zendesk/zendesk-app/sidebar/create-link-form.png" />
+            </Frame>
+          </Tab>
+          <Tab title="Editor">
+            <Frame caption="Zendesk editor button">
+              <img src="/media/zendesk/zendesk-app/editor/create-link-form.png" />
+            </Frame>
+          </Tab>
+          <Tab title="Top bar">
+            <Frame caption="Zendesk top bar app">
+              <img src="/media/zendesk/zendesk-app/navbar/opener-view.png" />
+            </Frame>
+          </Tab>
+        </Tabs>
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="Connect an existing workspace">
+    If you already have a Userplane workspace, install the Zendesk app and connect it to your existing workspace.
+
+    <Steps>
+      <Step title="Install from the Zendesk Marketplace">
+        Find Userplane in the Zendesk Marketplace and install it to your Zendesk account.
+
+        <Frame caption="Zendesk Marketplace install">
+          <img src="/media/zendesk/zendesk-app/marketplace/post-install-view.png" />
+        </Frame>
+      </Step>
+      <Step title="Open the Userplane app">
+        Open any ticket in Zendesk and click the **Userplane** app in the ticket sidebar.
+
+        <Frame caption="Sidebar opener">
+          <img src="/media/zendesk/zendesk-app/sidebar/opener-view.png" />
+        </Frame>
+      </Step>
+      <Step title="Select your workspace">
+        Click **Connect to Userplane** and select your existing workspace from the list.
+
+        <Frame caption="Select your workspace">
+          <img src="/media/zendesk/zendesk-oauth/zendesk-workspace-selector.png" />
+        </Frame>
+      </Step>
+      <Step title="Review your setup">
+        Confirm the integration is connected in your workspace settings.
+
+        <Frame caption="Integrations — connected">
+          <img src="/media/zendesk/workspace-settings/post-connection-modal.png" />
+        </Frame>
+      </Step>
+      <Step title="Start using the integration">
+        The Userplane app is now available across Zendesk — ticket sidebar, ticket editor, and top bar.
+
+        <Tabs>
+          <Tab title="Sidebar">
+            <Frame caption="Zendesk sidebar app">
+              <img src="/media/zendesk/zendesk-app/sidebar/create-link-form.png" />
+            </Frame>
+          </Tab>
+          <Tab title="Editor">
+            <Frame caption="Zendesk editor button">
+              <img src="/media/zendesk/zendesk-app/editor/create-link-form.png" />
+            </Frame>
+          </Tab>
+          <Tab title="Top bar">
+            <Frame caption="Zendesk top bar app">
+              <img src="/media/zendesk/zendesk-app/navbar/opener-view.png" />
+            </Frame>
+          </Tab>
+        </Tabs>
+      </Step>
+    </Steps>
+
+  </Tab>
+</Tabs>
 
 ## Permissions granted
 
@@ -43,10 +150,25 @@ When you authorize the Zendesk connection, Userplane receives the following perm
 - Manage ticket tags to mark tickets with `userplane-recording-requested`.
 - Post internal comments to notify agents when recordings arrive.
 
+<Frame caption="Zendesk connected">
+  <img src="/media/zendesk/workspace-settings/post-connection-modal.png" />
+</Frame>
+
 ## Disconnecting Zendesk
 
-1. Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
-2. Click **Disconnect** next to Zendesk.
+<Steps>
+  <Step title="Open Integrations settings">
+    Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+
+    <Frame caption="Zendesk integration settings">
+      <img src="/media/zendesk/workspace-settings/post-connection-modal.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Click Disconnect">
+    Click **Disconnect** next to Zendesk and confirm.
+  </Step>
+</Steps>
 
 <Note>
   Disconnecting removes the Userplane app from Zendesk. Existing recordings and links are preserved.

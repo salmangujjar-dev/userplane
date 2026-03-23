@@ -5,6 +5,10 @@ description: Attach custom metadata to recordings — user info, feature flags, 
 
 The Userplane SDK includes a metadata API that lets you attach custom key-value data to recordings. This data appears in the Info panel when your support team reviews a recording, giving them additional context about the user and their session without having to ask.
 
+<Frame caption="Userplane Metadata SDK on npm">
+  <img src="/media/developer/npm/userplane-metadata-sdk.png" />
+</Frame>
+
 ## Installation
 
 <CodeGroup>
@@ -163,6 +167,10 @@ interface SerializableObject {
 
 Custom metadata is displayed in the **Info Panel** of the recording detail view as a list of key-value pairs, shown below the system metadata section (browser, OS, page URL). Keys appear as labels and values appear as text.
 
+<Frame caption="Custom metadata in Info panel">
+  <img src="/media/recordings/agent-browser-recording-metadata-expanded.png" />
+</Frame>
+
 ## Common patterns
 
 ### Set user context on login
@@ -308,6 +316,22 @@ If both URL parameter metadata and SDK metadata are present, the values are merg
   parameter to pass metadata through recording link URLs. This is especially useful for helpdesk
   macros and server-rendered pages.
 </Tip>
+
+## Framework guides
+
+For framework-specific installation instructions, see the guide for your stack:
+
+<CardGroup cols={3}>
+  <Card title="React" icon="react" href="/frameworks/react" />
+  <Card title="Next.js" icon="react" href="/frameworks/nextjs" />
+  <Card title="Vue" icon="vuejs" href="/frameworks/vue" />
+  <Card title="Nuxt" icon="vuejs" href="/frameworks/nuxt" />
+  <Card title="Angular" icon="angular" href="/frameworks/angular" />
+  <Card title="SvelteKit" icon="code" href="/frameworks/sveltekit" />
+  <Card title="Astro" icon="code" href="/frameworks/astro" />
+  <Card title="TanStack Start" icon="code" href="/frameworks/tanstack-start" />
+  <Card title="Static HTML" icon="html5" href="/frameworks/static-html" />
+</CardGroup>
 
 ## Related articles
 

@@ -9,31 +9,194 @@ Intercom macros let agents insert pre-written responses into conversations with 
 
 <Steps>
   <Step title="Create a reusable recording link">
-    In Userplane, create a **reusable recording link**. Choose the appropriate project and domain. Copy the recording link URL.
+    In Userplane, create a **reusable recording link**. Choose the appropriate project and domain, enable the **Reusable** toggle, then copy the link URL.
+
+    <Frame caption="Reusable link toggle">
+      <img src="/media/links/create-link/agent-browser-create-link-reusable-on.png" />
+    </Frame>
+
+    <Frame caption="Share link">
+      <img src="/media/links/share-link/share-link-modal.png" />
+    </Frame>
+
   </Step>
   <Step title="Create or edit a macro in Intercom">
     In Intercom, create a new macro or edit an existing one.
+
+    <Frame caption="Userplane macro in Intercom">
+      <img src="/media/intercom/intercom-inbox/macro/intercom-userplane-macro.png" />
+    </Frame>
+
   </Step>
   <Step title="Add the link to the macro message">
     Add a message that includes the recording link URL. For example:
 
-    > Hi! To help us troubleshoot this issue, could you record a quick screen capture? Just click this link and follow the instructions: [recording link URL]
+    > Hi! To help us troubleshoot this issue, could you record a quick screen capture? Just click this link and follow the instructions: [reusable recording link]
 
   </Step>
   <Step title="Save the macro">
-    Save the macro.
+    Save the macro. It's now ready for agents to use.
   </Step>
 </Steps>
 
 ## Using the macro
 
-When an agent needs a screen recording from a customer:
+<Steps>
+  <Step title="Open a conversation">
+    Open a conversation in the Intercom inbox.
+  </Step>
+  <Step title="Insert the macro">
+    Open the macro menu and select your Userplane macro. The pre-written message with the recording link is inserted into the reply.
 
-1. Open the conversation in Intercom.
-2. Insert the macro from the macro menu.
-3. Send the message.
+    <Frame caption="Recording link sent to customer">
+      <img src="/media/intercom/intercom-inbox/intercom-recording-link-sent.png" />
+    </Frame>
 
-Since the link is reusable, every customer who clicks it creates a separate recording. All recordings are tied to the same link and can be viewed from the **Links** page in Userplane.
+  </Step>
+  <Step title="Send the message">
+    Send the message. The customer clicks the link and records their screen.
+  </Step>
+</Steps>
+
+Since the link is reusable, every customer who clicks it creates a separate recording. All recordings are tied to the same link and can be viewed from the [Links](https://dash.userplane.io/_/links) page in Userplane.
+
+<Frame caption="Reusable link recordings">
+  <img src="/media/links/agent-browser-reusable-link-recordings.png" />
+</Frame>
+
+## Viewing recordings
+
+When a customer completes a recording, it appears in the conversation automatically.
+
+<Steps>
+  <Step title="Recording received">
+    The customer clicks the link and completes the recording. You receive a notification in the conversation.
+
+    <Frame caption="Recording link received">
+      <img src="/media/intercom/intercom-inbox/intercom-recording-link-received.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Open the recording">
+    Click the recording in the sidebar to view its details, or open it in Userplane for full [playback](/recording/playback).
+
+    <Frame caption="Recording received in sidebar">
+      <img src="/media/intercom/intercom-inbox/intercom-received-recording.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Review the recording">
+    Watch the video and inspect the captured data — console logs, network requests, user actions, and metadata.
+
+    <Tabs>
+      <Tab title="Recording">
+        <Frame caption="Recording playback">
+          <img src="/media/playback/media/player-playback-screen.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Console logs">
+        <Frame caption="Console log list">
+          <img src="/media/playback/console/console-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Network logs">
+        <Frame caption="Network request list">
+          <img src="/media/playback/network/network-panel-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Actions">
+        <Frame caption="Actions list">
+          <img src="/media/playback/actions/actions-list-view.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
+
+## Attaching metadata via URL parameters
+
+Since the recording link is reusable, every customer gets the same base URL. But you can inject dynamic context into each recording by appending the `userplane-meta` query parameter to the link in your macro.
+
+The link has two parts — a static base that stays the same across all uses, and a dynamic metadata suffix that changes per conversation. The metadata is attached to the **recording**, not the link, so each recording carries its own context even though they all share the same reusable link.
+
+Intercom macros support placeholder variables that are resolved at send time. You can use these placeholders in the `userplane-meta` parameter so that each conversation automatically injects the right values — ticket ID, customer name, assignee, or anything else Intercom exposes.
+
+<Tabs>
+  <Tab title="Static metadata">
+    Tag every recording from this macro with a fixed source and macro name.
+
+    ```
+    https://record.userplane.io/r/abc123?userplane-meta=source%3Dintercom,macro%3Dbug-report
+    ```
+
+    This attaches `source: intercom` and `macro: bug-report` to each recording.
+
+  </Tab>
+  <Tab title="Dynamic with placeholders">
+    Use Intercom's placeholder variables to inject conversation-specific context.
+
+    ```
+    https://record.userplane.io/r/abc123?userplane-meta=source%3Dintercom,conversation_id%3D{{conversation.id}},customer%3D{{user.name}}
+    ```
+
+    When the macro is sent, Intercom resolves the placeholders. The recording ends up with metadata like `conversation_id: 12345` and `customer: Jane Smith`.
+
+  </Tab>
+  <Tab title="Mixed approach">
+    Combine static tags with dynamic placeholders for the best of both.
+
+    ```
+    https://record.userplane.io/r/abc123?userplane-meta=source%3Dintercom,macro%3Dbug-report,conversation_id%3D{{conversation.id}},assignee%3D{{assignee.name}},priority%3D{{conversation.priority}}
+    ```
+
+    This gives you a fixed `source` and `macro` tag for filtering, plus dynamic `conversation_id`, `assignee`, and `priority` for each individual recording.
+
+  </Tab>
+</Tabs>
+
+The metadata appears in the [Info panel](/recording/playback#info-panel) when reviewing the recording.
+
+<Frame caption="Metadata in Info panel">
+  <img src="/media/playback/info/info-panel-metadata-expanded.png" />
+</Frame>
+
+See [Metadata SDK](/developer/metadata-sdk) for the full URL parameter format.
+
+## Conversation linking
+
+Recordings created through the macro are automatically linked to the Intercom conversation. Because the metadata is injected dynamically via placeholders, each recording carries its own conversation context — even though they all come from the same reusable link.
+
+<Steps>
+  <Step title="Metadata attached">
+    The metadata attached via the URL parameter is carried over to the recording. Your team can see it in the Info panel without asking the customer for any additional context.
+
+    <Frame caption="Metadata in Info panel">
+      <img src="/media/playback/info/info-panel-metadata-expanded.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Issue resolved">
+    Once you've reviewed the recording and resolved the issue, close the conversation as normal.
+
+    <Frame caption="Issue resolved">
+      <img src="/media/intercom/intercom-inbox/intercom-issue-resolved.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Post-resolution follow-up">
+    The recording remains linked to the conversation for future reference.
+
+    <Frame caption="Post-resolution workflow">
+      <img src="/media/intercom/intercom-inbox/intercom-post-issue-resolution-part-1.png" />
+    </Frame>
+
+    <Frame caption="Post-resolution follow-up">
+      <img src="/media/intercom/intercom-inbox/intercom-post-issue-resolution-part-2.png" />
+    </Frame>
+
+  </Step>
+</Steps>
 
 ## Tips
 
@@ -43,19 +206,8 @@ Since the link is reusable, every customer who clicks it creates a separate reco
   branded recording link (with a verified domain) for a more professional experience.
 </Tip>
 
-## Attaching metadata via URL parameters
-
-You can append the `userplane-meta` query parameter to a recording link in your macro to automatically attach metadata to every recording created from that macro. This is useful for tagging recordings with the macro name, issue type, or support tier.
-
-For example:
-
-```
-https://record.userplane.io/r/abc123?userplane-meta=source%3Dintercom,macro%3Dbug-report
-```
-
-This attaches `source: intercom` and `macro: bug-report` to each recording. See [Metadata SDK](/developer/metadata-sdk) for the full URL parameter format.
-
 ## Related articles
 
 - [Reusable Recording Links](/recording-links/reusable) — how reusable links work.
-- [Using Userplane in Intercom](/integrations/intercom-inbox) — the inbox sidebar app.
+- [Intercom Inbox](/integrations/intercom-inbox) — the inbox sidebar app.
+- [Metadata SDK](/developer/metadata-sdk) — attach custom metadata to recordings.

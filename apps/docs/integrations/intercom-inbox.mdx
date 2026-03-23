@@ -1,5 +1,5 @@
 ---
-title: Using Userplane in Intercom
+title: Intercom Inbox
 description: Create recording links and view recordings from the Intercom inbox sidebar
 ---
 
@@ -8,27 +8,116 @@ After [connecting Intercom](/integrations/intercom), a Userplane sidebar app app
 ## Creating a recording link
 
 <Steps>
-  <Step title="Open a conversation">Open a conversation in the Intercom inbox.</Step>
-  <Step title="Open the sidebar app">Click the **Userplane** sidebar app.</Step>
-  <Step title="Create the link">
-    Click **Create Link**, select a **project** and **domain** from the dropdowns, then click
-    **Create**.
+  <Step title="Open a conversation">
+    Open a conversation in the Intercom inbox and click the **Userplane** sidebar app.
+
+    <Frame caption="Userplane sidebar in Intercom">
+      <img src="/media/intercom/intercom-inbox/sidebar/intercom-sidebar.png" />
+    </Frame>
+
   </Step>
-  <Step title="Send to customer">Send the link to the customer in the conversation.</Step>
+  <Step title="Fill in the link details">
+    Click **Create Link**, select a **project** and **domain** from the dropdowns, then click **Create**.
+
+    <Frame caption="Create link form in sidebar">
+      <img src="/media/intercom/intercom-inbox/sidebar/intercom-create-link-form-sidebar.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Copy the link">
+    The link is generated and ready to share. Copy it to your clipboard.
+
+    <Frame caption="Link created in sidebar">
+      <img src="/media/intercom/intercom-inbox/sidebar/intercom-created-link-sidebar.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Send to the customer">
+    Paste the recording link into the conversation and send it to the customer.
+
+    <Frame caption="Recording link sent to customer">
+      <img src="/media/intercom/intercom-inbox/intercom-recording-link-sent.png" />
+    </Frame>
+
+  </Step>
 </Steps>
 
 ## Viewing recordings
 
-When a customer completes a recording from a link created in an Intercom conversation:
+When a customer completes a recording, it appears in the conversation automatically.
 
-1. Open the conversation in the Intercom inbox.
-2. Click the **Userplane** sidebar app.
-3. Recordings associated with the conversation appear in the sidebar.
-4. Click a recording to view details or open it in Userplane for full playback.
+<Steps>
+  <Step title="Recording requested">
+    The customer clicks the link and completes the recording. You receive a notification in the conversation.
+
+    <Frame caption="Recording link received">
+      <img src="/media/intercom/intercom-inbox/intercom-recording-link-received.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Open the recording">
+    Click the recording in the sidebar to view its details, or open it in Userplane for full [playback](/recording/playback).
+
+    <Frame caption="Recording received in sidebar">
+      <img src="/media/intercom/intercom-inbox/intercom-received-recording.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Review the recording">
+    Watch the video and inspect the captured data — console logs, network requests, user actions, and metadata.
+
+    <Tabs>
+      <Tab title="Recording">
+        <Frame caption="Recording playback">
+          <img src="/media/playback/media/player-playback-screen.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Console logs">
+        <Frame caption="Console log list">
+          <img src="/media/playback/console/console-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Network logs">
+        <Frame caption="Network request list">
+          <img src="/media/playback/network/network-panel-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Actions">
+        <Frame caption="Actions list">
+          <img src="/media/playback/actions/actions-list-view.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
 
 ## Conversation linking
 
-Recordings created through the Intercom sidebar app are automatically linked to the Intercom conversation. This makes it easy to find the recording later from either Userplane or Intercom.
+Recordings created through the Intercom sidebar are automatically linked to the conversation. This makes it easy to find the recording later from either Userplane or Intercom.
+
+<Steps>
+  <Step title="Issue resolved">
+    Once you've reviewed the recording and resolved the issue, close the conversation as normal.
+
+    <Frame caption="Issue resolved">
+      <img src="/media/intercom/intercom-inbox/intercom-issue-resolved.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Post-resolution follow-up">
+    The recording remains linked to the conversation for future reference.
+
+    <Frame caption="Post-resolution workflow">
+      <img src="/media/intercom/intercom-inbox/intercom-post-issue-resolution-part-1.png" />
+    </Frame>
+
+    <Frame caption="Post-resolution follow-up">
+      <img src="/media/intercom/intercom-inbox/intercom-post-issue-resolution-part-2.png" />
+    </Frame>
+
+  </Step>
+</Steps>
 
 ## Using Cmd+K instead
 
@@ -42,4 +131,3 @@ Recordings created through the Intercom sidebar app are automatically linked to 
 
 - The Intercom integration must be [connected](/integrations/intercom).
 - The agent must be a member of the Userplane workspace.
-- Domains must be [verified](/workspace/domain-verification) to appear in the domain dropdown.

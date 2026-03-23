@@ -23,6 +23,10 @@ The `@userplane/sdk` package gives you a JavaScript API for full control over th
 - **Attach metadata** — send user IDs, account info, feature flags, or session context alongside recordings so your support team has full context.
 - **Query recording state** — check whether a recording is active, get the session ID, or read connection status to build custom UI.
 
+<Frame caption="Userplane SDK on npm">
+  <img src="/media/developer/npm/userplane-sdk.png" />
+</Frame>
+
 ```javascript
 import { initialize, open } from '@userplane/sdk';
 import { setMetadata } from '@userplane/sdk/metadata';
@@ -56,9 +60,24 @@ document.getElementById('help-btn').addEventListener('click', () => {
 
 You can use both together. The embed script handles the baseline, and the SDK adds programmatic capabilities on top.
 
+## Framework guides
+
+For framework-specific installation instructions, see the guide for your stack:
+
+<CardGroup cols={3}>
+  <Card title="React" icon="react" href="/frameworks/react" />
+  <Card title="Next.js" icon="react" href="/frameworks/nextjs" />
+  <Card title="Vue" icon="vuejs" href="/frameworks/vue" />
+  <Card title="Nuxt" icon="vuejs" href="/frameworks/nuxt" />
+  <Card title="Angular" icon="angular" href="/frameworks/angular" />
+  <Card title="SvelteKit" icon="code" href="/frameworks/sveltekit" />
+  <Card title="Astro" icon="code" href="/frameworks/astro" />
+  <Card title="TanStack Start" icon="code" href="/frameworks/tanstack-start" />
+  <Card title="Static HTML" icon="html5" href="/frameworks/static-html" />
+</CardGroup>
+
 ## Next steps
 
 - [Web SDK Reference](/developer/web-sdk) — full API for initialization, recorder control, and state inspection.
 - [Metadata SDK Reference](/developer/metadata-sdk) — attach custom key-value data to recordings.
 - [Installation](/developer/installation) — set up the embed script.
-- [Framework Guides](/frameworks/react) — framework-specific integration instructions.

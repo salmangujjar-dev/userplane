@@ -27,6 +27,10 @@ Paste the following into the `<head>` of your site:
 
 Replace `YOUR_WORKSPACE_ID` with the workspace ID provided by your admin. You can also copy the exact snippet (with the workspace ID already filled in) from **Workspace Settings > Domains** in the Userplane dashboard.
 
+<Frame caption="Verification code in dashboard">
+  <img src="/media/workspace/domain/agent-browser-domain-verification-code.png" />
+</Frame>
+
 The `<script>` tag should be placed as early as possible in the `<head>` to ensure it initializes before other scripts run. See [Installation](/developer/installation) for detailed placement guidance.
 
 ## Step 2: Deploy
@@ -36,6 +40,18 @@ Deploy the page with the script tag. The page must be publicly accessible — ve
 ## Step 3: Trigger verification
 
 After deploying, if you're a member of the workspace you can trigger verification yourself from **Workspace Settings > Domains**. Otherwise, let your workspace admin know the script is deployed and ask them to click **Verify** on your behalf. The verification check runs immediately.
+
+<Frame caption="Verification in progress">
+  <img src="/media/workspace/domain/verify-domain/domain-verification-in-progress.png" />
+</Frame>
+
+## Step 4: Confirmation
+
+Once the token is found and valid, the domain status changes to **Verified**. You'll see a confirmation in the dashboard.
+
+<Frame caption="Verification successful">
+  <img src="/media/workspace/domain/verify-domain/domain-verification-confirmation.png" />
+</Frame>
 
 ## Time limit
 
@@ -53,6 +69,10 @@ The verification token expires after **5 minutes**. If the token expires before 
 ## After verification
 
 Once the domain is verified, **keep the script on your site** — it is needed for recordings to work. The meta tag and script serve double duty: they verify the domain and enable screen recording.
+
+<Frame caption="Domain verified">
+  <img src="/media/workspace/domain/agent-browser-domain-verified-config.png" />
+</Frame>
 
 ## Related articles
 
