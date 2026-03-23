@@ -25,6 +25,18 @@ Userplane supports two ways to share a recording:
 
 Use **Share with teammates** when referencing a recording within your team. Use **Share with collaborators** to generate a temporary public link for external recipients.
 
+<Frame caption="Sharing options">
+  <img src="/media/recordings/share-recording/share-recording-options.png" />
+</Frame>
+
+<Frame caption="Share with teammates">
+  <img src="/media/recordings/share-recording/share-recording-internal-private.png" />
+</Frame>
+
+<Frame caption="Share recording options">
+  <img src="/media/recordings/agent-browser-share-recording-options.png" />
+</Frame>
+
 ## Generating a public share link
 
 <Steps>
@@ -35,6 +47,11 @@ Use **Share with teammates** when referencing a recording within your team. Use 
   <Step title="Click Share">Click the **Share** button in the recording detail view.</Step>
   <Step title="Select Share with collaborators">
     In the sharing modal, select **Share with collaborators**.
+
+    <Frame caption="Share with collaborators">
+      <img src="/media/recordings/share-recording/share-recording-collaborator-select.png" />
+    </Frame>
+
   </Step>
   <Step title="Choose expiry duration">
     Choose an expiry duration. The link expires automatically after the selected time. The default
@@ -42,10 +59,19 @@ Use **Share with teammates** when referencing a recording within your team. Use 
   </Step>
   <Step title="Generate and copy the link">
     Click **Share** to generate the link, then copy it and send it to your recipient.
+
+    <Frame caption="Public share link generated">
+      <img src="/media/recordings/share-recording/share-public-temporary-link.png" />
+    </Frame>
+
   </Step>
 </Steps>
 
 The link is ready to use immediately. Recipients can open it in any browser — no account or login required.
+
+<Frame caption="Share with collaborators — public link">
+  <img src="/media/recordings/agent-browser-share-collaborators.png" />
+</Frame>
 
 ## Expiry options
 
@@ -61,15 +87,13 @@ The link is ready to use immediately. Recipients can open it in any browser — 
 
 The maximum duration is **14 days**. Once the link expires, it stops working immediately. There is no way to extend or reactivate an expired share link — you will need to generate a new one.
 
+<Frame caption="Share link expiry options">
+  <img src="/media/recordings/agent-browser-share-expiry-dropdown.png" />
+</Frame>
+
 ## What recipients see
 
-The shared recording view is a full-featured, read-only playback page. Recipients can:
-
-- Watch the video recording with standard playback controls.
-- Inspect the **Console**, **Network**, and **Actions** panels alongside the video.
-- Re-share the link using the **Share** button, which shows the current link URL and its expiry date.
-
-Recipients cannot edit, delete, or manage the recording in any way.
+The shared recording view is a full-featured, read-only playback page. Recipients can watch the video, inspect technical data panels, and re-share the link. They cannot edit, delete, or manage the recording in any way.
 
 <Note>
   Which panels are available depends on what data was captured during the recording, which is
@@ -78,9 +102,76 @@ Recipients cannot edit, delete, or manage the recording in any way.
   recording's domain.
 </Note>
 
+<Tabs>
+  <Tab title="Recording">
+    The video player with standard playback controls — play, pause, scrub, and speed adjustment. Audio plays back in sync when captured.
+
+    <Frame caption="Recording playback">
+      <img src="/media/playback/media/player-playback-screen.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="Console logs">
+    Browser console output captured during the session — errors, warnings, info, and debug messages with source locations and stack traces.
+
+    <Frame caption="Console log list">
+      <img src="/media/playback/console/console-list-view.png" />
+    </Frame>
+
+    <Frame caption="Console error detail">
+      <img src="/media/playback/console/console-error-detail-view-output.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="Network logs">
+    HTTP requests made during the recording — method, URL, status code, timing, headers, and request/response payloads.
+
+    <Frame caption="Network request list">
+      <img src="/media/playback/network/network-panel-list-view.png" />
+    </Frame>
+
+    <Frame caption="Network request detail">
+      <img src="/media/playback/network/network-panel-detail-view.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="Action logs">
+    User interactions captured during the session — clicks, text inputs, page navigations, and tab switches with timestamps.
+
+    <Frame caption="Actions list">
+      <img src="/media/playback/actions/actions-list-view.png" />
+    </Frame>
+
+    <Frame caption="Action detail">
+      <img src="/media/playback/actions/actions-detail-view.png" />
+    </Frame>
+
+  </Tab>
+  <Tab title="Other details">
+    Recording metadata including link details, project, domain, requester, customer notes, system information, and any custom metadata attached via the [Metadata SDK](/developer/metadata-sdk).
+
+    <Frame caption="Info panel">
+      <img src="/media/playback/info/info-panel-metadata-collapsed.png" />
+    </Frame>
+
+    <Frame caption="Metadata expanded">
+      <img src="/media/playback/info/info-panel-metadata-expanded.png" />
+    </Frame>
+
+    <Frame caption="System information">
+      <img src="/media/playback/info/info-panel-system-expanded.png" />
+    </Frame>
+
+  </Tab>
+</Tabs>
+
 ## Sharing by email
 
 On plans that support outbound email, you can send the share link directly to one or more email addresses from within the sharing modal. Enter each address and click **Send**. Recipients receive an email with the link and can open it without a Userplane account.
+
+<Frame caption="Share with teammates via email">
+  <img src="/media/recordings/agent-browser-share-teammates.png" />
+</Frame>
 
 ## What happens when a link expires
 

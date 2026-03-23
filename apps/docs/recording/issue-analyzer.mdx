@@ -9,6 +9,10 @@ description: Use Userplane alongside your AI agent to explain, triage, and fix c
 
 From the [recording detail view](/recording/playback), click the **⋮** (more options) menu in the top-right navigation bar and select **Issue Analyzer**. The modal loads the recording's session data and generates a prompt.
 
+<Frame caption="Recording options menu">
+  <img src="/media/recordings/agent-browser-recording-options-menu.png" />
+</Frame>
+
 ## Prompt modes
 
 Two modes are available, selectable via tabs at the top of the modal:
@@ -21,6 +25,10 @@ Designed for support agents and team members triaging a customer issue. The gene
 - **Why it happened** — the technical root cause in plain language, suitable for pasting into a ticket or Slack message
 - **How to fix it** — split by what the customer can do immediately vs. what the dev team needs to fix in code
 
+<Frame caption="Issue Analyzer — Explain mode">
+  <img src="/media/recordings/ai-analyzer/explain-issue.png" />
+</Frame>
+
 ### Fix
 
 Designed for engineers debugging a production issue. The prompt asks the AI to analyse:
@@ -28,6 +36,10 @@ Designed for engineers debugging a production issue. The prompt asks the AI to a
 - **Root cause** — the exact failing request, error message, or console error with timestamp
 - **Affected code paths** — the specific components, API endpoints, or services involved and what went wrong in each
 - **Fix** — immediate mitigation steps, code changes required, and prevention measures
+
+<Frame caption="Issue Analyzer — Fix mode">
+  <img src="/media/recordings/agent-browser-issue-analyzer-fix.png" />
+</Frame>
 
 ## Session data included
 
@@ -48,3 +60,11 @@ When you open Issue Analyzer, Userplane fetches the recording's captured data an
 ## Copying and using the prompt
 
 Click **Copy to clipboard** to copy the full prompt, then paste it into your AI assistant of choice. The prompt is self-contained — no additional context is needed beyond what's already included.
+
+<Frame caption="Using the generated prompt">
+  <img src="/media/recordings/ai-analyzer/explain-with-claude-using-prompt-part-1.png" />
+</Frame>
+
+<Frame caption="AI response from the prompt">
+  <img src="/media/recordings/ai-analyzer/explain-with-claude-using-prompt-part-2.png" />
+</Frame>

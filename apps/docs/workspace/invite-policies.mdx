@@ -18,25 +18,101 @@ Your workspace's invite policy determines how new people can discover and join y
 <Steps>
   <Step title="Open General settings">
     Go to [Workspace Settings > General](https://dash.userplane.io/_/settings?tab=workspace).
+
+    <Frame caption="Invite policy settings">
+      <img src="/media/workspace/invite-policy/invite-policy-settings.png" />
+    </Frame>
+
+    <Frame caption="Access policy">
+      <img src="/media/workspace/invite-policy/agent-browser-access-policy-expanded.png" />
+    </Frame>
+
   </Step>
-  <Step title="Select a policy">Select the invite policy.</Step>
+  <Step title="Select a policy">
+    Choose a policy that matches how you want people to join your workspace.
+
+    <Tabs>
+      <Tab title="Private">
+        Only explicit invitations. The workspace does not appear in search or suggestions.
+
+        <Frame caption="Private invite policy">
+          <img src="/media/workspace/invite-policy/invite-policy-private.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Whitelisted">
+        People with an email address matching a whitelisted domain can join directly. Others need an explicit invitation.
+
+        <Frame caption="Whitelisted invite policy">
+          <img src="/media/workspace/invite-policy/invite-policy-whitelisted.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Protected">
+        People with a matching email domain can **request access**. An owner must approve the request. Others need an explicit invitation.
+
+        <Frame caption="Protected invite policy">
+          <img src="/media/workspace/invite-policy/invite-policy-protected.png" />
+        </Frame>
+
+        <Frame caption="Protected policy settings">
+          <img src="/media/workspace/invite-policy/agent-browser-protected-policy.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
   <Step title="Add email domains (optional)">
-    If using **Whitelisted** or **Protected**, add the email domains you want to allow (e.g.
-    `example.com`).
+    If using **Whitelisted** or **Protected**, add email domains to control who can join. See [Email domains](#email-domains) below for details.
   </Step>
 </Steps>
 
+<Note>Only workspace **owners** can change the invite policy.</Note>
+
 ## Email domains
 
-You can whitelist up to **5 email domains**. Only people with email addresses matching one of these domains can auto-join (whitelisted) or request access (protected).
+When using the **Whitelisted** or **Protected** policy, you configure a list of allowed email domains. Only people with email addresses matching one of these domains can auto-join (whitelisted) or request access (protected). Everyone else needs an explicit invitation.
 
-For example, if you whitelist `acme.com`, anyone with an `@acme.com` email address can join or request access depending on your policy.
+### Managing domains
+
+Add or remove domains at any time from the invite policy settings. Enter a domain (e.g. `acme.com`) and save — anyone with an `@acme.com` email address can then join or request access depending on your policy. Changes take effect immediately.
+
+<Frame caption="Whitelist configuration">
+  <img src="/media/workspace/invite-policy/invite-policy-whitelist.png" />
+</Frame>
+
+<Frame caption="Domain whitelist">
+  <img src="/media/workspace/invite-policy/agent-browser-domain-whitelist.png" />
+</Frame>
+
+<Frame caption="Updating allowed email domains">
+  <img src="/media/workspace/invite-policy/invite-policy-update-allowed-emails.png" />
+</Frame>
+
+### Limits
+
+You can whitelist up to **5 email domains** per workspace. If you need to support more domains, consider using the **Protected** policy so an owner can manually approve requests from any email address.
 
 ## Rotating the invite token
 
-If you need to invalidate existing invitation links, you can rotate your workspace's invite token from the settings page. This invalidates all pending invitations and generates a new token.
+If you need to invalidate existing invitation links, you can rotate your workspace's invite token. This invalidates all pending invitations and generates a new token.
 
-<Note>Only workspace **owners** can change the invite policy.</Note>
+<Steps>
+  <Step title="Open General settings">
+    Go to [Workspace Settings > General](https://dash.userplane.io/_/settings?tab=workspace) and find the invite token section.
+
+    <Frame caption="Rotate invite token">
+      <img src="/media/workspace/invites/invite-token-reset.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Rotate the token">
+    Click **Rotate Token** and confirm. All pending invitations are invalidated immediately.
+
+    <Frame caption="Token reset confirmation">
+      <img src="/media/workspace/invites/invite-token-reset-confirmation.png" />
+    </Frame>
+
+  </Step>
+</Steps>
 
 ## Related articles
 

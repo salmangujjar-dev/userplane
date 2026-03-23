@@ -7,24 +7,65 @@ The Domains section in Workspace Settings lets you manage all domains in your wo
 
 ## Viewing domains
 
-Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) to see all domains. Each domain shows its name, status (pending, verified, or revoked), and creation date.
+Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) to see all domains. Each domain shows its name, status indicator, and creation date. Sort the list by name, status, or creation date to find what you need.
 
-## Sorting
+<Frame caption="Domain list">
+  <img src="/media/workspace/domain/agent-browser-domain-list.png" />
+</Frame>
 
-Sort your domain list by name, status, or creation date to find what you need.
+<Tip>
+  Look for the colored status dot next to each domain — a **yellow dot** means the domain is pending
+  verification, and a **green dot** means it's verified and ready to use.
+</Tip>
 
 ## Editing a domain
 
-Select a domain to view its details. From here you can:
+<Steps>
+  <Step title="Open the domain menu">
+    Find the domain in the list and click the menu icon.
 
-- View the current verification status.
-- Trigger re-verification if the domain status is pending or revoked.
-- Access [domain recording preferences](/recording-links/domain-preferences) for verified domains.
+    <Frame caption="Domain actions menu">
+      <img src="/media/workspace/domain/agent-browser-domain-menu.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Edit domain details">
+    View the current verification status, trigger re-verification if the domain is pending or revoked, or access [domain recording preferences](/recording-links/domain-preferences) for verified domains.
+
+    <Frame caption="Edit domain">
+      <img src="/media/workspace/domain/agent-browser-edit-domain.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Configure recording preferences (verified domains)">
+    For verified domains, toggle the capture preferences — console logs, network activity, client actions, and more.
+
+    <Frame caption="Verified domain configuration">
+      <img src="/media/workspace/domain/agent-browser-domain-verified-config.png" />
+    </Frame>
+
+    <Frame caption="Domain recording preferences">
+      <img src="/media/workspace/domain/verify-domain/post-verification-domain-preference.png" />
+    </Frame>
+
+  </Step>
+</Steps>
 
 ## Deleting a domain
 
-1. Select the domain you want to delete.
-2. Click **Delete**.
+<Steps>
+  <Step title="Open the domain menu">
+    Find the domain in the list and click the menu icon.
+
+    <Frame caption="Domain actions menu">
+      <img src="/media/workspace/domain/agent-browser-domain-menu.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Click Delete">
+    Select **Delete** and confirm.
+  </Step>
+</Steps>
 
 <Warning>
   Deleting a domain removes it from your workspace. Existing recording links that use this domain

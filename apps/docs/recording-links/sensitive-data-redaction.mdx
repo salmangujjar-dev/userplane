@@ -11,6 +11,26 @@ Sensitive content is blurred directly in the recording. The element is still vis
 
 Blurring happens at capture time, which means sensitive data is never recorded in a readable state.
 
+<Frame caption="Blur in action — before recording">
+  <img src="/media/recorder/recorder-data-blurr-in-action-part-1.png" />
+</Frame>
+
+<Frame caption="Blur in action — sensitive fields detected">
+  <img src="/media/recorder/recorder-data-blurr-in-action-part-2.png" />
+</Frame>
+
+<Frame caption="Blur in action — fields obscured">
+  <img src="/media/recorder/recorder-data-blurr-in-action-part-3.png" />
+</Frame>
+
+<Frame caption="Blur in action — recording with blur active">
+  <img src="/media/recorder/recorder-data-blurr-in-action-part-4.png" />
+</Frame>
+
+<Frame caption="Blur in action — playback verification">
+  <img src="/media/recorder/recorder-data-blurr-in-action-part-5.png" />
+</Frame>
+
 ## Automatic blurring
 
 Userplane automatically recognizes and blurs common sensitive elements without any extra setup. When the **Hide sensitive fields** preference is enabled for a domain, elements like password fields and credit card inputs are blurred by default.
@@ -69,7 +89,34 @@ For example, if your page already uses `data-hj-suppress` for Hotjar or `.sentry
 
 ## Enabling automatic redaction
 
-Automatic blur is controlled per domain. Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general), select a verified domain, and enable the **Hide sensitive fields** preference. See [Domain Recording Preferences](/recording-links/domain-preferences) for details.
+Automatic blur is controlled per domain via [Domain Recording Preferences](/recording-links/domain-preferences).
+
+<Steps>
+  <Step title="Open Domain settings">
+    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) and select a verified domain.
+
+    <Frame caption="Domain list">
+      <img src="/media/workspace/domain/agent-browser-domain-list.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Enable Hide sensitive fields">
+    Toggle the **Hide sensitive fields** preference to enable automatic blur for recordings on this domain.
+
+    <Frame caption="Domain recording preferences">
+      <img src="/media/workspace/domain/verify-domain/post-verification-domain-preference.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Customer controls">
+    Before starting a recording, customers can optionally toggle whether to hide sensitive content. This gives them control over their own privacy during the session.
+
+    <Frame caption="Customer blur toggle">
+      <img src="/media/recorder/recorder-toggle-blurr.png" />
+    </Frame>
+
+  </Step>
+</Steps>
 
 ## Related articles
 
