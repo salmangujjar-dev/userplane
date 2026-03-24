@@ -24,3 +24,10 @@ export const SPOTLIGHT_IMAGE = {
   sizes: '100vw',
   alt: 'AI handling customer support calls',
 };
+
+const VIMEO_VIDEO_ID = '1176596203';
+
+export const SPOTLIGHT_VIDEO = {
+  src: `https://player.vimeo.com/video/${VIMEO_VIDEO_ID}?autoplay=1`,
+  title: 'Introducing Userplane',
+};
