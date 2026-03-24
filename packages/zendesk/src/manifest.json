@@ -7,7 +7,7 @@
     "url": "https://userplane.io"
   },
   "defaultLocale": "en",
-  "private": true,
+  "private": false,
   "frameworkVersion": "2.0",
   "location": {
     "support": {
@@ -37,7 +37,8 @@
     {
       "name": "jwt_secret",
       "type": "hidden",
-      "secure": true
+      "secure": true,
+      "scopes": ["jwt_secret_key"]
     }
   ],
   "domainWhitelist": ["{{ZENDESK_DOMAIN_WHITELIST}}"]

@@ -4,7 +4,7 @@
   "private": true,
   "description": "Zendesk app manifest packaging (UI lives in apps/dash)",
   "scripts": {
-    "package": "rm -rf dist && mkdir -p dist/assets && cp src/manifest.json dist/ && cp -r src/translations dist/ && cp src/assets/icon.svg src/assets/icon_top_bar.svg src/assets/logo.png src/assets/logo-small.png dist/assets/ && ./scripts/inject-manifest-env.sh .env.production && cd dist && zip -r ../userplane.zip .",
-    "package:dev": "rm -rf dist && mkdir -p dist/assets && cp src/manifest.json dist/ && cp -r src/translations dist/ && cp src/assets/icon.svg src/assets/icon_top_bar.svg src/assets/logo.png src/assets/logo-small.png dist/assets/ && ./scripts/inject-manifest-env.sh .env.development && cd dist && zip -r ../userplane.zip ."
+    "package": "rm -rf dist && mkdir -p dist/assets && cp src/manifest.json dist/ && cp -r src/translations dist/ && cp src/assets/icon.svg src/assets/icon_top_bar.svg src/assets/logo.png src/assets/logo-small.png src/assets/screenshot-*.png dist/assets/ && ./scripts/inject-manifest-env.sh .env.production && cd dist && zip -r ../userplane.zip .",
+    "package:dev": "rm -rf dist && mkdir -p dist/assets && cp src/manifest.json dist/ && cp -r src/translations dist/ && cp src/assets/icon.svg src/assets/icon_top_bar.svg src/assets/logo.png src/assets/logo-small.png src/assets/screenshot-*.png dist/assets/ && ./scripts/inject-manifest-env.sh .env.development && cd dist && zip -r ../userplane.zip ."
   }
 }
