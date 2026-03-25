@@ -108,7 +108,7 @@ export function LinksList() {
         <div>
           <h1 className="text-lg font-semibold">Links</h1>
           <div className="flex items-center gap-1.5">
-            <p className="text-sm text-muted-foreground">Manage your recording links</p>
+            <p className="text-sm text-muted-foreground">Manage recording links</p>
             <Tooltip>
               <TooltipTrigger asChild>
                 <a

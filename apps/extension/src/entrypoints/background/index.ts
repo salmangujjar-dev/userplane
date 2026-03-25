@@ -143,10 +143,12 @@ export default defineBackground(() => {
 
     const trimmedReference = createReference?.trim();
     if (trimmedReference) {
-      await setPendingCreateReference(trimmedReference);
+      await setPendingCreateReference(windowId, trimmedReference);
     }
 
-    await setPendingRoute(path);
+    // Scope the follow-up route/reference payload to the initiating window so
+    // panels in other Chrome windows don't consume a navigation meant for this one.
+    await setPendingRoute(windowId, path);
   }
 
   async function openCreateLinkFromCommand() {

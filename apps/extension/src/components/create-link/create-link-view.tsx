@@ -39,6 +39,16 @@ const createLinkFormSchema = z.object({
 type CreateLinkFormValues = z.infer<typeof createLinkFormSchema>;
 
 type ViewState = { view: 'create' } | { view: 'error'; error: { message: string; code?: string } };
+type WindowScopedValue<T> = { value: T; windowId: number };
+
+async function getCurrentWindowId(): Promise<number | null> {
+  try {
+    const currentWindow = await chrome.windows.getCurrent();
+    return currentWindow.id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function CreateLinkView() {
   const workspaceId = useWorkspaceStore((state) => state.workspaceId);
@@ -104,26 +114,46 @@ export function CreateLinkView() {
   useEffect(() => {
     let isActive = true;
 
-    consumePendingCreateReference().then((reference) => {
+    getCurrentWindowId().then((windowId) => {
       if (!isActive) return;
-
-      if (reference) {
-        setValue('reference', reference, { shouldDirty: true });
-        setHasSeededPendingReference(true);
+      if (windowId == null) {
+        setHasResolvedPendingReference(true);
+        return;
       }
 
-      setHasResolvedPendingReference(true);
+      consumePendingCreateReference(windowId).then((reference) => {
+        if (!isActive) return;
+
+        if (reference) {
+          setValue('reference', reference, { shouldDirty: true });
+          setHasSeededPendingReference(true);
+        }
+
+        setHasResolvedPendingReference(true);
+      });
     });
 
     const listener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
       const change = changes[PENDING_CREATE_REFERENCE_KEY];
-      const reference = change?.newValue;
+      const payload = change?.newValue as WindowScopedValue<string> | string | undefined;
+      if (!payload) return;
 
-      if (typeof reference !== 'string' || reference.length === 0) return;
+      void getCurrentWindowId().then((windowId) => {
+        if (windowId == null) return;
 
-      setValue('reference', reference, { shouldDirty: true });
-      setHasSeededPendingReference(true);
-      chrome.storage.session.remove(PENDING_CREATE_REFERENCE_KEY);
+        const reference =
+          typeof payload === 'string'
+            ? payload
+            : payload.windowId === windowId
+              ? payload.value
+              : null;
+
+        if (!reference || reference.length === 0) return;
+
+        setValue('reference', reference, { shouldDirty: true });
+        setHasSeededPendingReference(true);
+        chrome.storage.session.remove(PENDING_CREATE_REFERENCE_KEY);
+      });
     };
 
     chrome.storage.session.onChanged.addListener(listener);

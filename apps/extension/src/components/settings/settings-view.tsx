@@ -18,7 +18,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SUPPORT_LINKS } from '@/constants';
 import { useExtensionAuth } from '@/hooks/useExtensionAuth';
-import { sendMessage } from '@/lib/messaging';
 import { useAutoPopulateUrl, useSettingsStore } from '@/stores/settings';
 import { useWorkspaceId } from '@/stores/workspace';
 
@@ -38,7 +37,7 @@ function openChromeShortcutSettings() {
 }
 
 export function SettingsView() {
-  const { user, signOut } = useExtensionAuth();
+  const { user, refreshSession, signOut } = useExtensionAuth();
   const workspaceId = useWorkspaceId();
   const autoPopulateUrl = useAutoPopulateUrl();
   const setAutoPopulateUrl = useSettingsStore((s) => s.setAutoPopulateUrl);
@@ -72,11 +71,12 @@ export function SettingsView() {
   const handleReload = useCallback(async () => {
     setIsReloading(true);
     try {
-      await Promise.all([queryClient.invalidateQueries(), sendMessage({ type: 'CHECK_SESSION' })]);
+      await refreshSession();
+      await queryClient.invalidateQueries();
     } finally {
       setIsReloading(false);
     }
-  }, [queryClient]);
+  }, [queryClient, refreshSession]);
 
   return (
     <div className="flex flex-col h-full">

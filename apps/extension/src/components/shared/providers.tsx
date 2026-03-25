@@ -3,6 +3,8 @@ import { Toaster } from '@userplane/ui/components/sonner';
 import { TooltipProvider } from '@userplane/ui/components/tooltip';
 import { type ReactNode, useState } from 'react';
 
+import { ExtensionAuthProvider } from '@/hooks/useExtensionAuth';
+
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -19,10 +21,12 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={200}>
-        {children}
-        <Toaster />
-      </TooltipProvider>
+      <ExtensionAuthProvider>
+        <TooltipProvider delayDuration={200}>
+          {children}
+          <Toaster />
+        </TooltipProvider>
+      </ExtensionAuthProvider>
     </QueryClientProvider>
   );
 }
