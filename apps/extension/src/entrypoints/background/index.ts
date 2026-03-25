@@ -23,7 +23,7 @@ async function checkSession(): Promise<SessionCheckResponse> {
 
 async function launchAuthFlow(): Promise<SessionCheckResponse> {
   const redirectUrl = chrome.identity.getRedirectURL();
-  const authUrl = `${DASH_URL}/auth?redirect_to=/auth/extension-cb?ext_redirect=${encodeURIComponent(redirectUrl)}`;
+  const authUrl = `${DASH_URL}/auth?redirect_to=/extension/auth?ext_redirect=${encodeURIComponent(redirectUrl)}`;
 
   try {
     await chrome.identity.launchWebAuthFlow({
@@ -69,7 +69,18 @@ export default defineBackground(() => {
       clearSessionCache().then(sendResponse);
       return true;
     }
+
+    if (message.type === 'GET_ACTIVE_TAB_URL') {
+      chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+        sendResponse({ url: tabs[0]?.url ?? null });
+      });
+      return true;
+    }
   });
+
+  // Register side panel
+  chrome.sidePanel.setOptions({ enabled: true });
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
   // Check session on extension install/update
   chrome.runtime.onInstalled.addListener(() => {
