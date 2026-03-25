@@ -11,7 +11,8 @@
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6012",
-    "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
+    "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build",
+    "submit": "wxt submit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
