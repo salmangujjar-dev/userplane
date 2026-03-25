@@ -22,7 +22,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", ".astro/**", "dist/**"],
+      "outputs": [".next/**", "!.next/cache/**", ".astro/**", "dist/**", ".output/**"],
       "env": [
         "OBFUSCATE_MODE",
         "OPTIMIZE_MODE",
@@ -159,7 +159,9 @@
         "SDK_RECORDER_BASE_URL",
         "SDK_VERIFICATION_BASE_URL",
         "DEV",
-        "INTERNAL_API_KEY"
+        "INTERNAL_API_KEY",
+        "WXT_API_URL",
+        "WXT_DASH_URL"
       ]
     },
     "lint": {

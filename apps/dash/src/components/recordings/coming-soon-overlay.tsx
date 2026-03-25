@@ -66,7 +66,7 @@ export function ComingSoonOverlay({ title, subtitle, children }: ComingSoonOverl
             size="default"
             onClick={handleNotifyClick}
             disabled={isNotified}
-            className="mt-2 rounded-full"
+            className="mt-2"
           >
             {isNotified ? (
               <>

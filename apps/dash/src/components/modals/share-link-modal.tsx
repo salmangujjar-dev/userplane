@@ -78,10 +78,10 @@ function ShareLinkView({
 
       <DialogFooter>
         <div className="flex w-full gap-2">
-          <Button variant="outline" onClick={onClose} className="rounded-full px-6">
+          <Button variant="outline" onClick={onClose} className="px-6">
             Close
           </Button>
-          <Button onClick={onCopy} className="rounded-full px-6">
+          <Button onClick={onCopy} className="px-6">
             <Copy className="h-4 w-4 mr-2" />
             Copy Link
           </Button>

@@ -60,7 +60,7 @@ export function InviteLoadingState() {
       </div>
 
       <div className="space-y-4">
-        <Skeleton className="h-14 w-full rounded-full" />
+        <Skeleton className="h-14 w-full rounded-md" />
         <div className="flex justify-center">
           <Skeleton className="h-4 w-24" />
         </div>
@@ -88,7 +88,7 @@ export function InviteEmptyState({ workspaceId }: InviteEmptyStateProps) {
         <Button
           onClick={() => router.push(`/workspace/${workspaceId}/settings`)}
           size="lg"
-          className="w-full rounded-full px-7 py-6"
+          className="w-full px-7 py-6"
         >
           Go to Settings
         </Button>
@@ -112,7 +112,7 @@ export function InviteErrorState({ workspaceId, message, onRetry }: InviteErrorS
   return (
     <IntercomInviteLayout title="Failed to load teammates" description={message}>
       <div className="space-y-4">
-        <Button onClick={onRetry} size="lg" className="w-full rounded-full px-7 py-6">
+        <Button onClick={onRetry} size="lg" className="w-full px-7 py-6">
           Try Again
         </Button>
 

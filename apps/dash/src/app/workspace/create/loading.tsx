@@ -18,7 +18,7 @@ export default function CreateWorkspaceLoading() {
             <Skeleton className="h-3 w-48" />
             <Skeleton className="h-12 w-full rounded-lg" />
           </div>
-          <Skeleton className="h-14 w-full rounded-full" />
+          <Skeleton className="h-14 w-full rounded-md" />
           <Skeleton className="h-5 w-48 mx-auto" />
         </div>
       </div>

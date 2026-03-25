@@ -248,7 +248,7 @@ export function AdminBanUserModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
@@ -256,7 +256,7 @@ export function AdminBanUserModal({
             </Button>
             <Button
               type="button"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={handleConfirm}
               disabled={isConfirmDisabled}
             >

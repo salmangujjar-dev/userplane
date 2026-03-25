@@ -147,7 +147,7 @@ export function DomainVerificationPostModal({
               <Button
                 type="button"
                 variant="secondary"
-                className="rounded-full px-6"
+                className="px-6"
                 onClick={() => {
                   if (onReverify) {
                     onReverify();
@@ -161,7 +161,7 @@ export function DomainVerificationPostModal({
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-full px-6"
+                className="px-6"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
@@ -170,7 +170,7 @@ export function DomainVerificationPostModal({
             {!verified && (
               <Button
                 type="button"
-                className="rounded-full px-6"
+                className="px-6"
                 onClick={() => {
                   if (onReverify) {
                     onReverify();
@@ -183,7 +183,7 @@ export function DomainVerificationPostModal({
             {verified && (
               <Button
                 type="button"
-                className="rounded-full px-6"
+                className="px-6"
                 onClick={handleDone}
                 disabled={loadingSettings}
               >

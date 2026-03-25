@@ -250,7 +250,7 @@ export function EditProjectModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={handleCancel}
               disabled={loading}
             >
@@ -258,7 +258,7 @@ export function EditProjectModal({
             </Button>
             <Button
               type="button"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={handleSave}
               disabled={!isFormValid || loading}
             >

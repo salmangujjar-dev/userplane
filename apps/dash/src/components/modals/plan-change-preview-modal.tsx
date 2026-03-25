@@ -80,7 +80,7 @@ function PreviewActionButtons({
       <button
         onClick={onConfirm}
         disabled={isConfirming}
-        className="flex-1 px-6 py-3 text-sm font-medium rounded-full transition-colors bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="flex-1 px-6 py-3 text-sm font-medium rounded-md transition-colors bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isConfirming ? (
           <>
@@ -94,7 +94,7 @@ function PreviewActionButtons({
       <button
         onClick={onCancel}
         disabled={isConfirming}
-        className="flex-1 px-6 py-3 text-sm font-medium rounded-full transition-colors border border-border hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex-1 px-6 py-3 text-sm font-medium rounded-md transition-colors border border-border hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Cancel
       </button>
@@ -690,7 +690,7 @@ function SuccessView({
                 <button
                   onClick={onOpenPortal}
                   disabled={isPortalLoading}
-                  className="flex-1 px-6 py-3 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3 text-sm font-medium rounded-md bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isPortalLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -701,7 +701,7 @@ function SuccessView({
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 text-sm font-medium rounded-full border border-border hover:bg-accent transition-colors"
+                  className="flex-1 px-6 py-3 text-sm font-medium rounded-md border border-border hover:bg-accent transition-colors"
                 >
                   Done
                 </button>
@@ -830,8 +830,8 @@ function PreviewLoadingView() {
 
               {/* Button Skeletons */}
               <div className="flex gap-2 mt-6">
-                <Skeleton className="flex-1 h-12 rounded-full" />
-                <Skeleton className="flex-1 h-12 rounded-full" />
+                <Skeleton className="flex-1 h-12 rounded-md" />
+                <Skeleton className="flex-1 h-12 rounded-md" />
               </div>
             </div>
           </div>
@@ -1005,7 +1005,7 @@ function ErrorView({
                 <button
                   onClick={onOpenPortal}
                   disabled={isPortalLoading}
-                  className="flex-1 px-6 py-3 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3 text-sm font-medium rounded-md bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isPortalLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1016,7 +1016,7 @@ function ErrorView({
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 text-sm font-medium rounded-full border border-border hover:bg-accent transition-colors"
+                  className="flex-1 px-6 py-3 text-sm font-medium rounded-md border border-border hover:bg-accent transition-colors"
                 >
                   Close
                 </button>
@@ -1164,7 +1164,7 @@ function RequestSentView({ planName, onClose }: { planName: string; onClose: () 
               <div className="flex gap-2 mt-6">
                 <button
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                  className="flex-1 px-6 py-3 text-sm font-medium rounded-md bg-foreground text-background hover:bg-foreground/90 transition-colors"
                 >
                   Done
                 </button>

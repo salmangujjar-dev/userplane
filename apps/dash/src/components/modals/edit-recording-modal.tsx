@@ -178,13 +178,13 @@ export function EditRecordingModal({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="rounded-full px-6"
+              className="px-6"
             >
               Cancel
             </Button>
             <Button
               type="button"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={handleSave}
               disabled={!hasChanged || isLoading}
             >

@@ -422,7 +422,7 @@ export function BillingDetailsModal({
                       onOpenChange(false);
                     }}
                     disabled={isPortalLoading}
-                    className="flex-1 px-6 py-3 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-3 text-sm font-medium rounded-md bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isPortalLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                     Manage in Portal
@@ -433,7 +433,7 @@ export function BillingDetailsModal({
                         onUpgradePlan();
                         onOpenChange(false);
                       }}
-                      className="flex-1 px-6 py-3 text-sm font-medium rounded-full border border-border hover:bg-accent transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 px-6 py-3 text-sm font-medium rounded-md border border-border hover:bg-accent transition-colors flex items-center justify-center gap-2"
                     >
                       <MoveUpRight className="h-4 w-4" />
                       Upgrade Plan

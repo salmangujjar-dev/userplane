@@ -142,7 +142,7 @@ export function ErrorView({
                   onClick={secondaryAction.onClick}
                   size="lg"
                   variant="outline"
-                  className="rounded-full px-7"
+                  className="px-7"
                 >
                   {secondaryAction.icon && (
                     <span className="mr-2 h-4 w-4">{secondaryAction.icon}</span>
@@ -151,7 +151,7 @@ export function ErrorView({
                 </Button>
               )}
               {primaryAction && (
-                <Button onClick={primaryAction.onClick} size="lg" className="rounded-full px-7">
+                <Button onClick={primaryAction.onClick} size="lg" className="px-7">
                   {primaryAction.icon && <span className="mr-2 h-4 w-4">{primaryAction.icon}</span>}
                   {primaryAction.label}
                 </Button>

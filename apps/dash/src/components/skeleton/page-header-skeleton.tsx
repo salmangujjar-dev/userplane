@@ -22,7 +22,7 @@ export function PageHeaderSkeleton({ showDescription = true }: PageHeaderSkeleto
           <Skeleton className="h-7 w-7 rounded-full" />
           <Skeleton className="h-7 w-7 rounded-full" />
         </div>
-        <Skeleton className="h-9 w-28 rounded-full" />
+        <Skeleton className="h-9 w-28 rounded-md" />
       </div>
     </div>
   );

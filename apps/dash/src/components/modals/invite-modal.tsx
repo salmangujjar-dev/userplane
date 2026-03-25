@@ -167,7 +167,7 @@ function InviteLinkSection({ inviteLink, isLoading, onCopyLink }: InviteLinkSect
         <Button
           type="button"
           variant="secondary"
-          className="rounded-full px-4 py-2.5 h-auto"
+          className="px-4 py-2.5 h-auto"
           onClick={onCopyLink}
           disabled={isLoading}
         >
@@ -447,17 +447,13 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
               <Button
                 type="button"
                 variant="secondary"
-                className="rounded-full px-6"
+                className="px-6"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
               {canSendEmails && showEmailInvite && (
-                <Button
-                  type="submit"
-                  className="rounded-full px-6"
-                  disabled={isPending || !isValid}
-                >
+                <Button type="submit" className="px-6" disabled={isPending || !isValid}>
                   {isPending ? 'Sending...' : 'Send Invites'}
                 </Button>
               )}

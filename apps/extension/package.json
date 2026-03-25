@@ -1,0 +1,46 @@
+{
+  "name": "@userplane/extension",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt --browser firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build --browser firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip --browser firefox",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6012",
+    "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
+  },
+  "dependencies": {
+    "@userplane/auth": "*",
+    "@userplane/ui": "*",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.11"
+  },
+  "devDependencies": {
+    "@userplane/eslint-config": "*",
+    "@userplane/typescript-config": "*",
+    "@wxt-dev/module-react": "latest",
+    "@chromatic-com/storybook": "^4.1.3",
+    "@storybook/addon-a11y": "^10.1.11",
+    "@storybook/addon-docs": "^10.1.11",
+    "@storybook/react": "^10.1.11",
+    "@storybook/react-vite": "^10.1.11",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@tailwindcss/vite": "^4.1.7",
+    "@types/chrome": "^0.0.304",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "eslint": "^9.32.0",
+    "eslint-plugin-storybook": "^10.1.11",
+    "storybook": "^10.1.11",
+    "typescript": "5.8.2",
+    "wxt": "latest"
+  }
+}

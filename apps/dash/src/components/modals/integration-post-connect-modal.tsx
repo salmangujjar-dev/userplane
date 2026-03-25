@@ -105,7 +105,7 @@ export function IntegrationPostConnectModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6 ml-auto"
+              className="px-6 ml-auto"
               onClick={() => onOpenChange(false)}
               disabled={isDisconnecting}
             >

@@ -127,8 +127,8 @@ function RequestDeleteContent() {
 
           <div className="space-y-6">
             <div className="flex flex-col gap-3">
-              <Skeleton className="h-12 w-full rounded-full" />
-              <Skeleton className="h-12 w-full rounded-full" />
+              <Skeleton className="h-12 w-full rounded-md" />
+              <Skeleton className="h-12 w-full rounded-md" />
             </div>
           </div>
         </div>
@@ -177,7 +177,7 @@ function RequestDeleteContent() {
             </div>
           </div>
 
-          <Button onClick={handleViewWorkspaces} size="lg" className="w-full rounded-full px-6">
+          <Button onClick={handleViewWorkspaces} size="lg" className="w-full px-6">
             View My Workspaces
           </Button>
         </div>
@@ -220,7 +220,7 @@ function RequestDeleteContent() {
               disabled={isRequesting}
               variant="default"
               size="lg"
-              className="w-full rounded-full px-6"
+              className="w-full px-6"
             >
               Cancel
             </Button>
@@ -230,7 +230,7 @@ function RequestDeleteContent() {
               disabled={isRequesting}
               variant="secondary"
               size="lg"
-              className="w-full rounded-full px-6"
+              className="w-full px-6"
             >
               {isRequesting ? (
                 <>

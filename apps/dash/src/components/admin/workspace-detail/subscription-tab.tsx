@@ -434,7 +434,7 @@ function SubscriptionOverview({
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="rounded-full px-4"
+                  className="px-4"
                   onClick={handleDiscard}
                   disabled={updateSubscriptionMutation.isPending}
                 >
@@ -442,7 +442,7 @@ function SubscriptionOverview({
                 </Button>
                 <Button
                   size="sm"
-                  className="rounded-full px-4"
+                  className="px-4"
                   onClick={handleSave}
                   disabled={updateSubscriptionMutation.isPending}
                 >

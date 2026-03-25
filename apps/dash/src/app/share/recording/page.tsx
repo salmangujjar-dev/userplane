@@ -45,19 +45,19 @@ function SharedRecordingNav({
       <div className="flex w-full items-center justify-between px-6 py-4">
         <Logo size="sm" />
         <div className="flex items-center gap-3">
-          <Button variant="secondary" size="default" className="rounded-full" asChild>
+          <Button variant="secondary" size="default" asChild>
             <Link href="/auth">
               Join
               <ArrowUpRight className="h-4 w-4" />
             </Link>
           </Button>
-          <Button variant="default" size="default" className="rounded-full" onClick={onShare}>
+          <Button variant="default" size="default" onClick={onShare}>
             <Share2 className="h-4 w-4" />
             Share
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

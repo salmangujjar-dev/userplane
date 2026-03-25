@@ -39,12 +39,7 @@ function PageHeaderActions({
     <div className="flex items-center gap-3">
       {onInviteClick && <WorkspaceMemberAvatars members={members} onInviteClick={onInviteClick} />}
       {onCreateLinkClick && (
-        <Button
-          variant="default"
-          size="default"
-          className="rounded-full"
-          onClick={onCreateLinkClick}
-        >
+        <Button variant="default" size="default" onClick={onCreateLinkClick}>
           Create Link
           <Plus className="h-4 w-4" />
         </Button>

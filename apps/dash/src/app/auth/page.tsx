@@ -107,7 +107,7 @@ function GoogleSignInButton({ onClick, isLoading }: { onClick: () => void; isLoa
         disabled={isLoading}
         variant="secondary"
         size="lg"
-        className="w-full rounded-full px-7 py-6"
+        className="w-full px-7 py-6"
       >
         {isLoading ? 'Signing in...' : 'Continue with Google'}
         <GoogleIcon />
@@ -145,13 +145,7 @@ function MagicLinkForm({
               />
               {field.value.trim() && !fieldState.invalid && (
                 <InputGroupAddon align="inline-end">
-                  <InputGroupButton
-                    type="submit"
-                    disabled={isLoading}
-                    variant="default"
-                    size="sm"
-                    className="rounded-full"
-                  >
+                  <InputGroupButton type="submit" disabled={isLoading} variant="default" size="sm">
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
@@ -321,7 +315,7 @@ function AuthPageSkeleton() {
           <Skeleton className="h-4 w-48" />
         </div>
         <div className="space-y-6">
-          <Skeleton className="h-14 w-full rounded-full" />
+          <Skeleton className="h-14 w-full rounded-md" />
         </div>
         <Skeleton className="h-10 w-80 mx-auto" />
       </div>

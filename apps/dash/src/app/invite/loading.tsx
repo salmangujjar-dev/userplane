@@ -14,7 +14,7 @@ export default function InviteLoading() {
           <Skeleton className="h-4 w-80" />
         </div>
         <div className="space-y-6">
-          <Skeleton className="h-14 w-full rounded-full" />
+          <Skeleton className="h-14 w-full rounded-md" />
           <Skeleton className="h-10 w-32 mx-auto" />
         </div>
       </div>

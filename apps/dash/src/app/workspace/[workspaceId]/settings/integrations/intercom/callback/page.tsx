@@ -47,7 +47,7 @@ function LoadingState() {
         </div>
 
         <div className="space-y-4">
-          <Skeleton className="h-14 w-full rounded-full" />
+          <Skeleton className="h-14 w-full rounded-md" />
           <div className="flex justify-center">
             <Skeleton className="h-4 w-24" />
           </div>
@@ -97,7 +97,7 @@ function SuccessState({ workspaceId }: { workspaceId: string }) {
         </div>
 
         <div className="space-y-4">
-          <Button onClick={handleInviteMembers} size="lg" className="w-full rounded-full px-7 py-6">
+          <Button onClick={handleInviteMembers} size="lg" className="w-full px-7 py-6">
             Invite Workspace Members
           </Button>
 
@@ -155,11 +155,7 @@ function ErrorState({ error, errorActionPrimary, errorActionSecondary }: ErrorSt
         </div>
 
         <div className="space-y-4">
-          <Button
-            onClick={errorActionPrimary.callback}
-            size="lg"
-            className="w-full rounded-full px-7 py-6"
-          >
+          <Button onClick={errorActionPrimary.callback} size="lg" className="w-full px-7 py-6">
             {errorActionPrimary.label}
           </Button>
 

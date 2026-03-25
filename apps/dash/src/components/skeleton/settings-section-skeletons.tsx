@@ -144,7 +144,7 @@ export function IntegrationsSectionSkeleton() {
             <Skeleton className="h-8 w-8 rounded" />
             <Skeleton className="h-4 w-24" />
           </div>
-          <Skeleton className="h-9 w-28 rounded-full" />
+          <Skeleton className="h-9 w-28 rounded-md" />
         </div>
       </div>
     </div>

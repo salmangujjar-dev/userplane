@@ -162,7 +162,7 @@ export function AdminDeactivateProjectModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
@@ -170,7 +170,7 @@ export function AdminDeactivateProjectModal({
             </Button>
             <Button
               type="button"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={handleConfirm}
               disabled={!isConfirmed || isPending}
             >

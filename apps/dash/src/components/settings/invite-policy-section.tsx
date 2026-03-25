@@ -288,14 +288,14 @@ export function InvitePolicySection() {
                     <button
                       onClick={handleSave}
                       disabled={updatePolicyMutation.isPending}
-                      className="flex-1 px-4 py-2 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50"
+                      className="flex-1 px-4 py-2 text-sm font-medium rounded-md bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50"
                     >
                       {updatePolicyMutation.isPending ? 'Saving...' : 'Save'}
                     </button>
                     <button
                       onClick={handleCancel}
                       disabled={updatePolicyMutation.isPending}
-                      className="flex-1 px-4 py-2 text-sm font-medium rounded-full border border-border hover:bg-accent transition-colors"
+                      className="flex-1 px-4 py-2 text-sm font-medium rounded-md border border-border hover:bg-accent transition-colors"
                     >
                       Cancel
                     </button>

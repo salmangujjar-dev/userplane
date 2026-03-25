@@ -62,7 +62,7 @@ export function ShareLinkView({
           <Button
             type="button"
             variant="secondary"
-            className="rounded-full px-4 py-2.5 h-auto"
+            className="px-4 py-2.5 h-auto"
             onClick={onCopyLink}
           >
             <Link className="h-4 w-4" />

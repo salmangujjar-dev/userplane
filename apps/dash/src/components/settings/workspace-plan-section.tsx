@@ -50,7 +50,7 @@ function BillingActionButton({
   return (
     <button
       onClick={handleClick}
-      className="px-4 py-2 text-sm font-medium rounded-full border border-border hover:bg-accent transition-colors flex items-center gap-2"
+      className="px-4 py-2 text-sm font-medium rounded-md border border-border hover:bg-accent transition-colors flex items-center gap-2"
     >
       <Icon className="h-4 w-4" />
       {shouldShowUpgrade ? 'Upgrade Plan' : 'Review Plan'}
@@ -285,7 +285,7 @@ function ContactAdminSheet({ open, onOpenChange }: ContactAdminSheetProps) {
 
             <button
               onClick={() => onOpenChange(false)}
-              className="w-full px-6 py-3 text-sm font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 transition-colors"
+              className="w-full px-6 py-3 text-sm font-medium rounded-md bg-foreground text-background hover:bg-foreground/90 transition-colors"
             >
               Done
             </button>

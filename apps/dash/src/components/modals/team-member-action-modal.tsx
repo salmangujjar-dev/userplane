@@ -128,18 +128,13 @@ export function TeamMemberActionModal({
               <Button
                 type="button"
                 variant="secondary"
-                className="rounded-full px-6"
+                className="px-6"
                 onClick={() => onOpenChange(false)}
                 disabled={isPending}
               >
                 Cancel
               </Button>
-              <Button
-                type="button"
-                className="rounded-full px-6"
-                onClick={handleConfirm}
-                disabled={isPending}
-              >
+              <Button type="button" className="px-6" onClick={handleConfirm} disabled={isPending}>
                 {isPending ? 'Removing...' : 'Remove'}
               </Button>
             </div>
@@ -221,7 +216,7 @@ export function TeamMemberActionModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
@@ -229,7 +224,7 @@ export function TeamMemberActionModal({
             </Button>
             <Button
               type="button"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={handleConfirm}
               disabled={isPending || !selectedRole || selectedRole === currentRole}
             >

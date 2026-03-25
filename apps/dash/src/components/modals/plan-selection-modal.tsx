@@ -163,7 +163,7 @@ function PlanCard({
         {isCurrent ? (
           <button
             disabled
-            className="w-full h-full rounded-full px-4 py-2 text-sm font-medium border border-zinc-300 text-muted-foreground bg-white cursor-default"
+            className="w-full h-full rounded-md px-4 py-2 text-sm font-medium border border-zinc-300 text-muted-foreground bg-white cursor-default"
           >
             Current
           </button>
@@ -174,7 +174,7 @@ function PlanCard({
                 e.stopPropagation();
                 onCheckout();
               }}
-              className="w-full h-full rounded-full px-4 py-2 text-sm font-medium transition-colors bg-foreground text-background hover:bg-foreground/90"
+              className="w-full h-full rounded-md px-4 py-2 text-sm font-medium transition-colors bg-foreground text-background hover:bg-foreground/90"
             >
               {isCustom ? 'Talk to sales' : 'Continue'}
             </button>

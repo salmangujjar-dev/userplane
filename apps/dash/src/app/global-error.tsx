@@ -43,11 +43,11 @@ export default function GlobalError({
               onClick={() => (window.location.href = '/')}
               variant="outline"
               size="lg"
-              className="rounded-full px-7"
+              className="px-7"
             >
               Go Home
             </Button>
-            <Button onClick={reset} size="lg" className="rounded-full px-7">
+            <Button onClick={reset} size="lg" className="px-7">
               Try Again
             </Button>
           </div>

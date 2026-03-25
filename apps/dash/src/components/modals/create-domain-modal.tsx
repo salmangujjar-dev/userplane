@@ -156,13 +156,13 @@ function CreateDomainStep({
           <Button
             type="button"
             variant="secondary"
-            className="rounded-full px-6"
+            className="px-6"
             onClick={onCancel}
             disabled={loading}
           >
             Cancel
           </Button>
-          <Button type="submit" className="rounded-full px-6" disabled={!isValid || loading}>
+          <Button type="submit" className="px-6" disabled={!isValid || loading}>
             {loading ? 'Adding...' : 'Add Domain'}
           </Button>
         </div>
@@ -215,10 +215,10 @@ function VerifyDomainStep({
           How it works
         </button>
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" className="rounded-full px-6" onClick={onSkip}>
+          <Button type="button" variant="secondary" className="px-6" onClick={onSkip}>
             Skip
           </Button>
-          <Button type="button" className="rounded-full px-6" onClick={onVerify}>
+          <Button type="button" className="px-6" onClick={onVerify}>
             {isFailed ? 'Try Again' : 'Verify'}
           </Button>
         </div>
@@ -253,7 +253,7 @@ function VerifyingDomainStep({ onSkip }: VerifyingDomainStepProps) {
 
       <DialogFooter className="mt-8">
         <div className="flex gap-2 ml-auto">
-          <Button type="button" variant="secondary" className="rounded-full px-6" onClick={onSkip}>
+          <Button type="button" variant="secondary" className="px-6" onClick={onSkip}>
             Skip
           </Button>
         </div>
@@ -323,12 +323,7 @@ function SuccessDomainStep({
           )}
         </button>
         <div className="flex gap-2 ml-auto">
-          <Button
-            type="button"
-            className="rounded-full px-6"
-            onClick={onDone}
-            disabled={savingSettings}
-          >
+          <Button type="button" className="px-6" onClick={onDone} disabled={savingSettings}>
             {savingSettings ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

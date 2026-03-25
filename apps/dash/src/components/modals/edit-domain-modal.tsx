@@ -133,12 +133,12 @@ export function EditDomainModal({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="rounded-full px-6"
+              className="px-6"
               disabled={loading}
             >
               Cancel
             </Button>
-            <Button type="submit" className="rounded-full px-6" disabled={!isValid || loading}>
+            <Button type="submit" className="px-6" disabled={!isValid || loading}>
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>

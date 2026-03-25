@@ -130,7 +130,7 @@ export function ClearCacheModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={handleClose}
               disabled={isLoading}
             >
@@ -138,7 +138,7 @@ export function ClearCacheModal({
             </Button>
             <Button
               type="button"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={handleConfirm}
               disabled={isLoading || selectedTypes.length === 0}
             >

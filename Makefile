@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production i d b l f t c
+.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension storybook\:extension storybook\:extension\:build i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -63,6 +63,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:ramp$(WHITE)                      ║$(RESET) Run ramp app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:home$(WHITE)                      ║$(RESET) Run home app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:docs$(WHITE)                      ║$(RESET) Run docs app only (Mintlify)                                      $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:extension$(WHITE)                 ║$(RESET) Run Chrome extension in dev mode (WXT)                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -75,6 +76,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)package:zendesk$(WHITE)               ║$(RESET) Package Zendesk manifest .zip (dev)                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)preview:home$(WHITE)                  ║$(RESET) Preview home production build (Cloudflare)                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home$(WHITE)                   ║$(RESET) Deploy home app (preview)                                         $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)build:extension$(WHITE)               ║$(RESET) Build Chrome extension                                             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home:production$(WHITE)        ║$(RESET) Deploy home app (production)                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)CODE QUALITY$(WHITE)                                                                                      ║$(RESET)"
@@ -107,6 +109,8 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)storybook:embed:build$(WHITE)         ║$(RESET) Build Storybook for embed package                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:dash$(WHITE)                ║$(RESET) Run Storybook for dashboard (incl. Zendesk)                       $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:dash:build$(WHITE)          ║$(RESET) Build Storybook for dashboard                                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:extension$(WHITE)           ║$(RESET) Run Storybook for Chrome extension (port 6012)                     $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)storybook:extension:build$(WHITE)     ║$(RESET) Build Storybook for Chrome extension                               $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)ZENDESK$(WHITE)                                                                                            ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -216,6 +220,10 @@ dev\:docs: ## Run docs app only (Mintlify)
 	@echo "$(MAGENTA)Starting Docs app (Mintlify on port 3003)...$(RESET)"
 	@cd apps/docs && fnm exec --using=22 bun dev
 
+dev\:extension: ## Run Chrome extension in dev mode (WXT)
+	@echo "$(MAGENTA)Starting Chrome extension (WXT dev)...$(RESET)"
+	@cd apps/extension && bun run dev
+
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
 	@bun run build
@@ -245,6 +253,11 @@ build\:ramp: ## Build Ramp app only
 	@echo "$(BLUE)Building Ramp app...$(RESET)"
 	@cd apps/ramp && bun run build
 	@echo "$(GREEN)Ramp app built!$(RESET)"
+
+build\:extension: ## Build Chrome extension
+	@echo "$(BLUE)Building Chrome extension...$(RESET)"
+	@cd apps/extension && bun run build
+	@echo "$(GREEN)Chrome extension built!$(RESET)"
 
 package\:zendesk: ## Package Zendesk manifest .zip (dev)
 	@echo "$(BLUE)Packaging Zendesk manifest (dev)...$(RESET)"
@@ -411,6 +424,15 @@ storybook\:dash\:build: ## Build Storybook for dashboard
 	@cd apps/dash && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
 
+storybook\:extension: ## Run Storybook for Chrome extension (port 6012)
+	@echo "$(MAGENTA)Starting Storybook for Chrome extension...$(RESET)"
+	@cd apps/extension && bun run storybook
+
+storybook\:extension\:build: ## Build Storybook for Chrome extension
+	@echo "$(BLUE)Building Storybook for Chrome extension...$(RESET)"
+	@cd apps/extension && bun run build-storybook
+	@echo "$(GREEN)Storybook build complete!$(RESET)"
+
 # Assets commands
 assets\:upload: ## Upload assets to R2 CDN (dev)
 	@echo "$(BLUE)Uploading assets to R2 CDN (development)...$(RESET)"
@@ -474,6 +496,7 @@ env\:setup: ## Copy .env.example files to create .env.development files
 	@if [ ! -f apps/home/.env.development ]; then cp apps/home/.env.example apps/home/.env.development && echo "$(GREEN)✓$(RESET) Created apps/home/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/home/.env.development already exists"; fi
 	@if [ ! -f apps/recorder/.env.development ]; then cp apps/recorder/.env.example apps/recorder/.env.development && echo "$(GREEN)✓$(RESET) Created apps/recorder/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/recorder/.env.development already exists"; fi
 	@if [ ! -f apps/ramp/.env.development ]; then cp apps/ramp/.env.example apps/ramp/.env.development && echo "$(GREEN)✓$(RESET) Created apps/ramp/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/ramp/.env.development already exists"; fi
+	@if [ ! -f apps/extension/.env.development ]; then cp apps/extension/.env.example apps/extension/.env.development && echo "$(GREEN)✓$(RESET) Created apps/extension/.env.development"; else echo "$(YELLOW)⚠$(RESET) apps/extension/.env.development already exists"; fi
 	@if [ ! -f packages/storage/.env.development ]; then cp packages/storage/.env.example packages/storage/.env.development && echo "$(GREEN)✓$(RESET) Created packages/storage/.env.development"; else echo "$(YELLOW)⚠$(RESET) packages/storage/.env.development already exists"; fi
 	@echo "$(GREEN)Environment files setup complete!$(RESET)"
 	@echo "$(YELLOW)Remember to update the values in each .env.development file$(RESET)"
@@ -485,6 +508,7 @@ env\:check: ## Check if .env.development files exist
 	@if [ -f apps/home/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/home/.env.development exists"; else echo "$(RED)✗$(RESET) apps/home/.env.development missing"; fi
 	@if [ -f apps/recorder/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/recorder/.env.development exists"; else echo "$(RED)✗$(RESET) apps/recorder/.env.development missing"; fi
 	@if [ -f apps/ramp/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/ramp/.env.development exists"; else echo "$(RED)✗$(RESET) apps/ramp/.env.development missing"; fi
+	@if [ -f apps/extension/.env.development ]; then echo "$(GREEN)✓$(RESET) apps/extension/.env.development exists"; else echo "$(RED)✗$(RESET) apps/extension/.env.development missing"; fi
 	@if [ -f packages/storage/.env.development ]; then echo "$(GREEN)✓$(RESET) packages/storage/.env.development exists"; else echo "$(RED)✗$(RESET) packages/storage/.env.development missing (optional, falls back to apps/api)"; fi
 
 # Database commands - Development

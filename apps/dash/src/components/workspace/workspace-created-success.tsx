@@ -37,7 +37,7 @@ export function WorkspaceCreatedSuccess({
         <WorkspaceCard workspaceName={workspaceName} />
 
         <div className="w-full space-y-3">
-          <Button onClick={onPrimaryAction} size="lg" className="w-full rounded-full px-7 py-6">
+          <Button onClick={onPrimaryAction} size="lg" className="w-full px-7 py-6">
             {primaryText}
           </Button>
 

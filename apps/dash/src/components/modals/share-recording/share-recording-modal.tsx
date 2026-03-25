@@ -313,14 +313,14 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
                   <Button
                     type="button"
                     variant="secondary"
-                    className="rounded-full px-6"
+                    className="px-6"
                     onClick={() => handleOpenChange(false)}
                   >
                     Cancel
                   </Button>
                   <Button
                     type="button"
-                    className="rounded-full px-6"
+                    className="px-6"
                     disabled={isGenerating}
                     onClick={handleShare}
                   >
@@ -332,17 +332,13 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
                   <Button
                     type="button"
                     variant="secondary"
-                    className="rounded-full px-6"
+                    className="px-6"
                     onClick={handleCopyLink}
                   >
                     Copy
                   </Button>
                   {canSendEmails && showEmailShare && (
-                    <Button
-                      type="submit"
-                      className="rounded-full px-6"
-                      disabled={isPending || !isValid}
-                    >
+                    <Button type="submit" className="px-6" disabled={isPending || !isValid}>
                       {isPending ? 'Sending...' : 'Send'}
                     </Button>
                   )}

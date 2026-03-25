@@ -159,12 +159,7 @@ function CreateWorkspaceForm({
     <form onSubmit={onSubmit} className="space-y-6">
       <WorkspaceUrlField control={control} errors={errors} isPending={isPending} />
 
-      <Button
-        type="submit"
-        disabled={!isValid || isPending}
-        size="lg"
-        className="w-full rounded-full px-7 py-6"
-      >
+      <Button type="submit" disabled={!isValid || isPending} size="lg" className="w-full px-7 py-6">
         {isPending ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -345,7 +340,7 @@ function ProviderSelectFlow() {
             onClick={handleConnect}
             disabled={isConnecting}
             size="lg"
-            className="w-full rounded-full px-7 py-6"
+            className="w-full px-7 py-6"
           >
             {isConnecting
               ? 'Connecting...'
@@ -533,7 +528,7 @@ function ZendeskAuthFlow() {
           <Button
             onClick={() => window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank')}
             size="lg"
-            className="w-full rounded-full px-7 py-6"
+            className="w-full px-7 py-6"
           >
             Go to Zendesk Marketplace
           </Button>
@@ -592,7 +587,7 @@ function ZendeskAuthFlow() {
             type="submit"
             disabled={!isValid || isSubmitting}
             size="lg"
-            className="w-full rounded-full px-7 py-6"
+            className="w-full px-7 py-6"
           >
             {isSubmitting ? (
               <>

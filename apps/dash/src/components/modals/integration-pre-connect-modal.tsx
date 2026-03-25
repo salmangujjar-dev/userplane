@@ -105,18 +105,13 @@ export function IntegrationPreConnectModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={() => onOpenChange(false)}
               disabled={isConnecting}
             >
               Cancel
             </Button>
-            <Button
-              type="button"
-              className="rounded-full px-6"
-              onClick={handleConnect}
-              disabled={isConnecting}
-            >
+            <Button type="button" className="px-6" onClick={handleConnect} disabled={isConnecting}>
               {isConnecting ? 'Connecting...' : 'Connect'}
             </Button>
           </div>

@@ -92,18 +92,13 @@ export function ImpersonateConfirmModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
               Cancel
             </Button>
-            <Button
-              type="button"
-              className="rounded-full px-6"
-              onClick={onConfirm}
-              disabled={isPending}
-            >
+            <Button type="button" className="px-6" onClick={onConfirm} disabled={isPending}>
               {isPending ? 'Impersonating...' : 'Start Impersonating'}
             </Button>
           </div>

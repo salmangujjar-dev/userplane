@@ -21,19 +21,19 @@ export function AdminTopActions({
       {hasActions && (
         <div className="flex items-center gap-2">
           {onProvisionClick && (
-            <Button onClick={onProvisionClick} variant="secondary" className="rounded-full">
+            <Button onClick={onProvisionClick} variant="secondary">
               Provision
               <Rocket className="h-4 w-4 ml-2" />
             </Button>
           )}
           {onCreateInviteClick && (
-            <Button onClick={onCreateInviteClick} className="rounded-full">
+            <Button onClick={onCreateInviteClick}>
               Invite
               <LinkIcon className="h-4 w-4 ml-2" />
             </Button>
           )}
           {onCreatePlanClick && (
-            <Button onClick={onCreatePlanClick} className="rounded-full">
+            <Button onClick={onCreatePlanClick}>
               Create Plan
               <Plus className="h-4 w-4 ml-2" />
             </Button>

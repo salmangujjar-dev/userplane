@@ -64,7 +64,7 @@ export function DomainListItem({
         <Button
           variant="secondary"
           size="sm"
-          className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
+          className="min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
           onClick={() => onConfigure(domain.domainId, domain.domainUrl, domain.domainStatus)}
           disabled={isConfiguring}
         >

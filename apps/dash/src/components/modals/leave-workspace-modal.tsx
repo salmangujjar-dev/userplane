@@ -140,7 +140,7 @@ export function LeaveWorkspaceModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
@@ -148,7 +148,7 @@ export function LeaveWorkspaceModal({
             </Button>
             <Button
               type="button"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={handleConfirm}
               disabled={isConfirmDisabled}
             >

@@ -419,7 +419,7 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
                     <Button
                       type="button"
                       variant="secondary"
-                      className="rounded-full px-4 py-2.5 h-auto"
+                      className="px-4 py-2.5 h-auto"
                       onClick={handleCopyLink}
                     >
                       <Link className="h-4 w-4" />
@@ -552,17 +552,13 @@ export function ShareRecordingModal({ open, onOpenChange, recordingId }: ShareRe
               <Button
                 type="button"
                 variant="secondary"
-                className="rounded-full px-6"
+                className="px-6"
                 onClick={() => handleOpenChange(false)}
               >
                 {shareMode === 'choose' ? 'Cancel' : 'Done'}
               </Button>
               {canSendEmails && shareMode === 'internal' && showEmailShare && (
-                <Button
-                  type="submit"
-                  className="rounded-full px-6"
-                  disabled={isPending || !isValid}
-                >
+                <Button type="submit" className="px-6" disabled={isPending || !isValid}>
                   {isPending ? 'Sharing...' : 'Share'}
                 </Button>
               )}

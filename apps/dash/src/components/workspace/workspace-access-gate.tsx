@@ -150,7 +150,7 @@ function WorkspaceAccessLoading() {
           </div>
         </div>
       </div>
-      <div className="h-12 w-full animate-pulse rounded-full bg-muted" />
+      <div className="h-12 w-full animate-pulse rounded-md bg-muted" />
     </WorkspaceAccessLayout>
   );
 }
@@ -274,12 +274,7 @@ function WorkspaceAccessJoin({
         invitePolicy={invitePolicy}
       />
 
-      <Button
-        onClick={onJoin}
-        disabled={isJoining}
-        size="lg"
-        className="w-full rounded-full px-7 py-6"
-      >
+      <Button onClick={onJoin} disabled={isJoining} size="lg" className="w-full px-7 py-6">
         {isJoining ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -329,7 +324,7 @@ function WorkspaceAccessRequest({
         onClick={onRequestAccess}
         disabled={isRequesting}
         size="lg"
-        className="w-full rounded-full px-7 py-6"
+        className="w-full px-7 py-6"
       >
         {isRequesting ? (
           <>
