@@ -219,7 +219,7 @@ function OAuthZendeskAuthorizeContent() {
             onClick={handleAuthorize}
             disabled={isSubmitting || !selectedWorkspaceId}
             size="lg"
-            className="w-full rounded-full px-7 py-6"
+            className="w-full px-7 py-6"
           >
             {isSubmitting ? (
               <>

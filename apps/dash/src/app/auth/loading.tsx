@@ -16,7 +16,7 @@ export default function AuthLoading() {
           <Skeleton className="h-4 w-48" />
         </div>
         <div className="space-y-6">
-          <Skeleton className="h-14 w-full rounded-full" />
+          <Skeleton className="h-14 w-full rounded-md" />
         </div>
         <Skeleton className="h-10 w-80 mx-auto" />
       </div>

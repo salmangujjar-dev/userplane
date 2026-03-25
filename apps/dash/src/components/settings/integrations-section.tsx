@@ -78,14 +78,14 @@ export function IntegrationsSection() {
               <Skeleton className="w-8 h-8 rounded" />
               <Skeleton className="w-24 h-4" />
             </div>
-            <Skeleton className="w-[120px] h-9 rounded-full" />
+            <Skeleton className="w-[120px] h-9 rounded-md" />
           </div>
           <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
             <div className="flex items-center gap-3">
               <Skeleton className="w-8 h-8 rounded" />
               <Skeleton className="w-24 h-4" />
             </div>
-            <Skeleton className="w-[120px] h-9 rounded-full" />
+            <Skeleton className="w-[120px] h-9 rounded-md" />
           </div>
         </div>
       </div>
@@ -116,7 +116,7 @@ export function IntegrationsSection() {
           <Button
             variant="secondary"
             size="sm"
-            className="rounded-full min-w-[120px]"
+            className="min-w-[120px]"
             onClick={() => setShowIntercomModal(true)}
             disabled={authorizeIntercom.isPending}
           >
@@ -146,7 +146,7 @@ export function IntegrationsSection() {
           <Button
             variant="secondary"
             size="sm"
-            className="rounded-full min-w-[120px]"
+            className="min-w-[120px]"
             onClick={() => setShowZendeskModal(true)}
           >
             {isZendeskConnected ? 'Connected' : 'Connect'}

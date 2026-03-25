@@ -8,6 +8,8 @@ dist
 build
 .next
 .astro
+.output
+.wxt
 out
 
 # Cache

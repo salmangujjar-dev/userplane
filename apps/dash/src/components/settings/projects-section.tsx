@@ -136,7 +136,7 @@ function ProjectItemCard({
         <Button
           variant="secondary"
           size="sm"
-          className="rounded-full min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
+          className="min-w-[120px] focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
           onClick={() => onView(project.projectId)}
         >
           View

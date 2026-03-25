@@ -71,7 +71,7 @@ function WorkspaceSuggestSkeleton() {
           </div>
         </div>
 
-        <Skeleton className="h-12 w-full rounded-full" />
+        <Skeleton className="h-12 w-full rounded-md" />
 
         <div className="flex justify-center pt-2">
           <Skeleton className="h-4 w-32" />
@@ -365,7 +365,7 @@ function WorkspaceSuggestPageContent() {
           onClick={handleJoinWorkspace}
           disabled={!selectedWorkspaceId || isJoining}
           size="lg"
-          className="w-full rounded-full px-7 py-6"
+          className="w-full px-7 py-6"
         >
           {isJoining ? (
             <>

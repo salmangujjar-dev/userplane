@@ -264,15 +264,11 @@ export function AdminCreateWorkspaceInviteModal({
                   variant="secondary"
                   onClick={() => onOpenChange(false)}
                   disabled={isPending}
-                  className="rounded-full px-6"
+                  className="px-6"
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={!isValid || isPending}
-                  className="rounded-full px-6"
-                >
+                <Button type="submit" disabled={!isValid || isPending} className="px-6">
                   {isPending ? (
                     <>
                       <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
@@ -395,14 +391,10 @@ export function AdminCreateWorkspaceInviteSuccessModal({
               )}
             </button>
             <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
-                className="rounded-full px-6"
-              >
+              <Button variant="secondary" onClick={() => onOpenChange(false)} className="px-6">
                 Done
               </Button>
-              <Button onClick={handleCopy} className="rounded-full px-6 w-[140px]">
+              <Button onClick={handleCopy} className="px-6 w-[140px]">
                 {copied ? (
                   <>
                     <Check className="mr-2 h-4 w-4" />

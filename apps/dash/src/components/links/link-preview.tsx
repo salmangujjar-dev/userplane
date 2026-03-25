@@ -202,7 +202,7 @@ export function LinkPreview({
             <Button
               variant="secondary"
               size="sm"
-              className="rounded-full focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
+              className="focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
               onClick={handleView}
             >
               Recordings

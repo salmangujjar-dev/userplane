@@ -23,7 +23,6 @@ import {
   useSidebar,
 } from '@userplane/ui/components/sidebar';
 import {
-  Building2,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -255,9 +254,13 @@ export function AppSidebar() {
                   <div className="py-1.5">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-accent transition-colors border border-border">
-                          <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm font-medium flex-1 truncate text-center">
+                        <button className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-accent transition-colors border border-border">
+                          <WorkspaceAvatar
+                            workspaceId={workspace?.workspace.workspaceId}
+                            workspaceName={workspace?.workspace.workspaceName}
+                            size={WORKSPACE_AVATAR_SIZES.COMPACT}
+                          />
+                          <span className="text-sm font-medium flex-1 truncate text-left">
                             {workspace?.workspace.workspaceName || 'Select Workspace'}
                           </span>
                           <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0" />

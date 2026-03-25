@@ -162,12 +162,7 @@ function InviteActionsFooter({
 }: InviteActionsFooterProps) {
   return (
     <div className="space-y-4">
-      <Button
-        onClick={onAction}
-        size="lg"
-        className="w-full rounded-full px-7 py-6"
-        disabled={isProcessing}
-      >
+      <Button onClick={onAction} size="lg" className="w-full px-7 py-6" disabled={isProcessing}>
         {isProcessing ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin mr-2" />

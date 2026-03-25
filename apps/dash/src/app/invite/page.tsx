@@ -77,11 +77,7 @@ function InvitePageContent() {
           <p className="text-sm text-muted-foreground text-center">No invite token provided</p>
         </div>
         <div className="space-y-6">
-          <Button
-            onClick={() => router.push('/')}
-            size="lg"
-            className="w-full rounded-full px-7 py-6"
-          >
+          <Button onClick={() => router.push('/')} size="lg" className="w-full px-7 py-6">
             Go to Dashboard
           </Button>
         </div>
@@ -105,11 +101,7 @@ function InvitePageContent() {
           <p className="text-sm text-muted-foreground text-center">{validationError.message}</p>
         </div>
         <div className="space-y-6">
-          <Button
-            onClick={() => router.push('/')}
-            size="lg"
-            className="w-full rounded-full px-7 py-6"
-          >
+          <Button onClick={() => router.push('/')} size="lg" className="w-full px-7 py-6">
             Go to Dashboard
           </Button>
         </div>
@@ -133,11 +125,7 @@ function InvitePageContent() {
           <p className="text-sm text-muted-foreground text-center">{inviteResult.error.message}</p>
         </div>
         <div className="space-y-6">
-          <Button
-            onClick={() => router.push('/')}
-            size="lg"
-            className="w-full rounded-full px-7 py-6"
-          >
+          <Button onClick={() => router.push('/')} size="lg" className="w-full px-7 py-6">
             Go to Dashboard
           </Button>
         </div>
@@ -178,7 +166,7 @@ function InvitePageContent() {
           onClick={handleJoinWorkspace}
           disabled={isAccepting}
           size="lg"
-          className="w-full rounded-full px-7 py-6"
+          className="w-full px-7 py-6"
         >
           {isAccepting ? (
             <>
@@ -214,7 +202,7 @@ function InvitePageSkeleton() {
         <Skeleton className="h-4 w-80" />
       </div>
       <div className="space-y-6">
-        <Skeleton className="h-14 w-full rounded-full" />
+        <Skeleton className="h-14 w-full rounded-md" />
         <Skeleton className="h-10 w-32 mx-auto" />
       </div>
     </InviteLayout>

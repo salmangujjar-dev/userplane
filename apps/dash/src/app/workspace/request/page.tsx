@@ -323,7 +323,7 @@ function AccessRequestPageContent() {
             <Button
               variant="secondary"
               size="sm"
-              className="rounded-full h-8 w-8 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
+              className="h-8 w-8 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 border-0"
               onClick={handleApprove}
               disabled={isProcessing}
             >
@@ -336,7 +336,7 @@ function AccessRequestPageContent() {
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-full h-8 w-8 p-0"
+              className="h-8 w-8 p-0"
               onClick={handleDecline}
               disabled={isProcessing}
             >

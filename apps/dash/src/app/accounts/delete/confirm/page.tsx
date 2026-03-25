@@ -188,7 +188,7 @@ function DeleteAccountContent() {
             </div>
           </div>
 
-          <Button onClick={handleViewWorkspaces} size="lg" className="w-full rounded-full px-6">
+          <Button onClick={handleViewWorkspaces} size="lg" className="w-full px-6">
             View My Workspaces
           </Button>
         </div>
@@ -272,7 +272,7 @@ function DeleteAccountContent() {
               disabled={isDeleting}
               variant="default"
               size="lg"
-              className="w-full rounded-full px-6"
+              className="w-full px-6"
             >
               Cancel
             </Button>
@@ -282,7 +282,7 @@ function DeleteAccountContent() {
               disabled={isDeleting || !token}
               variant="secondary"
               size="lg"
-              className="w-full rounded-full px-6"
+              className="w-full px-6"
             >
               {isDeleting ? (
                 <>

@@ -78,7 +78,7 @@ export function PublicShareRecordingModal({
               <Button
                 type="button"
                 variant="secondary"
-                className="rounded-full px-4 py-2.5 h-auto"
+                className="px-4 py-2.5 h-auto"
                 onClick={handleCopyLink}
               >
                 <LinkIcon className="h-4 w-4" />
@@ -93,15 +93,10 @@ export function PublicShareRecordingModal({
 
         <DialogFooter className="mt-6">
           <div className="flex gap-2 ml-auto">
-            <Button
-              type="button"
-              variant="secondary"
-              className="rounded-full px-6"
-              onClick={handleCopyLink}
-            >
+            <Button type="button" variant="secondary" className="px-6" onClick={handleCopyLink}>
               Copy
             </Button>
-            <Button type="button" className="rounded-full px-6" onClick={() => onOpenChange(false)}>
+            <Button type="button" className="px-6" onClick={() => onOpenChange(false)}>
               Done
             </Button>
           </div>

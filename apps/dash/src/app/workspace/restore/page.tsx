@@ -51,7 +51,7 @@ function InvalidParamsState({ onGoToDashboard }: { onGoToDashboard: () => void }
           </div>
         </div>
 
-        <Button onClick={onGoToDashboard} size="lg" className="w-full rounded-full px-6">
+        <Button onClick={onGoToDashboard} size="lg" className="w-full px-6">
           Go to Dashboard
         </Button>
       </div>
@@ -121,7 +121,7 @@ function SuccessState({
           />
         )}
 
-        <Button onClick={onGoToWorkspace} size="lg" className="w-full rounded-full px-7 py-6">
+        <Button onClick={onGoToWorkspace} size="lg" className="w-full px-7 py-6">
           Go to {restoreType === 'workspace' ? 'Workspace' : 'Project'}
         </Button>
       </div>
@@ -221,7 +221,7 @@ function ErrorState({
           </div>
         </div>
 
-        <Button onClick={onGoToDashboard} size="lg" className="w-full rounded-full px-6">
+        <Button onClick={onGoToDashboard} size="lg" className="w-full px-6">
           Go to Dashboard
         </Button>
       </div>
@@ -313,12 +313,7 @@ function ConfirmationState({
         )}
 
         <div className="w-full space-y-3">
-          <Button
-            onClick={onRestore}
-            disabled={isPending}
-            size="lg"
-            className="w-full rounded-full px-7 py-6"
-          >
+          <Button onClick={onRestore} disabled={isPending} size="lg" className="w-full px-7 py-6">
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

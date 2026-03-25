@@ -108,11 +108,7 @@ export function OAuthErrorState({
         </div>
 
         <div className="space-y-4">
-          <Button
-            onClick={errorActionPrimary.callback}
-            size="lg"
-            className="w-full rounded-full px-7 py-6"
-          >
+          <Button onClick={errorActionPrimary.callback} size="lg" className="w-full px-7 py-6">
             {errorActionPrimary.label}
           </Button>
 

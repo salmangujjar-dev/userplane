@@ -106,15 +106,10 @@ export function CreateWorkspaceModal({
 
           <DialogFooter className="mt-8">
             <div className="flex gap-2 w-full justify-end">
-              <Button
-                type="button"
-                variant="secondary"
-                className="rounded-full px-6"
-                onClick={handleCancel}
-              >
+              <Button type="button" variant="secondary" className="px-6" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button type="submit" className="rounded-full px-6" disabled={!isValid}>
+              <Button type="submit" className="px-6" disabled={!isValid}>
                 Create Workspace
               </Button>
             </div>

@@ -1,0 +1,12 @@
+{
+  "extends": "@userplane/typescript-config/react-library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@userplane/ui/*": ["../../packages/ui/src/*"]
+    }
+  },
+  "include": ["src/**/*", "wxt.config.ts", ".wxt/**/*"],
+  "exclude": ["node_modules", ".output"]
+}

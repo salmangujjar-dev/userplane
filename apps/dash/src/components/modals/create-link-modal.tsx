@@ -195,7 +195,7 @@ export function CreateLinkModal({
     <Dialog open={open} onOpenChange={setOpen}>
       {!hideButton && (
         <DialogTrigger asChild>
-          <Button variant="default" size="default" className="rounded-full">
+          <Button variant="default" size="default">
             Create Link
             <Plus className="h-4 w-4" />
           </Button>
@@ -458,13 +458,13 @@ function FormView({
           <Button
             type="button"
             variant="secondary"
-            className="rounded-full px-6"
+            className="px-6"
             onClick={onClose}
             disabled={isPending}
           >
             Cancel
           </Button>
-          <Button type="submit" className="rounded-full px-6" disabled={isPending || !isValid}>
+          <Button type="submit" className="px-6" disabled={isPending || !isValid}>
             {isPending ? 'Creating...' : 'Create Link'}
           </Button>
         </div>
@@ -519,7 +519,7 @@ function ErrorView({
           <HelpCircle className="h-4 w-4" />
           Link issues
         </a>
-        <Button variant="outline" className="rounded-full px-6" onClick={onClose}>
+        <Button variant="outline" className="px-6" onClick={onClose}>
           Close
         </Button>
       </DialogFooter>
@@ -589,7 +589,7 @@ function ShareView({ linkUrl }: { linkUrl: string }) {
       </div>
 
       <DialogFooter>
-        <Button variant="default" onClick={handleCopy} className="rounded-full px-6">
+        <Button variant="default" onClick={handleCopy} className="px-6">
           <Copy className="h-4 w-4 mr-2" />
           Copy Link
         </Button>

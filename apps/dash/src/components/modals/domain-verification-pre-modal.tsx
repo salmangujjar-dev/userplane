@@ -64,12 +64,12 @@ export function DomainVerificationPreModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button type="button" className="rounded-full px-6" onClick={onVerify}>
+            <Button type="button" className="px-6" onClick={onVerify}>
               Verify
             </Button>
           </div>

@@ -903,15 +903,11 @@ export function AdminProvisionWorkspaceModal({
                   variant="secondary"
                   onClick={() => onOpenChange(false)}
                   disabled={isPending}
-                  className="rounded-full px-6"
+                  className="px-6"
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={!canSubmit() || isPending}
-                  className="rounded-full px-6"
-                >
+                <Button type="submit" disabled={!canSubmit() || isPending} className="px-6">
                   {isPending ? (
                     <>
                       <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
@@ -1023,17 +1019,13 @@ export function AdminProvisionWorkspaceSuccessModal({
               )}
             </button>
             <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
-                className="rounded-full px-6"
-              >
+              <Button variant="secondary" onClick={() => onOpenChange(false)} className="px-6">
                 Done
               </Button>
               {result.checkoutUrl && (
                 <Button
                   onClick={() => handleCopy(result.checkoutUrl!, 'copy-link')}
-                  className="rounded-full px-6 w-[140px]"
+                  className="px-6 w-[140px]"
                 >
                   {copiedField === 'copy-link' ? (
                     <>

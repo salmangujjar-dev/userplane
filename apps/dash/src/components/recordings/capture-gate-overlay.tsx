@@ -30,7 +30,7 @@ function OverlayAction({
   // On shared page (no workspace context), always show helpdesk link
   if (!workspaceId || reason === 'preference-disabled') {
     return (
-      <Button variant="secondary" size="default" className="mt-2 rounded-full" asChild>
+      <Button variant="secondary" size="default" className="mt-2" asChild>
         <a href={SUPPORT_LINKS.domainPreferences} target="_blank" rel="noopener noreferrer">
           <ExternalLink className="h-4 w-4" />
           Learn more
@@ -43,7 +43,7 @@ function OverlayAction({
     <Button
       variant="secondary"
       size="default"
-      className="mt-2 rounded-full"
+      className="mt-2"
       onClick={() => triggerUpsell(featureGateKey!)}
     >
       <ArrowUpRight className="h-4 w-4" />

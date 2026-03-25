@@ -280,13 +280,13 @@ export function CreateProjectModal({
               <Button
                 type="button"
                 variant="secondary"
-                className="rounded-full px-6"
+                className="px-6"
                 onClick={handleCancel}
                 disabled={loading}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="rounded-full px-6" disabled={!isValid || loading}>
+              <Button type="submit" className="px-6" disabled={!isValid || loading}>
                 {loading ? 'Creating...' : 'Create Project'}
               </Button>
             </div>

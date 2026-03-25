@@ -37,18 +37,18 @@ export function RecordingDetailNav({
           <Logo size="sm" />
         </Link>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" size="default" className="rounded-full" onClick={onCopyLink}>
+          <Button variant="secondary" size="default" onClick={onCopyLink}>
             <LinkIcon className="h-4 w-4" />
             Copy link
           </Button>
-          <Button variant="default" size="default" className="rounded-full" onClick={onShare}>
+          <Button variant="default" size="default" onClick={onShare}>
             <Share2 className="h-4 w-4" />
             Share
           </Button>
           {(onEdit || onDelete || onGetAiPrompt) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

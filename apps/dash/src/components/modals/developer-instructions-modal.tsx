@@ -215,16 +215,12 @@ export function DeveloperInstructionsModal({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-full px-6"
+              className="px-6"
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="rounded-full px-6"
-              disabled={loading || validEmails.length === 0}
-            >
+            <Button type="submit" className="px-6" disabled={loading || validEmails.length === 0}>
               {loading ? 'Sending...' : 'Send Instructions'}
             </Button>
           </DialogFooter>

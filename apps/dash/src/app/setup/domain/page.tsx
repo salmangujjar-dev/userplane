@@ -34,7 +34,7 @@ function DomainSetupContent() {
       <AuthIcons />
 
       <nav className="absolute top-0 right-0 p-6 z-20">
-        <Button onClick={handleVerify} size="lg" className="rounded-full px-7 py-3">
+        <Button onClick={handleVerify} size="lg" className="px-7 py-3">
           Verify
         </Button>
       </nav>

@@ -122,17 +122,12 @@ export function AiPromptModal({ open, onOpenChange, recording, resources }: AiPr
           <Button
             type="button"
             variant="secondary"
-            className="rounded-full px-6"
+            className="px-6"
             onClick={() => onOpenChange(false)}
           >
             Close
           </Button>
-          <Button
-            type="button"
-            className="rounded-full px-6"
-            onClick={handleCopy}
-            disabled={isLoading}
-          >
+          <Button type="button" className="px-6" onClick={handleCopy} disabled={isLoading}>
             <Copy className="h-4 w-4" />
             Copy to clipboard
           </Button>

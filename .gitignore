@@ -29,6 +29,8 @@ out/
 build/
 dist/
 .astro/
+.output/
+.wxt/
 .trigger/
 
 # Zendesk manifest packaging output
