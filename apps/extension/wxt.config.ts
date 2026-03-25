@@ -21,6 +21,9 @@ export default defineConfig({
           { light: 'icon/light-32.png', dark: 'icon/dark-32.png', size: 32 },
         ],
       },
+      omnibox: {
+        keyword: 'userplane',
+      },
       side_panel: {
         default_path: 'sidepanel/index.html',
       },

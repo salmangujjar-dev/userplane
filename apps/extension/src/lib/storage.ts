@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   user: 'session:user',
   session: 'session:data',
   pendingRoute: 'nav:pending-route',
+  pendingCreateReference: 'create:pending-reference',
 } as const;
 
 export async function getSessionCache(): Promise<{
@@ -30,6 +31,7 @@ export async function clearSessionCache(): Promise<void> {
 }
 
 export const PENDING_ROUTE_KEY = STORAGE_KEYS.pendingRoute;
+export const PENDING_CREATE_REFERENCE_KEY = STORAGE_KEYS.pendingCreateReference;
 
 export async function setPendingRoute(path: string): Promise<void> {
   await chrome.storage.session.set({ [STORAGE_KEYS.pendingRoute]: path });
@@ -42,4 +44,17 @@ export async function consumePendingRoute(): Promise<string | null> {
     await chrome.storage.session.remove(STORAGE_KEYS.pendingRoute);
   }
   return path;
+}
+
+export async function setPendingCreateReference(reference: string): Promise<void> {
+  await chrome.storage.session.set({ [STORAGE_KEYS.pendingCreateReference]: reference });
+}
+
+export async function consumePendingCreateReference(): Promise<string | null> {
+  const result = await chrome.storage.session.get(STORAGE_KEYS.pendingCreateReference);
+  const reference = result[STORAGE_KEYS.pendingCreateReference] ?? null;
+  if (reference) {
+    await chrome.storage.session.remove(STORAGE_KEYS.pendingCreateReference);
+  }
+  return reference;
 }
