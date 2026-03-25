@@ -8,8 +8,6 @@ import {
   setSessionCache,
 } from '@/lib/storage';
 
-const DASH_URL = import.meta.env.WXT_DASH_URL || 'https://dash-dev.userplane.io';
-
 const MENU_IDS = {
   ACTION_CREATE: 'action-create-link',
   ACTION_VIEW_LINKS: 'action-view-links',
@@ -74,30 +72,15 @@ async function checkSession(): Promise<SessionCheckResponse> {
   }
 }
 
-async function launchAuthFlow(): Promise<SessionCheckResponse> {
-  const redirectUrl = chrome.identity.getRedirectURL();
-  const authUrl = `${DASH_URL}/auth?redirect_to=/extension/auth?ext_redirect=${encodeURIComponent(redirectUrl)}`;
-
-  try {
-    await chrome.identity.launchWebAuthFlow({
-      url: authUrl,
-      interactive: true,
-    });
-
-    // After auth flow completes, the session cookie is set on .userplane.io
-    // Re-check session to confirm authentication
-    return await checkSession();
-  } catch {
-    return { authenticated: false };
-  }
-}
-
 async function handleSignOut(): Promise<void> {
   try {
     await authClient.signOut();
   } catch {
     // Sign out best-effort
   }
+  // Clear the extension cache even if sign-out fails so we don't keep showing
+  // stale signed-in UI; the server-side session cookie may still exist until a
+  // later session check or successful sign-out clears it.
   await clearSessionCache();
 }
 
@@ -105,11 +88,6 @@ export default defineBackground(() => {
   chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
     if (message.type === 'CHECK_SESSION') {
       checkSession().then(sendResponse);
-      return true;
-    }
-
-    if (message.type === 'SIGN_IN') {
-      launchAuthFlow().then(sendResponse);
       return true;
     }
 

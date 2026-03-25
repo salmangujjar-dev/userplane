@@ -3,10 +3,13 @@ import { useCallback, useEffect, useState } from 'react';
 import type { SessionCheckResponse, SessionUser } from '@/lib/messaging';
 import { sendMessage } from '@/lib/messaging';
 
+const DASH_URL = import.meta.env.WXT_DASH_URL || 'https://dash-dev.userplane.io';
+
 interface UseExtensionAuthReturn {
   user: SessionUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  refreshSession: () => Promise<void>;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -37,19 +40,28 @@ export function useExtensionAuth(): UseExtensionAuthReturn {
     checkSession();
   }, [checkSession]);
 
-  const signIn = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await sendMessage<SessionCheckResponse>({
-        type: 'SIGN_IN',
-      });
+  useEffect(() => {
+    const handleFocus = () => {
+      void checkSession();
+    };
 
-      if (response.authenticated && response.user) {
-        setUser(response.user);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void checkSession();
       }
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [checkSession]);
+
+  const signIn = useCallback(async () => {
+    await chrome.tabs.create({ url: `${DASH_URL}/auth` });
   }, []);
 
   const signOut = useCallback(async () => {
@@ -66,6 +78,7 @@ export function useExtensionAuth(): UseExtensionAuthReturn {
     user,
     isLoading,
     isAuthenticated: !!user,
+    refreshSession: checkSession,
     signIn,
     signOut,
   };

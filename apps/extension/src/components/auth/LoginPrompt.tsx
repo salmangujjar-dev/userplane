@@ -4,6 +4,7 @@ import Logo from '@userplane/ui/components/logo';
 import { mediaClient } from '@/lib/media';
 
 interface LoginPromptProps {
+  onRefresh: () => void;
   onSignIn: () => void;
 }
 
@@ -54,7 +55,7 @@ export function DecorativeIcons() {
   );
 }
 
-export function LoginPrompt({ onSignIn }: LoginPromptProps) {
+export function LoginPrompt({ onRefresh, onSignIn }: LoginPromptProps) {
   return (
     <div className="relative flex flex-col items-center justify-center h-screen bg-background overflow-hidden">
       <div className="flex flex-col items-center gap-8 px-8 relative z-10">
@@ -71,6 +72,14 @@ export function LoginPrompt({ onSignIn }: LoginPromptProps) {
         >
           Sign in to continue
         </Button>
+
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Already signed in? Refresh
+        </button>
       </div>
 
       <DecorativeIcons />
