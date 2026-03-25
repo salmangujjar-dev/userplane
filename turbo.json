@@ -161,7 +161,10 @@
         "DEV",
         "INTERNAL_API_KEY",
         "WXT_API_URL",
-        "WXT_DASH_URL"
+        "WXT_DASH_URL",
+        "WXT_CDN_DOMAIN",
+        "WXT_CLOUDFLARE_IMAGE_ZONE",
+        "WXT_SKIP_IMAGE_TRANSFORM"
       ]
     },
     "lint": {

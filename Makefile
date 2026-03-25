@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension storybook\:extension storybook\:extension\:build i d b l f t c
+.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension dev\:extension\:firefox dev\:extension\:edge build\:extension build\:extension\:firefox build\:extension\:edge zip\:extension zip\:extension\:firefox zip\:extension\:edge storybook\:extension storybook\:extension\:build i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -63,7 +63,9 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:ramp$(WHITE)                      ║$(RESET) Run ramp app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:home$(WHITE)                      ║$(RESET) Run home app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:docs$(WHITE)                      ║$(RESET) Run docs app only (Mintlify)                                      $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev:extension$(WHITE)                 ║$(RESET) Run Chrome extension in dev mode (WXT)                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:extension$(WHITE)                 ║$(RESET) Run Chrome extension in dev mode (WXT, port 3010)                  $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:extension:firefox$(WHITE)         ║$(RESET) Run extension in Firefox dev mode (WXT, port 3011)                  $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:extension:edge$(WHITE)            ║$(RESET) Run extension in Edge dev mode (WXT, port 3012)                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -77,6 +79,11 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)preview:home$(WHITE)                  ║$(RESET) Preview home production build (Cloudflare)                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home$(WHITE)                   ║$(RESET) Deploy home app (preview)                                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:extension$(WHITE)               ║$(RESET) Build Chrome extension                                             $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)build:extension:firefox$(WHITE)       ║$(RESET) Build extension for Firefox                                        $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)build:extension:edge$(WHITE)          ║$(RESET) Build extension for Edge                                           $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)zip:extension$(WHITE)                 ║$(RESET) Zip Chrome extension for distribution                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)zip:extension:firefox$(WHITE)         ║$(RESET) Zip extension for Firefox distribution                             $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)zip:extension:edge$(WHITE)            ║$(RESET) Zip extension for Edge distribution                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home:production$(WHITE)        ║$(RESET) Deploy home app (production)                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)CODE QUALITY$(WHITE)                                                                                      ║$(RESET)"
@@ -220,9 +227,17 @@ dev\:docs: ## Run docs app only (Mintlify)
 	@echo "$(MAGENTA)Starting Docs app (Mintlify on port 3003)...$(RESET)"
 	@cd apps/docs && fnm exec --using=22 bun dev
 
-dev\:extension: ## Run Chrome extension in dev mode (WXT)
-	@echo "$(MAGENTA)Starting Chrome extension (WXT dev)...$(RESET)"
+dev\:extension: ## Run Chrome extension in dev mode (WXT, port 3010)
+	@echo "$(MAGENTA)Starting Chrome extension (WXT dev, port 3010)...$(RESET)"
 	@cd apps/extension && bun run dev
+
+dev\:extension\:firefox: ## Run extension in Firefox dev mode (WXT, port 3011)
+	@echo "$(MAGENTA)Starting extension for Firefox (WXT dev, port 3011)...$(RESET)"
+	@cd apps/extension && bun run dev:firefox
+
+dev\:extension\:edge: ## Run extension in Edge dev mode (WXT, port 3012)
+	@echo "$(MAGENTA)Starting extension for Edge (WXT dev, port 3012)...$(RESET)"
+	@cd apps/extension && bun run dev:edge
 
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
@@ -258,6 +273,31 @@ build\:extension: ## Build Chrome extension
 	@echo "$(BLUE)Building Chrome extension...$(RESET)"
 	@cd apps/extension && bun run build
 	@echo "$(GREEN)Chrome extension built!$(RESET)"
+
+build\:extension\:firefox: ## Build extension for Firefox
+	@echo "$(BLUE)Building extension for Firefox...$(RESET)"
+	@cd apps/extension && bun run build:firefox
+	@echo "$(GREEN)Firefox extension built!$(RESET)"
+
+build\:extension\:edge: ## Build extension for Edge
+	@echo "$(BLUE)Building extension for Edge...$(RESET)"
+	@cd apps/extension && bun run build:edge
+	@echo "$(GREEN)Edge extension built!$(RESET)"
+
+zip\:extension: ## Zip Chrome extension for distribution
+	@echo "$(BLUE)Zipping Chrome extension...$(RESET)"
+	@cd apps/extension && bun run zip
+	@echo "$(GREEN)Chrome extension zipped!$(RESET)"
+
+zip\:extension\:firefox: ## Zip extension for Firefox distribution
+	@echo "$(BLUE)Zipping extension for Firefox...$(RESET)"
+	@cd apps/extension && bun run zip:firefox
+	@echo "$(GREEN)Firefox extension zipped!$(RESET)"
+
+zip\:extension\:edge: ## Zip extension for Edge distribution
+	@echo "$(BLUE)Zipping extension for Edge...$(RESET)"
+	@cd apps/extension && bun run zip:edge
+	@echo "$(GREEN)Edge extension zipped!$(RESET)"
 
 package\:zendesk: ## Package Zendesk manifest .zip (dev)
 	@echo "$(BLUE)Packaging Zendesk manifest (dev)...$(RESET)"
