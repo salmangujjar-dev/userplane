@@ -171,7 +171,7 @@ export function LinkPreview({
           <div className="flex items-center gap-2">
             <BoringAvatar name={createdBy} size={AVATAR_SIZES.TAG} />
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Created by {createdBy}</span>
+              <span>{createdBy}</span>
               <span>&middot;</span>
               <span>{formatDate(createdAt)}</span>
             </div>
