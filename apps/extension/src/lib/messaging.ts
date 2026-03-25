@@ -2,7 +2,12 @@ export type ExtensionMessage =
   | { type: 'CHECK_SESSION' }
   | { type: 'SIGN_IN' }
   | { type: 'SIGN_OUT' }
-  | { type: 'AUTH_EXPIRED' };
+  | { type: 'AUTH_EXPIRED' }
+  | { type: 'GET_ACTIVE_TAB_URL' };
+
+export interface ActiveTabResponse {
+  url: string | null;
+}
 
 export interface SessionUser {
   id: string;
