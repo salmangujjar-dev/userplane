@@ -7,12 +7,13 @@ import {
   FolderKanban,
   Globe,
   HelpCircle,
+  Keyboard,
   Link2,
   LogOut,
   RefreshCw,
   Settings2,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { SUPPORT_LINKS } from '@/constants';
@@ -24,11 +25,16 @@ import { useWorkspaceId } from '@/stores/workspace';
 import { WorkspaceSwitcher } from './workspace-switcher';
 
 const DASH_URL = import.meta.env.WXT_DASH_URL || 'https://dash-dev.userplane.io';
+const CREATE_RECORDING_LINK_COMMAND = 'create-recording-link';
 
 function openDashPage(workspaceId: string | null, path: string) {
   if (workspaceId) {
     chrome.tabs.create({ url: `${DASH_URL}/workspace/${workspaceId}${path}` });
   }
+}
+
+function openChromeShortcutSettings() {
+  chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
 }
 
 export function SettingsView() {
@@ -38,6 +44,30 @@ export function SettingsView() {
   const setAutoPopulateUrl = useSettingsStore((s) => s.setAutoPopulateUrl);
   const queryClient = useQueryClient();
   const [isReloading, setIsReloading] = useState(false);
+  const [shortcut, setShortcut] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadShortcut = () => {
+      chrome.commands.getAll().then((commands) => {
+        if (!isMounted) return;
+
+        const createLinkCommand = commands.find(
+          (command) => command.name === CREATE_RECORDING_LINK_COMMAND
+        );
+        setShortcut(createLinkCommand?.shortcut || '');
+      });
+    };
+
+    loadShortcut();
+    window.addEventListener('focus', loadShortcut);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('focus', loadShortcut);
+    };
+  }, []);
 
   const handleReload = useCallback(async () => {
     setIsReloading(true);
@@ -149,6 +179,25 @@ export function SettingsView() {
               className="shrink-0"
             />
           </div>
+          <button
+            onClick={openChromeShortcutSettings}
+            className="flex items-start gap-2 w-full px-3 py-2 rounded-lg hover:bg-accent transition-colors text-left"
+          >
+            <Keyboard className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">Create Link Shortcut</p>
+                  <p className="text-xs text-muted-foreground">
+                    Open Create Link from anywhere in Chrome
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-md border bg-background px-2 py-1 text-xs font-medium">
+                  {shortcut === null ? 'Loading...' : shortcut || 'Not set'}
+                </span>
+              </div>
+            </div>
+          </button>
           <button
             onClick={handleReload}
             disabled={isReloading}
