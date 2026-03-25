@@ -1,8 +1,17 @@
+import { SUPPORT_LINKS } from '@/constants';
 import { authClient } from '@/lib/auth-client';
 import type { ExtensionMessage, SessionCheckResponse } from '@/lib/messaging';
-import { clearSessionCache, setSessionCache } from '@/lib/storage';
+import { clearSessionCache, setPendingRoute, setSessionCache } from '@/lib/storage';
 
 const DASH_URL = import.meta.env.WXT_DASH_URL || 'https://dash-dev.userplane.io';
+
+const MENU_IDS = {
+  ACTION_CREATE: 'action-create-link',
+  ACTION_VIEW_LINKS: 'action-view-links',
+  ACTION_VIEW_RECORDINGS: 'action-view-recordings',
+  ACTION_HELP: 'action-help',
+  PAGE_CREATE: 'page-create-link',
+} as const;
 
 async function checkSession(): Promise<SessionCheckResponse> {
   try {
@@ -82,8 +91,76 @@ export default defineBackground(() => {
   chrome.sidePanel.setOptions({ enabled: true });
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-  // Check session on extension install/update
+  // Create context menus and check session on install/update
   chrome.runtime.onInstalled.addListener(() => {
     checkSession();
+
+    // Extension icon right-click menu
+    chrome.contextMenus.create({
+      id: MENU_IDS.ACTION_CREATE,
+      title: 'Create Recording Link',
+      contexts: ['action'],
+    });
+    chrome.contextMenus.create({
+      id: MENU_IDS.ACTION_VIEW_LINKS,
+      title: 'View Recording Links',
+      contexts: ['action'],
+    });
+    chrome.contextMenus.create({
+      id: MENU_IDS.ACTION_VIEW_RECORDINGS,
+      title: 'View Received Recordings',
+      contexts: ['action'],
+    });
+    chrome.contextMenus.create({
+      id: 'action-separator',
+      type: 'separator',
+      contexts: ['action'],
+    });
+    chrome.contextMenus.create({
+      id: MENU_IDS.ACTION_HELP,
+      title: 'Help',
+      contexts: ['action'],
+    });
+
+    // Page right-click menu
+    chrome.contextMenus.create({
+      id: MENU_IDS.PAGE_CREATE,
+      title: 'Create Recording Link',
+      contexts: ['page'],
+    });
+  });
+
+  // Open side panel at a specific route
+  async function openSidePanelAt(windowId: number, path: string) {
+    // `sidePanel.open()` must run directly from the user gesture. Persist the
+    // target route afterwards so a fresh panel can consume it on mount and an
+    // already-open panel can react via storage.onChanged.
+    await chrome.sidePanel.open({ windowId });
+    await setPendingRoute(path);
+  }
+
+  // Handle context menu clicks
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    const windowId = tab?.windowId;
+
+    void (async () => {
+      switch (info.menuItemId) {
+        case MENU_IDS.ACTION_CREATE:
+        case MENU_IDS.PAGE_CREATE:
+          if (windowId != null) await openSidePanelAt(windowId, '/create');
+          break;
+        case MENU_IDS.ACTION_VIEW_LINKS:
+          if (windowId != null) await openSidePanelAt(windowId, '/');
+          break;
+        case MENU_IDS.ACTION_VIEW_RECORDINGS:
+          if (windowId != null) await openSidePanelAt(windowId, '/recordings');
+          break;
+        case MENU_IDS.ACTION_HELP:
+          await chrome.tabs.create({ url: SUPPORT_LINKS.helpCenter });
+          break;
+      }
+    })().catch((error) => {
+      console.error('Failed to handle context menu click', error);
+    });
   });
 });

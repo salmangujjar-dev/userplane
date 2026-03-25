@@ -9,7 +9,7 @@ export default defineConfig({
     return {
       name: 'Userplane',
       description: 'Userplane Chrome Extension',
-      permissions: ['storage', 'identity', 'sidePanel', 'tabs'],
+      permissions: ['storage', 'identity', 'sidePanel', 'tabs', 'contextMenus'],
       host_permissions: [`${apiUrl}/*`],
       action: {
         default_icon: {
