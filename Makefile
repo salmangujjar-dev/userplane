@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build i d b l f t c
+.PHONY: help install dev dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build extension\:dev extension\:build extension\:build\:prod extension\:zip extension\:zip\:prod extension\:storybook extension\:storybook\:build i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -63,7 +63,6 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:ramp$(WHITE)                      ║$(RESET) Run ramp app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:home$(WHITE)                      ║$(RESET) Run home app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:docs$(WHITE)                      ║$(RESET) Run docs app only (Mintlify)                                      $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)dev:extension$(WHITE)                 ║$(RESET) Run Chrome extension in dev mode (WXT, port 3010)                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -76,9 +75,17 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)package:zendesk$(WHITE)               ║$(RESET) Package Zendesk manifest .zip (dev)                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)preview:home$(WHITE)                  ║$(RESET) Preview home production build (Cloudflare)                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home$(WHITE)                   ║$(RESET) Deploy home app (preview)                                         $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)build:extension$(WHITE)               ║$(RESET) Build Chrome extension                                             $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)zip:extension$(WHITE)                 ║$(RESET) Zip Chrome extension for distribution                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home:production$(WHITE)        ║$(RESET) Deploy home app (production)                                      $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)EXTENSION$(WHITE)                                                                                         ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)extension:dev$(WHITE)                 ║$(RESET) Start extension dev server (WXT hot-reload, port 3010)            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)extension:build$(WHITE)               ║$(RESET) Build extension dev profile (untagged)                            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)extension:build:prod$(WHITE)          ║$(RESET) Build extension prod profile (tagged)                             $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)extension:zip$(WHITE)                 ║$(RESET) Zip extension dev build (untagged)                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)extension:zip:prod$(WHITE)            ║$(RESET) Zip extension prod build for store submission (tagged)            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)extension:storybook$(WHITE)           ║$(RESET) Run Storybook for Chrome extension (port 6012)                    $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)extension:storybook:build$(WHITE)     ║$(RESET) Build Storybook for Chrome extension                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)CODE QUALITY$(WHITE)                                                                                      ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -110,8 +117,6 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)storybook:embed:build$(WHITE)         ║$(RESET) Build Storybook for embed package                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:dash$(WHITE)                ║$(RESET) Run Storybook for dashboard (incl. Zendesk)                       $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)storybook:dash:build$(WHITE)          ║$(RESET) Build Storybook for dashboard                                    $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)storybook:extension$(WHITE)           ║$(RESET) Run Storybook for Chrome extension (port 6012)                     $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)storybook:extension:build$(WHITE)     ║$(RESET) Build Storybook for Chrome extension                               $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)ZENDESK$(WHITE)                                                                                            ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -438,6 +443,41 @@ storybook\:extension\:build: ## Build Storybook for Chrome extension
 	@echo "$(BLUE)Building Storybook for Chrome extension...$(RESET)"
 	@cd apps/extension && bun run build-storybook
 	@echo "$(GREEN)Storybook build complete!$(RESET)"
+
+# ─── Extension ──────────────────────────────────────────────────────────────
+
+extension\:dev: ## Start extension dev server (WXT hot-reload, port 3010)
+	@echo "$(MAGENTA)Starting Chrome extension dev server...$(RESET)"
+	@cd apps/extension && bun run dev
+
+extension\:build: ## Build extension dev profile (untagged)
+	@echo "$(BLUE)Building Chrome extension (dev profile)...$(RESET)"
+	@cd apps/extension && bunx wxt build --mode development
+	@echo "$(GREEN)Chrome extension (dev) built!$(RESET)"
+
+extension\:build\:prod: ## Build extension prod profile (tagged)
+	@echo "$(BLUE)Building Chrome extension (prod profile)...$(RESET)"
+	@cd apps/extension && bun run build
+	@echo "$(GREEN)Chrome extension (prod) built!$(RESET)"
+
+extension\:zip: ## Zip extension dev build (untagged)
+	@echo "$(BLUE)Zipping Chrome extension (dev profile)...$(RESET)"
+	@cd apps/extension && bunx wxt zip --mode development
+	@echo "$(GREEN)Chrome extension (dev) zipped!$(RESET)"
+
+extension\:zip\:prod: ## Zip extension prod build for store submission (tagged)
+	@echo "$(BLUE)Zipping Chrome extension (prod profile)...$(RESET)"
+	@cd apps/extension && bun run zip
+	@echo "$(GREEN)Chrome extension (prod) zipped!$(RESET)"
+
+extension\:storybook: ## Run Storybook for Chrome extension (port 6012)
+	@echo "$(MAGENTA)Starting Storybook for Chrome extension...$(RESET)"
+	@cd apps/extension && bun run storybook
+
+extension\:storybook\:build: ## Build Storybook for Chrome extension
+	@echo "$(BLUE)Building Storybook for Chrome extension...$(RESET)"
+	@cd apps/extension && bun run build-storybook
+	@echo "$(GREEN)Storybook for Chrome extension built!$(RESET)"
 
 # Assets commands
 assets\:upload: ## Upload assets to R2 CDN (dev)

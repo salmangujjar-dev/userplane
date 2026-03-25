@@ -7,8 +7,9 @@ export default defineConfig({
     const apiUrl = import.meta.env.WXT_API_URL || 'https://api-dev.userplane.io';
 
     return {
-      name: 'Userplane',
-      description: 'Userplane Chrome Extension',
+      name: 'Request Screen Recording - Userplane',
+      description:
+        'Request screen recordings with console logs, network requests, and session data. Resolve support issues without the back and forth.',
       permissions: ['storage', 'sidePanel', 'tabs', 'contextMenus'],
       host_permissions: [`${apiUrl}/*`],
       action: {
