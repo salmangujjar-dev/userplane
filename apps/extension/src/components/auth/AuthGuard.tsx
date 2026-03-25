@@ -9,7 +9,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { isLoading, isAuthenticated, signIn } = useExtensionAuth();
+  const { isLoading, isAuthenticated, refreshSession, signIn } = useExtensionAuth();
 
   if (isLoading) {
     return (
@@ -20,7 +20,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   if (!isAuthenticated) {
-    return <LoginPrompt onSignIn={signIn} />;
+    return <LoginPrompt onRefresh={refreshSession} onSignIn={signIn} />;
   }
 
   return <>{children}</>;

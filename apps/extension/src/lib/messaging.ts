@@ -1,6 +1,5 @@
 export type ExtensionMessage =
   | { type: 'CHECK_SESSION' }
-  | { type: 'SIGN_IN' }
   | { type: 'SIGN_OUT' }
   | { type: 'AUTH_EXPIRED' }
   | { type: 'GET_ACTIVE_TAB_URL' };
