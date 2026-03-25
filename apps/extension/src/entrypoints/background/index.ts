@@ -18,6 +18,10 @@ const MENU_IDS = {
   PAGE_CREATE: 'page-create-link',
 } as const;
 
+const COMMANDS = {
+  CREATE_RECORDING_LINK: 'create-recording-link',
+} as const;
+
 async function setupContextMenus() {
   await chrome.contextMenus.removeAll();
 
@@ -154,9 +158,9 @@ export default defineBackground(() => {
 
   // Open side panel at a specific route
   async function openSidePanelAt(windowId: number, path: string, createReference?: string) {
-    // `sidePanel.open()` must run directly from the user gesture. Persist the
-    // target route afterwards so a fresh panel can consume it on mount and an
-    // already-open panel can react via storage.onChanged.
+    // Keep `sidePanel.open()` as the first awaited call in user-gesture flows.
+    // Moving storage reads/writes ahead of it can cause Chrome to reject the
+    // open with a user-action error for context menus, omnibox, and commands.
     await chrome.sidePanel.open({ windowId });
 
     const trimmedReference = createReference?.trim();
@@ -165,6 +169,12 @@ export default defineBackground(() => {
     }
 
     await setPendingRoute(path);
+  }
+
+  async function openCreateLinkFromCommand() {
+    // Commands are also gesture-sensitive for side panel opening, so avoid any
+    // async work before delegating to `openSidePanelAt`.
+    await openSidePanelAt(chrome.windows.WINDOW_ID_CURRENT, '/create');
   }
 
   // Handle context menu clicks
@@ -195,6 +205,14 @@ export default defineBackground(() => {
   chrome.omnibox.onInputEntered.addListener((text) => {
     void openSidePanelAt(chrome.windows.WINDOW_ID_CURRENT, '/create', text).catch((error) => {
       console.error('Failed to open create link flow from omnibox', error);
+    });
+  });
+
+  chrome.commands.onCommand.addListener((command) => {
+    if (command !== COMMANDS.CREATE_RECORDING_LINK) return;
+
+    void openCreateLinkFromCommand().catch((error) => {
+      console.error('Failed to open create link flow from keyboard shortcut', error);
     });
   });
 });

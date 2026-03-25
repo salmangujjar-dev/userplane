@@ -21,6 +21,15 @@ export default defineConfig({
           { light: 'icon/light-32.png', dark: 'icon/dark-32.png', size: 32 },
         ],
       },
+      commands: {
+        'create-recording-link': {
+          suggested_key: {
+            default: 'Ctrl+Shift+Y',
+            mac: 'Command+Shift+Y',
+          },
+          description: 'Create Recording Link',
+        },
+      },
       omnibox: {
         keyword: 'userplane',
       },
