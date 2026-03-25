@@ -25,6 +25,7 @@ import { useCreateLink } from '@/features/links';
 import { useWorkspaceProjects } from '@/features/projects';
 import type { ActiveTabResponse } from '@/lib/messaging';
 import { sendMessage } from '@/lib/messaging';
+import { consumePendingCreateReference, PENDING_CREATE_REFERENCE_KEY } from '@/lib/storage';
 import { useAutoPopulateUrl } from '@/stores/settings';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -44,9 +45,12 @@ export function CreateLinkView() {
   const navigate = useNavigate();
   const [state, setState] = useState<ViewState>({ view: 'create' });
   const autoPopulateUrl = useAutoPopulateUrl();
+  const [hasResolvedPendingReference, setHasResolvedPendingReference] = useState(false);
+  const [hasSeededPendingReference, setHasSeededPendingReference] = useState(false);
 
   const {
     control,
+    getValues,
     handleSubmit,
     reset,
     setValue,
@@ -97,15 +101,55 @@ export function CreateLinkView() {
     }
   }, [domains, selectedDomain, setValue]);
 
-  // Auto-populate link reference with current page URL
   useEffect(() => {
-    if (!autoPopulateUrl) return;
+    let isActive = true;
+
+    consumePendingCreateReference().then((reference) => {
+      if (!isActive) return;
+
+      if (reference) {
+        setValue('reference', reference, { shouldDirty: true });
+        setHasSeededPendingReference(true);
+      }
+
+      setHasResolvedPendingReference(true);
+    });
+
+    const listener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      const change = changes[PENDING_CREATE_REFERENCE_KEY];
+      const reference = change?.newValue;
+
+      if (typeof reference !== 'string' || reference.length === 0) return;
+
+      setValue('reference', reference, { shouldDirty: true });
+      setHasSeededPendingReference(true);
+      chrome.storage.session.remove(PENDING_CREATE_REFERENCE_KEY);
+    };
+
+    chrome.storage.session.onChanged.addListener(listener);
+    return () => {
+      isActive = false;
+      chrome.storage.session.onChanged.removeListener(listener);
+    };
+  }, [setValue]);
+
+  // Auto-populate link reference with current page URL when no omnibox draft exists.
+  useEffect(() => {
+    if (!hasResolvedPendingReference || !autoPopulateUrl || hasSeededPendingReference) return;
+    if (getValues('reference')) return;
+
     sendMessage<ActiveTabResponse>({ type: 'GET_ACTIVE_TAB_URL' }).then((response) => {
-      if (response?.url) {
+      if (response?.url && !getValues('reference')) {
         setValue('reference', response.url);
       }
     });
-  }, [autoPopulateUrl, setValue]);
+  }, [
+    autoPopulateUrl,
+    getValues,
+    hasResolvedPendingReference,
+    hasSeededPendingReference,
+    setValue,
+  ]);
 
   const onSubmit = (data: CreateLinkFormValues) => {
     createLinkMutation.mutate(

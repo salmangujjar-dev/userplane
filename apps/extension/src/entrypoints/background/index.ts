@@ -1,7 +1,12 @@
 import { SUPPORT_LINKS } from '@/constants';
 import { authClient } from '@/lib/auth-client';
 import type { ExtensionMessage, SessionCheckResponse } from '@/lib/messaging';
-import { clearSessionCache, setPendingRoute, setSessionCache } from '@/lib/storage';
+import {
+  clearSessionCache,
+  setPendingCreateReference,
+  setPendingRoute,
+  setSessionCache,
+} from '@/lib/storage';
 
 const DASH_URL = import.meta.env.WXT_DASH_URL || 'https://dash-dev.userplane.io';
 
@@ -12,6 +17,41 @@ const MENU_IDS = {
   ACTION_HELP: 'action-help',
   PAGE_CREATE: 'page-create-link',
 } as const;
+
+async function setupContextMenus() {
+  await chrome.contextMenus.removeAll();
+
+  chrome.contextMenus.create({
+    id: MENU_IDS.ACTION_CREATE,
+    title: 'Create Recording Link',
+    contexts: ['action'],
+  });
+  chrome.contextMenus.create({
+    id: MENU_IDS.ACTION_VIEW_LINKS,
+    title: 'View Recording Links',
+    contexts: ['action'],
+  });
+  chrome.contextMenus.create({
+    id: MENU_IDS.ACTION_VIEW_RECORDINGS,
+    title: 'View Received Recordings',
+    contexts: ['action'],
+  });
+  chrome.contextMenus.create({
+    id: 'action-separator',
+    type: 'separator',
+    contexts: ['action'],
+  });
+  chrome.contextMenus.create({
+    id: MENU_IDS.ACTION_HELP,
+    title: 'Help',
+    contexts: ['action'],
+  });
+  chrome.contextMenus.create({
+    id: MENU_IDS.PAGE_CREATE,
+    title: 'Create Recording Link',
+    contexts: ['page'],
+  });
+}
 
 async function checkSession(): Promise<SessionCheckResponse> {
   try {
@@ -88,54 +128,42 @@ export default defineBackground(() => {
   });
 
   // Register side panel
-  chrome.sidePanel.setOptions({ enabled: true });
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+  chrome.sidePanel.setOptions({ enabled: true }).catch((error) => {
+    console.error('Failed to enable side panel', error);
+  });
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => {
+    console.error('Failed to enable side panel action click behavior', error);
+  });
+  chrome.omnibox.setDefaultSuggestion({
+    description:
+      '<match>Userplane - Create Recording Link</match> <dim>Type a customer, ticket, or URL reference</dim>',
+  });
 
   // Create context menus and check session on install/update
   chrome.runtime.onInstalled.addListener(() => {
-    checkSession();
-
-    // Extension icon right-click menu
-    chrome.contextMenus.create({
-      id: MENU_IDS.ACTION_CREATE,
-      title: 'Create Recording Link',
-      contexts: ['action'],
+    void checkSession();
+    void setupContextMenus().catch((error) => {
+      console.error('Failed to create context menus', error);
     });
-    chrome.contextMenus.create({
-      id: MENU_IDS.ACTION_VIEW_LINKS,
-      title: 'View Recording Links',
-      contexts: ['action'],
-    });
-    chrome.contextMenus.create({
-      id: MENU_IDS.ACTION_VIEW_RECORDINGS,
-      title: 'View Received Recordings',
-      contexts: ['action'],
-    });
-    chrome.contextMenus.create({
-      id: 'action-separator',
-      type: 'separator',
-      contexts: ['action'],
-    });
-    chrome.contextMenus.create({
-      id: MENU_IDS.ACTION_HELP,
-      title: 'Help',
-      contexts: ['action'],
-    });
-
-    // Page right-click menu
-    chrome.contextMenus.create({
-      id: MENU_IDS.PAGE_CREATE,
-      title: 'Create Recording Link',
-      contexts: ['page'],
+  });
+  chrome.runtime.onStartup.addListener(() => {
+    void setupContextMenus().catch((error) => {
+      console.error('Failed to refresh context menus on startup', error);
     });
   });
 
   // Open side panel at a specific route
-  async function openSidePanelAt(windowId: number, path: string) {
+  async function openSidePanelAt(windowId: number, path: string, createReference?: string) {
     // `sidePanel.open()` must run directly from the user gesture. Persist the
     // target route afterwards so a fresh panel can consume it on mount and an
     // already-open panel can react via storage.onChanged.
     await chrome.sidePanel.open({ windowId });
+
+    const trimmedReference = createReference?.trim();
+    if (trimmedReference) {
+      await setPendingCreateReference(trimmedReference);
+    }
+
     await setPendingRoute(path);
   }
 
@@ -161,6 +189,12 @@ export default defineBackground(() => {
       }
     })().catch((error) => {
       console.error('Failed to handle context menu click', error);
+    });
+  });
+
+  chrome.omnibox.onInputEntered.addListener((text) => {
+    void openSidePanelAt(chrome.windows.WINDOW_ID_CURRENT, '/create', text).catch((error) => {
+      console.error('Failed to open create link flow from omnibox', error);
     });
   });
 });
