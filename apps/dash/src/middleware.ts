@@ -7,7 +7,7 @@ import { env } from '@/env';
 const logger = createClientLogger('middleware', { level: 'debug' });
 
 const authRoutes = ['/auth'];
-const publicRoutes = ['/accounts/delete/confirm', '/setup', '/share', '/zendesk/iframe'];
+const publicRoutes = ['/accounts/delete/confirm', '/setup', '/share', '/zendesk/iframe', '/review'];
 
 /**
  * Get session cookie name based on environment
