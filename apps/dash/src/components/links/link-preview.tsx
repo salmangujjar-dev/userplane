@@ -37,6 +37,7 @@ interface LinkPreviewProps {
   reference: string | null;
   linkProvider: LinkProviderType | null;
   linkProviderId: string | null;
+  meta: Record<string, string> | null;
   createdBy: string;
   createdAt: Date;
   projectName: string | null;
@@ -45,7 +46,12 @@ interface LinkPreviewProps {
   canDelete?: boolean;
   onShare?: () => void;
   onView?: () => void;
-  onEdit?: (title: string, reference: string, isReusable: boolean) => void;
+  onEdit?: (
+    title: string,
+    reference: string,
+    isReusable: boolean,
+    meta?: Record<string, string>
+  ) => void;
   onDelete?: () => void;
 }
 
@@ -56,6 +62,7 @@ export function LinkPreview({
   reference,
   linkProvider,
   linkProviderId,
+  meta,
   createdBy,
   createdAt,
   projectName,
@@ -109,10 +116,11 @@ export function LinkPreview({
     reference: string,
     reusable: boolean,
     linkProvider?: string,
-    linkProviderId?: string
+    linkProviderId?: string,
+    editMeta?: Record<string, string>
   ) => {
     if (onEdit) {
-      onEdit(title, reference, reusable);
+      onEdit(title, reference, reusable, editMeta);
     }
     logger.debug({ linkProvider, linkProviderId }, 'Fetched link provider and ID');
   };
@@ -252,6 +260,7 @@ export function LinkPreview({
         isReusable={isReusable}
         linkProvider={linkProvider || undefined}
         linkProviderId={linkProviderId || undefined}
+        meta={meta}
         onSave={handleSaveEdit}
       />
 

@@ -9,6 +9,9 @@ export * from './admin';
 // Domain constants
 export * from './domain';
 
+// Link constants
+export * from './links';
+
 // Integration constants
 export * from './integration-permissions';
 
