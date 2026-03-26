@@ -16,9 +16,6 @@ import { useWorkspaceStore } from '@/stores/workspace';
 
 import { RecordingPreview } from './recording-preview';
 
-// Seed workspace store
-useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
-
 // RecordingsList is a page-level component with heavy data dependencies.
 // We render its visual sub-states directly.
 
@@ -85,7 +82,10 @@ const meta = {
     layout: 'fullscreen',
   },
   decorators: [
-    (Story) => withRouter(<Story />),
+    (Story) => {
+      useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
+      return withRouter(<Story />);
+    },
   ],
 } satisfies Meta;
 

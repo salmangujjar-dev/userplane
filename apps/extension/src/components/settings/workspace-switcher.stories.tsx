@@ -3,20 +3,15 @@ import React from 'react';
 
 import { WorkspaceSwitcherSkeleton } from '@/components/shared/skeletons';
 import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
-import { useWorkspaceStore } from '@/stores/workspace';
 
 // WorkspaceSwitcher depends on useWorkspaces() (TanStack Query). Since
 // the API isn't available in Storybook, we render the visual states directly.
-
-useWorkspaceStore.setState({ workspaceId: 'ws-1' });
 
 const meta = {
   title: 'Settings/WorkspaceSwitcher',
   parameters: {
     layout: 'centered',
   },
-
-
 } satisfies Meta;
 
 export default meta;

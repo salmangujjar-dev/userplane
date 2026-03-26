@@ -6,9 +6,6 @@ import { useWorkspaceStore } from '@/stores/workspace';
 
 import { SettingsView } from './settings-view';
 
-// Seed workspace store
-useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
-
 const meta = {
   title: 'Settings/SettingsView',
   component: SettingsView,
@@ -16,11 +13,14 @@ const meta = {
     layout: 'fullscreen',
   },
   decorators: [
-    (Story) => (
-      <ExtensionAuthProvider>
-        <Story />
-      </ExtensionAuthProvider>
-    ),
+    (Story) => {
+      useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
+      return (
+        <ExtensionAuthProvider>
+          <Story />
+        </ExtensionAuthProvider>
+      );
+    },
   ],
 } satisfies Meta<typeof SettingsView>;
 

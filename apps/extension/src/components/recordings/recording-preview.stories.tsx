@@ -4,9 +4,6 @@ import { useWorkspaceStore } from '@/stores/workspace';
 
 import { RecordingPreview } from './recording-preview';
 
-// Seed the Zustand store so useWorkspaceId returns a value
-useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
-
 const defaultArgs = {
   recordingId: 'rec-001',
   createdBy: 'Alice Johnson',
@@ -23,6 +20,12 @@ const meta = {
     layout: 'padded',
   },
   args: defaultArgs,
+  decorators: [
+    (Story) => {
+      useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
+      return <Story />;
+    },
+  ],
 } satisfies Meta<typeof RecordingPreview>;
 
 export default meta;

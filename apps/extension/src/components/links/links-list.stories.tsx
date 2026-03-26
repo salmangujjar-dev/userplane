@@ -16,9 +16,6 @@ import { useWorkspaceStore } from '@/stores/workspace';
 
 import { LinkPreview } from './link-preview';
 
-// Seed workspace store
-useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
-
 // LinksList is a page-level component with heavy data dependencies
 // (infinite scroll, TanStack Query, search hooks). We render its
 // visual sub-states directly with realistic mock data.
@@ -87,7 +84,10 @@ const meta = {
     layout: 'fullscreen',
   },
   decorators: [
-    (Story) => withRouter(<Story />),
+    (Story) => {
+      useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
+      return withRouter(<Story />);
+    },
   ],
 } satisfies Meta;
 

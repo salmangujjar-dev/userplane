@@ -78,15 +78,18 @@ if (!runtime.sendMessage) {
 if (!runtime.onMessage) runtime.onMessage = { addListener: noop, removeListener: noop };
 
 // ─── React Query ──────────────────────────────────────────────────────────────
+// Create a fresh QueryClient per story so cache/state never leaks between them.
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      refetchOnWindowFocus: false,
+function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        refetchOnWindowFocus: false,
+      },
     },
-  },
-});
+  });
+}
 
 // ─── Extension panel dimensions ───────────────────────────────────────────────
 // Chrome extension side panels are typically ~400px wide. We constrain all
@@ -110,6 +113,9 @@ const preview: Preview = {
   },
   decorators: [
     (Story, context) => {
+      // Fresh QueryClient per story render — prevents cache leakage.
+      const [queryClient] = React.useState(makeQueryClient);
+
       // Stories that already set layout: 'fullscreen' get a fixed extension frame.
       // Centered stories get just the width constraint.
       const isFullscreen = context.parameters.layout === 'fullscreen';
