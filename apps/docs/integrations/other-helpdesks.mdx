@@ -1,0 +1,72 @@
+---
+title: Other Help Desks
+description: Use the Chrome extension to manage recordings when your help desk isn't Intercom or Zendesk
+---
+
+If your team uses a help desk other than Intercom or Zendesk — Freshdesk, HubSpot, Help Scout, Salesforce Service Cloud, or any other browser-based tool — the Userplane Chrome extension provides the same core workflow: create recording links, manage links, and view recordings from a side panel that works alongside any tab.
+
+## Why use the Chrome extension
+
+- **Works with any web-based tool** — no marketplace installation or OAuth connection required.
+- **Auto-populates link references** — the current page URL (e.g., your ticket page) is captured automatically.
+- **Same features** — create links, manage links, view recordings, filter, search, and share — just like the Intercom and Zendesk integrations.
+- **Keyboard shortcuts** — press `Cmd+Shift+Y` to create a link in seconds.
+- **No integration setup** — install the extension, sign in, and start creating links immediately.
+
+## Getting started
+
+<Steps>
+  <Step title="Install the Chrome extension">
+    Install **Userplane** from the Chrome Web Store and pin it to your toolbar. See [Chrome Extension](/integrations/chrome-extension) for details.
+  </Step>
+  <Step title="Sign in and select your workspace">
+    Open the side panel and sign in with your Userplane account. Select your workspace if you belong to multiple.
+  </Step>
+  <Step title="Open a ticket in your help desk">
+    Navigate to the ticket or conversation where the customer is reporting an issue.
+  </Step>
+  <Step title="Open the side panel">
+    Click the Userplane icon in your toolbar — or press `Cmd+Shift+Y` (Mac) / `Ctrl+Shift+Y` (Windows/Linux).
+  </Step>
+  <Step title="Create a recording link">
+    The **Link Reference** field auto-populates with the ticket URL. Select a **domain** and **project**, then click **Create Link**.
+
+    <Frame caption="Create link with auto-populated reference">
+      <img src="/media/extension/extension-create-link-prefill-reference.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Share the link">
+    Copy the link and paste it into your help desk reply. The customer clicks the link, records their screen, and you receive the recording in Userplane.
+
+    <Frame caption="Share the recording link">
+      <img src="/media/extension/extension-share-link.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+## Comparison with native integrations
+
+| Capability                      | Intercom / Zendesk Integration      | Chrome Extension                        |
+| ------------------------------- | ----------------------------------- | --------------------------------------- |
+| Create recording links          | Inside the help desk UI             | Side panel alongside any tool           |
+| Auto-populate reference         | From conversation or ticket context | From current tab URL                    |
+| View recordings                 | In-app sidebar + dashboard          | Side panel + dashboard                  |
+| Ticket tagging / internal notes | Automatic                           | Manual (paste the link into your reply) |
+| Keyboard shortcuts              | `Cmd+K` (Intercom)                  | `Cmd+Shift+Y`                           |
+| Setup required                  | OAuth + marketplace install         | Install extension and sign in           |
+
+## Tips for teams without a native integration
+
+- **Enable Prefill Reference** — in [extension settings](/integrations/chrome-extension-settings), keep this toggle on so the ticket URL is captured automatically every time you create a link.
+- **Use reusable links with templates** — create [reusable recording links](/recording-links/reusable) and embed them in your help desk's canned responses, macros, or templates.
+- **Use the omnibox for fast access** — type `userplane` in the Chrome address bar, press Tab, type a ticket number or customer name, and press Enter. See [Chrome Extension Shortcuts](/integrations/chrome-extension-shortcuts).
+- **Organize by project** — assign links to [projects](/recording/projects) so recordings are easy to filter by team, product area, or customer segment.
+
+## Related articles
+
+- [Chrome Extension](/integrations/chrome-extension) — full installation and overview guide.
+- [Chrome Extension Side Panel](/integrations/chrome-extension-side-panel) — creating links, managing links, and viewing recordings.
+- [Chrome Extension Shortcuts](/integrations/chrome-extension-shortcuts) — keyboard shortcuts, context menus, and omnibox.
+- [Help Desk Setup](/getting-started/helpdesk-setup) — connecting Intercom, Zendesk, or the Chrome extension.

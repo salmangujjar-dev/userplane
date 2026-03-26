@@ -1,18 +1,21 @@
 ---
 title: Help Desk Setup
-description: Connect Userplane to Intercom or Zendesk so your team can request recordings from inside tickets and conversations
+description: Connect Userplane to Intercom, Zendesk, or any help desk via the Chrome extension so your team can request recordings from inside tickets and conversations
 ---
 
-Userplane integrates with Intercom and Zendesk so your support agents can create recording links and view recordings without leaving their help desk.
+Userplane integrates with Intercom and Zendesk so your support agents can create recording links and view recordings without leaving their help desk. If you use a different help desk, the [Chrome extension](/integrations/chrome-extension) provides the same core workflow alongside any browser-based tool.
 
 ## Choose your help desk
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Intercom" icon="message" href="#connect-intercom">
     Sidebar app, Cmd+K shortcuts, and macro support inside the Intercom inbox
   </Card>
   <Card title="Zendesk" icon="ticket" href="#connect-zendesk">
     Ticket sidebar, editor button, and top bar app inside Zendesk
+  </Card>
+  <Card title="Chrome Extension" icon="puzzle-piece" href="#chrome-extension">
+    Side panel for creating links and viewing recordings alongside any browser-based tool
   </Card>
 </CardGroup>
 
@@ -119,6 +122,62 @@ See [Intercom Integration](/integrations/intercom) for the full reference.
 
 See [Zendesk Integration](/integrations/zendesk) for the full reference.
 
+## Chrome Extension
+
+If your team uses a help desk other than Intercom or Zendesk, install the Chrome extension to get the same recording link workflow from a browser side panel.
+
+<Steps>
+  <Step title="Install from the Chrome Web Store">
+    Find **Userplane** in the Chrome Web Store and click **Add to Chrome**. Pin the extension to
+    your toolbar.
+
+    <Frame caption="Pin the Userplane extension">
+      <img src="/media/extension/extension-pin-chrome-extension.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Open the side panel">
+    Click the **Userplane** icon in the toolbar. The side panel opens on the right side of your
+    browser.
+  </Step>
+  <Step title="Sign in">
+    Click **Sign in to continue**. You'll be redirected to the Userplane dashboard to authenticate.
+    After signing in, return to the side panel and click **Refresh** if needed.
+
+    <Frame caption="Extension sign-in prompt">
+      <img src="/media/extension/extension-sign-in-continue.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Select your workspace">
+    If you belong to multiple workspaces, select the one you want to use.
+
+    <Frame caption="Workspace selector">
+      <img src="/media/extension/extension-setting-workspace-switcher.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+### What you get
+
+- A **side panel** with tabs for Links, Recordings, Create, and Settings.
+- **Keyboard shortcut** (`Cmd+Shift+Y` / `Ctrl+Shift+Y`) to create a link instantly.
+- **Right-click context menus** for quick link creation.
+- **Omnibox** — type `userplane` in the address bar to create a link with a reference.
+- **Auto-populates** the link reference with the current tab URL (e.g., your ticket page).
+
+<Frame caption="Extension side panel showing recording links">
+  <img src="/media/extension/extension-list-recording-link.png" />
+</Frame>
+
+<Note>
+  The Chrome extension works with any help desk. See [Other Help
+  Desks](/integrations/other-helpdesks) for workflow tips.
+</Note>
+
+See [Chrome Extension Integration](/integrations/chrome-extension) for the full reference.
+
 ## Invite your team
 
 Once connected, invite your help desk agents to your Userplane workspace so they can use the integration:
@@ -179,6 +238,8 @@ Once connected, invite your help desk agents to your Userplane workspace so they
 
 - [Intercom Integration](/integrations/intercom) — detailed overview of the Intercom integration.
 - [Zendesk Integration](/integrations/zendesk) — detailed overview of the Zendesk integration.
+- [Chrome Extension](/integrations/chrome-extension) — installation and overview of the Chrome extension.
+- [Other Help Desks](/integrations/other-helpdesks) — use the Chrome extension alongside any help desk.
 - [Roles & Permissions](/workspace/roles-permissions) — what each workspace role can do.
 - [Domain Verification](/workspace/domain-verification) — enable branded recording links.
 - [Team Management](/workspace/team-management) — manage workspace members and invites.
