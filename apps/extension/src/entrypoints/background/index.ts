@@ -1,6 +1,7 @@
 import { SUPPORT_LINKS } from '@/constants';
 import { authClient } from '@/lib/auth-client';
 import type { ExtensionMessage, SessionCheckResponse } from '@/lib/messaging';
+import { initPostHogBackground } from '@/lib/posthog';
 import {
   clearSessionCache,
   setPendingCreateReference,
@@ -85,6 +86,8 @@ async function handleSignOut(): Promise<void> {
 }
 
 export default defineBackground(() => {
+  void initPostHogBackground();
+
   chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
     if (message.type === 'CHECK_SESSION') {
       checkSession().then(sendResponse);
