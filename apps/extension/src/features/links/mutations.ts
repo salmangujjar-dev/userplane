@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/client';
 import { handleSafeResult, handleUnknownError, showErrorToast } from '@/lib/errors';
+import { buildLinkMeta } from '@/lib/link-meta';
 
 import { workspaceKeys } from '../workspace/query-keys';
 import { linkKeys } from './query-keys';
@@ -19,9 +20,10 @@ export function useCreateLink(workspaceId: string | null) {
   return useMutation({
     mutationFn: async (data: CreateLinkInput) => {
       if (!workspaceId) throw new Error('No workspace ID');
+      const meta = await buildLinkMeta();
       const [error, response] = await apiClient.link.create({
         params: { workspaceId },
-        body: data,
+        body: { ...data, meta },
       });
       return handleSafeResult(error, response?.data ?? null);
     },
