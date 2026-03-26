@@ -14,6 +14,8 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': resolve(__dirname, '../src'),
+      '@userplane/ui/globals.css': resolve(__dirname, '../../../packages/ui/src/styles/globals.css'),
+      '@userplane/ui': resolve(__dirname, '../../../packages/ui/src'),
     };
 
     config.esbuild = {
