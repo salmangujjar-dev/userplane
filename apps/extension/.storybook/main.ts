@@ -14,7 +14,10 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': resolve(__dirname, '../src'),
-      '@userplane/ui/globals.css': resolve(__dirname, '../../../packages/ui/src/styles/globals.css'),
+      '@userplane/ui/globals.css': resolve(
+        __dirname,
+        '../../../packages/ui/src/styles/globals.css'
+      ),
       '@userplane/ui': resolve(__dirname, '../../../packages/ui/src'),
       'posthog-js/dist/module.no-external': resolve(__dirname, 'mocks/posthog.ts'),
       'posthog-js/dist/posthog-recorder': resolve(__dirname, 'mocks/posthog.ts'),

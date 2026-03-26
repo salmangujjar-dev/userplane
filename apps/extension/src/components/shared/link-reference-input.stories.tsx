@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
 import { useState } from 'react';
+import { fn } from 'storybook/test';
 
 import { LinkReferenceInput } from './link-reference-input';
 
@@ -15,8 +15,6 @@ const meta = {
     onChange: fn(),
     placeholder: 'Enter URL or reference',
   },
-
-
 } satisfies Meta<typeof LinkReferenceInput>;
 
 export default meta;

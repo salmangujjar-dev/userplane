@@ -28,9 +28,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-  decorators: [
-    (Story) => withRouter(<Story />),
-  ],
+  decorators: [(Story) => withRouter(<Story />)],
 } satisfies Meta<typeof ShareLinkView>;
 
 export default meta;
@@ -44,7 +42,8 @@ export const Default: Story = {
 
 export const LongUrl: Story = {
   args: {
-    linkUrl: 'https://recordings.my-custom-domain.com/r/very-long-recording-identifier-abc123def456',
+    linkUrl:
+      'https://recordings.my-custom-domain.com/r/very-long-recording-identifier-abc123def456',
   },
 };
 

@@ -77,7 +77,8 @@ export const EmptyReference: Story = {
 
 export const LongTitle: Story = {
   args: {
-    title: 'Very Long Title That Should Demonstrate How The Component Handles Overflow Text In The Input Field',
+    title:
+      'Very Long Title That Should Demonstrate How The Component Handles Overflow Text In The Input Field',
     reference: 'https://github.com/some-org/some-very-long-repo-name/issues/12345',
     isReusable: false,
   },
