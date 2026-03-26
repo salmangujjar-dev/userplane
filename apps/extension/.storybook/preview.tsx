@@ -12,7 +12,7 @@ import React from 'react';
 // other tooling may partially define `chrome`, which would skip a naïve guard.
 
 const noop = () => {};
-const noopPromise = (..._: unknown[]) => Promise.resolve({});
+const noopPromise = () => Promise.resolve({});
 
 function makeStorageArea() {
   return {
