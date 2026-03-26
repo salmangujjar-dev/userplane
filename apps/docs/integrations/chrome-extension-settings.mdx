@@ -1,0 +1,86 @@
+---
+title: Chrome Extension Settings
+description: Configure workspace, preferences, and account settings in the Chrome extension
+---
+
+The **Settings** tab in the Chrome extension side panel manages workspace selection, extension behavior, and account access.
+
+<Frame caption="Extension settings overview">
+  <img src="/media/extension/extensions-settings.png" />
+</Frame>
+
+## Workspace
+
+### Workspace switcher
+
+If you belong to multiple workspaces, use the workspace dropdown to switch between them. The active workspace is shown with a checkmark. All links, recordings, and filters update to reflect the selected workspace.
+
+<Frame caption="Workspace switcher">
+  <img src="/media/extension/extension-setting-workspace-switcher.png" />
+</Frame>
+
+### Quick links
+
+The Settings tab provides shortcuts to your workspace settings in the Userplane dashboard:
+
+| Link                         | Where it goes                   |
+| ---------------------------- | ------------------------------- |
+| **Manage Projects**          | Dashboard project settings      |
+| **Manage Domains**           | Dashboard domain settings       |
+| **Manage Workspace**         | Dashboard workspace settings    |
+| **Notification Preferences** | Dashboard notification settings |
+
+Clicking any of these opens the corresponding dashboard page in a new tab.
+
+## Extension
+
+### Prefill Reference
+
+**Default: On**
+
+When enabled, the **Create Link** form auto-populates the Link Reference field with the URL of the current active tab — for example, the help desk ticket or customer page you're viewing.
+
+Toggle off to enter references manually.
+
+<Frame caption="Create Link form with prefilled reference from the current tab">
+  <img src="/media/extension/extension-create-link-prefill-reference.png" />
+</Frame>
+
+### Create Link Shortcut
+
+Displays your current keyboard shortcut for opening the Create Link form (default: `Cmd+Shift+Y` on Mac, `Ctrl+Shift+Y` on Windows/Linux).
+
+Click to open `chrome://extensions/shortcuts` where you can customize the shortcut to a different key combination.
+
+<Frame caption="Create Link Shortcut setting">
+  <img src="/media/extension/extension-create-link-shortcut.png" />
+</Frame>
+
+### Reload Extension
+
+Refreshes the session and clears all cached data. Use this when:
+
+- Data in the side panel appears stale or out of date.
+- A recent dashboard sign-in hasn't been picked up by the extension.
+- Troubleshooting an issue with the extension.
+
+<Frame caption="Reload Extension setting">
+  <img src="/media/extension/extension-reload.png" />
+</Frame>
+
+## Account
+
+- **User info** — shows your name, email, and avatar.
+- **Help** — opens the Userplane documentation.
+- **Log out** — signs you out of the extension. Your session is cleared from Chrome storage.
+
+<Note>
+  Logging out of the extension does not sign you out of the Userplane dashboard. To sign out of
+  both, log out of the dashboard separately.
+</Note>
+
+## Related articles
+
+- [Chrome Extension](/integrations/chrome-extension) — installation and overview.
+- [Chrome Extension Side Panel](/integrations/chrome-extension-side-panel) — full guide to creating and managing links.
+- [Chrome Extension Shortcuts](/integrations/chrome-extension-shortcuts) — keyboard shortcuts, context menus, and omnibox.

@@ -1,4 +1,7 @@
+import posthogPlugin from '@posthog/rollup-plugin';
 import { defineConfig } from 'wxt';
+
+const shouldUploadSourcemaps = !!process.env.POSTHOG_PERSONAL_API_KEY;
 
 export default defineConfig({
   srcDir: 'src',
@@ -48,6 +51,16 @@ export default defineConfig({
     },
   },
   vite: () => ({
+    plugins: shouldUploadSourcemaps
+      ? [
+          posthogPlugin({
+            personalApiKey: process.env.POSTHOG_PERSONAL_API_KEY!,
+            projectId: process.env.POSTHOG_PROJECT_ID!,
+            host: process.env.WXT_POSTHOG_HOST || 'https://us.i.posthog.com',
+            sourcemaps: { enabled: true, deleteAfterUpload: true },
+          }),
+        ]
+      : [],
     resolve: {
       conditions: ['source'],
     },

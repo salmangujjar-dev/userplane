@@ -164,7 +164,9 @@
         "WXT_DASH_URL",
         "WXT_CDN_DOMAIN",
         "WXT_CLOUDFLARE_IMAGE_ZONE",
-        "WXT_SKIP_IMAGE_TRANSFORM"
+        "WXT_SKIP_IMAGE_TRANSFORM",
+        "WXT_POSTHOG_KEY",
+        "WXT_POSTHOG_HOST"
       ]
     },
     "lint": {
