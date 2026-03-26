@@ -1,5 +1,5 @@
-import { isDefinedError } from '@userplane/client';
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { isDefinedError } from '@userplane/client';
 import { Toaster } from '@userplane/ui/components/sonner';
 import { TooltipProvider } from '@userplane/ui/components/tooltip';
 import { type ReactNode, useEffect, useState } from 'react';

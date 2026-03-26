@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
 import { FolderKanban, Globe, Link2, Users } from 'lucide-react';
 import { useState } from 'react';
+import { fn } from 'storybook/test';
 
 import { FilterDropdown, type FilterOption } from './filter-dropdown';
 

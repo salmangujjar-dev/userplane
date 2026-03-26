@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
 import React from 'react';
+import { fn } from 'storybook/test';
 
 import { LoginPrompt } from './LoginPrompt';
 
@@ -37,7 +37,13 @@ export const Authenticated: StoryObj = {
     <div className="p-8 bg-background h-full flex items-center justify-center">
       <div className="text-center space-y-2">
         <div className="mx-auto h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-          <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <svg
+            className="h-5 w-5 text-green-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>

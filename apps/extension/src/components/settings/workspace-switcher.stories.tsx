@@ -30,7 +30,13 @@ export const Selected: StoryObj = {
         size={WORKSPACE_AVATAR_SIZES.COMPACT}
       />
       <span className="text-sm font-medium flex-1 truncate text-left">Acme Corp</span>
-      <svg className="h-4 w-4 text-muted-foreground shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg
+        className="h-4 w-4 text-muted-foreground shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
         <path d="m7 15 5 5 5-5" />
         <path d="m7 9 5-5 5 5" />
       </svg>
@@ -46,7 +52,13 @@ export const NoSelection: StoryObj = {
       <span className="text-sm font-medium flex-1 truncate text-left text-muted-foreground">
         Select Workspace
       </span>
-      <svg className="h-4 w-4 text-muted-foreground shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg
+        className="h-4 w-4 text-muted-foreground shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
         <path d="m7 15 5 5 5-5" />
         <path d="m7 9 5-5 5 5" />
       </svg>

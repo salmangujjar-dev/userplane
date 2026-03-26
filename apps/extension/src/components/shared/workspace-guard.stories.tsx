@@ -28,7 +28,6 @@ export const Loading: StoryObj = {
 };
 
 export const NoWorkspaces: StoryObj = {
-  name: 'No Workspaces',
   render: () => (
     <div className="flex-1 flex items-center justify-center h-full">
       <NoWorkspaceState />

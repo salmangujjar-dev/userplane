@@ -25,9 +25,7 @@ function MockSidePanelLayout({ content }: { content: React.ReactNode }) {
 
 function createLayoutRouter(initialPath: string, content: React.ReactNode) {
   const rootRoute = createRootRoute({
-    component: () => (
-      <MockSidePanelLayout content={<Outlet />} />
-    ),
+    component: () => <MockSidePanelLayout content={<Outlet />} />,
   });
 
   const indexRoute = createRoute({

@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
 import {
   createMemoryHistory,
   createRootRoute,
@@ -8,6 +7,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import React from 'react';
+import { fn } from 'storybook/test';
 
 import { useWorkspaceStore } from '@/stores/workspace';
 

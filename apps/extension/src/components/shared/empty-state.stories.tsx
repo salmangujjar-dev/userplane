@@ -16,7 +16,9 @@ function withRouter(Component: React.ComponentType) {
     routeTree: rootRoute.addChildren([createLinkRoute]),
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
-  return () => <RouterProvider router={router} />;
+  const Wrapper = () => <RouterProvider router={router} />;
+  Wrapper.displayName = 'CreateLinkRouterWrapper';
+  return Wrapper;
 }
 
 const meta = {

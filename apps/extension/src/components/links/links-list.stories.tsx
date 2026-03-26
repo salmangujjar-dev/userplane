@@ -9,7 +9,7 @@ import {
 import { FolderKanban, Globe, Plus, Users } from 'lucide-react';
 import React from 'react';
 
-import { FilterDropdown, type FilterOption } from '@/components/filters/filter-dropdown';
+import { FilterDropdown } from '@/components/filters/filter-dropdown';
 import { FilteredEmptyState, LinkEmptyState } from '@/components/shared/empty-state';
 import { LinkPreviewSkeleton } from '@/components/shared/skeletons';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -213,11 +213,7 @@ export const WithLinks: StoryObj = {
         <div className="flex-1 overflow-y-auto p-4">
           <div className="space-y-4">
             {links.map((link) => (
-              <LinkPreview
-                key={link.linkId}
-                {...link}
-                onDelete={noop}
-              />
+              <LinkPreview key={link.linkId} {...link} onDelete={noop} />
             ))}
           </div>
         </div>

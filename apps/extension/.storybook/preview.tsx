@@ -1,7 +1,7 @@
 import '@userplane/ui/globals.css';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { Preview } from '@storybook/react-vite';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@userplane/ui/components/tooltip';
 import React from 'react';
 
@@ -12,7 +12,7 @@ import React from 'react';
 // other tooling may partially define `chrome`, which would skip a naïve guard.
 
 const noop = () => {};
-const noopPromise = (..._args: unknown[]) => Promise.resolve({});
+const noopPromise = (..._: unknown[]) => Promise.resolve({});
 
 function makeStorageArea() {
   return {
@@ -47,8 +47,7 @@ if (!c.windows) c.windows = { getCurrent: () => Promise.resolve({ id: 1 }) };
 // chrome.commands
 if (!c.commands)
   c.commands = {
-    getAll: () =>
-      Promise.resolve([{ name: 'create-recording-link', shortcut: 'Ctrl+Shift+Y' }]),
+    getAll: () => Promise.resolve([{ name: 'create-recording-link', shortcut: 'Ctrl+Shift+Y' }]),
   };
 
 // chrome.runtime

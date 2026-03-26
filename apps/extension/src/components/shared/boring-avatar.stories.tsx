@@ -56,7 +56,12 @@ export const AvatarGroup: Story = {
   render: () => (
     <div className="flex -space-x-2">
       {['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'].map((name) => (
-        <BoringAvatar key={name} name={name} size={AVATAR_SIZES.GROUP} className="ring-2 ring-background" />
+        <BoringAvatar
+          key={name}
+          name={name}
+          size={AVATAR_SIZES.GROUP}
+          className="ring-2 ring-background"
+        />
       ))}
     </div>
   ),
