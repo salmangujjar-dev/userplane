@@ -11,8 +11,9 @@ import { FilteredEmptyState, LinkEmptyState, RecordingEmptyState } from './empty
 
 function withRouter(Component: React.ComponentType) {
   const rootRoute = createRootRoute({ component: Component });
+  const createLinkRoute = createRoute({ getParentRoute: () => rootRoute, path: '/create' });
   const router = createRouter({
-    routeTree: rootRoute,
+    routeTree: rootRoute.addChildren([createLinkRoute]),
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   return () => <RouterProvider router={router} />;

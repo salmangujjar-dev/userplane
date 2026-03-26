@@ -12,9 +12,6 @@ import { useWorkspaceStore } from '@/stores/workspace';
 
 import { EditLinkView } from './edit-link-view';
 
-// Seed workspace store
-useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
-
 function withRouter(children: React.ReactNode) {
   const rootRoute = createRootRoute({
     component: () => <>{children}</>,
@@ -40,7 +37,10 @@ const meta = {
     isReusable: false,
   },
   decorators: [
-    (Story) => withRouter(<Story />),
+    (Story) => {
+      useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
+      return withRouter(<Story />);
+    },
   ],
 } satisfies Meta<typeof EditLinkView>;
 

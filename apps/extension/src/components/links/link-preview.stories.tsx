@@ -13,9 +13,6 @@ import { useWorkspaceStore } from '@/stores/workspace';
 
 import { LinkPreview } from './link-preview';
 
-// Seed the Zustand store so useWorkspaceId returns a value
-useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
-
 function withRouter(children: React.ReactNode) {
   const rootRoute = createRootRoute({
     component: () => <>{children}</>,
@@ -52,7 +49,10 @@ const meta = {
   },
   args: defaultArgs,
   decorators: [
-    (Story) => withRouter(<Story />),
+    (Story) => {
+      useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
+      return withRouter(<Story />);
+    },
   ],
 } satisfies Meta<typeof LinkPreview>;
 

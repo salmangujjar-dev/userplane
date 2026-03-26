@@ -12,9 +12,6 @@ import { useWorkspaceStore } from '@/stores/workspace';
 
 import { CreateLinkView } from './create-link-view';
 
-// Seed workspace store
-useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
-
 function withRouter(children: React.ReactNode) {
   const rootRoute = createRootRoute({
     component: () => <>{children}</>,
@@ -34,7 +31,10 @@ const meta = {
     layout: 'fullscreen',
   },
   decorators: [
-    (Story) => withRouter(<Story />),
+    (Story) => {
+      useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
+      return withRouter(<Story />);
+    },
   ],
 } satisfies Meta<typeof CreateLinkView>;
 
