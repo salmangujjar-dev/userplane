@@ -16,6 +16,10 @@ const config: StorybookConfig = {
       '@': resolve(__dirname, '../src'),
       '@userplane/ui/globals.css': resolve(__dirname, '../../../packages/ui/src/styles/globals.css'),
       '@userplane/ui': resolve(__dirname, '../../../packages/ui/src'),
+      'posthog-js/dist/module.no-external': resolve(__dirname, 'mocks/posthog.ts'),
+      'posthog-js/dist/posthog-recorder': resolve(__dirname, 'mocks/posthog.ts'),
+      'posthog-js/dist/exception-autocapture': resolve(__dirname, 'mocks/posthog.ts'),
+      'posthog-js': resolve(__dirname, 'mocks/posthog.ts'),
     };
 
     config.esbuild = {
