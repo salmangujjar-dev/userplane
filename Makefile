@@ -84,6 +84,8 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)extension:build:prod$(WHITE)          ║$(RESET) Build extension prod profile (tagged)                             $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)extension:zip$(WHITE)                 ║$(RESET) Zip extension dev build (untagged)                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)extension:zip:prod$(WHITE)            ║$(RESET) Zip extension prod build for store submission (tagged)            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)extension:submit$(WHITE)              ║$(RESET) Submit extension to Chrome Web Store (requires .env.submit)       $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)extension:submit:dry$(WHITE)          ║$(RESET) Dry-run submission (authenticate without uploading)                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)extension:storybook$(WHITE)           ║$(RESET) Run Storybook for Chrome extension (port 6012)                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)extension:storybook:build$(WHITE)     ║$(RESET) Build Storybook for Chrome extension                              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -469,6 +471,16 @@ extension\:zip\:prod: ## Zip extension prod build for store submission (tagged)
 	@echo "$(BLUE)Zipping Chrome extension (prod profile)...$(RESET)"
 	@cd apps/extension && bun run zip
 	@echo "$(GREEN)Chrome extension (prod) zipped!$(RESET)"
+
+extension\:submit: extension\:zip\:prod ## Submit extension to Chrome Web Store (requires .env.submit)
+	@echo "$(BLUE)Submitting Chrome extension to Chrome Web Store...$(RESET)"
+	@cd apps/extension && bun run submit --chrome-zip $$(ls .output/userplaneextension-*-chrome.zip | head -1)
+	@echo "$(GREEN)Chrome extension submitted!$(RESET)"
+
+extension\:submit\:dry: extension\:zip\:prod ## Dry-run submission (authenticate without uploading)
+	@echo "$(BLUE)Dry-run: submitting Chrome extension...$(RESET)"
+	@cd apps/extension && bun run submit --chrome-zip $$(ls .output/userplaneextension-*-chrome.zip | head -1) --dry-run
+	@echo "$(GREEN)Dry-run complete!$(RESET)"
 
 extension\:storybook: ## Run Storybook for Chrome extension (port 6012)
 	@echo "$(MAGENTA)Starting Storybook for Chrome extension...$(RESET)"
