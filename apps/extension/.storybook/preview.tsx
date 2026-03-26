@@ -28,10 +28,32 @@ if (typeof globalThis.chrome === 'undefined') {
       getCurrent: () => Promise.resolve({ id: 1 }),
     },
     commands: {
-      getAll: () => Promise.resolve([]),
+      getAll: () =>
+        Promise.resolve([
+          { name: 'create-recording-link', shortcut: 'Ctrl+Shift+L' },
+        ]),
     },
     runtime: {
-      sendMessage: noopPromise,
+      sendMessage: (message: { type: string }) => {
+        // Return a mock authenticated session for CHECK_SESSION
+        if (message?.type === 'CHECK_SESSION') {
+          return Promise.resolve({
+            authenticated: true,
+            user: {
+              id: 'user-storybook-1',
+              email: 'alice@example.com',
+              name: 'Alice Johnson',
+              role: 'admin',
+              emailVerified: true,
+              image: null,
+            },
+          });
+        }
+        if (message?.type === 'GET_ACTIVE_TAB_URL') {
+          return Promise.resolve({ url: 'https://example.com' });
+        }
+        return Promise.resolve({});
+      },
       onMessage: { addListener: noop, removeListener: noop },
     },
   } as unknown as typeof chrome;
