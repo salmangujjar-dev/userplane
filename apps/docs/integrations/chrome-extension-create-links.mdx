@@ -1,0 +1,164 @@
+---
+title: Chrome Extension Link Creation
+description: Create recording links from the Chrome extension using the side panel, keyboard shortcut, context menu, or omnibox
+---
+
+The Chrome extension supports multiple ways to create recording links. Every method opens the same Create Link form in the side panel and produces the same link.
+
+## Create a recording link
+
+<Tabs>
+  <Tab title="Extension Icon">
+    <Steps>
+      <Step title="Click the Userplane icon">
+        Click the **Userplane** icon in your Chrome toolbar. The side panel opens to the Links list.
+      </Step>
+      <Step title="Open the Create tab">
+        Click the **Create** tab in the bottom navigation of the side panel.
+
+        <Frame caption="Create Link form in the side panel">
+          <img src="/media/extension/extension-create-link.png" />
+        </Frame>
+      </Step>
+      <Step title="Fill in the form">
+        - **Link Reference** (optional) — a URL, ticket number, or customer reference. Auto-populates with the current tab URL if [Prefill Reference](#prefill-reference) is enabled.
+        - **Domain** (required) — select from your workspace's domains. The first domain is auto-selected.
+        - **Project** (optional) — associate the link with a project for organization. The default project is auto-selected if one exists.
+        - **Reusable** — toggle whether the link can be used for multiple recordings or just one.
+      </Step>
+      <Step title="Create the link">
+        Click **Create Link**. If successful, the Share Link screen appears.
+      </Step>
+      <Step title="Share the link">
+        Click **Copy Link** to copy the URL to your clipboard, then paste it into your help desk reply, email, or chat.
+
+        <Frame caption="Share link screen">
+          <img src="/media/extension/extension-share-link.png" />
+        </Frame>
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="Keyboard Shortcut">
+    <Steps>
+      <Step title="Press the shortcut">
+        Press **Cmd+Shift+Y** (Mac) or **Ctrl+Shift+Y** (Windows/Linux) from any Chrome tab. The side panel opens directly to the Create Link form.
+
+        <Frame caption="Create Link form opened via keyboard shortcut">
+          <img src="/media/extension/extension-create-link-prefill-reference.png" />
+        </Frame>
+
+      </Step>
+      <Step title="Fill in the form">
+        - **Link Reference** — auto-populates with the current tab URL if [Prefill Reference](#prefill-reference) is enabled. Edit or clear it as needed.
+        - **Domain** (required) — select from your workspace's domains.
+        - **Project** (optional) — associate the link with a project.
+        - **Reusable** — toggle for single or multiple recordings.
+      </Step>
+      <Step title="Create the link">
+        Click **Create Link**. The Share Link screen appears.
+      </Step>
+      <Step title="Share the link">
+        Click **Copy Link** to copy the URL to your clipboard, then paste it into your help desk reply, email, or chat.
+      </Step>
+    </Steps>
+
+    <Note>
+      You can customize this shortcut at `chrome://extensions/shortcuts`. Find **Userplane** and
+      change the **Create Recording Link** binding to your preferred key combination.
+    </Note>
+
+  </Tab>
+  <Tab title="Context Menu">
+    <Steps>
+      <Step title="Right-click to open the menu">
+        Right-click anywhere on a web page and select **Create Recording Link**. You can also right-click the **Userplane extension icon** in the toolbar and select **Create Recording Link**.
+
+        <Frame caption="Right-click context menu on a webpage">
+          <img src="/media/extension/extension-context-menu-on-webpage.png" />
+        </Frame>
+      </Step>
+      <Step title="Fill in the form">
+        The side panel opens to the Create Link form. If [Prefill Reference](#prefill-reference) is enabled, the **Link Reference** field auto-populates with the current page URL.
+
+        - **Domain** (required) — select from your workspace's domains.
+        - **Project** (optional) — associate the link with a project.
+        - **Reusable** — toggle for single or multiple recordings.
+      </Step>
+      <Step title="Create the link">
+        Click **Create Link**. The Share Link screen appears.
+      </Step>
+      <Step title="Share the link">
+        Click **Copy Link** to copy the URL to your clipboard, then paste it into your help desk reply, email, or chat.
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="Omnibox">
+    <Steps>
+      <Step title="Activate the omnibox">
+        Type **userplane** in the Chrome address bar, then press **Tab**. The address bar changes to show "Userplane - Create Recording Link".
+
+        <Frame caption="Omnibox activated in the Chrome address bar">
+          <img src="/media/extension/extension-omnibox-create-link-part-1.png" />
+        </Frame>
+      </Step>
+      <Step title="Type a reference and press Enter">
+        Type a reference — a customer name, ticket number, or URL — and press **Enter**. The side panel opens to the Create Link form with your reference pre-filled.
+
+        <Frame caption="Side panel opens with the Create Link form">
+          <img src="/media/extension/extension-omnibox-create-link-part-2.png" />
+        </Frame>
+
+      </Step>
+      <Step title="Complete the form">
+        - **Domain** (required) — select from your workspace's domains.
+        - **Project** (optional) — associate the link with a project.
+        - **Reusable** — toggle for single or multiple recordings.
+      </Step>
+      <Step title="Create the link">
+        Click **Create Link**. The Share Link screen appears.
+      </Step>
+      <Step title="Share the link">
+        Click **Copy Link** to copy the URL to your clipboard, then paste it into your help desk reply, email, or chat.
+      </Step>
+    </Steps>
+
+    <Tip>
+      The omnibox works well when the reference is already known — such as a ticket number or
+      customer name — and you want to skip opening the side panel first.
+    </Tip>
+
+  </Tab>
+</Tabs>
+
+## Prefill Reference
+
+When **Prefill Reference** is enabled in [Settings](/integrations/chrome-extension-settings), the Create Link form auto-populates the **Link Reference** field with the URL of your current active tab — for example, the help desk ticket you're viewing.
+
+Prefill Reference is **on by default**. Toggle it off in [extension settings](/integrations/chrome-extension-settings) to enter references manually.
+
+<Frame caption="Create Link form with auto-populated reference from the current tab">
+  <img src="/media/extension/extension-create-link-prefill-reference.png" />
+</Frame>
+
+Prefill Reference works with all creation methods — side panel, keyboard shortcut, context menu, and omnibox. When using the omnibox, the typed reference overrides the auto-populated URL.
+
+## When to use each method
+
+| Method                                | Best for                                      | Reference                       |
+| ------------------------------------- | --------------------------------------------- | ------------------------------- |
+| **Side panel Create tab**             | When you're already in the side panel         | Auto-populated or manual        |
+| **Keyboard shortcut** (`Cmd+Shift+Y`) | Quick link creation from any tab              | Auto-populated from current tab |
+| **Context menu** (right-click)        | Creating a link while viewing a specific page | Auto-populated from current tab |
+| **Omnibox** (`userplane` + Tab)       | When you know the exact reference to use      | Typed by you                    |
+
+All methods produce the same recording link — the only difference is how you reach the form and what's pre-filled.
+
+## Related articles
+
+- [Chrome Extension Side Panel](/integrations/chrome-extension-side-panel) — overview of the side panel navigation.
+- [Chrome Extension Link Management](/integrations/chrome-extension-manage-links) — browse, edit, and delete links.
+- [Chrome Extension Recordings](/integrations/chrome-extension-recordings) — browse recordings received from your links.
+- [Requesting a Recording](/recording/requesting) — creating links from the Userplane dashboard.
+- [Reusable Links](/recording-links/reusable) — how reusable links work.

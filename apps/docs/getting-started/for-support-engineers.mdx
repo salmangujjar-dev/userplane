@@ -30,6 +30,10 @@ You're the one who gets things set up so the rest of the support team can work e
     | **Whitelisted** | Anyone with a matching email domain joins automatically |
     | **Protected** | Matching domain users can request access, you approve |
 
+    <Frame caption="Request workspace access (Protected policy)">
+      <img src="/media/intercom/workspace-settings/request-workspace-access.png" />
+    </Frame>
+
     Whitelist your company email domain so teammates can join without individual invites.
 
     <Frame caption="Invite policy settings">
@@ -202,9 +206,38 @@ Before going live, make sure sensitive customer data doesn't appear in recording
     </Steps>
 
   </Tab>
+  <Tab title="Chrome Extension">
+    <Steps>
+      <Step title="Install the Chrome extension">
+        Install **Userplane** from the Chrome Web Store. Share the install link with your support team so each agent can install it.
+      </Step>
+      <Step title="Agents sign in">
+        Each agent opens the side panel, clicks **Sign in to continue**, and authenticates via the Userplane dashboard.
+
+        <Frame caption="Extension sign-in prompt">
+          <img src="/media/extension/extension-sign-in-continue.png" />
+        </Frame>
+
+      </Step>
+      <Step title="Select the workspace">
+        After signing in, agents select your workspace from the workspace list. They can then create recording links and view recordings from the side panel.
+
+        <Frame caption="Workspace selector in the extension">
+          <img src="/media/extension/extension-setting-workspace-switcher.png" />
+        </Frame>
+
+      </Step>
+    </Steps>
+
+    <Note>
+      No OAuth or marketplace setup is required. The Chrome extension authenticates via the Userplane
+      dashboard session.
+    </Note>
+
+  </Tab>
 </Tabs>
 
-See [Help Desk Setup](/getting-started/helpdesk-setup) for full details.
+See [Help Desk Setup](/getting-started/helpdesk-setup) for full details, including the [Chrome extension](/integrations/chrome-extension) option.
 
 ## Ongoing management
 

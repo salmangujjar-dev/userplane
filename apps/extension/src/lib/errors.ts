@@ -1,6 +1,8 @@
 import { isDefinedError } from '@userplane/client';
 import { toast } from '@userplane/ui/components/sonner';
 
+import { getPostHog } from '@/lib/posthog';
+
 interface ORPCDefinedError {
   defined: true;
   code: string;
@@ -17,7 +19,8 @@ export function handleSafeResult<T>(error: unknown, response: T | null): SafeRes
     if (isDefinedError(error)) {
       return { success: false, error };
     }
-    console.error('Unknown API error:', error);
+    console.debug('Unknown API error:', error);
+    getPostHog()?.captureException(error, { error_type: 'api_unknown_error' });
     throw error;
   }
   return { success: true, data: response as T };
@@ -28,7 +31,11 @@ export function showErrorToast(error: ORPCDefinedError): void {
 }
 
 export function handleUnknownError(error: unknown, fallbackMessage: string): void {
-  console.error(fallbackMessage, error);
+  console.debug(fallbackMessage, error);
+  getPostHog()?.captureException(error, {
+    error_type: 'unknown_error',
+    fallback_message: fallbackMessage,
+  });
   toast.error(fallbackMessage, {
     description: error instanceof Error ? error.message : 'An unexpected error occurred',
   });

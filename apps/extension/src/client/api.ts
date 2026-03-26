@@ -1,5 +1,7 @@
 import { createClient, createSafeClient, isDefinedError } from '@userplane/client';
 
+import { getPostHog } from '@/lib/posthog';
+
 const API_URL = import.meta.env.WXT_API_URL || 'https://api-dev.userplane.io';
 
 let isHandling401 = false;
@@ -31,10 +33,19 @@ const baseClient = createClient({
       return;
     }
 
-    console.error('API Error:', error);
+    console.debug('API Error:', error);
 
-    if (error && typeof error === 'object' && 'status' in error && error.status === 401) {
-      handle401();
+    if (error && typeof error === 'object' && 'status' in error) {
+      const status = (error as { status: number }).status;
+      if (status === 401) {
+        handle401();
+      }
+      if (status >= 500) {
+        getPostHog()?.captureException(error, {
+          error_type: 'api_error',
+          status_code: String(status),
+        });
+      }
     }
   },
 });

@@ -208,7 +208,20 @@
                   "integrations/zendesk-top-bar",
                   "integrations/zendesk-notifications"
                 ]
-              }
+              },
+              {
+                "group": "Chrome Extension",
+                "pages": [
+                  "integrations/chrome-extension",
+                  "integrations/chrome-extension-side-panel",
+                  "integrations/chrome-extension-create-links",
+                  "integrations/chrome-extension-manage-links",
+                  "integrations/chrome-extension-recordings",
+                  "integrations/chrome-extension-shortcuts",
+                  "integrations/chrome-extension-settings"
+                ]
+              },
+              "integrations/other-helpdesks"
             ]
           },
           {

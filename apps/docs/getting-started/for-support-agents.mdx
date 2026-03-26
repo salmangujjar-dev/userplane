@@ -7,7 +7,7 @@ You're the one talking to customers. This guide gets you from zero to sending yo
 
 ## What you'll be able to do
 
-- Send recording links to customers directly from Intercom or Zendesk
+- Send recording links to customers directly from Intercom, Zendesk, or the Chrome extension
 - Review screen recordings with console logs and network data alongside the video
 - Use shortcuts and macros to request recordings in seconds
 
@@ -51,6 +51,33 @@ Your workspace admin will send you an invite link via email. Click it to create 
   </Tab>
   <Tab title="Zendesk">
     Userplane appears automatically in every Zendesk ticket — as a **sidebar app**, a **button in the reply editor**, and in the **top bar**. No pinning required.
+  </Tab>
+  <Tab title="Chrome Extension">
+    Userplane opens as a Chrome side panel alongside whatever tab you're working in.
+
+    <Steps>
+      <Step title="Click the Userplane icon">
+        Click the **Userplane** extension icon in your Chrome toolbar — or press **Cmd+Shift+Y** (Mac) / **Ctrl+Shift+Y** (Windows/Linux).
+      </Step>
+      <Step title="Sign in if needed">
+        The first time, click **Sign in to continue** and authenticate via the Userplane dashboard. After that, the side panel opens automatically.
+
+        <Frame caption="Extension sign-in prompt">
+          <img src="/media/extension/extension-sign-in-continue.png" />
+        </Frame>
+
+      </Step>
+    </Steps>
+
+    <Tip>
+      Pin the extension to your toolbar so the icon is always visible. Click the puzzle piece icon in
+      Chrome and pin **Userplane**.
+    </Tip>
+
+    <Frame caption="Pin the Userplane extension">
+      <img src="/media/extension/extension-pin-chrome-extension.png" />
+    </Frame>
+
   </Tab>
 </Tabs>
 
@@ -124,6 +151,42 @@ Your workspace admin will send you an invite link via email. Click it to create 
     </Tip>
 
   </Tab>
+  <Tab title="Chrome Extension">
+    <Steps>
+      <Step title="Open a ticket">
+        Go to the ticket or conversation in your help desk where the customer is reporting an issue.
+      </Step>
+      <Step title="Open the side panel">
+        Click the **Userplane** icon in the toolbar or press **Cmd+Shift+Y** (Mac) / **Ctrl+Shift+Y** (Windows/Linux).
+      </Step>
+      <Step title="Create a recording link">
+        The **Link Reference** field auto-populates with the current tab URL (your ticket page). Select a **domain** and **project**, then click **Create Link**.
+
+        <Frame caption="Create Link form with auto-populated reference">
+          <img src="/media/extension/extension-create-link-prefill-reference.png" />
+        </Frame>
+
+      </Step>
+      <Step title="Share the link">
+        Copy the link and paste it into your help desk reply.
+
+        <Frame caption="Share the recording link">
+          <img src="/media/extension/extension-share-link.png" />
+        </Frame>
+
+      </Step>
+      <Step title="Customer records">
+        The customer clicks the link, records their screen, and submits. No installs required on their end.
+      </Step>
+    </Steps>
+
+    <Tip>
+      Use the **omnibox** (type `userplane` in the address bar, press Tab, then type a reference) or
+      **right-click context menu** for even faster access. See [Chrome Extension
+      Shortcuts](/integrations/chrome-extension-shortcuts).
+    </Tip>
+
+  </Tab>
 </Tabs>
 
 ## Step 4: Review the recording
@@ -179,6 +242,7 @@ Once the customer submits, the recording appears in the Userplane dashboard.
 - **Intercom Macros** — embed reusable recording links in Intercom macros so you can request recordings with one click. See [Intercom Macros](/integrations/intercom-macros).
 - **Intercom Shortcuts** — use `Cmd+K` inside a conversation to insert a link instantly. See [Intercom Shortcuts](/integrations/intercom-shortcuts).
 - **Zendesk locations** — use the ticket sidebar, editor button, or top bar to create links from anywhere in Zendesk. See [Zendesk Ticket Sidebar](/integrations/zendesk-ticket-sidebar).
+- **Chrome Extension Shortcuts** — use `Cmd+Shift+Y`, context menus, or the omnibox for fast link creation from any tab. See [Chrome Extension Shortcuts](/integrations/chrome-extension-shortcuts).
 - **Projects** — organize recordings by product area, customer tier, or issue type. See [Projects](/recording/projects).
 
 ## Next steps
@@ -195,6 +259,9 @@ Once the customer submits, the recording appears in the Userplane dashboard.
   </Card>
   <Card title="Zendesk Integration" icon="ticket" href="/integrations/zendesk-ticket-sidebar">
     Full guide to using Userplane from inside Zendesk
+  </Card>
+  <Card title="Chrome Extension" icon="puzzle-piece" href="/integrations/chrome-extension">
+    Use the side panel alongside any browser-based tool
   </Card>
   <Card title="Issue Analyzer" icon="magnifying-glass" href="/recording/issue-analyzer">
     Automatically surface root causes from session data

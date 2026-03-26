@@ -1,13 +1,12 @@
 import { Link } from '@tanstack/react-router';
 import { Button } from '@userplane/ui/components/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
-import { FolderKanban, Globe, HelpCircle, Loader2, Plus, Users } from 'lucide-react';
+import { FolderKanban, Globe, Loader2, Plus, RefreshCw, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { FilterDropdown, type FilterOption } from '@/components/filters/filter-dropdown';
 import { FilteredEmptyState, LinkEmptyState } from '@/components/shared/empty-state';
 import { LinkPreviewSkeleton } from '@/components/shared/skeletons';
-import { SUPPORT_LINKS } from '@/constants';
 import { useWorkspaceDomains } from '@/features/domains';
 import { type LinksFilters, useDeleteLink, useInfiniteWorkspaceLinks } from '@/features/links';
 import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
@@ -54,15 +53,26 @@ export function LinksList() {
   const {
     data,
     isPending: isLoading,
+    isFetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    refetch,
   } = useInfiniteWorkspaceLinks({
     filters: debouncedFilters,
   });
+
+  // isRefreshing includes isFetchingNextPage — use a narrower check so the
+  // refresh icon doesn't spin during infinite scroll pagination.
+  const isRefreshing = isFetching && !isLoading && !isFetchingNextPage;
   const deleteLink = useDeleteLink(workspaceId);
 
   const links = data?.pages.flatMap((page) => (page.success ? page.data.links : [])) ?? [];
+
+  // "Via the UI" optimistic delete — hide the link being deleted while mutation is in flight
+  const visibleLinks = links.filter(
+    (link) => !(deleteLink.isPending && deleteLink.variables === link.linkId)
+  );
 
   // Infinite scroll sentinel
   const sentinelRef = useIntersectionObserver({
@@ -111,17 +121,18 @@ export function LinksList() {
             <p className="text-sm text-muted-foreground">Manage recording links</p>
             <Tooltip>
               <TooltipTrigger asChild>
-                <a
-                  href={SUPPORT_LINKS.recordingLinks}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => refetch()}
+                  disabled={isRefreshing}
                   className="inline-flex items-center"
                 >
-                  <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
-                </a>
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${isRefreshing ? 'animate-spin' : ''}`}
+                  />
+                </button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Learn more about recording links</p>
+                <p>Refresh links</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -177,14 +188,14 @@ export function LinksList() {
             ))}
           </div>
         </div>
-      ) : links.length === 0 ? (
+      ) : visibleLinks.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
           {hasActiveFilters ? <FilteredEmptyState label="links" /> : <LinkEmptyState />}
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto p-4">
           <div className="space-y-4">
-            {links.map((link) => (
+            {visibleLinks.map((link) => (
               <LinkPreview
                 key={link.linkId}
                 linkId={link.linkId}
