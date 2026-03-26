@@ -25,14 +25,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@userplane/ui/components/tooltip';
-import { ChevronDown, ChevronUp, Copy, FolderKanban, Globe, HelpCircle, Plus } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Copy,
+  FolderKanban,
+  Globe,
+  HelpCircle,
+  Plus,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import type { Control, UseFormHandleSubmit, UseFormSetValue } from 'react-hook-form';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { LinkReferenceInput } from '@/components/link-reference-input';
+import { metaEntriesToRecord, MetaInput } from '@/components/meta-input';
 import { SUPPORT_LINKS } from '@/constants';
 import { useWorkspaceDomains } from '@/features/domains';
 import { useCreateLink } from '@/features/links';
@@ -54,6 +65,7 @@ const createLinkFormSchema = z.object({
   domainId: z.string().min(1, 'Please select a domain'),
   projectId: z.string().optional(),
   isReusable: z.boolean(),
+  meta: z.array(z.object({ key: z.string(), value: z.string() })).default([]),
 });
 
 type CreateLinkFormValues = z.infer<typeof createLinkFormSchema>;
@@ -95,6 +107,7 @@ export function CreateLinkModal({
       domainId: '',
       projectId: '',
       isReusable: false,
+      meta: [],
     },
   });
 
@@ -156,6 +169,7 @@ export function CreateLinkModal({
         projectId: data.projectId || undefined,
         linkReference: data.reference || undefined,
         linkReusable: data.isReusable,
+        meta: metaEntriesToRecord(data.meta),
       },
       {
         onSuccess: (result) => {
@@ -265,6 +279,53 @@ function FormView({
   isPending: boolean;
   isValid: boolean;
 }) {
+  const [showMetaView, setShowMetaView] = useState(false);
+  const metaValues = useWatch({ control, name: 'meta' }) as Array<{ key: string; value: string }>;
+  const metaCount = (metaValues ?? []).filter((e) => e.key.trim() !== '').length;
+
+  if (showMetaView) {
+    return (
+      <>
+        <div className="space-y-6 py-4">
+          <div className="flex items-start gap-4">
+            <Logo variant="tiled" size="md" showText={false} />
+            <div className="flex flex-col space-y-1">
+              <DialogTitle className="text-xl font-semibold">Link Metadata</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Custom key-value pairs for this link
+              </DialogDescription>
+            </div>
+          </div>
+          <Controller
+            name="meta"
+            control={control}
+            render={({ field }) => (
+              <MetaInput value={field.value} onChange={field.onChange} disabled={isPending} />
+            )}
+          />
+        </div>
+        <DialogFooter className="mt-8">
+          <button
+            type="button"
+            onClick={() => setShowMetaView(false)}
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-auto"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="px-6"
+            onClick={() => setShowMetaView(false)}
+          >
+            Done
+          </Button>
+        </DialogFooter>
+      </>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-6 py-4">
@@ -430,6 +491,24 @@ function FormView({
                   <Switch id="reusable" checked={field.value} onCheckedChange={field.onChange} />
                 )}
               />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium">Link Metadata</Label>
+                <p className="text-xs text-muted-foreground">
+                  Custom key-value pairs for this link
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMetaView(true)}
+                disabled={isPending}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {metaCount > 0 ? `${metaCount} ${metaCount === 1 ? 'field' : 'fields'}` : 'Add'}
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
         )}
