@@ -141,14 +141,25 @@ export default defineBackground(() => {
     // open with a user-action error for context menus, omnibox, and commands.
     await chrome.sidePanel.open({ windowId });
 
+    // Resolve WINDOW_ID_CURRENT (-2) to the actual window ID so that
+    // storage entries match what the side panel UI resolves via
+    // chrome.windows.getCurrent().
+    let resolvedId = windowId;
+    if (windowId === chrome.windows.WINDOW_ID_CURRENT) {
+      const currentWindow = await chrome.windows.getCurrent();
+      if (currentWindow.id != null) {
+        resolvedId = currentWindow.id;
+      }
+    }
+
     const trimmedReference = createReference?.trim();
     if (trimmedReference) {
-      await setPendingCreateReference(windowId, trimmedReference);
+      await setPendingCreateReference(resolvedId, trimmedReference);
     }
 
     // Scope the follow-up route/reference payload to the initiating window so
     // panels in other Chrome windows don't consume a navigation meant for this one.
-    await setPendingRoute(windowId, path);
+    await setPendingRoute(resolvedId, path);
   }
 
   async function openCreateLinkFromCommand() {
