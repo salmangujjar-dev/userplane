@@ -20,7 +20,7 @@ export default meta;
 export const Loading: StoryObj = {
   name: 'Loading State',
   render: () => (
-    <div className="flex items-center justify-center p-8 h-[400px]">
+    <div className="flex items-center justify-center p-8 h-full">
       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
     </div>
   ),
@@ -34,7 +34,7 @@ export const Unauthenticated: StoryObj = {
 export const Authenticated: StoryObj = {
   name: 'Authenticated (Children)',
   render: () => (
-    <div className="p-8 bg-background h-[400px] flex items-center justify-center">
+    <div className="p-8 bg-background h-full flex items-center justify-center">
       <div className="text-center space-y-2">
         <div className="mx-auto h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
           <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">

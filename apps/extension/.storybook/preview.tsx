@@ -5,59 +5,79 @@ import type { Preview } from '@storybook/react-vite';
 import { TooltipProvider } from '@userplane/ui/components/tooltip';
 import React from 'react';
 
-// Mock chrome extension APIs for Storybook environment
-if (typeof globalThis.chrome === 'undefined') {
-  const noop = () => {};
-  const noopPromise = () => Promise.resolve({});
-  const storage = {
+// ─── Chrome Extension API Mocks ───────────────────────────────────────────────
+// Storybook runs outside of a Chrome extension context. We must provide complete
+// mocks for every chrome.* API surface that components touch. The mock must run
+// *before* any component module is evaluated, and must be unconditional — WXT or
+// other tooling may partially define `chrome`, which would skip a naïve guard.
+
+const noop = () => {};
+const noopPromise = (..._args: unknown[]) => Promise.resolve({});
+
+function makeStorageArea() {
+  return {
     get: noopPromise,
     set: noopPromise,
     remove: noopPromise,
-    onChanged: { addListener: noop, removeListener: noop },
+    clear: noopPromise,
+    onChanged: { addListener: noop, removeListener: noop, hasListener: () => false },
   };
-  globalThis.chrome = {
-    storage: {
-      local: storage,
-      session: storage,
-      sync: storage,
-    },
-    tabs: {
-      create: noopPromise,
-    },
-    windows: {
-      getCurrent: () => Promise.resolve({ id: 1 }),
-    },
-    commands: {
-      getAll: () =>
-        Promise.resolve([
-          { name: 'create-recording-link', shortcut: 'Ctrl+Shift+L' },
-        ]),
-    },
-    runtime: {
-      sendMessage: (message: { type: string }) => {
-        // Return a mock authenticated session for CHECK_SESSION
-        if (message?.type === 'CHECK_SESSION') {
-          return Promise.resolve({
-            authenticated: true,
-            user: {
-              id: 'user-storybook-1',
-              email: 'alice@example.com',
-              name: 'Alice Johnson',
-              role: 'admin',
-              emailVerified: true,
-              image: null,
-            },
-          });
-        }
-        if (message?.type === 'GET_ACTIVE_TAB_URL') {
-          return Promise.resolve({ url: 'https://example.com' });
-        }
-        return Promise.resolve({});
-      },
-      onMessage: { addListener: noop, removeListener: noop },
-    },
-  } as unknown as typeof chrome;
 }
+
+// Unconditionally ensure every sub-property exists (deep merge)
+const g = globalThis as Record<string, unknown>;
+if (!g.chrome) g.chrome = {};
+const c = g.chrome as Record<string, unknown>;
+
+// chrome.storage
+if (!c.storage) c.storage = {};
+const storage = c.storage as Record<string, unknown>;
+if (!storage.local) storage.local = makeStorageArea();
+if (!storage.session) storage.session = makeStorageArea();
+if (!storage.sync) storage.sync = makeStorageArea();
+// Top-level onChanged (some code reads chrome.storage.onChanged)
+if (!storage.onChanged) storage.onChanged = { addListener: noop, removeListener: noop };
+
+// chrome.tabs
+if (!c.tabs) c.tabs = { create: noopPromise, query: noopPromise };
+
+// chrome.windows
+if (!c.windows) c.windows = { getCurrent: () => Promise.resolve({ id: 1 }) };
+
+// chrome.commands
+if (!c.commands)
+  c.commands = {
+    getAll: () =>
+      Promise.resolve([{ name: 'create-recording-link', shortcut: 'Ctrl+Shift+Y' }]),
+  };
+
+// chrome.runtime
+if (!c.runtime) c.runtime = {};
+const runtime = c.runtime as Record<string, unknown>;
+if (!runtime.sendMessage) {
+  runtime.sendMessage = (message: { type?: string }) => {
+    if (message?.type === 'CHECK_SESSION') {
+      return Promise.resolve({
+        authenticated: true,
+        user: {
+          id: 'user-sb-1',
+          email: 'alice@example.com',
+          name: 'Alice Johnson',
+          role: 'admin',
+          emailVerified: true,
+          image: null,
+        },
+      });
+    }
+    if (message?.type === 'GET_ACTIVE_TAB_URL') {
+      return Promise.resolve({ url: 'https://example.com' });
+    }
+    return Promise.resolve({});
+  };
+}
+if (!runtime.onMessage) runtime.onMessage = { addListener: noop, removeListener: noop };
+
+// ─── React Query ──────────────────────────────────────────────────────────────
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,6 +87,15 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// ─── Extension panel dimensions ───────────────────────────────────────────────
+// Chrome extension side panels are typically ~400px wide. We constrain all
+// stories to this width so what you see in Storybook matches the real extension.
+
+const PANEL_WIDTH = 400;
+const PANEL_HEIGHT = 600;
+
+// ─── Preview config ───────────────────────────────────────────────────────────
 
 const preview: Preview = {
   parameters: {
@@ -80,13 +109,36 @@ const preview: Preview = {
     },
   },
   decorators: [
-    (Story) => (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider delayDuration={200}>
-          <Story />
-        </TooltipProvider>
-      </QueryClientProvider>
-    ),
+    (Story, context) => {
+      // Stories that already set layout: 'fullscreen' get a fixed extension frame.
+      // Centered stories get just the width constraint.
+      const isFullscreen = context.parameters.layout === 'fullscreen';
+
+      return (
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider delayDuration={200}>
+            {isFullscreen ? (
+              <div
+                style={{
+                  width: PANEL_WIDTH,
+                  height: PANEL_HEIGHT,
+                  overflow: 'hidden',
+                  border: '1px solid var(--border, #e5e7eb)',
+                  borderRadius: 12,
+                  background: 'var(--background, #fff)',
+                }}
+              >
+                <Story />
+              </div>
+            ) : (
+              <div style={{ width: PANEL_WIDTH }}>
+                <Story />
+              </div>
+            )}
+          </TooltipProvider>
+        </QueryClientProvider>
+      );
+    },
   ],
 };
 

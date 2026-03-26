@@ -87,12 +87,7 @@ const meta = {
     layout: 'fullscreen',
   },
   decorators: [
-    (Story) =>
-      withRouter(
-        <div className="w-[400px] h-[700px] border rounded-lg overflow-hidden">
-          <Story />
-        </div>
-      ),
+    (Story) => withRouter(<Story />),
   ],
 } satisfies Meta;
 

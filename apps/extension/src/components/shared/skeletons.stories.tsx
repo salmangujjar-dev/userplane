@@ -19,7 +19,7 @@ export default meta;
 export const LinkPreviewSkeletonStory: StoryObj = {
   name: 'LinkPreview Skeleton',
   render: () => (
-    <div className="w-[360px] space-y-4">
+    <div className="space-y-4">
       <LinkPreviewSkeleton />
       <LinkPreviewSkeleton />
       <LinkPreviewSkeleton />
@@ -30,7 +30,7 @@ export const LinkPreviewSkeletonStory: StoryObj = {
 export const RecordingPreviewSkeletonStory: StoryObj = {
   name: 'RecordingPreview Skeleton',
   render: () => (
-    <div className="w-[360px] space-y-2">
+    <div className="space-y-2">
       <RecordingPreviewSkeleton />
       <RecordingPreviewSkeleton />
     </div>
@@ -39,17 +39,13 @@ export const RecordingPreviewSkeletonStory: StoryObj = {
 
 export const WorkspaceSwitcherSkeletonStory: StoryObj = {
   name: 'WorkspaceSwitcher Skeleton',
-  render: () => (
-    <div className="w-[320px]">
-      <WorkspaceSwitcherSkeleton />
-    </div>
-  ),
+  render: () => <WorkspaceSwitcherSkeleton />,
 };
 
 export const FormFieldSkeletonStory: StoryObj = {
   name: 'FormField Skeleton',
   render: () => (
-    <div className="w-[320px] space-y-4">
+    <div className="space-y-4">
       <FormFieldSkeleton />
       <FormFieldSkeleton />
     </div>

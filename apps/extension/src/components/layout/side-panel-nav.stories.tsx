@@ -12,12 +12,12 @@ import { SidePanelNav } from './side-panel-nav';
 function createNavRouter(initialPath: string) {
   const rootRoute = createRootRoute({
     component: () => (
-      <div className="w-[400px] border rounded-lg overflow-hidden">
+      <>
         <div className="h-40 flex items-center justify-center text-sm text-muted-foreground bg-muted/30">
           Page Content
         </div>
         <SidePanelNav />
-      </div>
+      </>
     ),
   });
 

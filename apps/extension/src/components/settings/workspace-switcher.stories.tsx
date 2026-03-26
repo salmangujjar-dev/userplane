@@ -15,13 +15,8 @@ const meta = {
   parameters: {
     layout: 'centered',
   },
-  decorators: [
-    (Story) => (
-      <div className="w-[320px]">
-        <Story />
-      </div>
-    ),
-  ],
+
+
 } satisfies Meta;
 
 export default meta;
