@@ -90,7 +90,8 @@
                   "recording-links/branding",
                   "recording-links/domain-preferences",
                   "recording-links/limits",
-                  "recording-links/sensitive-data-redaction"
+                  "recording-links/sensitive-data-redaction",
+                  "recording-links/link-metadata"
                 ]
               }
             ]
