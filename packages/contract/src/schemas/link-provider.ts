@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { LINK_META } from '../constants';
 import { type LinkProviderType } from './common';
 
 /**
@@ -15,6 +16,30 @@ import { type LinkProviderType } from './common';
  * 3. Add a case in parseLinkProviderData / createLinkProviderData
  */
 
+// -- Meta schema (universal across all providers) ----------------------------
+
+const META_KEY_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
+/**
+ * User-provided key-value metadata for links.
+ * Stored inside linkProviderData under the `meta` key so it doesn't
+ * conflict with provider-specific fields.
+ */
+export const LinkMetaSchema = z
+  .record(
+    z
+      .string()
+      .max(LINK_META.MAX_KEY_LENGTH)
+      .regex(META_KEY_PATTERN, 'Meta keys must be alphanumeric, hyphens, or underscores'),
+    z.string().max(LINK_META.MAX_VALUE_LENGTH)
+  )
+  .refine((obj) => Object.keys(obj).length <= LINK_META.MAX_ENTRIES, {
+    message: `Meta may contain at most ${LINK_META.MAX_ENTRIES} entries`,
+  })
+  .optional();
+
+export type LinkMeta = z.infer<typeof LinkMetaSchema>;
+
 // -- Provider-specific data schemas ------------------------------------------
 
 /**
@@ -24,6 +49,7 @@ import { type LinkProviderType } from './common';
  */
 export const IntercomLinkProviderDataSchema = z.object({
   adminId: z.string(),
+  meta: LinkMetaSchema,
 });
 export type IntercomLinkProviderData = z.infer<typeof IntercomLinkProviderDataSchema>;
 
@@ -41,6 +67,7 @@ export const ZendeskLinkProviderDataSchema = z.object({
   requesterEmail: z.string().optional(),
   agentName: z.string().optional(),
   agentEmail: z.string().optional(),
+  meta: LinkMetaSchema,
 });
 export type ZendeskLinkProviderData = z.infer<typeof ZendeskLinkProviderDataSchema>;
 
@@ -49,7 +76,9 @@ export type ZendeskLinkProviderData = z.infer<typeof ZendeskLinkProviderDataSche
  * Fallback for providers that don't require additional context (web, API, etc.).
  * Stores no fields; exists so every provider resolves to a concrete type.
  */
-export const GeneralLinkProviderDataSchema = z.object({});
+export const GeneralLinkProviderDataSchema = z.object({
+  meta: LinkMetaSchema,
+});
 export type GeneralLinkProviderData = z.infer<typeof GeneralLinkProviderDataSchema>;
 
 // -- Config map & type helpers -----------------------------------------------
@@ -96,14 +125,17 @@ export function parseLinkProviderData<P extends LinkProviderType>(
   if (data === null || data === undefined) {
     return null;
   }
+  // Use safeParse so that a schema mismatch (e.g. API-created link with
+  // an Intercom URL but no adminId) returns null instead of throwing.
+  let result;
   if (providerType === 'intercom') {
-    return IntercomLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
+    result = IntercomLinkProviderDataSchema.safeParse(data);
+  } else if (providerType === 'zendesk') {
+    result = ZendeskLinkProviderDataSchema.safeParse(data);
+  } else {
+    result = GeneralLinkProviderDataSchema.safeParse(data);
   }
-  if (providerType === 'zendesk') {
-    return ZendeskLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
-  }
-  // All other providers: no required fields
-  return GeneralLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
+  return result.success ? (result.data as LinkProviderDataFor<P>) : null;
 }
 
 /**

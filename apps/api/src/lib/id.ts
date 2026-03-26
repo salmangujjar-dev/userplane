@@ -129,6 +129,41 @@ export function generateIntegrationId(): string {
 }
 
 /**
+ * Short suffix length for fallback link titles
+ * 4 characters with 62-char alphabet = ~14.7 million combinations
+ */
+const TITLE_SUFFIX_LENGTH = 4;
+const titleSuffixGenerator = customAlphabet(ID_ALPHABET, TITLE_SUFFIX_LENGTH);
+
+/**
+ * Generate a short random suffix for fallback link titles
+ * @returns 4-character alphanumeric string (e.g., "a3Kx")
+ */
+function generateTitleSuffix(): string {
+  return titleSuffixGenerator();
+}
+
+/**
+ * Determine the link title to store.
+ * Returns the provided title if non-empty, otherwise generates a unique fallback.
+ * - With name: "{firstName}'s Recording Link #XXXX"
+ * - Without name: "Recording Link #XXXX"
+ */
+export function determineLinkTitle(title?: string | null, createdByName?: string | null): string {
+  if (title && title.trim() !== '') {
+    return title;
+  }
+
+  const suffix = generateTitleSuffix();
+  const firstName = createdByName?.trim().split(/\s+/)[0];
+
+  if (!firstName) {
+    return `Recording Link #${suffix}`;
+  }
+  return `${firstName}'s Recording Link #${suffix}`;
+}
+
+/**
  * Export the raw nanoid generator for cases where custom prefixes are needed
  */
 export { nanoid };

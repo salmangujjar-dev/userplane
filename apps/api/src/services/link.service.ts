@@ -8,7 +8,7 @@ import type { LinkProviderData } from '@userplane/contract';
 import { billingError, linkError } from '@userplane/contract';
 
 import { env } from '@/api/env';
-import { generateLinkId } from '@/api/lib/id';
+import { determineLinkTitle, generateLinkId } from '@/api/lib/id';
 import { parseLinkReference } from '@/api/lib/parser';
 import { DomainRepository } from '@/api/repositories/domains.repository';
 import { LinkRepository } from '@/api/repositories/links.repository';
@@ -51,6 +51,7 @@ export interface CreateLinkParams {
   createdBy: string;
   linkReference?: string;
   linkReusable?: boolean;
+  meta?: Record<string, string>;
 }
 
 /**
@@ -79,20 +80,28 @@ export interface UpdateLinkParams {
   linkProviderType?: LinkProviderType;
   linkProviderId?: string | null;
   linkProviderRef?: string | null;
+  meta?: Record<string, string>;
+}
+
+/**
+ * Extract user-provided meta from linkProviderData JSONB
+ */
+function extractMeta(providerData: unknown): Record<string, string> | null {
+  if (
+    providerData != null &&
+    typeof providerData === 'object' &&
+    'meta' in providerData &&
+    providerData.meta != null &&
+    typeof providerData.meta === 'object'
+  ) {
+    const meta = providerData.meta as Record<string, string>;
+    return Object.keys(meta).length > 0 ? meta : null;
+  }
+  return null;
 }
 
 export class LinkService {
   constructor(private deps: LinkServiceDeps) {}
-
-  /**
-   * Extract first name from full name
-   * Handles various name formats
-   */
-  private extractFirstName(fullName: string): string {
-    const trimmed = fullName.trim();
-    const firstWord = trimmed.split(/\s+/)[0];
-    return firstWord || trimmed;
-  }
 
   /**
    * Generate a JWT-encoded link URL for accessing recordings
@@ -258,7 +267,7 @@ export class LinkService {
         projectId: params.projectId,
         domainId: params.domainId,
         createdBy: params.createdBy,
-        linkTitle: params.linkTitle,
+        linkTitle: determineLinkTitle(params.linkTitle, params.createdByName),
         linkType: 'recording',
         linkReusable: params.linkReusable,
         linkProviderType: params.linkProviderType,
@@ -337,7 +346,7 @@ export class LinkService {
   /**
    * Create a new link
    * Parses the linkReference to infer provider info and generate title
-   * If linkReference is empty, uses user's first name as default
+   * If linkReference is empty, a unique fallback title is generated in createLinkRecord
    * If projectId is not provided, uses the default project for the workspace
    * Throws NOT_FOUND if workspace or project doesn't exist
    * Throws specific link errors if validation fails
@@ -350,12 +359,9 @@ export class LinkService {
       params.projectId
     );
 
-    // Determine linkReference - use provided or generate default based on user's first name
-    let linkReference = params.linkReference;
-    if (!linkReference || linkReference.trim() === '') {
-      const firstName = this.extractFirstName(memberWithUser.userName);
-      linkReference = `${firstName}'s Recording Link`;
-    }
+    // Use provided linkReference, or empty string if none provided
+    // Empty string → parseLinkReference returns null title → createLinkRecord applies fallback
+    const linkReference = params.linkReference?.trim() || '';
 
     // Parse link reference to extract provider info
     const parsed = parseLinkReference(linkReference);
@@ -373,6 +379,7 @@ export class LinkService {
         linkProviderType: parsed.linkProviderType,
         linkProviderId: parsed.linkProviderId,
         linkProviderRef: parsed.linkProviderRef,
+        linkProviderData: params.meta ? { meta: params.meta } : undefined,
       },
       options
     );
@@ -461,6 +468,7 @@ export class LinkService {
         row.recordingCaptureServerLog,
         row.recordingCaptureNetworkLog
       ),
+      meta: extractMeta(row.linkProviderData),
       createdAt: row.createdAt,
       project: {
         projectId: row.projectId,
@@ -512,8 +520,15 @@ export class LinkService {
       throw linkError.LINK_WORKSPACE_MISMATCH();
     }
 
+    // Merge meta into existing provider data if provided
+    const updateInput: UpdateLinkParams & { linkProviderData?: unknown } = { ...params };
+    if (params.meta !== undefined) {
+      const existing = (existingLink.linkProviderData as Record<string, unknown>) ?? {};
+      updateInput.linkProviderData = { ...existing, meta: params.meta };
+    }
+
     // Perform update
-    const updated = await this.deps.linkRepo.update(linkId, params, options);
+    const updated = await this.deps.linkRepo.update(linkId, updateInput, options);
 
     if (!updated) {
       throw linkError.LINK_UPDATE_FAILED();
@@ -596,6 +611,7 @@ export class LinkService {
         linkWithDetails.recordingCaptureServerLog,
         linkWithDetails.recordingCaptureNetworkLog
       ),
+      meta: extractMeta(linkWithDetails.linkProviderData),
       createdAt: linkWithDetails.createdAt,
       project: {
         projectId: linkWithDetails.projectId,

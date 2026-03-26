@@ -83,6 +83,7 @@ export const createLinkImpl = (
         domainId: input.body.domainId,
         linkReference: input.body.linkReference,
         linkReusable: input.body.linkReusable,
+        meta: input.body.meta,
       });
 
       const link = await linkService.getById(createdLink.linkId, input.params.workspaceId);
@@ -143,6 +144,7 @@ export const updateLinkImpl = (
         linkProviderType: input.body.linkProviderType,
         linkProviderId: input.body.linkProviderId,
         linkProviderRef: input.body.linkProviderRef,
+        meta: input.body.meta,
       });
 
       const link = await linkService.getById(input.params.linkId, input.params.workspaceId);

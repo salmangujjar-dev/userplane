@@ -36,6 +36,7 @@ export interface LinkListRow {
   linkProviderType: LinkProviderType;
   linkProviderId: string | null;
   linkProviderRef: string | null;
+  linkProviderData: unknown;
   createdAt: Date;
   workspaceId: string;
   projectId: string;
@@ -79,6 +80,7 @@ export interface UpdateLinkInput {
   linkProviderType?: LinkProviderType;
   linkProviderId?: string | null;
   linkProviderRef?: string | null;
+  linkProviderData?: unknown;
 }
 
 /**
@@ -214,6 +216,7 @@ export class LinkRepository {
         linkProviderType: links.linkProviderType,
         linkProviderId: links.linkProviderId,
         linkProviderRef: links.linkProviderRef,
+        linkProviderData: links.linkProviderData,
         createdAt: links.createdAt,
         workspaceId: links.workspaceId,
         projectId: links.projectId,
@@ -293,6 +296,7 @@ export class LinkRepository {
         linkProviderType: links.linkProviderType,
         linkProviderId: links.linkProviderId,
         linkProviderRef: links.linkProviderRef,
+        linkProviderData: links.linkProviderData,
         createdAt: links.createdAt,
         workspaceId: links.workspaceId,
         projectId: links.projectId,
@@ -365,6 +369,10 @@ export class LinkRepository {
 
     if (data.linkProviderRef !== undefined) {
       updateData.linkProviderRef = data.linkProviderRef;
+    }
+
+    if (data.linkProviderData !== undefined) {
+      updateData.linkProviderData = data.linkProviderData;
     }
 
     const [updated] = await dbClient
@@ -502,6 +510,7 @@ export class LinkRepository {
         linkProviderType: links.linkProviderType,
         linkProviderId: links.linkProviderId,
         linkProviderRef: links.linkProviderRef,
+        linkProviderData: links.linkProviderData,
         createdAt: links.createdAt,
         workspaceId: links.workspaceId,
         projectId: projects.projectId,
