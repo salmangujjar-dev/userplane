@@ -23,13 +23,6 @@ const meta = {
     layout: 'padded',
   },
   args: defaultArgs,
-  decorators: [
-    (Story) => (
-      <div className="w-[360px]">
-        <Story />
-      </div>
-    ),
-  ],
 } satisfies Meta<typeof RecordingPreview>;
 
 export default meta;

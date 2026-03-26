@@ -18,9 +18,7 @@ const meta = {
   decorators: [
     (Story) => (
       <ExtensionAuthProvider>
-        <div className="w-[400px] h-[700px] border rounded-lg overflow-hidden">
-          <Story />
-        </div>
+        <Story />
       </ExtensionAuthProvider>
     ),
   ],

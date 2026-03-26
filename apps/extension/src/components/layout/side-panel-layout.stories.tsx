@@ -16,7 +16,7 @@ import { SidePanelNav } from './side-panel-nav';
 
 function MockSidePanelLayout({ content }: { content: React.ReactNode }) {
   return (
-    <div className="flex flex-col h-[600px] bg-background text-foreground border rounded-lg overflow-hidden w-[400px]">
+    <div className="flex flex-col h-full bg-background text-foreground">
       <main className="flex-1 overflow-y-auto">{content}</main>
       <SidePanelNav />
     </div>

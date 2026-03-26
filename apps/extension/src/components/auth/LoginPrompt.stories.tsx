@@ -26,7 +26,7 @@ export const DecorativeIconsOnly: StoryObj = {
     layout: 'centered',
   },
   render: () => (
-    <div className="relative w-[400px] h-[300px] bg-background border rounded-lg">
+    <div className="relative h-[300px] bg-background">
       <DecorativeIcons />
     </div>
   ),

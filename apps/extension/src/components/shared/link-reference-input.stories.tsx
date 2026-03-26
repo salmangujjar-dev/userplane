@@ -15,13 +15,8 @@ const meta = {
     onChange: fn(),
     placeholder: 'Enter URL or reference',
   },
-  decorators: [
-    (Story) => (
-      <div className="w-[360px]">
-        <Story />
-      </div>
-    ),
-  ],
+
+
 } satisfies Meta<typeof LinkReferenceInput>;
 
 export default meta;

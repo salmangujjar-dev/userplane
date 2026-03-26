@@ -21,7 +21,7 @@ export default meta;
 export const Loading: StoryObj = {
   name: 'Loading State',
   render: () => (
-    <div className="flex items-center justify-center p-8 h-[400px]">
+    <div className="flex items-center justify-center p-8 h-full">
       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
     </div>
   ),
@@ -30,7 +30,7 @@ export const Loading: StoryObj = {
 export const NoWorkspaces: StoryObj = {
   name: 'No Workspaces',
   render: () => (
-    <div className="flex-1 flex items-center justify-center h-[500px]">
+    <div className="flex-1 flex items-center justify-center h-full">
       <NoWorkspaceState />
     </div>
   ),
@@ -39,7 +39,6 @@ export const NoWorkspaces: StoryObj = {
 export const WorkspacePicker: StoryObj = {
   name: 'Multiple Workspaces Picker',
   render: () => {
-    // Clear workspace selection to show picker
     useWorkspaceStore.setState({ workspaceId: null });
 
     const workspaces = [
@@ -49,7 +48,7 @@ export const WorkspacePicker: StoryObj = {
     ];
 
     return (
-      <div className="relative flex flex-col items-center justify-center h-[500px] bg-background overflow-hidden">
+      <div className="relative flex flex-col items-center justify-center h-full bg-background overflow-hidden">
         <div className="flex flex-col items-center gap-8 px-8 relative z-10">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-32 bg-foreground/10 rounded" />
@@ -80,7 +79,7 @@ export const WithChildren: StoryObj = {
   render: () => {
     useWorkspaceStore.setState({ workspaceId: 'ws-storybook-123' });
     return (
-      <div className="p-8 bg-background h-[400px] flex items-center justify-center">
+      <div className="p-8 bg-background h-full flex items-center justify-center">
         <div className="text-center space-y-2">
           <p className="text-sm font-medium">Workspace guard passed</p>
           <p className="text-xs text-muted-foreground">

@@ -52,12 +52,7 @@ const meta = {
   },
   args: defaultArgs,
   decorators: [
-    (Story) =>
-      withRouter(
-        <div className="w-[380px]">
-          <Story />
-        </div>
-      ),
+    (Story) => withRouter(<Story />),
   ],
 } satisfies Meta<typeof LinkPreview>;
 
