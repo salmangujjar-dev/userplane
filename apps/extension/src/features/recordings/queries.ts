@@ -121,6 +121,7 @@ export function useInfiniteWorkspaceRecordings(options?: {
     },
     enabled: enabled && !!workspaceId,
     staleTime: 2 * 60 * 1000,
+    refetchOnMount: 'always',
     retry: 1,
   });
 }
