@@ -1,13 +1,12 @@
 import { Link } from '@tanstack/react-router';
 import { Button } from '@userplane/ui/components/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
-import { FolderKanban, HelpCircle, Link2, Loader2, Plus, Users } from 'lucide-react';
+import { FolderKanban, Link2, Loader2, Plus, RefreshCw, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { FilterDropdown, type FilterOption } from '@/components/filters/filter-dropdown';
 import { FilteredEmptyState, RecordingEmptyState } from '@/components/shared/empty-state';
 import { RecordingPreviewSkeleton } from '@/components/shared/skeletons';
-import { SUPPORT_LINKS } from '@/constants';
 import { type RecordingsFilters, useInfiniteWorkspaceRecordings } from '@/features/recordings';
 import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
 import { useSearchableLinks } from '@/hooks/use-searchable-links';
@@ -51,12 +50,18 @@ export function RecordingsList() {
   const {
     data,
     isPending: isLoading,
+    isFetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    refetch,
   } = useInfiniteWorkspaceRecordings({
     filters: debouncedFilters,
   });
+
+  // isRefreshing includes isFetchingNextPage — use a narrower check so the
+  // refresh icon doesn't spin during infinite scroll pagination.
+  const isRefreshing = isFetching && !isLoading && !isFetchingNextPage;
 
   const recordings =
     data?.pages.flatMap((page) => (page.success ? page.data.recordings : [])) ?? [];
@@ -108,17 +113,18 @@ export function RecordingsList() {
             <p className="text-sm text-muted-foreground">View received recordings</p>
             <Tooltip>
               <TooltipTrigger asChild>
-                <a
-                  href={SUPPORT_LINKS.recordingLinks}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => refetch()}
+                  disabled={isRefreshing}
                   className="inline-flex items-center"
                 >
-                  <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" />
-                </a>
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${isRefreshing ? 'animate-spin' : ''}`}
+                  />
+                </button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Learn more about recordings</p>
+                <p>Refresh recordings</p>
               </TooltipContent>
             </Tooltip>
           </div>
