@@ -306,13 +306,15 @@ export async function publishView(
 }
 
 /**
- * Open a modal view in Slack
+ * Open a modal view in Slack.
+ * Returns the Slack-assigned view ID on success (needed for views.update),
+ * or null on failure.
  */
 export async function openModal(
   accessToken: string,
   triggerId: string,
   view: Record<string, unknown>
-): Promise<boolean> {
+): Promise<string | null> {
   try {
     const response = await fetch('https://slack.com/api/views.open', {
       method: 'POST',
@@ -335,10 +337,14 @@ export async function openModal(
         error_text: errorText,
         trigger_id: triggerId,
       });
-      return false;
+      return null;
     }
 
-    const data = (await response.json()) as { ok: boolean; error?: string };
+    const data = (await response.json()) as {
+      ok: boolean;
+      view?: { id: string };
+      error?: string;
+    };
 
     if (!data.ok) {
       logger.warn({ error: data.error, triggerId }, 'Slack views.open returned ok=false');
@@ -347,13 +353,68 @@ export async function openModal(
         slack_error: data.error,
         trigger_id: triggerId,
       });
+      return null;
+    }
+
+    return data.view?.id ?? null;
+  } catch (error) {
+    logger.error({ error, triggerId }, 'views.open error');
+    captureException(error, undefined, { operation: 'slack_open_modal', trigger_id: triggerId });
+    return null;
+  }
+}
+
+/**
+ * Update an existing modal view in Slack.
+ * Used to replace a loading/placeholder modal with the real content
+ * after async work completes.
+ */
+export async function updateModal(
+  accessToken: string,
+  viewId: string,
+  view: Record<string, unknown>
+): Promise<boolean> {
+  try {
+    const response = await fetch('https://slack.com/api/views.update', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        view_id: viewId,
+        view,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn({ status: response.status, error: errorText, viewId }, 'views.update failed');
+      captureException(new Error('slack views.update failed'), undefined, {
+        operation: 'slack_update_modal',
+        status: response.status,
+        error_text: errorText,
+        view_id: viewId,
+      });
+      return false;
+    }
+
+    const data = (await response.json()) as { ok: boolean; error?: string };
+
+    if (!data.ok) {
+      logger.warn({ error: data.error, viewId }, 'Slack views.update returned ok=false');
+      captureException(new Error('slack views.update returned ok=false'), undefined, {
+        operation: 'slack_update_modal',
+        slack_error: data.error,
+        view_id: viewId,
+      });
       return false;
     }
 
     return true;
   } catch (error) {
-    logger.error({ error, triggerId }, 'views.open error');
-    captureException(error, undefined, { operation: 'slack_open_modal', trigger_id: triggerId });
+    logger.error({ error, viewId }, 'views.update error');
+    captureException(error, undefined, { operation: 'slack_update_modal', view_id: viewId });
     return false;
   }
 }
@@ -414,5 +475,50 @@ export async function postMessage(
     logger.error({ error, channel }, 'chat.postMessage error');
     captureException(error, undefined, { operation: 'slack_post_message', channel });
     return null;
+  }
+}
+
+/**
+ * Send a deferred response to a Slack response_url webhook.
+ *
+ * Slash commands include a short-lived `response_url` that accepts POST
+ * requests for up to 30 minutes. This lets us acknowledge the command
+ * with an immediate HTTP 200 and deliver the real reply (or error)
+ * asynchronously — avoiding the 3-second `operation_timeout`.
+ *
+ * The webhook is pre-authenticated, so no Authorization header is needed.
+ * Slack returns plain-text "ok" (not JSON) on success.
+ */
+export async function respondToUrl(
+  responseUrl: string,
+  payload: { response_type?: 'ephemeral' | 'in_channel'; text: string; blocks?: unknown[] }
+): Promise<boolean> {
+  try {
+    const response = await fetch(responseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        response_type: payload.response_type ?? 'ephemeral',
+        text: payload.text,
+        blocks: payload.blocks,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn({ status: response.status, error: errorText }, 'response_url POST failed');
+      captureException(new Error('slack response_url POST failed'), undefined, {
+        operation: 'slack_respond_to_url',
+        status: response.status,
+        error_text: errorText,
+      });
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logger.error({ error }, 'response_url error');
+    captureException(error, undefined, { operation: 'slack_respond_to_url' });
+    return false;
   }
 }

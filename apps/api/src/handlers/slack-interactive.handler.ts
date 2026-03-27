@@ -43,25 +43,27 @@ export function createSlackInteractiveRouter(service: SlackCanvasService): Hono<
 
     const payload = parseResult.data;
 
-    try {
-      switch (payload.type) {
-        case 'block_actions':
-          await service.handleBlockAction(payload);
-          return c.json({ ok: true });
-        case 'view_submission': {
-          const result = await service.handleViewSubmission(payload);
-          return result ? c.json(result) : c.body(null, 200);
-        }
-        case 'view_closed':
-          return c.json({ ok: true });
+    switch (payload.type) {
+      case 'block_actions':
+        // Fire-and-forget — acknowledge immediately to avoid Slack's timeout.
+        // Errors are delivered via DM since block actions have no response_url.
+        void service.handleBlockAction(payload).catch((error) => {
+          logger.error({ error, type: payload.type }, 'handleBlockAction failed');
+          captureException(error, undefined, {
+            operation: 'slack_block_action',
+            type: payload.type,
+          });
+        });
+        return c.json({ ok: true });
+      case 'view_submission': {
+        // Validation runs synchronously (no I/O). The heavy work (link
+        // creation, channel message) is fire-and-forget inside the service
+        // and updates the modal via views.update when done.
+        const result = service.handleViewSubmission(payload);
+        return result ? c.json(result) : c.body(null, 200);
       }
-    } catch (error) {
-      logger.error({ err: error, type: payload.type }, 'Slack interactive handler failed');
-      captureException(error, undefined, {
-        operation: 'slack_interactive',
-        type: payload.type,
-      });
-      return c.json({ ok: true });
+      case 'view_closed':
+        return c.json({ ok: true });
     }
   });
 

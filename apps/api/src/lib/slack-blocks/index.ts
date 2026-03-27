@@ -17,5 +17,6 @@ export * from './limit-exceeded';
 export * from './link-created-message';
 export * from './link-creator';
 export * from './link-success';
+export * from './loading';
 export * from './recording-received-message';
 export * from './urls';

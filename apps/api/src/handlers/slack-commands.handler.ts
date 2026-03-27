@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 
+import { respondToUrl } from '@/api/clients/slack';
 import { createLogger } from '@/api/lib/logger';
 import { getRawBody, type SlackSignatureEnv } from '@/api/middleware/slack-signature';
+import { captureException } from '@/api/posthog';
 import type { SlackCanvasService } from '@/api/services/slack-canvas.service';
 
 const logger = createLogger('slack-commands');
@@ -42,8 +44,26 @@ export function createSlackCommandsRouter(service: SlackCanvasService): Hono<Sla
 
     logger.debug({ command: payload.command, text: payload.text }, 'Slash command received');
 
-    const response = await service.handleSlashCommand(payload);
-    return response ? c.json(response) : c.body(null, 200);
+    // Acknowledge immediately to avoid Slack's 3-second operation_timeout.
+    // The service opens modals / sends errors asynchronously via trigger_id
+    // and response_url, so nothing needs to be in the HTTP response body.
+    void service.handleSlashCommand(payload).catch((error) => {
+      logger.error({ error, teamId, command: payload.command }, 'handleSlashCommand failed');
+      captureException(error, undefined, {
+        operation: 'slack_slash_command',
+        teamId,
+        command: payload.command,
+      });
+
+      // Best-effort fallback so the user doesn't see silence after typing the command
+      if (payload.responseUrl) {
+        void respondToUrl(payload.responseUrl, {
+          text: 'Something went wrong. Please try again.',
+        });
+      }
+    });
+
+    return c.body(null, 200);
   });
 
   return router;
