@@ -14,6 +14,7 @@ import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-mem
 import type { IntercomNotificationService } from '@/api/services/intercom-notification.service';
 import type { NotificationService } from '@/api/services/notification.service';
 import type { SessionService } from '@/api/services/session.service';
+import type { SlackNotificationService } from '@/api/services/slack-notification.service';
 import type { ZendeskNotificationService } from '@/api/services/zendesk-notification.service';
 import { emailUrls } from '@/api/utils/email-urls';
 
@@ -131,6 +132,7 @@ async function sendRecordingNotifications(
     notificationService: NotificationService;
     intercomNotificationService: IntercomNotificationService;
     zendeskNotificationService: ZendeskNotificationService;
+    slackNotificationService: SlackNotificationService;
   }
 ): Promise<void> {
   const recording = await deps.recordingRepo.findByIdWithDetailsAndStatusGroup(
@@ -181,6 +183,21 @@ async function sendRecordingNotifications(
       recordingUrl,
     });
   }
+
+  // Message to Slack channel if link originated from Slack
+  if (recording.linkProviderType === 'slack' && recording.linkProviderId) {
+    const providerData = parseLinkProviderData('slack', recording.linkProviderData);
+    if (providerData?.channelId) {
+      const recordingUrl = emailUrls.recording.view(recording.workspaceId, recording.recordingId);
+      await deps.slackNotificationService.notifyRecordingReceived({
+        workspaceId: recording.workspaceId,
+        channelId: providerData.channelId,
+        userId: providerData.userId,
+        recordingId: recording.recordingId,
+        recordingUrl,
+      });
+    }
+  }
 }
 
 /**
@@ -195,7 +212,8 @@ export const completeUploadImpl = (
   workspaceMemberRepo: WorkspaceMemberRepository,
   notificationService: NotificationService,
   intercomNotificationService: IntercomNotificationService,
-  zendeskNotificationService: ZendeskNotificationService
+  zendeskNotificationService: ZendeskNotificationService,
+  slackNotificationService: SlackNotificationService
 ) => {
   return os.upload.complete.use(requireUploadToken).handler(async ({ input, context }) => {
     const result = await sessionService.markAsAvailable(
@@ -213,6 +231,7 @@ export const completeUploadImpl = (
           notificationService,
           intercomNotificationService,
           zendeskNotificationService,
+          slackNotificationService,
         });
       } catch (error) {
         sessionLogger.error({ err: error }, 'Error sending recording notifications');
@@ -242,7 +261,8 @@ export const createSessionProcedures = (
   workspaceMemberRepo: WorkspaceMemberRepository,
   notificationService: NotificationService,
   intercomNotificationService: IntercomNotificationService,
-  zendeskNotificationService: ZendeskNotificationService
+  zendeskNotificationService: ZendeskNotificationService,
+  slackNotificationService: SlackNotificationService
 ) => {
   return {
     init: getSessionImpl(sessionService),
@@ -254,7 +274,8 @@ export const createSessionProcedures = (
         workspaceMemberRepo,
         notificationService,
         intercomNotificationService,
-        zendeskNotificationService
+        zendeskNotificationService,
+        slackNotificationService
       ),
     },
   };

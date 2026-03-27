@@ -21,6 +21,7 @@ import type { InviteService } from '@/api/services/invite.service';
 import type { LinkService } from '@/api/services/link.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { RecordingService } from '@/api/services/recording.service';
+import type { SlackService } from '@/api/services/slack-oauth.service';
 import type { TokenService } from '@/api/services/token.service';
 import type { UserService } from '@/api/services/user.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
@@ -1741,6 +1742,145 @@ export const deleteZendeskIntegrationImpl = (
     });
 };
 
+// ============================================================================
+// SLACK INTEGRATION HANDLERS
+// ============================================================================
+
+/**
+ * GET /workspace/:workspaceId/integrations/slack - Get Slack integration status
+ * Requires workspace membership
+ */
+export const getSlackIntegrationImpl = (
+  slackService: SlackService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorizedRateLimited.workspace.integrations.slack.get
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const status = await slackService.getIntegrationStatus(input.params.workspaceId);
+
+      return {
+        message: 'Integration status retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          integration: {
+            connected: status.connected,
+            providerWorkspaceId: status.providerWorkspaceId,
+            connectedAt: status.connectedAt,
+          },
+        },
+      };
+    });
+};
+
+/**
+ * GET /workspace/:workspaceId/integrations/slack/authorize - Initiate Slack OAuth
+ * Requires admin or owner role
+ */
+export const slackIntegrationAuthorizeImpl = (
+  slackService: SlackService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorizedRateLimited.workspace.integrations.slack.authorize
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      // Check if already connected
+      const existingStatus = await slackService.getIntegrationStatus(input.params.workspaceId);
+      if (existingStatus.connected) {
+        throw workspaceError.INTEGRATION_ALREADY_CONNECTED();
+      }
+
+      const { authorizationUrl, state } = slackService.generateAuthorizationUrl(
+        context.user.id,
+        input.params.workspaceId
+      );
+
+      return {
+        message: 'Authorization URL generated successfully',
+        data: {
+          authorizationUrl,
+          state,
+        },
+      };
+    });
+};
+
+/**
+ * GET /workspace/:workspaceId/integrations/slack/callback - Handle Slack OAuth callback
+ * Requires admin or owner role
+ */
+export const slackIntegrationCallbackImpl = (
+  slackService: SlackService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorizedRateLimited.workspace.integrations.slack.callback
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input, context }) => {
+      const result = await slackService.handleIntegrationCallback({
+        code: input.query.code,
+        state: input.query.state,
+        userId: context.user.id,
+        workspaceId: input.params.workspaceId,
+      });
+
+      return {
+        message: 'Slack connected successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          connected: result.connected,
+          providerWorkspaceId: result.providerWorkspaceId,
+        },
+      };
+    });
+};
+
+/**
+ * DELETE /workspace/:workspaceId/integrations/slack - Disconnect Slack integration
+ * Requires admin or owner role
+ */
+export const deleteSlackIntegrationImpl = (
+  slackService: SlackService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorizedRateLimited.workspace.integrations.slack.delete
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      await slackService.disconnectIntegration(input.params.workspaceId);
+
+      return {
+        message: 'Slack disconnected successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          disconnected: true as const,
+        },
+      };
+    });
+};
+
 /**
  * Create the workspace procedures object
  * Complete implementation with CRUD, member management, invites, domains, and integrations
@@ -1758,6 +1898,7 @@ export const createWorkspaceProcedures = (
   tokenService: TokenService,
   intercomService: IntercomService,
   zendeskService: ZendeskService,
+  slackService: SlackService,
   billingService: BillingService
 ) => {
   return {
@@ -1893,6 +2034,20 @@ export const createWorkspaceProcedures = (
           workspaceMemberService,
           workspaceService
         ),
+      },
+      slack: {
+        get: getSlackIntegrationImpl(slackService, workspaceMemberService, workspaceService),
+        authorize: slackIntegrationAuthorizeImpl(
+          slackService,
+          workspaceMemberService,
+          workspaceService
+        ),
+        callback: slackIntegrationCallbackImpl(
+          slackService,
+          workspaceMemberService,
+          workspaceService
+        ),
+        delete: deleteSlackIntegrationImpl(slackService, workspaceMemberService, workspaceService),
       },
     },
   };

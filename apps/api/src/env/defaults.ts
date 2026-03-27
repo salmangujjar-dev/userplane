@@ -66,6 +66,7 @@ export const AUTH = {
   GOOGLE_REDIRECT_PATH: '/api/auth/callback/google',
   INTERCOM_REDIRECT_PATH: '/callback/intercom',
   ZENDESK_REDIRECT_PATH: '/callback/zendesk',
+  SLACK_REDIRECT_PATH: '/callback/slack',
 } as const;
 
 // =============================================================================

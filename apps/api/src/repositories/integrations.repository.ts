@@ -242,6 +242,20 @@ export class IntegrationRepository {
   }
 
   /**
+   * Update the provider metadata for an integration
+   * Used on re-installation to refresh workspace name and other metadata
+   */
+  async updateProviderMeta<P extends IntegrationProvider>(
+    id: string,
+    providerMeta: ProviderMetaFor<P>
+  ): Promise<void> {
+    await this.db
+      .update(integrations)
+      .set({ providerMeta })
+      .where(and(eq(integrations.id, id), eq(integrations.isDeleted, false)));
+  }
+
+  /**
    * Restore a soft-deleted integration by workspace ID and provider
    * Sets isDeleted to false and clears deletedAt timestamp
    * Restores only the record matching the specific deletedAt timestamp

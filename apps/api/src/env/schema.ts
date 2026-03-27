@@ -98,6 +98,20 @@ export const zendeskEnvSchema = z.object({
   ZENDESK_JWT_SECRET: z.string().optional().default('zendesk-jwt-secret-dev-only'),
 });
 
+/**
+ * Slack OAuth env vars schema
+ *
+ * Slack uses OAuth V2 for app installation to workspaces.
+ * Bot token (xoxb-) is the primary token for all API operations.
+ * Signing secret is used to verify webhook request authenticity.
+ */
+export const slackEnvSchema = z.object({
+  SLACK_CLIENT_ID: z.string().optional().default(''),
+  SLACK_CLIENT_SECRET: z.string().optional().default(''),
+  SLACK_SIGNING_SECRET: z.string().optional().default(''),
+  SLACK_REDIRECT_URI: urlWithDefault(`${DEV_URLS.DASH}${AUTH.SLACK_REDIRECT_PATH}`),
+});
+
 /** Dashboard env vars schema */
 export const dashboardEnvSchema = z.object({
   INVITE_APP_URL: urlWithDefault(DEV_URLS.DASH),
@@ -256,6 +270,7 @@ export const rawEnvSchema = serverEnvSchema
   .merge(googleEnvSchema)
   .merge(intercomEnvSchema)
   .merge(zendeskEnvSchema)
+  .merge(slackEnvSchema)
   .merge(dashboardEnvSchema)
   .merge(billingEnvSchema)
   .merge(paymentsEnvSchema)
@@ -477,6 +492,9 @@ export const envConfigSchema = z.object({
   intercom: oauthConfigSchema,
   zendesk: oauthConfigSchema.extend({
     jwtSecret: z.string(),
+  }),
+  slack: oauthConfigSchema.extend({
+    signingSecret: z.string(),
   }),
   dashboard: dashboardConfigSchema,
   billing: billingConfigSchema,
