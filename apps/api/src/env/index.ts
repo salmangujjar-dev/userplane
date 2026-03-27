@@ -138,6 +138,12 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       redirectUri: raw.ZENDESK_REDIRECT_URI,
       jwtSecret: raw.ZENDESK_JWT_SECRET,
     },
+    slack: {
+      clientId: raw.SLACK_CLIENT_ID,
+      clientSecret: raw.SLACK_CLIENT_SECRET,
+      redirectUri: raw.SLACK_REDIRECT_URI,
+      signingSecret: raw.SLACK_SIGNING_SECRET,
+    },
     dashboard: {
       baseUrl: raw.INVITE_APP_URL,
     },
@@ -427,6 +433,10 @@ function getConfigStatus(): {
 
   if (env.zendesk.clientId) configured.push('Zendesk');
   else notConfigured.push('Zendesk');
+
+  if (env.slack.clientId && env.slack.clientSecret && env.slack.signingSecret)
+    configured.push('Slack');
+  else notConfigured.push('Slack');
 
   if (env.posthog.apiKey) configured.push('PostHog');
   else notConfigured.push('PostHog');

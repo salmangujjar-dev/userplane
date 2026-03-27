@@ -41,6 +41,7 @@ import {
   recordingRepo,
   recordingService,
   sessionService,
+  slackService,
   tokenService,
   userService,
   workspaceMemberRepo,
@@ -50,6 +51,7 @@ import {
   zendeskService,
 } from '@/api/services';
 import { IntercomNotificationService } from '@/api/services/intercom-notification.service';
+import { SlackNotificationService } from '@/api/services/slack-notification.service';
 import { ZendeskNotificationService } from '@/api/services/zendesk-notification.service';
 
 import { createAccountProcedures } from './account/account.impl';
@@ -81,13 +83,15 @@ const zendeskNotificationService = new ZendeskNotificationService({
   integrationRepo,
   cacheService,
 });
+const slackNotificationService = new SlackNotificationService({ integrationRepo });
 const sessionProcedures = createSessionProcedures(
   sessionService,
   recordingRepo,
   workspaceMemberRepo,
   notificationService,
   intercomNotificationService,
-  zendeskNotificationService
+  zendeskNotificationService,
+  slackNotificationService
 );
 const accountProcedures = createAccountProcedures(userService);
 const workspaceProcedures = createWorkspaceProcedures(
@@ -103,6 +107,7 @@ const workspaceProcedures = createWorkspaceProcedures(
   tokenService,
   intercomService,
   zendeskService,
+  slackService,
   billingService
 );
 const recordingProcedures = createRecordingProcedures(

@@ -10,7 +10,7 @@ import {
 import { FilteredEmptyState, LinkEmptyState, RecordingEmptyState } from './empty-state';
 
 function withRouter(Component: React.ComponentType) {
-  const rootRoute = createRootRoute({ component: Component });
+  const rootRoute = createRootRoute({ component: Component as React.FC });
   const createLinkRoute = createRoute({ getParentRoute: () => rootRoute, path: '/create' });
   const router = createRouter({
     routeTree: rootRoute.addChildren([createLinkRoute]),

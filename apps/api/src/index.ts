@@ -26,6 +26,9 @@ import {
 } from '@/api/handlers/intercom-canvas.handler';
 import { createHealthCheckHandler } from '@/api/handlers/intercom-health-check.handler';
 import { createUninstallHandler } from '@/api/handlers/intercom-uninstall.handler';
+import { createSlackCommandsRouter } from '@/api/handlers/slack-commands.handler';
+import { createSlackEventsRouter } from '@/api/handlers/slack-events.handler';
+import { createSlackInteractiveRouter } from '@/api/handlers/slack-interactive.handler';
 import { handleWorkspaceLogoUpload } from '@/api/handlers/workspace-logo.handler';
 import { createResolveHandler } from '@/api/handlers/zendesk-app.handler';
 import {
@@ -39,6 +42,7 @@ import {
 import { createZendeskSessionHandler } from '@/api/handlers/zendesk-session.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
+import { type SlackSignatureEnv, verifySlackSignature } from '@/api/middleware/slack-signature';
 import { captureException } from '@/api/posthog';
 import { apiRouter } from '@/api/routes/api.router';
 import { billingWebhookRoute } from '@/api/routes/billing/billing-webhook.route.setup';
@@ -46,6 +50,7 @@ import {
   integrationRepo,
   intercomCanvasService,
   intercomHealthCheckService,
+  slackCanvasService,
   zendeskAppOAuthService,
   zendeskConnectService,
 } from '@/api/services';
@@ -264,6 +269,48 @@ app.route('/api/v1/intercom/canvas/messenger', messengerRouter);
 app.route('/api/v1/intercom/canvas/inbox', inboxRouter);
 app.route('/api/v1/intercom/health-check', healthCheckRouter);
 app.route('/api/v1/intercom/uninstall', uninstallRouter);
+
+// Slack Webhook Routes
+// ===========================
+// Events API, Interactive components, and Slash commands
+// All routes require Slack signature verification
+
+// Slack rate limiting middleware (applied after signature verification)
+const slackRateLimitMiddleware = rateLimiter.isAvailable()
+  ? createRateLimitMiddleware(rateLimiter, {
+      tier: 'webhook',
+      getIdentifier: getClientIP,
+    })
+  : undefined;
+
+// Slack Events route
+const slackEventsRouter = new Hono<SlackSignatureEnv>();
+slackEventsRouter.use('*', verifySlackSignature(env.slack.signingSecret));
+if (slackRateLimitMiddleware) {
+  slackEventsRouter.use('*', slackRateLimitMiddleware);
+}
+slackEventsRouter.route('/', createSlackEventsRouter(slackCanvasService));
+
+// Slack Interactive route
+const slackInteractiveRouter = new Hono<SlackSignatureEnv>();
+slackInteractiveRouter.use('*', verifySlackSignature(env.slack.signingSecret));
+if (slackRateLimitMiddleware) {
+  slackInteractiveRouter.use('*', slackRateLimitMiddleware);
+}
+slackInteractiveRouter.route('/', createSlackInteractiveRouter(slackCanvasService));
+
+// Slack Commands route
+const slackCommandsRouter = new Hono<SlackSignatureEnv>();
+slackCommandsRouter.use('*', verifySlackSignature(env.slack.signingSecret));
+if (slackRateLimitMiddleware) {
+  slackCommandsRouter.use('*', slackRateLimitMiddleware);
+}
+slackCommandsRouter.route('/', createSlackCommandsRouter(slackCanvasService));
+
+// Mount Slack routes
+app.route('/api/v1/slack/events', slackEventsRouter);
+app.route('/api/v1/slack/interactive', slackInteractiveRouter);
+app.route('/api/v1/slack/commands', slackCommandsRouter);
 
 // Zendesk Connect Routes (popup OAuth flow from Zendesk iframe app)
 // ===========================
