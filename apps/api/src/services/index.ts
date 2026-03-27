@@ -61,6 +61,8 @@ import { ProjectService } from '@/api/services/project.service';
 import { ProvisionerService } from '@/api/services/provisioner.service';
 import { RecordingService } from '@/api/services/recording.service';
 import { SessionService } from '@/api/services/session.service';
+import { SlackCanvasService } from '@/api/services/slack-canvas.service';
+import { SlackService } from '@/api/services/slack-oauth.service';
 import { tokenService } from '@/api/services/token.service';
 import { UserService } from '@/api/services/user.service';
 import { WorkspaceService } from '@/api/services/workspace.service';
@@ -338,6 +340,26 @@ export const zendeskAppOAuthService = new ZendeskAppOAuthService({
 
 // Intercom Canvas service
 export const intercomCanvasService = new IntercomCanvasService({
+  integrationRepo,
+  userRepo,
+  workspaceMemberRepo,
+  linkService,
+  projectRepo,
+  domainRepo,
+  entitlementService,
+  workspaceRepo,
+  cacheService,
+});
+
+// Slack OAuth service
+export const slackService = new SlackService({
+  tokenService,
+  integrationRepo,
+  cacheService,
+});
+
+// Slack Canvas service
+export const slackCanvasService = new SlackCanvasService({
   integrationRepo,
   userRepo,
   workspaceMemberRepo,

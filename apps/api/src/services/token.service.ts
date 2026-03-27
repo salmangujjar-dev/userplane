@@ -17,6 +17,7 @@ import type {
   InviteTokenPayload,
   SessionTokenPayload,
   ShareTokenPayload,
+  SlackOAuthStatePayload,
   UploadTokenPayload,
   WorkspaceCreateInviteTokenPayload,
   ZendeskOAuthSource,
@@ -26,6 +27,7 @@ import type {
 // Intercom OAuth state expiry: 15 minutes
 const INTERCOM_OAUTH_STATE_EXPIRES_IN = 15 * 60;
 const ZENDESK_OAUTH_STATE_EXPIRES_IN = 15 * 60;
+const SLACK_OAUTH_STATE_EXPIRES_IN = 15 * 60;
 
 export class TokenService {
   private jwtSecret: string;
@@ -378,6 +380,66 @@ export class TokenService {
 
       // If workspaceId is provided, verify it matches
       if (workspaceId !== undefined && payload.workspaceId !== workspaceId) return null;
+
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Generate signed Slack OAuth state token
+   * Used for CSRF protection during OAuth flow
+   * Token expires in 15 minutes
+   * @param userId - The user initiating the OAuth flow
+   * @param workspaceId - The workspace ID to connect Slack to (always required)
+   */
+  signSlackOAuthState(userId: string, workspaceId: string): string {
+    const now = Math.floor(Date.now() / 1000);
+    const payload: SlackOAuthStatePayload = {
+      iss: this.jwtIssuer,
+      userId,
+      workspaceId,
+      timestamp: now,
+      nonce: nanoid(16),
+      iat: now,
+      exp: now + SLACK_OAUTH_STATE_EXPIRES_IN,
+    };
+
+    return jwt.sign(payload, this.jwtSecret, { algorithm: 'HS256' });
+  }
+
+  /**
+   * Verify and decode Slack OAuth state token
+   * Returns payload if valid and user/workspace match, null otherwise
+   * @param token - The OAuth state token to verify
+   * @param userId - The expected user ID
+   * @param workspaceId - The expected workspace ID
+   */
+  verifySlackOAuthState(
+    token: string,
+    userId: string,
+    workspaceId: string
+  ): SlackOAuthStatePayload | null {
+    try {
+      const payload = jwt.verify(token, this.jwtSecret, {
+        algorithms: ['HS256'],
+      }) as SlackOAuthStatePayload;
+
+      // Verify issuer
+      if (payload.iss !== this.jwtIssuer) {
+        return null;
+      }
+
+      // Verify user ID matches (CSRF protection)
+      if (payload.userId !== userId) {
+        return null;
+      }
+
+      // Verify workspace ID matches
+      if (payload.workspaceId !== workspaceId) {
+        return null;
+      }
 
       return payload;
     } catch {
