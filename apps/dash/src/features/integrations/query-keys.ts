@@ -13,6 +13,9 @@ export const integrationKeys = {
 
   // Zendesk
   zendesk: (workspaceId: string) => [...integrationKeys.all, 'zendesk', workspaceId] as const,
+
+  // Slack
+  slack: (workspaceId: string) => [...integrationKeys.all, 'slack', workspaceId] as const,
 } as const;
 
 // Type helpers for query key inference

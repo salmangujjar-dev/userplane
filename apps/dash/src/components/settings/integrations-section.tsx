@@ -12,16 +12,24 @@ import {
   useIntercomAuthorize,
   useIntercomDisconnect,
   useIntercomIntegration,
+  useSlackAuthorize,
+  useSlackDisconnect,
+  useSlackIntegration,
   useZendeskDisconnect,
   useZendeskIntegration,
 } from '@/features/integrations';
 import { mediaClient } from '@/lib/media';
-import { showIntercomDisconnectedToast, showZendeskDisconnectedToast } from '@/lib/toasts';
+import {
+  showIntercomDisconnectedToast,
+  showSlackDisconnectedToast,
+  showZendeskDisconnectedToast,
+} from '@/lib/toasts';
 import { ZENDESK_MARKETPLACE_APP_URL } from '@/lib/zendesk-install';
 
 export function IntegrationsSection() {
   const [showIntercomModal, setShowIntercomModal] = useState(false);
   const [showZendeskModal, setShowZendeskModal] = useState(false);
+  const [showSlackModal, setShowSlackModal] = useState(false);
 
   // Intercom hooks
   const { data: intercomData, isLoading: intercomLoading } = useIntercomIntegration();
@@ -32,8 +40,14 @@ export function IntegrationsSection() {
   const { data: zendeskData, isLoading: zendeskLoading } = useZendeskIntegration();
   const disconnectZendesk = useZendeskDisconnect();
 
+  // Slack hooks
+  const { data: slackData, isLoading: slackLoading } = useSlackIntegration();
+  const authorizeSlack = useSlackAuthorize();
+  const disconnectSlack = useSlackDisconnect();
+
   const isIntercomConnected = intercomData?.success && intercomData.data.integration.connected;
   const isZendeskConnected = zendeskData?.success && zendeskData.data.integration.connected;
+  const isSlackConnected = slackData?.success && slackData.data.integration.connected;
 
   const handleIntercomConnect = async () => {
     authorizeIntercom.mutate();
@@ -61,7 +75,22 @@ export function IntegrationsSection() {
     });
   };
 
-  const isLoading = intercomLoading || zendeskLoading;
+  const handleSlackConnect = async () => {
+    authorizeSlack.mutate();
+  };
+
+  const handleSlackDisconnect = async () => {
+    disconnectSlack.mutate(undefined, {
+      onSuccess: (result) => {
+        if (result.success) {
+          showSlackDisconnectedToast();
+          setShowSlackModal(false);
+        }
+      },
+    });
+  };
+
+  const isLoading = intercomLoading || zendeskLoading || slackLoading;
 
   if (isLoading) {
     return (
@@ -73,6 +102,13 @@ export function IntegrationsSection() {
           </p>
         </div>
         <div className="max-w-2xl space-y-3">
+          <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+            <div className="flex items-center gap-3">
+              <Skeleton className="w-8 h-8 rounded" />
+              <Skeleton className="w-24 h-4" />
+            </div>
+            <Skeleton className="w-[120px] h-9 rounded-md" />
+          </div>
           <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
             <div className="flex items-center gap-3">
               <Skeleton className="w-8 h-8 rounded" />
@@ -153,6 +189,36 @@ export function IntegrationsSection() {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Slack card */}
+        <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <Image
+              src={mediaClient.getIntegrationMediaUrl('integrations/slack.webp')}
+              alt="Slack"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+            <span className="font-medium">Slack</span>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="min-w-[120px]"
+            onClick={() => setShowSlackModal(true)}
+            disabled={authorizeSlack.isPending}
+          >
+            {authorizeSlack.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                {isSlackConnected ? 'Connected' : 'Connect'}
+                <ChevronRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Intercom modals */}
@@ -196,6 +262,28 @@ export function IntegrationsSection() {
           integrationImage={mediaClient.getIntegrationMediaUrl('integrations/zendesk.webp')}
           onDisconnect={handleZendeskDisconnect}
           isDisconnecting={disconnectZendesk.isPending}
+        />
+      )}
+
+      {/* Slack modals */}
+      {!isSlackConnected && (
+        <IntegrationPreConnectModal
+          open={showSlackModal}
+          onOpenChange={setShowSlackModal}
+          integrationName="Slack"
+          integrationImage={mediaClient.getIntegrationMediaUrl('integrations/slack.webp')}
+          onConnect={handleSlackConnect}
+        />
+      )}
+
+      {isSlackConnected && (
+        <IntegrationPostConnectModal
+          open={showSlackModal}
+          onOpenChange={setShowSlackModal}
+          integrationName="Slack"
+          integrationImage={mediaClient.getIntegrationMediaUrl('integrations/slack.webp')}
+          onDisconnect={handleSlackDisconnect}
+          isDisconnecting={disconnectSlack.isPending}
         />
       )}
     </div>

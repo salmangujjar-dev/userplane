@@ -10,11 +10,12 @@ import { AuthIcons } from '@/components/auth/auth-icons';
 import type { DefinedError } from '@/lib/errors';
 import { mediaClient } from '@/lib/media';
 
-type OAuthProvider = 'intercom' | 'zendesk';
+type OAuthProvider = 'intercom' | 'zendesk' | 'slack';
 
 const providerConfig: Record<OAuthProvider, { label: string; icon: IntegrationAssetKey }> = {
   intercom: { label: 'Intercom', icon: 'integrations/intercom.webp' },
   zendesk: { label: 'Zendesk', icon: 'integrations/zendesk.webp' },
+  slack: { label: 'Slack', icon: 'integrations/slack.webp' },
 };
 
 /**

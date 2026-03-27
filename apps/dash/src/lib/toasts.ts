@@ -179,6 +179,10 @@ export function showZendeskDisconnectedToast() {
   toast.success('Zendesk disconnected successfully');
 }
 
+export function showSlackDisconnectedToast() {
+  toast.success('Slack disconnected successfully');
+}
+
 export function showTeammatesInvitedToast(count: number) {
   toast.success(`Invites sent to ${count} teammate${count > 1 ? 's' : ''}`);
 }
