@@ -14,6 +14,7 @@ export type AuthAssetKey = Extract<AssetKey, `auth/${string}`>;
 export type IconAssetKey = Extract<AssetKey, `icons/${string}`>;
 export type IntercomCanvasAssetKey = Extract<AssetKey, `intercom-canvas/${string}`>;
 export type ZendeskAssetKey = Extract<AssetKey, `zendesk/${string}`>;
+export type SlackAssetKey = Extract<AssetKey, `slack/${string}`>;
 export type FeatureAssetKey = Extract<AssetKey, `features/${string}`>;
 export type HeroAssetKey = Extract<AssetKey, `hero/${string}`>;
 export type PreviewAssetKey = Extract<AssetKey, `preview/${string}`>;

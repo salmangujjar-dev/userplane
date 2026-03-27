@@ -23,6 +23,7 @@ import type {
   IntegrationAssetKey,
   IntercomCanvasAssetKey,
   PreviewAssetKey,
+  SlackAssetKey,
   SpotlightAssetKey,
   TileAssetKey,
   ZendeskAssetKey,
@@ -48,6 +49,7 @@ const CATEGORY_PROFILES: Record<string, TransformProfile> = {
   auth: 'icon',
   icons: 'icon',
   'intercom-canvas': 'general',
+  slack: 'general',
   features: 'feature',
   hero: 'general',
   preview: 'general',
@@ -209,6 +211,11 @@ export class MediaClient {
 
   /** Get CDN URL for a zendesk app asset */
   getZendeskMediaUrl(key: ZendeskAssetKey, options?: GetMediaUrlOptions): string {
+    return this.getMediaUrl(key, options);
+  }
+
+  /** Get CDN URL for a slack canvas asset */
+  getSlackMediaUrl(key: SlackAssetKey, options?: GetMediaUrlOptions): string {
     return this.getMediaUrl(key, options);
   }
 
