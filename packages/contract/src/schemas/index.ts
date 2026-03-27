@@ -34,6 +34,7 @@ export * from './session';
 export * from './session.errors';
 export * from './share';
 export * from './share.errors';
+export * from './slack.errors';
 export * from './status';
 export * from './token';
 export * from './workspace';
