@@ -19,7 +19,14 @@ import type { CacheService } from '@userplane/cache';
 import { createLinkProviderData } from '@userplane/contract';
 import { z } from 'zod';
 
-import { getUserInfo, openModal, postMessage, publishView } from '@/api/clients/slack';
+import {
+  getUserInfo,
+  openModal,
+  postMessage,
+  publishView,
+  respondToUrl,
+  updateModal,
+} from '@/api/clients/slack';
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
 import {
@@ -33,6 +40,7 @@ import {
   buildLinkCreatedMessage,
   buildLinkCreatorModal,
   buildLinkSuccessView,
+  buildLoadingModal,
   SlackActionIds,
   SlackBlockIds,
   SlackCallbackIds,
@@ -286,61 +294,89 @@ export class SlackCanvasService {
   /**
    * Handle /userplane slash command
    *
-   * Verifies user access, fetches projects/domains, and opens the link
-   * creation modal. Returns an ephemeral error message if verification fails,
-   * or null when the modal opens successfully (Slack shows the modal directly).
+   * Called via fire-and-forget from the handler (HTTP 200 already sent).
    *
-   * Important: The 3-second deadline means we must open the modal quickly.
+   * Flow:
+   *  1. Look up the integration (single fast DB query) to get the access token.
+   *  2. Open a loading modal immediately — the trigger_id is short-lived (~3 s)
+   *     and must be consumed before the slower work begins.
+   *  3. Verify access, check capacity, fetch projects/domains.
+   *  4. Replace the loading modal with the real content via views.update,
+   *     or show an appropriate error/access-required view.
+   *
+   * If we can't even open the loading modal (no integration, or Slack API
+   * failure), fall back to response_url for error delivery.
    */
-  async handleSlashCommand(
-    payload: SlackSlashCommandPayload
-  ): Promise<ReturnType<typeof buildErrorEphemeral> | null> {
-    const { teamId, userId: slackUserId, triggerId, channelId, channelName } = payload;
+  async handleSlashCommand(payload: SlackSlashCommandPayload): Promise<void> {
+    const { teamId, userId: slackUserId, triggerId, channelId, channelName, responseUrl } = payload;
 
-    // Verify user access
-    const accessResult = await this.verifySlackUserAccess(teamId, slackUserId);
-
-    if (accessResult.status !== 'granted') {
-      // Open a rich access required modal instead of a text error
-      if (accessResult.status === 'not_workspace_member' && accessResult.integration) {
-        const accessToken = IntegrationHelper.getAccessToken(accessResult.integration);
-        const opened = await openModal(accessToken, triggerId, buildAccessRequiredView());
-        if (!opened) {
-          return buildErrorEphemeral('Unable to open the access request form. Please try again.');
-        }
-        return null;
-      }
-      return this.buildAccessDeniedEphemeral(accessResult);
+    // --- Phase 1: Get access token (single DB query) -------------------------
+    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    if (!integration) {
+      await respondToUrl(
+        responseUrl,
+        buildErrorEphemeral(
+          'This Slack workspace is not connected to Userplane. Please connect it from the Userplane dashboard.'
+        )
+      );
+      return;
     }
 
-    const { workspaceId, integration, userName } = accessResult.context;
     const accessToken = IntegrationHelper.getAccessToken(integration);
 
-    // Check link capacity
-    const hasRoom = await this.deps.entitlementService.hasCapacity(workspaceId, 'links');
-    if (!hasRoom) {
-      const opened = await openModal(
-        accessToken,
-        triggerId,
-        buildLimitExceededView({ workspaceId, limitType: 'links' })
+    // --- Phase 2: Open loading modal before trigger_id expires ----------------
+    const viewId = await openModal(accessToken, triggerId, buildLoadingModal());
+    if (!viewId) {
+      await respondToUrl(
+        responseUrl,
+        buildErrorEphemeral('Failed to open the link creation form. Please try again.')
       );
-      if (!opened) {
-        return buildErrorEphemeral(
-          'You have reached your plan limit for links. Please upgrade your plan.'
+      return;
+    }
+
+    // --- Phase 3: Verify access (includes slow Slack users.info call) --------
+    // Pass the already-fetched integration to avoid a redundant DB query.
+    const accessResult = await this.verifySlackUserAccess(teamId, slackUserId, integration);
+
+    if (accessResult.status !== 'granted') {
+      if (accessResult.status === 'not_workspace_member') {
+        await updateModal(accessToken, viewId, buildAccessRequiredView());
+      } else {
+        await updateModal(
+          accessToken,
+          viewId,
+          buildErrorModalView(this.buildAccessDeniedEphemeral(accessResult).text)
         );
       }
-      return null;
+      return;
     }
 
-    // Get dropdown options
+    const { workspaceId, userName } = accessResult.context;
+
+    // --- Phase 4: Check capacity & fetch data --------------------------------
+    const hasRoom = await this.deps.entitlementService.hasCapacity(workspaceId, 'links');
+    if (!hasRoom) {
+      await updateModal(
+        accessToken,
+        viewId,
+        buildLimitExceededView({ workspaceId, limitType: 'links' })
+      );
+      return;
+    }
+
     const { projects, domains } = await this.getProjectsAndDomains(workspaceId);
     if (projects.length === 0 || domains.length === 0) {
-      return buildErrorEphemeral(
-        'No projects or domains found. Please set up a project and domain in the Userplane dashboard first.'
+      await updateModal(
+        accessToken,
+        viewId,
+        buildErrorModalView(
+          'No projects or domains found. Please set up a project and domain in the Userplane dashboard first.'
+        )
       );
+      return;
     }
 
-    // Build modal with private metadata
+    // --- Phase 5: Replace loading modal with the real form -------------------
     const privateMetadata: ModalPrivateMetadata = {
       channelId,
       channelName,
@@ -354,14 +390,7 @@ export class SlackCanvasService {
       private_metadata: JSON.stringify(privateMetadata),
     };
 
-    // Open modal immediately to stay within 3-second deadline
-    const opened = await openModal(accessToken, triggerId, modalWithMetadata);
-    if (!opened) {
-      return buildErrorEphemeral('Failed to open the link creation form. Please try again.');
-    }
-
-    // Return null - modal is shown directly by Slack
-    return null;
+    await updateModal(accessToken, viewId, modalWithMetadata);
   }
 
   // ===========================================================================
@@ -382,46 +411,77 @@ export class SlackCanvasService {
     for (const action of actions) {
       switch (action.action_id) {
         case SlackActionIds.CREATE_LINK: {
-          // Verify user access
-          const accessResult = await this.verifySlackUserAccess(teamId, slackUserId);
+          // Same open-first-then-update pattern as handleSlashCommand.
+          // Block actions from home tab have no response_url, so errors
+          // that occur before the modal opens are sent as DMs.
 
+          // Phase 1: Get access token
+          const integration = await this.deps.integrationRepo.findByProviderWorkspaceId(
+            'slack',
+            teamId
+          );
+          if (!integration) {
+            logger.warn({ teamId }, 'Block action: integration not found');
+            return;
+          }
+          const accessToken = IntegrationHelper.getAccessToken(integration);
+
+          // Phase 2: Open loading modal before trigger_id expires
+          const viewId = await openModal(accessToken, triggerId, buildLoadingModal());
+          if (!viewId) {
+            const errMsg = buildErrorEphemeral(
+              'Failed to open the link creation form. Please try again.'
+            );
+            await postMessage(accessToken, slackUserId, errMsg.blocks, errMsg.text);
+            return;
+          }
+
+          // Phase 3: Verify access
+          const accessResult = await this.verifySlackUserAccess(teamId, slackUserId, integration);
           if (accessResult.status !== 'granted') {
             logger.debug(
               { teamId, slackUserId, status: accessResult.status },
               'Block action access denied'
             );
+            if (accessResult.status === 'not_workspace_member') {
+              await updateModal(accessToken, viewId, buildAccessRequiredView());
+            } else {
+              await updateModal(
+                accessToken,
+                viewId,
+                buildErrorModalView(this.buildAccessDeniedEphemeral(accessResult).text)
+              );
+            }
             return;
           }
 
-          const { workspaceId, userName, integration } = accessResult.context;
-          const accessToken = IntegrationHelper.getAccessToken(integration);
+          const { workspaceId, userName } = accessResult.context;
 
-          // Check link capacity
+          // Phase 4: Check capacity & fetch data
           const hasRoom = await this.deps.entitlementService.hasCapacity(workspaceId, 'links');
           if (!hasRoom) {
-            logger.debug({ workspaceId }, 'Block action: plan limit exceeded');
-            // Post error as DM since block actions from home tab have no channel
-            const errMsg = buildErrorEphemeral(
-              'You have reached your plan limit for links. Please upgrade your plan.'
+            await updateModal(
+              accessToken,
+              viewId,
+              buildLimitExceededView({ workspaceId, limitType: 'links' })
             );
-            await postMessage(accessToken, slackUserId, errMsg.blocks, errMsg.text);
             return;
           }
 
-          // Get dropdown options
           const { projects, domains } = await this.getProjectsAndDomains(workspaceId);
           if (projects.length === 0 || domains.length === 0) {
-            logger.warn({ workspaceId }, 'Block action: no projects or domains');
-            const errMsg = buildErrorEphemeral(
-              'No projects or domains found. Please set up a project and domain in the dashboard first.'
+            await updateModal(
+              accessToken,
+              viewId,
+              buildErrorModalView(
+                'No projects or domains found. Please set up a project and domain in the dashboard first.'
+              )
             );
-            await postMessage(accessToken, slackUserId, errMsg.blocks, errMsg.text);
             return;
           }
 
-          // Build and open modal
-          // Note: Block actions from home tab don't have a channel context,
-          // so we use empty strings for channelId/channelName
+          // Phase 5: Replace loading modal with the real form
+          // Block actions from home tab have no channel context
           const privateMetadata: ModalPrivateMetadata = {
             channelId: '',
             channelName: '',
@@ -435,13 +495,7 @@ export class SlackCanvasService {
             private_metadata: JSON.stringify(privateMetadata),
           };
 
-          const opened = await openModal(accessToken, triggerId, modalWithMetadata);
-          if (!opened) {
-            const errMsg = buildErrorEphemeral(
-              'Failed to open the link creation form. Please try again.'
-            );
-            await postMessage(accessToken, slackUserId, errMsg.blocks, errMsg.text);
-          }
+          await updateModal(accessToken, viewId, modalWithMetadata);
           break;
         }
 
@@ -459,16 +513,15 @@ export class SlackCanvasService {
   /**
    * Handle modal view submission (link creation form)
    *
-   * Parses form values, creates the link, posts a message to the channel,
-   * and returns an updated modal showing success.
+   * Validates form data synchronously (no I/O) and returns a "Creating…"
+   * loading view immediately so Slack doesn't time out. The actual link
+   * creation, channel message, and success/error modal update happen
+   * asynchronously in {@link processLinkCreation}.
    */
-  async handleViewSubmission(payload: SlackViewSubmissionPayload): Promise<{
+  handleViewSubmission(payload: SlackViewSubmissionPayload): {
     response_action: 'update';
-    view:
-      | ReturnType<typeof buildLinkSuccessView>
-      | ReturnType<typeof buildErrorModalView>
-      | ReturnType<typeof buildLimitExceededView>;
-  } | null> {
+    view: ReturnType<typeof buildLoadingModal> | ReturnType<typeof buildErrorModalView>;
+  } | null {
     const { view, user } = payload;
 
     if (view.callback_id !== SlackCallbackIds.CREATE_LINK_MODAL) {
@@ -476,7 +529,7 @@ export class SlackCanvasService {
       return null;
     }
 
-    // Parse form values from view state
+    // Parse form values from view state (pure parsing, no I/O)
     const values = view.state.values;
     const linkTitle =
       values[SlackBlockIds.LINK_REFERENCE]?.[SlackActionIds.LINK_REFERENCE_INPUT]?.value ||
@@ -522,26 +575,101 @@ export class SlackCanvasService {
 
     const { channelId, channelName, teamId, workspaceId } = metadataResult.data;
 
-    // Look up integration and verify user
-    const accessResult = await this.verifySlackUserAccess(teamId, user.id);
-    if (accessResult.status !== 'granted') {
-      logger.warn(
-        { teamId, slackUserId: user.id, status: accessResult.status },
-        'View submission access denied'
-      );
-      return {
-        response_action: 'update',
-        view: buildErrorModalView(
-          'You do not have access to this workspace. Please contact a workspace admin.'
-        ),
-      };
-    }
+    // Fire off async processing — the loading view is returned below
+    void this.processLinkCreation({
+      viewId: view.id,
+      teamId,
+      slackUserId: user.id,
+      workspaceId,
+      channelId,
+      channelName,
+      projectId,
+      domainId,
+      linkTitle,
+      customMessage,
+    }).catch((error) => {
+      logger.error({ err: error, workspaceId }, 'processLinkCreation failed');
+      captureException(error, undefined, {
+        component: 'slack_canvas',
+        operation: 'link_creation',
+        workspace_id: workspaceId,
+      });
+    });
 
-    const { workspaceMemberId, integration } = accessResult.context;
+    return {
+      response_action: 'update',
+      view: buildLoadingModal('Creating your link\u2026'),
+    };
+  }
+
+  /**
+   * Async link creation triggered by view submission.
+   *
+   * Runs after the handler has already returned the "Creating…" loading view
+   * to Slack. Uses views.update to show the final success or error state.
+   */
+  private async processLinkCreation(params: {
+    viewId: string;
+    teamId: string;
+    slackUserId: string;
+    workspaceId: string;
+    channelId: string;
+    channelName: string;
+    projectId: string;
+    domainId: string;
+    linkTitle: string | undefined;
+    customMessage: string | undefined;
+  }): Promise<void> {
+    const {
+      viewId,
+      teamId,
+      slackUserId,
+      workspaceId,
+      channelId,
+      channelName,
+      projectId,
+      domainId,
+      linkTitle,
+      customMessage,
+    } = params;
+
+    // Get access token (fast DB query)
+    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    if (!integration) {
+      // Integration removed between modal open and submit (e.g. app uninstalled).
+      // Without the access token we cannot call views.update, so the modal stays
+      // on the loading screen until the user closes it.
+      logger.warn({ teamId, viewId }, 'processLinkCreation: integration not found');
+      captureException(new Error('integration missing during link creation'), undefined, {
+        operation: 'slack_link_creation',
+        team_id: teamId,
+        view_id: viewId,
+      });
+      return;
+    }
     const accessToken = IntegrationHelper.getAccessToken(integration);
 
+    // Verify user still has access
+    const accessResult = await this.verifySlackUserAccess(teamId, slackUserId, integration);
+    if (accessResult.status !== 'granted') {
+      logger.warn(
+        { teamId, slackUserId, status: accessResult.status },
+        'View submission access denied'
+      );
+      await updateModal(
+        accessToken,
+        viewId,
+        buildErrorModalView(
+          'You do not have access to this workspace. Please contact a workspace admin.'
+        )
+      );
+      return;
+    }
+
+    const { workspaceMemberId } = accessResult.context;
+
     try {
-      // Create link with provider data
+      // Create the link
       const link = await this.deps.linkService.createWithProvider({
         workspaceId,
         projectId,
@@ -555,7 +683,7 @@ export class SlackCanvasService {
         linkProviderData: createLinkProviderData('slack', {
           channelId: channelId || undefined,
           channelName: channelName || undefined,
-          userId: user.id,
+          userId: slackUserId,
           meta: undefined,
         }),
       });
@@ -583,8 +711,7 @@ export class SlackCanvasService {
 
       // Post link message to channel if we have a channel context
       if (channelId) {
-        // Get Slack user info for creator display name
-        const slackUser = await getUserInfo(accessToken, user.id);
+        const slackUser = await getUserInfo(accessToken, slackUserId);
         const createdBy = slackUser?.profile.display_name || slackUser?.real_name || 'Unknown';
 
         const message = buildLinkCreatedMessage({
@@ -598,35 +725,30 @@ export class SlackCanvasService {
         await postMessage(accessToken, channelId, message.blocks, message.text);
       }
 
-      // Return updated modal showing success
-      return {
-        response_action: 'update',
-        view: buildLinkSuccessView({ linkUrl, projectName }),
-      };
+      // Replace loading modal with success view
+      await updateModal(accessToken, viewId, buildLinkSuccessView({ linkUrl, projectName }));
     } catch (error) {
-      // Handle expected business errors (ORPCError has a `code` property)
       if (error instanceof ORPCError && error.code === 'PLAN_LIMIT_EXCEEDED') {
         logger.debug({ workspaceId }, 'Link creation failed: plan limit exceeded');
-        return {
-          response_action: 'update',
-          view: buildLimitExceededView({ workspaceId, limitType: 'links' }),
-        };
+        await updateModal(
+          accessToken,
+          viewId,
+          buildLimitExceededView({ workspaceId, limitType: 'links' })
+        );
+        return;
       }
 
-      // Unexpected error
       logger.error({ err: error, workspaceId }, 'Link creation failed unexpectedly');
       captureException(error, undefined, {
         component: 'slack_canvas',
         operation: 'link_creation',
         workspace_id: workspaceId,
       });
-
-      return {
-        response_action: 'update',
-        view: buildErrorModalView(
-          'Something went wrong while creating the link. Please try again.'
-        ),
-      };
+      await updateModal(
+        accessToken,
+        viewId,
+        buildErrorModalView('Something went wrong while creating the link. Please try again.')
+      );
     }
   }
 
@@ -720,17 +842,19 @@ export class SlackCanvasService {
   // ===========================================================================
 
   /**
-   * Verify that a Slack user is a member of the connected Userplane workspace
+   * Verify that a Slack user is a member of the connected Userplane workspace.
    *
-   * Unlike Intercom (which gets the email from the webhook payload and can skip the DB
-   * call on cache hit), Slack requires the access token to call users.info for the email.
-   * The token lives in the full integration record, so we always need the DB lookup.
+   * Callers that already fetched the integration (e.g. to open a loading modal
+   * before the trigger_id expires) can pass it in to avoid a redundant DB query.
    */
   private async verifySlackUserAccess(
     teamId: string,
-    slackUserId: string
+    slackUserId: string,
+    existingIntegration?: TypedIntegration<'slack'>
   ): Promise<SlackAccessResult> {
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    const integration =
+      existingIntegration ??
+      (await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId));
 
     if (!integration) {
       return { status: 'integration_not_found' };
