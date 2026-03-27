@@ -251,7 +251,7 @@ export class LinkService {
       linkProviderType: LinkProviderType;
       linkProviderId: string | null;
       linkProviderRef: string | null;
-      linkProviderData?: unknown;
+      linkProviderData?: LinkProviderData | null;
     },
     options?: { tx?: Transaction }
   ) {
