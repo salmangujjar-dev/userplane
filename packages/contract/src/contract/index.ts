@@ -202,6 +202,12 @@ export const workspaceContract = {
       get: workspace.getZendeskIntegration,
       delete: workspace.deleteZendeskIntegration,
     },
+    slack: {
+      get: workspace.getSlackIntegration,
+      authorize: workspace.slackIntegrationAuthorize,
+      callback: workspace.slackIntegrationCallback,
+      delete: workspace.deleteSlackIntegration,
+    },
   },
 };
 

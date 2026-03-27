@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Integration provider types
  * Add new providers here as they are implemented
  */
-export const INTEGRATION_PROVIDERS = ['intercom', 'zendesk'] as const;
+export const INTEGRATION_PROVIDERS = ['intercom', 'zendesk', 'slack'] as const;
 export const IntegrationProviderSchema = z.enum(INTEGRATION_PROVIDERS);
 export type IntegrationProvider = z.infer<typeof IntegrationProviderSchema>;
 
@@ -56,6 +56,24 @@ export const ZendeskProviderMetaSchema = z.object({
 });
 export type ZendeskProviderMeta = z.infer<typeof ZendeskProviderMetaSchema>;
 
+// Slack token - bot token for Slack API calls (xoxb-...)
+export const SlackTokenSchema = z.object({
+  accessToken: z.string(),
+  botUserId: z.string(),
+  appId: z.string(),
+  authedUserId: z.string(),
+});
+export type SlackToken = z.infer<typeof SlackTokenSchema>;
+
+// Slack provider metadata
+export const SlackProviderMetaSchema = z.object({
+  teamId: z.string(),
+  teamName: z.string(),
+  enterpriseId: z.string().optional(),
+  isEnterpriseInstall: z.boolean().optional(),
+});
+export type SlackProviderMeta = z.infer<typeof SlackProviderMetaSchema>;
+
 /**
  * Complete provider configuration
  * Maps each provider to its token and metadata schemas
@@ -68,6 +86,10 @@ export interface ProviderConfig {
   zendesk: {
     token: ZendeskToken;
     meta: ZendeskProviderMeta;
+  };
+  slack: {
+    token: SlackToken;
+    meta: SlackProviderMeta;
   };
 }
 
@@ -94,6 +116,9 @@ export function createProviderMeta<P extends IntegrationProvider>(
   if (provider === 'zendesk') {
     return ZendeskProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
   }
+  if (provider === 'slack') {
+    return SlackProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
+  }
   throw new Error(`Unknown provider: ${provider}`);
 }
 
@@ -109,6 +134,9 @@ export function parseProviderMeta<P extends IntegrationProvider>(
   }
   if (provider === 'zendesk') {
     return ZendeskProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
+  }
+  if (provider === 'slack') {
+    return SlackProviderMetaSchema.parse(meta) as ProviderMetaFor<P>;
   }
   throw new Error(`Unknown provider: ${provider}`);
 }
@@ -126,6 +154,9 @@ export function createProviderToken<P extends IntegrationProvider>(
   if (provider === 'zendesk') {
     return ZendeskTokenSchema.parse(token) as ProviderTokenFor<P>;
   }
+  if (provider === 'slack') {
+    return SlackTokenSchema.parse(token) as ProviderTokenFor<P>;
+  }
   throw new Error(`Unknown provider: ${provider}`);
 }
 
@@ -141,6 +172,9 @@ export function parseProviderToken<P extends IntegrationProvider>(
   }
   if (provider === 'zendesk') {
     return ZendeskTokenSchema.parse(token) as ProviderTokenFor<P>;
+  }
+  if (provider === 'slack') {
+    return SlackTokenSchema.parse(token) as ProviderTokenFor<P>;
   }
   throw new Error(`Unknown provider: ${provider}`);
 }
@@ -158,6 +192,9 @@ export function extractAccessToken<P extends IntegrationProvider>(
   }
   if (provider === 'zendesk') {
     return (token as ZendeskToken).accessToken;
+  }
+  if (provider === 'slack') {
+    return (token as SlackToken).accessToken;
   }
   throw new Error(`Unknown provider: ${provider}`);
 }

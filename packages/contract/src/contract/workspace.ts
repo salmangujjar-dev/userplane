@@ -14,6 +14,8 @@ import {
   DeleteDomainSchema,
   DeleteIntercomIntegrationDataSchema,
   DeleteIntercomIntegrationSchema,
+  DeleteSlackIntegrationDataSchema,
+  DeleteSlackIntegrationSchema,
   DeleteWorkspaceSchema,
   DeleteZendeskIntegrationDataSchema,
   DeleteZendeskIntegrationSchema,
@@ -33,6 +35,7 @@ import {
   GetIntercomSuggestionsSchema,
   GetInvitePolicySchema,
   GetNotificationPreferencesSchema,
+  GetSlackIntegrationSchema,
   GetWorkspaceMembershipSchema,
   GetWorkspaceRestoreInfoSchema,
   GetWorkspaceStatusSchema,
@@ -67,6 +70,12 @@ import {
   SendDomainInstructionsSchema,
   SendInvitesResultSchema,
   SendWorkspaceInvitesSchema,
+  SlackErrors,
+  SlackIntegrationAuthorizeDataSchema,
+  SlackIntegrationAuthorizeSchema,
+  SlackIntegrationCallbackDataSchema,
+  SlackIntegrationCallbackSchema,
+  SlackIntegrationStatusDataSchema,
   SuggestWorkspacesDataSchema,
   SuggestWorkspacesQuerySchema,
   UpdateDomainRecordingPreferencesSchema,
@@ -1323,3 +1332,105 @@ export const deleteZendeskIntegration = oc
   })
   .input(DeleteZendeskIntegrationSchema)
   .output(ApiResponseSchema(DeleteZendeskIntegrationDataSchema));
+
+// ============================================================================
+// SLACK INTEGRATION ENDPOINTS
+// ============================================================================
+
+/**
+ * GET /workspace/{workspaceId}/integrations/slack
+ * Get Slack integration status for the workspace
+ * Requires workspace membership
+ */
+export const getSlackIntegration = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/slack',
+    inputStructure: 'detailed',
+    summary: 'Get Slack integration status',
+    description: 'Check if Slack is connected to this workspace',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(GetSlackIntegrationSchema)
+  .output(ApiResponseSchema(SlackIntegrationStatusDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/slack/authorize
+ * Initiate Slack OAuth flow for an existing workspace
+ * Requires admin or owner role
+ */
+export const slackIntegrationAuthorize = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/slack/authorize',
+    inputStructure: 'detailed',
+    summary: 'Initiate Slack OAuth for workspace',
+    description: 'Generate Slack OAuth V2 authorization URL with workspace-scoped CSRF state token',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    INTEGRATION_ALREADY_CONNECTED: WorkspaceErrors.INTEGRATION_ALREADY_CONNECTED,
+  })
+  .input(SlackIntegrationAuthorizeSchema)
+  .output(ApiResponseSchema(SlackIntegrationAuthorizeDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/slack/callback
+ * Handle Slack OAuth callback for an existing workspace
+ * Requires admin or owner role
+ */
+export const slackIntegrationCallback = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/slack/callback',
+    inputStructure: 'detailed',
+    summary: 'Handle Slack OAuth callback for workspace',
+    description:
+      'Exchange authorization code for bot token and connect Slack to existing workspace',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    INTEGRATION_PROVIDER_WORKSPACE_CONFLICT:
+      WorkspaceErrors.INTEGRATION_PROVIDER_WORKSPACE_CONFLICT,
+    SLACK_TOKEN_EXCHANGE_FAILED: SlackErrors.SLACK_API_ERROR,
+  })
+  .input(SlackIntegrationCallbackSchema)
+  .output(ApiResponseSchema(SlackIntegrationCallbackDataSchema));
+
+/**
+ * DELETE /workspace/{workspaceId}/integrations/slack
+ * Disconnect Slack integration from the workspace
+ * Requires admin or owner role
+ */
+export const deleteSlackIntegration = oc
+  .route({
+    method: 'DELETE',
+    path: '/workspace/{workspaceId}/integrations/slack',
+    inputStructure: 'detailed',
+    summary: 'Disconnect Slack integration',
+    description: 'Remove Slack connection from this workspace',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    INTEGRATION_NOT_FOUND: WorkspaceErrors.INTEGRATION_NOT_FOUND,
+  })
+  .input(DeleteSlackIntegrationSchema)
+  .output(ApiResponseSchema(DeleteSlackIntegrationDataSchema));

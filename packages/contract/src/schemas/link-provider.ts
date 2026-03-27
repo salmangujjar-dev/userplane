@@ -72,6 +72,20 @@ export const ZendeskLinkProviderDataSchema = z.object({
 export type ZendeskLinkProviderData = z.infer<typeof ZendeskLinkProviderDataSchema>;
 
 /**
+ * Slack link provider data
+ * Stores the Slack channel and user context where the link was created.
+ * Used to post recording notifications back to the originating channel.
+ */
+export const SlackLinkProviderDataSchema = z.object({
+  channelId: z.string().optional(),
+  channelName: z.string().optional(),
+  userId: z.string().optional(),
+  responseUrl: z.string().optional(),
+  meta: LinkMetaSchema,
+});
+export type SlackLinkProviderData = z.infer<typeof SlackLinkProviderDataSchema>;
+
+/**
  * General link provider data
  * Fallback for providers that don't require additional context (web, API, etc.).
  * Stores no fields; exists so every provider resolves to a concrete type.
@@ -90,6 +104,7 @@ export type GeneralLinkProviderData = z.infer<typeof GeneralLinkProviderDataSche
 export interface LinkProviderDataConfig {
   intercom: IntercomLinkProviderData;
   zendesk: ZendeskLinkProviderData;
+  slack: SlackLinkProviderData;
 }
 
 /**
@@ -132,6 +147,8 @@ export function parseLinkProviderData<P extends LinkProviderType>(
     result = IntercomLinkProviderDataSchema.safeParse(data);
   } else if (providerType === 'zendesk') {
     result = ZendeskLinkProviderDataSchema.safeParse(data);
+  } else if (providerType === 'slack') {
+    result = SlackLinkProviderDataSchema.safeParse(data);
   } else {
     result = GeneralLinkProviderDataSchema.safeParse(data);
   }
@@ -151,6 +168,9 @@ export function createLinkProviderData<P extends LinkProviderType>(
   }
   if (providerType === 'zendesk') {
     return ZendeskLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
+  }
+  if (providerType === 'slack') {
+    return SlackLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
   }
   return GeneralLinkProviderDataSchema.parse(data) as LinkProviderDataFor<P>;
 }

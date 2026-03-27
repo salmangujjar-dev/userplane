@@ -1300,6 +1300,85 @@ export const DeleteZendeskIntegrationDataSchema = z.object({
 });
 
 // ============================================================================
+// SLACK INTEGRATION SCHEMAS
+// ============================================================================
+
+/**
+ * Get Slack integration status request
+ */
+export const GetSlackIntegrationSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Get Slack integration status response
+ */
+export const SlackIntegrationStatusDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  integration: IntegrationStatusSchema,
+});
+
+/**
+ * Slack integration authorize request
+ */
+export const SlackIntegrationAuthorizeSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Slack integration authorize response
+ * Returns the authorization URL and state for CSRF protection
+ */
+export const SlackIntegrationAuthorizeDataSchema = z.object({
+  authorizationUrl: z.string().url(),
+  state: z.string(),
+});
+
+/**
+ * Slack integration callback request
+ * Received from Slack after user authorizes
+ */
+export const SlackIntegrationCallbackSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    code: z.string(),
+    state: z.string(),
+  }),
+});
+
+/**
+ * Slack integration callback response
+ */
+export const SlackIntegrationCallbackDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  connected: z.literal(true),
+  providerWorkspaceId: z.string(),
+});
+
+/**
+ * Delete Slack integration request
+ */
+export const DeleteSlackIntegrationSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+});
+
+/**
+ * Delete Slack integration response
+ */
+export const DeleteSlackIntegrationDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  disconnected: z.literal(true),
+});
+
+// ============================================================================
 // WORKSPACE LOGO UPLOAD
 // ============================================================================
 
