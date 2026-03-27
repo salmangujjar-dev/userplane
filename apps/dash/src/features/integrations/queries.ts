@@ -145,6 +145,95 @@ export function useZendeskDisconnect() {
   });
 }
 
+// ============================================================================
+// SLACK HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch Slack integration status for the current workspace
+ * Returns whether Slack is connected and connection details
+ */
+export function useSlackIntegration() {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery({
+    queryKey: integrationKeys.slack(workspaceId ?? ''),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.slack.get({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: !!workspaceId,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+/**
+ * Hook to initiate Slack OAuth authorization flow
+ * Returns authorization URL that user should be redirected to
+ */
+export function useSlackAuthorize() {
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.slack.authorize({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      // Redirect to Slack OAuth page
+      window.location.href = result.data.authorizationUrl;
+    },
+    onSettled: () => {
+      // Invalidate integration status after authorization attempt
+      queryClient.invalidateQueries({ queryKey: integrationKeys.slack(workspaceId ?? '') });
+    },
+  });
+}
+
+/**
+ * Hook to disconnect Slack integration from the workspace
+ */
+export function useSlackDisconnect() {
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.slack.delete({
+        params: { workspaceId },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    onSuccess: (result) => {
+      if (!result.success) {
+        showErrorToastToast(result.error);
+        return;
+      }
+      // Invalidate integration status after disconnect
+      queryClient.invalidateQueries({ queryKey: integrationKeys.slack(workspaceId ?? '') });
+    },
+  });
+}
+
 /**
  * Hook to fetch Intercom admins for a workspace
  * @param workspaceId - The workspace ID to fetch admins for
