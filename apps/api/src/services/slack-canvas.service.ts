@@ -23,17 +23,20 @@ import { getUserInfo, openModal, postMessage, publishView } from '@/api/clients/
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
 import {
+  buildAccessRequiredView,
   buildErrorEphemeral,
   buildErrorModalView,
   buildHomeTabConnectedView,
   buildHomeTabDisconnectedView,
   buildHomeTabNotMemberView,
+  buildLimitExceededView,
   buildLinkCreatedMessage,
   buildLinkCreatorModal,
   buildLinkSuccessView,
   SlackActionIds,
   SlackBlockIds,
   SlackCallbackIds,
+  slackCanvasUrls,
 } from '@/api/lib/slack-blocks';
 import { captureException } from '@/api/posthog';
 import type { DomainRepository } from '@/api/repositories/domains.repository';
@@ -167,6 +170,7 @@ export const SlackInteractivePayloadSchema = z.discriminatedUnion('type', [
 interface VerifiedSlackContext {
   workspaceId: string;
   workspaceMemberId: string;
+  userName: string;
   integration: TypedIntegration<'slack'>;
 }
 
@@ -177,7 +181,7 @@ type SlackAccessResult =
   | { status: 'granted'; context: VerifiedSlackContext }
   | { status: 'user_not_found' }
   | { status: 'integration_not_found' }
-  | { status: 'not_workspace_member' };
+  | { status: 'not_workspace_member'; integration: TypedIntegration<'slack'> };
 
 /**
  * Private metadata stored in modal views.
@@ -264,6 +268,8 @@ export class SlackCanvasService {
       buildHomeTabConnectedView({
         workspaceName,
         dashboardUrl: `${dashboardUrl}/workspace/${integration.workspaceId}`,
+        workspaceId: integration.workspaceId,
+        workspaceMemberId: member.workspaceMemberId,
       })
     );
 
@@ -295,18 +301,35 @@ export class SlackCanvasService {
     const accessResult = await this.verifySlackUserAccess(teamId, slackUserId);
 
     if (accessResult.status !== 'granted') {
+      // Open a rich access required modal instead of a text error
+      if (accessResult.status === 'not_workspace_member' && accessResult.integration) {
+        const accessToken = IntegrationHelper.getAccessToken(accessResult.integration);
+        const opened = await openModal(accessToken, triggerId, buildAccessRequiredView());
+        if (!opened) {
+          return buildErrorEphemeral('Unable to open the access request form. Please try again.');
+        }
+        return null;
+      }
       return this.buildAccessDeniedEphemeral(accessResult);
     }
 
-    const { workspaceId, integration } = accessResult.context;
+    const { workspaceId, integration, userName } = accessResult.context;
     const accessToken = IntegrationHelper.getAccessToken(integration);
 
     // Check link capacity
     const hasRoom = await this.deps.entitlementService.hasCapacity(workspaceId, 'links');
     if (!hasRoom) {
-      return buildErrorEphemeral(
-        'You have reached your plan limit for links. Please upgrade your plan to create more.'
+      const opened = await openModal(
+        accessToken,
+        triggerId,
+        buildLimitExceededView({ workspaceId, limitType: 'links' })
       );
+      if (!opened) {
+        return buildErrorEphemeral(
+          'You have reached your plan limit for links. Please upgrade your plan.'
+        );
+      }
+      return null;
     }
 
     // Get dropdown options
@@ -325,7 +348,7 @@ export class SlackCanvasService {
       workspaceId,
     };
 
-    const modal = buildLinkCreatorModal({ projects, domains });
+    const modal = buildLinkCreatorModal({ projects, domains, userName });
     const modalWithMetadata = {
       ...modal,
       private_metadata: JSON.stringify(privateMetadata),
@@ -370,7 +393,7 @@ export class SlackCanvasService {
             return;
           }
 
-          const { workspaceId, integration } = accessResult.context;
+          const { workspaceId, userName, integration } = accessResult.context;
           const accessToken = IntegrationHelper.getAccessToken(integration);
 
           // Check link capacity
@@ -406,7 +429,7 @@ export class SlackCanvasService {
             workspaceId,
           };
 
-          const modal = buildLinkCreatorModal({ projects, domains });
+          const modal = buildLinkCreatorModal({ projects, domains, userName });
           const modalWithMetadata = {
             ...modal,
             private_metadata: JSON.stringify(privateMetadata),
@@ -439,11 +462,12 @@ export class SlackCanvasService {
    * Parses form values, creates the link, posts a message to the channel,
    * and returns an updated modal showing success.
    */
-  async handleViewSubmission(
-    payload: SlackViewSubmissionPayload
-  ): Promise<{
+  async handleViewSubmission(payload: SlackViewSubmissionPayload): Promise<{
     response_action: 'update';
-    view: ReturnType<typeof buildLinkSuccessView> | ReturnType<typeof buildErrorModalView>;
+    view:
+      | ReturnType<typeof buildLinkSuccessView>
+      | ReturnType<typeof buildErrorModalView>
+      | ReturnType<typeof buildLimitExceededView>;
   } | null> {
     const { view, user } = payload;
 
@@ -454,11 +478,16 @@ export class SlackCanvasService {
 
     // Parse form values from view state
     const values = view.state.values;
+    const linkTitle =
+      values[SlackBlockIds.LINK_REFERENCE]?.[SlackActionIds.LINK_REFERENCE_INPUT]?.value ||
+      undefined;
     const projectId =
       values[SlackBlockIds.PROJECT]?.[SlackActionIds.SELECT_PROJECT]?.selected_option?.value;
     const domainId =
       values[SlackBlockIds.DOMAIN]?.[SlackActionIds.SELECT_DOMAIN]?.selected_option?.value;
-    const slug = values[SlackBlockIds.SLUG]?.[SlackActionIds.SLUG_INPUT]?.value || undefined;
+    const customMessage =
+      values[SlackBlockIds.CUSTOM_MESSAGE]?.[SlackActionIds.CUSTOM_MESSAGE_INPUT]?.value ||
+      undefined;
 
     if (!projectId || !domainId) {
       logger.warn('View submission missing required fields (projectId or domainId)');
@@ -520,7 +549,7 @@ export class SlackCanvasService {
         createdBy: workspaceMemberId,
         linkReusable: false,
         linkProviderType: 'slack',
-        linkTitle: slug || undefined,
+        linkTitle: linkTitle || undefined,
         linkProviderId: channelId || null,
         linkProviderRef: channelId ? `slack://channel?team=${teamId}&id=${channelId}` : null,
         linkProviderData: createLinkProviderData('slack', {
@@ -548,12 +577,12 @@ export class SlackCanvasService {
         'Link created successfully (Slack)'
       );
 
+      // Get project name for the success view and channel message
+      const project = await this.deps.projectRepo.findById(projectId);
+      const projectName = project?.projectTitle ?? 'Unknown Project';
+
       // Post link message to channel if we have a channel context
       if (channelId) {
-        // Get project name for the message
-        const project = await this.deps.projectRepo.findById(projectId);
-        const projectName = project?.projectTitle ?? 'Unknown Project';
-
         // Get Slack user info for creator display name
         const slackUser = await getUserInfo(accessToken, user.id);
         const createdBy = slackUser?.profile.display_name || slackUser?.real_name || 'Unknown';
@@ -562,6 +591,8 @@ export class SlackCanvasService {
           linkUrl,
           projectName,
           createdBy,
+          customMessage,
+          dashboardUrl: slackCanvasUrls.recordingsUrl(workspaceId),
         });
 
         await postMessage(accessToken, channelId, message.blocks, message.text);
@@ -570,7 +601,7 @@ export class SlackCanvasService {
       // Return updated modal showing success
       return {
         response_action: 'update',
-        view: buildLinkSuccessView({ linkUrl }),
+        view: buildLinkSuccessView({ linkUrl, projectName }),
       };
     } catch (error) {
       // Handle expected business errors (ORPCError has a `code` property)
@@ -578,9 +609,7 @@ export class SlackCanvasService {
         logger.debug({ workspaceId }, 'Link creation failed: plan limit exceeded');
         return {
           response_action: 'update',
-          view: buildErrorModalView(
-            'You have reached your plan limit for links. Please upgrade your plan to create more.'
-          ),
+          view: buildLimitExceededView({ workspaceId, limitType: 'links' }),
         };
       }
 
@@ -734,14 +763,23 @@ export class SlackCanvasService {
         { email: slackUser.profile.email, workspaceId: integration.workspaceId },
         'User is not a workspace member'
       );
-      return { status: 'not_workspace_member' };
+      return { status: 'not_workspace_member', integration };
     }
+
+    // Resolve display name for personalization
+    const userName =
+      slackUser.profile.real_name ||
+      slackUser.profile.display_name ||
+      slackUser.real_name ||
+      slackUser.name ||
+      'Your team';
 
     return {
       status: 'granted',
       context: {
         workspaceId: integration.workspaceId,
         workspaceMemberId: member.workspaceMemberId,
+        userName,
         integration,
       },
     };
