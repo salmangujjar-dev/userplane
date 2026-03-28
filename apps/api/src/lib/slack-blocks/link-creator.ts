@@ -21,7 +21,7 @@ export const DEFAULT_RECORDING_MESSAGE =
 export function buildLinkCreatorModal(params: {
   projects: Array<{ id: string; name: string }>;
   domains: Array<{ id: string; domain: string }>;
-  /** User display name — used to personalise the default title and message. */
+  /** User display name - used to personalise the default title and message. */
   userName?: string;
 }) {
   const defaultMessage = params.userName
@@ -35,7 +35,7 @@ export function buildLinkCreatorModal(params: {
     callback_id: SlackCallbackIds.CREATE_LINK_MODAL,
     title: {
       type: 'plain_text',
-      text: 'Create Link',
+      text: 'New recording link',
     },
     submit: {
       type: 'plain_text',
@@ -46,31 +46,6 @@ export function buildLinkCreatorModal(params: {
       text: 'Cancel',
     },
     blocks: [
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: 'Pick a project and domain for this recording link.',
-        },
-      },
-      {
-        type: 'input',
-        block_id: SlackBlockIds.LINK_REFERENCE,
-        optional: true,
-        label: {
-          type: 'plain_text',
-          text: 'Title',
-        },
-        element: {
-          type: 'plain_text_input',
-          action_id: SlackActionIds.LINK_REFERENCE_INPUT,
-          initial_value: defaultTitle,
-          placeholder: {
-            type: 'plain_text',
-            text: 'e.g. Customer Issue, Bug Report',
-          },
-        },
-      },
       {
         type: 'input',
         block_id: SlackBlockIds.PROJECT,
@@ -83,7 +58,7 @@ export function buildLinkCreatorModal(params: {
           action_id: SlackActionIds.SELECT_PROJECT,
           placeholder: {
             type: 'plain_text',
-            text: 'Select a project',
+            text: 'Choose a project',
           },
           options: params.projects.map((p) => ({
             text: {
@@ -92,7 +67,6 @@ export function buildLinkCreatorModal(params: {
             },
             value: p.id,
           })),
-          // Pre-select the first project
           initial_option: params.projects[0]
             ? {
                 text: { type: 'plain_text' as const, text: params.projects[0].name },
@@ -113,7 +87,7 @@ export function buildLinkCreatorModal(params: {
           action_id: SlackActionIds.SELECT_DOMAIN,
           placeholder: {
             type: 'plain_text',
-            text: 'Select a domain',
+            text: 'Choose a domain',
           },
           options: params.domains.map((d) => ({
             text: {
@@ -122,7 +96,6 @@ export function buildLinkCreatorModal(params: {
             },
             value: d.id,
           })),
-          // Pre-select the first domain
           initial_option: params.domains[0]
             ? {
                 text: { type: 'plain_text' as const, text: params.domains[0].domain },
@@ -132,20 +105,50 @@ export function buildLinkCreatorModal(params: {
         },
       },
       {
+        type: 'divider',
+      },
+      {
+        type: 'input',
+        block_id: SlackBlockIds.LINK_REFERENCE,
+        optional: true,
+        label: {
+          type: 'plain_text',
+          text: 'Title',
+        },
+        hint: {
+          type: 'plain_text',
+          text: 'Give this link a name so you can find it later',
+        },
+        element: {
+          type: 'plain_text_input',
+          action_id: SlackActionIds.LINK_REFERENCE_INPUT,
+          initial_value: defaultTitle,
+          placeholder: {
+            type: 'plain_text',
+            text: 'e.g. Login bug, Onboarding flow',
+          },
+        },
+      },
+      {
         type: 'input',
         block_id: SlackBlockIds.CUSTOM_MESSAGE,
         optional: true,
         label: {
           type: 'plain_text',
-          text: 'Message to recipient',
+          text: 'Message for the recipient',
+        },
+        hint: {
+          type: 'plain_text',
+          text: "They'll see this when they open the recording link",
         },
         element: {
           type: 'plain_text_input',
           action_id: SlackActionIds.CUSTOM_MESSAGE_INPUT,
+          multiline: true,
           initial_value: defaultMessage,
           placeholder: {
             type: 'plain_text',
-            text: 'Enter a message for the recipient...',
+            text: 'Hey - could you record your screen showing the issue?',
           },
         },
       },

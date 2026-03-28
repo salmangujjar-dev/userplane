@@ -3,8 +3,28 @@
  * Centralizes URL formatting and CDN image references for all Slack Block Kit views.
  */
 
+import { ASSET_MANIFEST, type LoadingAssetKey } from '@userplane/storage/media';
+
 import { getMediaClient } from '@/api/clients/media';
 import { env } from '@/api/env';
+
+// =============================================================================
+// Loading GIF Assets
+// =============================================================================
+
+const LOADING_KEYS = Object.keys(ASSET_MANIFEST).filter((k): k is LoadingAssetKey =>
+  k.startsWith('loading/')
+);
+
+/**
+ * Get a random loading GIF URL from the CDN.
+ * Returns a different GIF each time for visual variety in loading modals.
+ */
+export function getRandomLoadingGifUrl(): string {
+  const client = getMediaClient();
+  const key = LOADING_KEYS[Math.floor(Math.random() * LOADING_KEYS.length)]!;
+  return client.getLoadingMediaUrl(key);
+}
 
 /**
  * Base dashboard URL from environment
@@ -64,6 +84,10 @@ export const slackCanvasUrls = {
 
   recordingsUrl(workspaceId: string): string {
     return `${baseUrl}/workspace/${workspaceId}/recordings`;
+  },
+
+  linkRecordingsUrl(workspaceId: string, linkId: string): string {
+    return `${baseUrl}/workspace/${workspaceId}/recordings?links=${linkId}`;
   },
 
   userRecordingsUrl(workspaceId: string, memberId: string): string {
