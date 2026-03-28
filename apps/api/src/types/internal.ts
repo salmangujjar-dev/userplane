@@ -521,12 +521,12 @@ export interface ZendeskOAuthStatePayload {
 /**
  * Slack OAuth state payload for CSRF protection
  * Signed JWT with 15 minute expiry
- * workspaceId is always required — Slack only connects to existing workspaces
+ * workspaceId is optional — absent for onboarding (workspace creation), present for integration
  */
 export interface SlackOAuthStatePayload {
   iss: string;
   userId: string;
-  workspaceId: string;
+  workspaceId?: string;
   timestamp: number;
   nonce: string;
   iat: number;

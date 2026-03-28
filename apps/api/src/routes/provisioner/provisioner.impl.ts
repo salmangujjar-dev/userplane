@@ -7,6 +7,7 @@ import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import type { EmailService } from '@/api/services/email.service';
 import type { IntercomService } from '@/api/services/intercom-oauth.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
+import type { SlackService } from '@/api/services/slack-oauth.service';
 
 /**
  * POST /workspace - Create a new workspace
@@ -127,18 +128,71 @@ export const intercomCallbackImpl = (
 };
 
 /**
+ * GET /provisioner/slack/authorize - Initiate Slack OAuth flow
+ * Returns authorization URL and state token for CSRF protection
+ */
+export const slackAuthorizeImpl = (slackService: SlackService) => {
+  return authorizedRateLimited.provisioner.slack.authorize.handler(async ({ context }) => {
+    const { authorizationUrl, state } = slackService.generateAuthorizationUrl(context.user.id);
+
+    return {
+      message: 'Authorization URL generated',
+      data: { authorizationUrl, state },
+    };
+  });
+};
+
+/**
+ * GET /provisioner/slack/callback - Handle Slack OAuth callback
+ * Exchanges code for token and creates workspace (onboarding flow only)
+ */
+export const slackCallbackImpl = (slackService: SlackService, emailService: EmailService) => {
+  return authorizedRateLimited.provisioner.slack.callback.handler(async ({ input, context }) => {
+    const result = await slackService.handleCallback({
+      code: input.query.code,
+      state: input.query.state,
+      userId: context.user.id,
+      userName: context.user.name,
+      userEmail: context.user.email,
+      userRole: context.user.role,
+    });
+
+    // Send welcome email if workspace was created
+    if (result.created) {
+      await emailService.sendSafeWelcomeEmailSubscription(
+        { to: context.user.email },
+        {
+          workspaceName: result.workspaceName,
+          workspaceId: result.workspaceId,
+        }
+      );
+    }
+
+    return {
+      message: 'Workspace created successfully',
+      data: result,
+    };
+  });
+};
+
+/**
  * Create the provisioner procedures object
  */
 export const createProvisionerProcedures = (
   provisionerService: ProvisionerService,
   emailService: EmailService,
-  intercomService: IntercomService
+  intercomService: IntercomService,
+  slackService: SlackService
 ) => {
   return {
     createWorkspace: createWorkspaceImpl(provisionerService, emailService),
     intercom: {
       authorize: intercomAuthorizeImpl(intercomService),
       callback: intercomCallbackImpl(intercomService, emailService),
+    },
+    slack: {
+      authorize: slackAuthorizeImpl(slackService),
+      callback: slackCallbackImpl(slackService, emailService),
     },
   };
 };

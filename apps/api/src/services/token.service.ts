@@ -392,14 +392,14 @@ export class TokenService {
    * Used for CSRF protection during OAuth flow
    * Token expires in 15 minutes
    * @param userId - The user initiating the OAuth flow
-   * @param workspaceId - The workspace ID to connect Slack to (always required)
+   * @param workspaceId - The workspace ID to connect Slack to (optional — absent for onboarding)
    */
-  signSlackOAuthState(userId: string, workspaceId: string): string {
+  signSlackOAuthState(userId: string, workspaceId?: string): string {
     const now = Math.floor(Date.now() / 1000);
     const payload: SlackOAuthStatePayload = {
       iss: this.jwtIssuer,
       userId,
-      workspaceId,
+      ...(workspaceId && { workspaceId }),
       timestamp: now,
       nonce: nanoid(16),
       iat: now,
@@ -414,12 +414,12 @@ export class TokenService {
    * Returns payload if valid and user/workspace match, null otherwise
    * @param token - The OAuth state token to verify
    * @param userId - The expected user ID
-   * @param workspaceId - The expected workspace ID
+   * @param workspaceId - The expected workspace ID (optional — only checked when provided)
    */
   verifySlackOAuthState(
     token: string,
     userId: string,
-    workspaceId: string
+    workspaceId?: string
   ): SlackOAuthStatePayload | null {
     try {
       const payload = jwt.verify(token, this.jwtSecret, {
@@ -436,8 +436,8 @@ export class TokenService {
         return null;
       }
 
-      // Verify workspace ID matches
-      if (payload.workspaceId !== workspaceId) {
+      // Verify workspace ID matches (only when provided — integration flow)
+      if (workspaceId !== undefined && payload.workspaceId !== workspaceId) {
         return null;
       }
 

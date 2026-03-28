@@ -110,6 +110,10 @@ export const provisionerContract = {
     authorize: provisioner.intercomAuthorize,
     callback: provisioner.intercomCallback,
   },
+  slack: {
+    authorize: provisioner.slackAuthorize,
+    callback: provisioner.slackCallback,
+  },
 };
 
 /**
