@@ -6,7 +6,7 @@ import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToastToast,
+  showApiErrorToast,
 } from '@/lib/errors';
 import { showCreatedToast, showDeletedToast, showUpdatedToast } from '@/lib/toasts';
 import type { ProjectRestoreData, RestorationStatus } from '@/types';
@@ -77,7 +77,7 @@ export function useCreateProject(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showCreatedToast('Project', 'Your project is ready');
@@ -175,7 +175,7 @@ export function useUpdateProject(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Project');
@@ -238,7 +238,7 @@ export function useDeleteProject(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showDeletedToast('Project', 'Project has been permanently removed');
@@ -283,7 +283,7 @@ export function useRestoreProject() {
     },
     onSuccess: (result, input) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() });

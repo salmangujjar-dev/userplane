@@ -5,7 +5,7 @@ import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToastToast,
+  showApiErrorToast,
 } from '@/lib/errors';
 import { showDeletedToast, showShareRecordingToast, showUpdatedToast } from '@/lib/toasts';
 import type { DeleteResponse, QueryData, QuerySnapshot } from '@/types';
@@ -68,7 +68,7 @@ export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?:
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showDeletedToast('Recording', 'Recording has been permanently removed');
@@ -109,7 +109,7 @@ export function useUpdateRecordingExpiry(workspaceId: string | null) {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Recording expiration', 'New expiration has been set');
@@ -164,7 +164,7 @@ export function useShareRecording(workspaceId: string | null) {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showShareRecordingToast(result.data.sent.length);

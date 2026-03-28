@@ -171,6 +171,12 @@ export function showIntercomConnectionFailedToast(errorMessage?: string) {
   });
 }
 
+export function showConnectionFailedToast(provider: string, errorMessage?: string) {
+  toast.error(`Failed to connect to ${provider}`, {
+    description: errorMessage || 'Please try again.',
+  });
+}
+
 export function showIntercomDisconnectedToast() {
   toast.success('Intercom disconnected successfully');
 }

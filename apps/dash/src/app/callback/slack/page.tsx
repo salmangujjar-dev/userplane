@@ -6,8 +6,9 @@ type Props = {
 
 /**
  * Generic Slack OAuth callback dispatcher
- * Decodes the JWT state token and redirects to the workspace callback page.
- * Slack only connects to existing workspaces (no workspace creation flow).
+ * Decodes the JWT state token and routes to the correct callback page:
+ * - workspaceId present → workspace integration callback (existing workspace)
+ * - workspaceId absent → workspace creation callback (onboarding flow)
  */
 export default async function SlackCallbackPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -37,19 +38,19 @@ export default async function SlackCallbackPage({ searchParams }: Props) {
     redirect('/?error=invalid_state');
   }
 
-  if (!payload.workspaceId) {
-    // Slack requires an existing workspace
-    redirect('/?error=missing_workspace');
-  }
-
   // Build query params for redirect
   const queryParams = new URLSearchParams({
     code,
     state,
   });
 
-  // Redirect to workspace integration callback
-  redirect(
-    `/workspace/${payload.workspaceId}/settings/integrations/slack/callback?${queryParams.toString()}`
-  );
+  if (payload.workspaceId) {
+    // Integration flow — redirect to workspace settings callback
+    redirect(
+      `/workspace/${payload.workspaceId}/settings/integrations/slack/callback?${queryParams.toString()}`
+    );
+  }
+
+  // Onboarding flow — redirect to workspace creation callback
+  redirect(`/workspace/create/callback?flow=slack-inapp&${queryParams.toString()}`);
 }

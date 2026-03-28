@@ -6,7 +6,7 @@ import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToastToast,
+  showApiErrorToast,
 } from '@/lib/errors';
 import {
   showAccessRequestSentToast,
@@ -90,7 +90,7 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
             context.previousNotifications
           );
         }
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         options?.onError?.();
         return;
       }
@@ -127,7 +127,7 @@ export function useRotateInvite() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Invite token', 'Previous invite links are now invalid');
@@ -192,7 +192,7 @@ export function useDeleteWorkspace(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
 
@@ -267,7 +267,7 @@ export function useUpdateInvitePolicy(options?: { onError?: () => void; onSucces
             context.previousPolicy
           );
         }
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         options?.onError?.();
         return;
       }
@@ -306,7 +306,7 @@ export function useJoinWorkspace(options?: {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
 
@@ -386,7 +386,7 @@ export function useLeaveWorkspace(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
 
@@ -472,7 +472,7 @@ export function useUpdateMemberRole(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Member role', `Role changed to ${variables.newRole}`);
@@ -536,7 +536,7 @@ export function useRemoveMember(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showDeletedToast('Member', 'They will no longer have access to this workspace');
@@ -610,7 +610,7 @@ export function useCreateWorkspace() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
@@ -687,7 +687,7 @@ export function useUpdateToggle(workspaceId: string | null, onError?: () => void
             context.previousPreferences
           );
         }
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         onError?.();
         return;
       }
@@ -763,7 +763,7 @@ export function useUpdateAppearance(workspaceId: string | null) {
             context.previousPreferences
           );
         }
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showSettingsSavedToast('appearance', 'Appearance settings updated successfully');
@@ -956,7 +956,7 @@ export function useUpdateWorkspaceName(
         context?.previousListQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Workspace name', newName);
@@ -1015,7 +1015,7 @@ export function useRestoreWorkspace() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() });
