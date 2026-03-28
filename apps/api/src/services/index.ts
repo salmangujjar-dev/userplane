@@ -356,6 +356,7 @@ export const slackService = new SlackService({
   tokenService,
   integrationRepo,
   cacheService,
+  provisionerService,
 });
 
 // Slack Canvas service

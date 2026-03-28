@@ -85,4 +85,26 @@ export const ProvisionerErrors = {
     status: 409,
     message: 'This Zendesk account is already connected to another workspace',
   },
+
+  // Slack OAuth errors
+  SLACK_OAUTH_STATE_INVALID: {
+    status: 400,
+    message: 'Invalid or expired OAuth state. Please try connecting again.',
+  },
+  SLACK_TOKEN_EXCHANGE_FAILED: {
+    status: 502,
+    message: 'Failed to exchange authorization code with Slack. Please try again.',
+  },
+  SLACK_AUTH_VALIDATION_FAILED: {
+    status: 502,
+    message: 'Failed to validate Slack bot token. Please try again.',
+  },
+  SLACK_USER_INFO_FAILED: {
+    status: 502,
+    message: 'Failed to retrieve user information from Slack. Please try again.',
+  },
+  SLACK_WORKSPACE_ALREADY_CONNECTED: {
+    status: 409,
+    message: 'This Slack workspace is already connected to another account',
+  },
 } as const;

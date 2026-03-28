@@ -78,3 +78,27 @@ export const IntercomCallbackQuerySchema = z.object({
   code: z.string(),
   state: z.string(),
 });
+
+/**
+ * Slack OAuth authorize request
+ * No parameters needed for Slack onboarding
+ */
+export const SlackAuthorizeQuerySchema = z.object({});
+
+/**
+ * Slack OAuth authorize response
+ * Returns the authorization URL and state for CSRF protection
+ */
+export const SlackAuthorizeResponseSchema = z.object({
+  authorizationUrl: z.string().url(),
+  state: z.string(),
+});
+
+/**
+ * Slack OAuth callback query parameters
+ * Received from Slack after user authorizes
+ */
+export const SlackCallbackQuerySchema = z.object({
+  code: z.string(),
+  state: z.string(),
+});

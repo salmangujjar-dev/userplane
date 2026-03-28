@@ -8,6 +8,9 @@ import {
   IntercomAuthorizeResponseSchema,
   IntercomCallbackQuerySchema,
   ProvisionerErrors,
+  SlackAuthorizeQuerySchema,
+  SlackAuthorizeResponseSchema,
+  SlackCallbackQuerySchema,
   WorkspaceCreateDataSchema,
 } from '../schemas';
 
@@ -86,4 +89,49 @@ export const intercomCallback = oc
     WORKSPACE_CREATION_LIMIT_EXCEEDED: ProvisionerErrors.WORKSPACE_CREATION_LIMIT_EXCEEDED,
   })
   .input(z.object({ query: IntercomCallbackQuerySchema }))
+  .output(ApiResponseSchema(WorkspaceCreateDataSchema));
+
+/**
+ * GET /provisioner/slack/authorize
+ * Initiate Slack OAuth flow for workspace creation
+ */
+export const slackAuthorize = oc
+  .route({
+    method: 'GET',
+    path: '/provisioner/slack/authorize',
+    inputStructure: 'detailed',
+    summary: 'Initiate Slack OAuth',
+    description: 'Generate Slack OAuth authorization URL with CSRF state token',
+    tags: ['Provisioner', 'Slack'],
+  })
+  .errors({
+    UNAUTHORIZED: ProvisionerErrors.UNAUTHORIZED,
+  })
+  .input(z.object({ query: SlackAuthorizeQuerySchema }))
+  .output(ApiResponseSchema(SlackAuthorizeResponseSchema));
+
+/**
+ * GET /provisioner/slack/callback
+ * Handle Slack OAuth callback and create workspace
+ */
+export const slackCallback = oc
+  .route({
+    method: 'GET',
+    path: '/provisioner/slack/callback',
+    inputStructure: 'detailed',
+    summary: 'Handle Slack OAuth callback',
+    description: 'Exchange authorization code for access token and create workspace',
+    tags: ['Provisioner', 'Slack'],
+  })
+  .errors({
+    UNAUTHORIZED: ProvisionerErrors.UNAUTHORIZED,
+    SLACK_OAUTH_STATE_INVALID: ProvisionerErrors.SLACK_OAUTH_STATE_INVALID,
+    SLACK_TOKEN_EXCHANGE_FAILED: ProvisionerErrors.SLACK_TOKEN_EXCHANGE_FAILED,
+    SLACK_AUTH_VALIDATION_FAILED: ProvisionerErrors.SLACK_AUTH_VALIDATION_FAILED,
+    SLACK_WORKSPACE_ALREADY_CONNECTED: ProvisionerErrors.SLACK_WORKSPACE_ALREADY_CONNECTED,
+    PROVISIONER_WORKSPACE_CREATE_FAILED: ProvisionerErrors.PROVISIONER_WORKSPACE_CREATE_FAILED,
+    PROVISIONER_TRANSACTION_FAILED: ProvisionerErrors.PROVISIONER_TRANSACTION_FAILED,
+    WORKSPACE_CREATION_LIMIT_EXCEEDED: ProvisionerErrors.WORKSPACE_CREATION_LIMIT_EXCEEDED,
+  })
+  .input(z.object({ query: SlackCallbackQuerySchema }))
   .output(ApiResponseSchema(WorkspaceCreateDataSchema));

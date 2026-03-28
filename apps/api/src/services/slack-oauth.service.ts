@@ -1,19 +1,32 @@
 /**
  * SlackService - Handles Slack OAuth flow and integration management
  * Orchestrates OAuth V2 authorization, token exchange, and workspace integration
- * Only supports connecting to existing workspaces (no workspace creation flow)
+ * Supports two flows:
+ * 1. Onboarding flow: Creates a new workspace during OAuth (no workspaceId in state)
+ * 2. Workspace integration flow: Connects to existing workspace (workspaceId in state)
  * Handles re-installation by updating existing tokens rather than failing
  */
 
-import { ORPCError } from '@orpc/server';
 import type { CacheService } from '@userplane/cache';
-import { createProviderMeta, createProviderToken, workspaceError } from '@userplane/contract';
+import {
+  createProviderMeta,
+  createProviderToken,
+  provisionerError,
+  workspaceError,
+} from '@userplane/contract';
 
-import { authTest, exchangeCodeForToken, getAuthorizationUrl } from '@/api/clients/slack';
+import {
+  authTest,
+  exchangeCodeForToken,
+  getAuthorizationUrl,
+  getUserInfo,
+} from '@/api/clients/slack';
 import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
+import { deriveWorkspaceUrl } from '@/api/lib/workspace';
 import { captureException } from '@/api/posthog';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
 
 const logger = createLogger('slack-oauth');
@@ -22,6 +35,7 @@ export interface SlackServiceDeps {
   tokenService: TokenService;
   integrationRepo: IntegrationRepository;
   cacheService: CacheService;
+  provisionerService: ProvisionerService;
 }
 
 /**
@@ -41,23 +55,145 @@ export interface SlackIntegrationConnectResult {
   providerWorkspaceId: string;
 }
 
+type WorkspaceCreationResult =
+  | { created: false; workspaceUrl?: string }
+  | { created: true; workspaceId: string; workspaceName: string };
+
 export class SlackService {
   constructor(private deps: SlackServiceDeps) {}
 
   /**
    * Generate OAuth authorization URL with signed state token
    * @param userId - The user initiating the OAuth flow
-   * @param workspaceId - The workspace ID to connect Slack to
+   * @param workspaceId - Optional workspace ID (absent for onboarding, present for integration)
    */
   generateAuthorizationUrl(
     userId: string,
-    workspaceId: string
+    workspaceId?: string
   ): { authorizationUrl: string; state: string } {
     const state = this.deps.tokenService.signSlackOAuthState(userId, workspaceId);
     const authorizationUrl = getAuthorizationUrl(state);
 
     return { authorizationUrl, state };
   }
+
+  // ============================================================================
+  // ONBOARDING FLOW (workspace creation via Slack OAuth)
+  // ============================================================================
+
+  /**
+   * Validate OAuth state token
+   * Returns true if state is valid for the given user and optional workspace
+   */
+  private validateState(state: string, userId: string, workspaceId?: string): boolean {
+    const payload = this.deps.tokenService.verifySlackOAuthState(state, userId, workspaceId);
+    return payload !== null;
+  }
+
+  /**
+   * Handle OAuth callback for onboarding flow
+   * Exchanges code for token, fetches user info from Slack, and creates workspace
+   */
+  async handleCallback(params: {
+    code: string;
+    state: string;
+    userId: string;
+    userName?: string;
+    userEmail: string;
+    userRole?: string | null;
+  }): Promise<WorkspaceCreationResult> {
+    const { code, state, userId, userName, userEmail, userRole } = params;
+
+    // 1. Validate state token (no workspaceId verification — onboarding mode)
+    if (!this.validateState(state, userId)) {
+      throw provisionerError.SLACK_OAUTH_STATE_INVALID();
+    }
+
+    // 2. Exchange code for bot access token
+    const tokenResponse = await exchangeCodeForToken(code);
+    if (!tokenResponse) {
+      throw provisionerError.SLACK_TOKEN_EXCHANGE_FAILED();
+    }
+
+    // 3. Validate token via auth.test
+    const authResult = await authTest(tokenResponse.access_token);
+    if (!authResult) {
+      throw provisionerError.SLACK_AUTH_VALIDATION_FAILED();
+    }
+
+    const teamId = tokenResponse.team.id;
+    const teamName = tokenResponse.team.name;
+
+    // 4. Get installing user's email from Slack to derive workspace URL
+    // Slack profile email is typically their work email, better for workspace domain
+    let workspaceUrl: string;
+    const slackUser = await getUserInfo(tokenResponse.access_token, tokenResponse.authed_user.id);
+    if (slackUser?.profile?.email) {
+      workspaceUrl = deriveWorkspaceUrl(slackUser.profile.email);
+    } else {
+      // Fall back to the authenticated user's email
+      logger.warn({ userId, teamId }, 'Could not get Slack user email, falling back to auth email');
+      workspaceUrl = deriveWorkspaceUrl(userEmail);
+    }
+
+    // 5. Check if this Slack team is already connected
+    const existingIntegration = await this.deps.integrationRepo.findByProviderWorkspaceId(
+      'slack',
+      teamId
+    );
+    if (existingIntegration) {
+      throw provisionerError.SLACK_WORKSPACE_ALREADY_CONNECTED();
+    }
+
+    // 6. Create workspace using ProvisionerService
+    const result = await this.deps.provisionerService.createWorkspaceByURLAndName({
+      url: workspaceUrl,
+      workspaceName: teamName,
+      userId,
+      userName,
+      userEmail,
+      userRole,
+    });
+
+    if (!result.created) {
+      throw provisionerError.PROVISIONER_WORKSPACE_CREATE_FAILED();
+    }
+
+    // 7. Create integration record
+    await this.deps.integrationRepo.create({
+      id: generateIntegrationId(),
+      workspaceId: result.workspaceId,
+      provider: 'slack',
+      providerWorkspaceId: teamId,
+      providerToken: createProviderToken('slack', {
+        accessToken: tokenResponse.access_token,
+        botUserId: tokenResponse.bot_user_id,
+        appId: tokenResponse.app_id,
+        authedUserId: tokenResponse.authed_user.id,
+      }),
+      providerMeta: createProviderMeta('slack', {
+        teamId: tokenResponse.team.id,
+        teamName: tokenResponse.team.name,
+        enterpriseId: tokenResponse.enterprise?.id,
+        isEnterpriseInstall: tokenResponse.is_enterprise_install,
+      }),
+    });
+
+    // 8. Warm cache for future lookups
+    await this.deps.cacheService.setIntegrationByProviderWorkspace('slack', teamId, {
+      workspaceId: result.workspaceId,
+    });
+
+    return {
+      created: true,
+      workspaceId: result.workspaceId,
+      workspaceName: result.workspaceName,
+    };
+  }
+
+  // ============================================================================
+  // WORKSPACE INTEGRATION FLOW (for existing workspaces)
+  // ============================================================================
 
   /**
    * Handle OAuth callback for workspace integration flow
@@ -85,10 +221,7 @@ export class SlackService {
         operation: 'slack_oauth_callback',
         workspaceId,
       });
-      throw new ORPCError('SLACK_TOKEN_EXCHANGE_FAILED', {
-        status: 500,
-        message: 'Failed to exchange authorization code with Slack',
-      });
+      throw provisionerError.SLACK_TOKEN_EXCHANGE_FAILED();
     }
 
     // 3. Validate token via auth.test
@@ -99,10 +232,7 @@ export class SlackService {
         operation: 'slack_oauth_callback',
         workspaceId,
       });
-      throw new ORPCError('SLACK_AUTH_VALIDATION_FAILED', {
-        status: 500,
-        message: 'Failed to validate Slack bot token',
-      });
+      throw provisionerError.SLACK_AUTH_VALIDATION_FAILED();
     }
 
     const teamId = tokenResponse.team.id;

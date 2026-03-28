@@ -126,7 +126,8 @@ const inviteProcedures = createInviteProcedures(inviteService);
 const provisionerProcedures = createProvisionerProcedures(
   provisionerService,
   emailService,
-  intercomService
+  intercomService,
+  slackService
 );
 const statusProcedures = createStatusProcedures();
 const adminProcedures = createAdminProcedures(
