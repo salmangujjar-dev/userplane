@@ -365,6 +365,7 @@ export const slackCanvasService = new SlackCanvasService({
   userRepo,
   workspaceMemberRepo,
   linkService,
+  recordingService,
   projectRepo,
   domainRepo,
   entitlementService,
