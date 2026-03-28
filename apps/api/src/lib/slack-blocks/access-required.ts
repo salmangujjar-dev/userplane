@@ -8,14 +8,14 @@ import { slackCanvasUrls } from './urls';
 
 /**
  * Build the access-required modal view.
- * Directs the user to request workspace access or contact support.
+ * Directs the user to request workspace access.
  */
 export function buildAccessRequiredView() {
   return {
     type: 'modal' as const,
     title: {
       type: 'plain_text',
-      text: 'Request Access',
+      text: 'Almost there',
     },
     close: {
       type: 'plain_text',
@@ -26,7 +26,7 @@ export function buildAccessRequiredView() {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: ":lock: *Access Required*\n\nYou're not a member of the connected Userplane workspace yet. Ask a workspace admin to add you.",
+          text: "You're not a member of this Userplane workspace yet.\n\nAsk a workspace admin to add you - it only takes a moment.",
         },
       },
       {
@@ -41,15 +41,6 @@ export function buildAccessRequiredView() {
             action_id: SlackActionIds.REQUEST_ACCESS,
             url: slackCanvasUrls.workspaceSuggestUrl(),
             style: 'primary',
-          },
-          {
-            type: 'button',
-            text: {
-              type: 'plain_text',
-              text: 'Get Help',
-            },
-            action_id: SlackActionIds.CONTACT_SUPPORT,
-            url: slackCanvasUrls.dashboardUrl(),
           },
         ],
       },

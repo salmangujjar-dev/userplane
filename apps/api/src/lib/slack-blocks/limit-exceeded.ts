@@ -15,16 +15,12 @@ export function buildLimitExceededView(params: {
   limitType?: 'recordings' | 'links';
 }) {
   const upgradeUrl = slackCanvasUrls.upgradeWorkspaceUrl(params.workspaceId);
-  const limitDescription =
-    params.limitType === 'links'
-      ? "You've reached the maximum number of recording links for your workspace."
-      : "You've reached the maximum number of recordings for your workspace.";
 
   return {
     type: 'modal' as const,
     title: {
       type: 'plain_text',
-      text: 'Limit Reached',
+      text: 'Limit reached',
     },
     close: {
       type: 'plain_text',
@@ -35,14 +31,7 @@ export function buildLimitExceededView(params: {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: limitDescription,
-        },
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: 'Upgrade your workspace to continue creating recording links.',
+          text: "You've used all the recording links on your current plan. Upgrade to keep creating and sharing.",
         },
       },
       {

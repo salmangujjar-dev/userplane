@@ -5,12 +5,14 @@
  * async work (access verification, data fetching) completes.
  */
 
+import { getRandomLoadingGifUrl } from './urls';
+
 /**
- * Build a minimal loading modal.
+ * Build a loading modal with a random animated GIF.
  * Keeping it generic so it can front any slash-command, block-action,
  * or view-submission flow that needs time to resolve.
  */
-export function buildLoadingModal(message = 'Loading, please wait\u2026') {
+export function buildLoadingModal(message = 'Almost there - setting things up for you...') {
   return {
     type: 'modal' as const,
     title: {
@@ -19,15 +21,18 @@ export function buildLoadingModal(message = 'Loading, please wait\u2026') {
     },
     close: {
       type: 'plain_text',
-      text: 'Close',
+      text: 'Cancel',
     },
     blocks: [
       {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: message,
-        },
+        type: 'header',
+        text: { type: 'plain_text', text: message },
+        level: 4,
+      },
+      {
+        type: 'image',
+        image_url: getRandomLoadingGifUrl(),
+        alt_text: 'Loading',
       },
     ],
   };

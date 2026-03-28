@@ -3,8 +3,10 @@
  * Shown when the user's Slack workspace is not connected to any Userplane workspace.
  */
 
+import { env } from '@/api/env';
+
 import { SlackActionIds } from './constants';
-import { getSlackCanvasImages, slackCanvasUrls } from './urls';
+import { getSlackCanvasImages } from './urls';
 
 /**
  * Build the home tab view for disconnected users.
@@ -23,16 +25,17 @@ export function buildHomeTabDisconnectedView(params: { dashboardUrl: string }) {
       },
       {
         type: 'header',
+        level: 4,
         text: {
           type: 'plain_text',
-          text: ':link: Connect to Userplane',
+          text: 'Get started with Userplane',
         },
       },
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: 'Your Slack workspace is not connected to Userplane. Connect your workspace from the dashboard to get started.',
+          text: 'Connect your Slack workspace to start creating and sharing screen recording links with your team - right from here.',
         },
       },
       {
@@ -51,11 +54,14 @@ export function buildHomeTabDisconnectedView(params: { dashboardUrl: string }) {
         ],
       },
       {
+        type: 'divider',
+      },
+      {
         type: 'context',
         elements: [
           {
             type: 'mrkdwn',
-            text: `Need help? <${slackCanvasUrls.dashboardUrl()}|Get Help>`,
+            text: `Need a hand? Reach out at ${env.support.supportEmail}`,
           },
         ],
       },

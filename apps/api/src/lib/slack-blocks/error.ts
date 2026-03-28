@@ -3,6 +3,8 @@
  * Modal and ephemeral error views for the Slack integration.
  */
 
+import { env } from '@/api/env';
+
 /**
  * Modal view shown when an error occurs during view submission.
  * Replaces the form with a user-facing error message.
@@ -12,7 +14,7 @@ export function buildErrorModalView(message: string) {
     type: 'modal' as const,
     title: {
       type: 'plain_text',
-      text: 'Error',
+      text: 'Something went wrong',
     },
     close: {
       type: 'plain_text',
@@ -23,7 +25,7 @@ export function buildErrorModalView(message: string) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `:warning: ${message}`,
+          text: `We hit a snag - sorry about that.\n\n_${message}_`,
         },
       },
       {
@@ -31,7 +33,7 @@ export function buildErrorModalView(message: string) {
         elements: [
           {
             type: 'mrkdwn',
-            text: 'If this persists, contact support.',
+            text: `If this keeps happening, reach out at ${env.support.supportEmail}`,
           },
         ],
       },
@@ -50,7 +52,7 @@ export function buildErrorEphemeral(message: string) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `:warning: ${message}`,
+          text: `${message}\n\nIf this keeps happening, reach out at ${env.support.supportEmail}`,
         },
       },
     ],

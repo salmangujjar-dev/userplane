@@ -1,95 +1,167 @@
 /**
- * Home Tab — Connected View
- * Rich home tab shown when the user's Slack workspace is connected to Userplane
+ * Home Tab - Connected View
+ * Home tab shown when the user's Slack workspace is connected to Userplane
  * and the user is a recognised workspace member.
+ *
+ * Clean dashboard layout: Recording Link section (with Create Link),
+ * Recent Recordings, and Recent Links.
  */
 
 import { SlackActionIds } from './constants';
-import { getSlackCanvasImages, slackCanvasUrls } from './urls';
+import { slackCanvasUrls } from './urls';
+
+export interface HomeRecordingItem {
+  title: string;
+  projectName: string;
+  durationFormatted: string;
+  /** Unix timestamp in seconds for Slack date formatting */
+  createdAtTs: number;
+  thumbnailUrl: string | null;
+}
+
+export interface HomeLinkItem {
+  linkId: string;
+  title: string;
+  projectName: string;
+  creatorName: string;
+  /** Unix timestamp in seconds for Slack date formatting */
+  createdAtTs: number;
+  linkUrl: string;
+  workspaceId: string;
+}
 
 /**
  * Build the home tab view for connected users.
- * Shows workspace info, a "Create Link" action, and a "View Recordings" link.
  */
 export function buildHomeTabConnectedView(params: {
   workspaceName: string;
-  /** Workspace ID — used to build recordings and dashboard URLs */
-  workspaceId?: string;
-  /** Workspace member ID — used to build the "View Recordings" link filtered by creator */
-  workspaceMemberId?: string;
-  /** @deprecated Provide workspaceId instead; kept for backward compatibility */
-  dashboardUrl?: string;
+  workspaceId: string;
+  dashboardUrl: string;
+  recordings: HomeRecordingItem[];
+  links: HomeLinkItem[];
 }) {
-  const recordingsUrl =
-    params.workspaceId && params.workspaceMemberId
-      ? slackCanvasUrls.userRecordingsUrl(params.workspaceId, params.workspaceMemberId)
-      : params.workspaceId
-        ? slackCanvasUrls.recordingsUrl(params.workspaceId)
-        : (params.dashboardUrl ?? slackCanvasUrls.dashboardUrl());
-  const dashboardUrl = params.dashboardUrl ?? slackCanvasUrls.dashboardUrl();
+  const blocks: Array<Record<string, unknown>> = [];
 
-  const images = getSlackCanvasImages();
+  // --- Recording Link ---
+  blocks.push(
+    {
+      type: 'header',
+      level: 4,
+      text: { type: 'plain_text', text: 'Recording Link' },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: 'Create a recording link and share it with anyone.',
+      },
+      accessory: {
+        type: 'button',
+        text: { type: 'plain_text', text: 'Create Link' },
+        action_id: SlackActionIds.CREATE_LINK,
+        style: 'primary',
+      },
+    },
+    { type: 'divider' }
+  );
 
-  return {
-    type: 'home' as const,
-    blocks: [
-      {
-        type: 'image',
-        image_url: images.logo,
-        alt_text: 'Userplane',
+  // --- Recent Recordings ---
+  blocks.push(
+    {
+      type: 'header',
+      level: 4,
+      text: { type: 'plain_text', text: 'Recent Recordings' },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: 'Screen recordings submitted by your team.',
       },
-      {
-        type: 'header',
-        text: {
-          type: 'plain_text',
-          text: 'Welcome to Userplane',
-        },
+      accessory: {
+        type: 'button',
+        text: { type: 'plain_text', text: 'View All' },
+        action_id: SlackActionIds.BROWSE_RECORDINGS,
       },
-      {
+    }
+  );
+
+  if (params.recordings.length > 0) {
+    for (const rec of params.recordings.slice(0, 3)) {
+      const block: Record<string, unknown> = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Workspace:* ${params.workspaceName}\nYour Slack workspace is connected to Userplane. Create recording links and manage recordings right from Slack.`,
+          text: `*${rec.title}*\n${rec.projectName} \u00b7 ${rec.durationFormatted} \u00b7 <!date^${rec.createdAtTs}^{date_short_pretty}|${new Date(rec.createdAtTs * 1000).toLocaleDateString()}>`,
         },
+      };
+
+      if (rec.thumbnailUrl) {
+        block.accessory = {
+          type: 'image',
+          image_url: rec.thumbnailUrl,
+          alt_text: 'Recording thumbnail',
+        };
+      }
+
+      blocks.push(block);
+    }
+  } else {
+    blocks.push({
+      type: 'context',
+      elements: [{ type: 'plain_text', text: 'No recordings yet.' }],
+    });
+  }
+
+  blocks.push({ type: 'divider' });
+
+  // --- Recent Links ---
+  blocks.push(
+    {
+      type: 'header',
+      level: 4,
+      text: { type: 'plain_text', text: 'Recent Links' },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: 'Recording links shared with your team.',
       },
-      {
-        type: 'divider',
+      accessory: {
+        type: 'button',
+        text: { type: 'plain_text', text: 'View All' },
+        action_id: SlackActionIds.BROWSE_LINKS,
       },
-      {
-        type: 'actions',
-        elements: [
-          {
-            type: 'button',
-            text: {
-              type: 'plain_text',
-              text: 'Create Link',
-            },
-            action_id: SlackActionIds.CREATE_LINK,
-            style: 'primary',
-          },
-          {
-            type: 'button',
-            text: {
-              type: 'plain_text',
-              text: 'View Recordings',
-            },
-            action_id: SlackActionIds.VIEW_RECORDINGS,
-            url: recordingsUrl,
-          },
-        ],
-      },
-      {
-        type: 'divider',
-      },
-      {
-        type: 'context',
-        elements: [
-          {
-            type: 'mrkdwn',
-            text: `Userplane \u00b7 <${dashboardUrl}|Open Dashboard>`,
-          },
-        ],
-      },
-    ],
+    }
+  );
+
+  if (params.links.length > 0) {
+    for (const link of params.links.slice(0, 3)) {
+      const viewUrl = slackCanvasUrls.linkRecordingsUrl(link.workspaceId, link.linkId);
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*${link.title}*\nCreated by ${link.creatorName} \u00b7 <!date^${link.createdAtTs}^{date_short_pretty}|${new Date(link.createdAtTs * 1000).toLocaleDateString()}>`,
+        },
+        accessory: {
+          type: 'button',
+          text: { type: 'plain_text', text: 'View Recording' },
+          action_id: SlackActionIds.VIEW_RECORDING,
+          url: viewUrl,
+        },
+      });
+    }
+  } else {
+    blocks.push({
+      type: 'context',
+      elements: [{ type: 'plain_text', text: 'No recording links yet.' }],
+    });
+  }
+
+  return {
+    type: 'home' as const,
+    blocks,
   };
 }

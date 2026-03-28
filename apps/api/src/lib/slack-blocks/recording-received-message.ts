@@ -11,7 +11,6 @@ import { getSlackCanvasImages } from './urls';
  * Includes a `text` fallback for push notifications.
  */
 export function buildRecordingReceivedMessage(params: { recordingUrl: string }) {
-  const ts = Math.floor(Date.now() / 1000);
   const images = getSlackCanvasImages();
 
   return {
@@ -21,7 +20,7 @@ export function buildRecordingReceivedMessage(params: { recordingUrl: string }) 
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: ':movie_camera: *Recording Received*\n\nA new session recording has been submitted.',
+          text: '*New recording received*\nSomeone just submitted a screen recording.',
         },
         accessory: {
           type: 'image',
@@ -36,7 +35,7 @@ export function buildRecordingReceivedMessage(params: { recordingUrl: string }) 
             type: 'button',
             text: {
               type: 'plain_text',
-              text: 'View Recording',
+              text: 'Watch Recording',
             },
             action_id: SlackActionIds.VIEW_RECORDING,
             url: params.recordingUrl,
@@ -48,8 +47,8 @@ export function buildRecordingReceivedMessage(params: { recordingUrl: string }) 
         type: 'context',
         elements: [
           {
-            type: 'mrkdwn',
-            text: `Userplane \u00b7 <!date^${ts}^{date}|now>`,
+            type: 'plain_text',
+            text: 'Recordings are automatically deleted after 30 days.',
           },
         ],
       },

@@ -5,51 +5,42 @@
 
 /**
  * Build the success modal view after link creation.
- * Displays the link URL and a creation timestamp.
+ * Shows a confirmation message with project and domain context.
  */
-export function buildLinkSuccessView(params: { linkUrl: string; projectName?: string }) {
-  const ts = Math.floor(Date.now() / 1000);
-  const iso = new Date().toISOString();
-
-  const contextElements: Array<{ type: string; text: string }> = [
-    {
-      type: 'mrkdwn',
-      text: `Created at <!date^${ts}^{date_short_pretty} at {time}|${iso}>`,
-    },
-  ];
-
-  if (params.projectName) {
-    contextElements.push({
-      type: 'mrkdwn',
-      text: `Project: ${params.projectName}`,
-    });
-  }
+export function buildLinkSuccessView(params: { projectName?: string; domainName?: string }) {
+  const contextParts = [params.projectName, params.domainName].filter(Boolean);
 
   return {
     type: 'modal' as const,
     title: {
       type: 'plain_text',
-      text: 'Link Created',
+      text: 'Link created',
     },
     close: {
       type: 'plain_text',
-      text: 'Close',
+      text: 'Done',
     },
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `:white_check_mark: *Recording link created*\n\nYour link is live and ready to share:\n<${params.linkUrl}|${params.linkUrl}>`,
+          text: 'Your recording link has been created and shared in the channel.',
         },
       },
-      {
-        type: 'divider',
-      },
-      {
-        type: 'context',
-        elements: contextElements,
-      },
+      ...(contextParts.length > 0
+        ? [
+            {
+              type: 'context' as const,
+              elements: [
+                {
+                  type: 'plain_text' as const,
+                  text: contextParts.join(' \u00b7 '),
+                },
+              ],
+            },
+          ]
+        : []),
     ],
   };
 }
