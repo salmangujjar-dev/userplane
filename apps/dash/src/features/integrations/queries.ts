@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/client';
-import { handleSafeResult, showErrorToastToast } from '@/lib/errors';
+import { handleSafeResult, showApiErrorToast } from '@/lib/errors';
 import { useWorkspaceId } from '@/stores/workspace';
 
 import { integrationKeys } from './query-keys';
@@ -50,7 +50,7 @@ export function useIntercomAuthorize() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       // Redirect to Intercom OAuth page
@@ -82,7 +82,7 @@ export function useIntercomDisconnect() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       // Invalidate integration status after disconnect
@@ -137,7 +137,7 @@ export function useZendeskDisconnect() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       queryClient.invalidateQueries({ queryKey: integrationKeys.zendesk(workspaceId ?? '') });
@@ -193,7 +193,7 @@ export function useSlackAuthorize() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       // Redirect to Slack OAuth page
@@ -225,7 +225,7 @@ export function useSlackDisconnect() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       // Invalidate integration status after disconnect

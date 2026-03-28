@@ -28,9 +28,9 @@ import { useAccount } from '@/features/account';
 import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { type DefinedError, handleSafeResult, showErrorToastToast } from '@/lib/errors';
+import { type DefinedError, handleSafeResult, showApiErrorToast } from '@/lib/errors';
 import { mediaClient } from '@/lib/media';
-import { showIntercomConnectionFailedToast } from '@/lib/toasts';
+import { showConnectionFailedToast } from '@/lib/toasts';
 import { ZENDESK_MARKETPLACE_APP_URL } from '@/lib/zendesk-install';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -225,6 +225,8 @@ function PostCreationInviteView({
   );
 }
 
+type OnboardingProvider = 'intercom' | 'zendesk' | 'slack';
+
 // Provider selection card
 function ProviderCard({
   provider,
@@ -233,21 +235,21 @@ function ProviderCard({
   selected,
   onSelect,
 }: {
-  provider: 'intercom' | 'zendesk';
+  provider: OnboardingProvider;
   icon: IntegrationAssetKey;
   label: string;
   selected: boolean;
-  onSelect: (provider: 'intercom' | 'zendesk') => void;
+  onSelect: (provider: OnboardingProvider) => void;
 }) {
   return (
     <button
       type="button"
       onClick={() => onSelect(provider)}
-      className={`relative flex flex-col items-center gap-3 rounded-xl border p-6 bg-card transition-colors hover:bg-accent/50 ${
+      className={`relative flex flex-col items-center gap-2 rounded-xl border p-4 bg-card transition-colors hover:bg-accent/50 ${
         selected ? 'border-foreground ring-1 ring-foreground' : 'border-border'
       }`}
     >
-      <div className="absolute top-3 right-3">
+      <div className="absolute top-2 right-2">
         {selected ? (
           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-background">
             <Check className="h-3 w-3" />
@@ -256,12 +258,12 @@ function ProviderCard({
           <Circle className="h-5 w-5 text-muted-foreground/40" />
         )}
       </div>
-      <div className="flex items-center justify-center w-14 h-14 rounded-xl border bg-background shadow-sm">
+      <div className="flex items-center justify-center w-12 h-12 rounded-xl border bg-background shadow-sm">
         <Image
           src={mediaClient.getIntegrationMediaUrl(icon)}
           alt={label}
-          width={32}
-          height={32}
+          width={28}
+          height={28}
           className="object-contain"
         />
       </div>
@@ -270,9 +272,15 @@ function ProviderCard({
   );
 }
 
-// Provider selector flow — lets users pick Intercom or Zendesk before connecting
+const PROVIDER_LABELS: Record<OnboardingProvider, string> = {
+  intercom: 'Intercom',
+  zendesk: 'Zendesk',
+  slack: 'Slack',
+};
+
+// Provider selector flow — lets users pick Intercom, Zendesk, or Slack before connecting
 function ProviderSelectFlow() {
-  const [selectedProvider, setSelectedProvider] = useState<'intercom' | 'zendesk'>('intercom');
+  const [selectedProvider, setSelectedProvider] = useState<OnboardingProvider>('intercom');
   const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
   const { data: accountResult } = useAccount();
@@ -288,19 +296,36 @@ function ProviderSelectFlow() {
 
     setIsConnecting(true);
     try {
-      const [error, response] = await apiClient.provisioner.intercom.authorize({
-        query: { source: 'inapp' },
-      });
-      const result = handleSafeResult(error, response?.data ?? null);
+      if (selectedProvider === 'slack') {
+        const [error, response] = await apiClient.provisioner.slack.authorize({
+          query: {},
+        });
+        const result = handleSafeResult(error, response?.data ?? null);
 
-      if (!result.success) {
-        showErrorToastToast(result.error);
-        return;
+        if (!result.success) {
+          showApiErrorToast(result.error);
+          return;
+        }
+
+        window.location.href = result.data.authorizationUrl;
+      } else {
+        const [error, response] = await apiClient.provisioner.intercom.authorize({
+          query: { source: 'inapp' },
+        });
+        const result = handleSafeResult(error, response?.data ?? null);
+
+        if (!result.success) {
+          showApiErrorToast(result.error);
+          return;
+        }
+
+        window.location.href = result.data.authorizationUrl;
       }
-
-      window.location.href = result.data.authorizationUrl;
     } catch (error) {
-      showIntercomConnectionFailedToast(error instanceof Error ? error.message : undefined);
+      showConnectionFailedToast(
+        PROVIDER_LABELS[selectedProvider],
+        error instanceof Error ? error.message : undefined
+      );
     } finally {
       setIsConnecting(false);
     }
@@ -319,7 +344,7 @@ function ProviderSelectFlow() {
         />
 
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <ProviderCard
               provider="intercom"
               icon="integrations/intercom.webp"
@@ -334,6 +359,13 @@ function ProviderSelectFlow() {
               selected={selectedProvider === 'zendesk'}
               onSelect={setSelectedProvider}
             />
+            <ProviderCard
+              provider="slack"
+              icon="integrations/slack.webp"
+              label="Slack"
+              selected={selectedProvider === 'slack'}
+              onSelect={setSelectedProvider}
+            />
           </div>
 
           <Button
@@ -342,9 +374,7 @@ function ProviderSelectFlow() {
             size="lg"
             className="w-full px-7 py-6"
           >
-            {isConnecting
-              ? 'Connecting...'
-              : `Connect to ${selectedProvider === 'intercom' ? 'Intercom' : 'Zendesk'}`}
+            {isConnecting ? 'Connecting...' : `Connect to ${PROVIDER_LABELS[selectedProvider]}`}
           </Button>
 
           <div className="flex justify-center">

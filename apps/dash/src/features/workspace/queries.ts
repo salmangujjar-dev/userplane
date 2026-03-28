@@ -6,7 +6,7 @@ import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToastToast,
+  showApiErrorToast,
 } from '@/lib/errors';
 import {
   showAccessRequestApprovedToast,
@@ -525,7 +525,7 @@ export function useSendWorkspaceInvites(workspaceId: string | null) {
       if (!result.success) {
         // PLAN_LIMIT_EXCEEDED is handled by the caller via upsell sheet
         if (result.error.code !== 'PLAN_LIMIT_EXCEEDED') {
-          showErrorToastToast(result.error);
+          showApiErrorToast(result.error);
         }
         return;
       }
@@ -570,7 +570,7 @@ export function useAcceptInvite() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
 

@@ -15,7 +15,7 @@ import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToastToast,
+  showApiErrorToast,
 } from '@/lib/errors';
 import {
   showCreatedToast,
@@ -442,7 +442,7 @@ export function useAdminUpdateSubscription() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Subscription', 'Changes will take effect shortly');
@@ -476,7 +476,7 @@ export function useAdminExtendTrial() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Trial', 'Trial period extended');
@@ -531,7 +531,7 @@ export function useAdminUpdateEntitlements() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Entitlements');
@@ -599,7 +599,7 @@ export function useAdminBanUser() {
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('User ban status');
@@ -657,7 +657,7 @@ export function useAdminUnbanUser() {
     },
     onSuccess: (result, { userId }) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('User ban status');
@@ -720,7 +720,7 @@ export function useAdminRevokeSession() {
             queryClient.setQueryData(queryKey, data);
           });
         }
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showDeletedToast('Session');
@@ -785,7 +785,7 @@ export function useAdminRevokeAllSessions() {
             queryClient.setQueryData(queryKey, data);
           });
         }
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showDeletedToast('All sessions');
@@ -848,7 +848,7 @@ export function useAdminDeactivateWorkspace() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showDeletedToast('Workspace');
@@ -909,7 +909,7 @@ export function useAdminRestoreWorkspace() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       const { restoredProjects, restoredLinks } = result.data;
@@ -941,7 +941,7 @@ export function useAdminResetInviteToken() {
     },
     onSuccess: (result, { workspaceId }) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Invite token', 'Previous invite links are now invalid');
@@ -971,7 +971,7 @@ export function useAdminCreateWorkspaceInvite() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showCreatedToast('Workspace invite', 'Invite URL has been generated');
@@ -1003,7 +1003,7 @@ export function useAdminDeactivateProject(workspaceId: string) {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showDeletedToast('Project');
@@ -1037,7 +1037,7 @@ export function useAdminRestoreProject(workspaceId: string) {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Project');
@@ -1125,7 +1125,7 @@ export function useAdminCreatePlan() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showCreatedToast('Plan');
@@ -1168,7 +1168,7 @@ export function useAdminUpdatePlan() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Plan');
@@ -1226,7 +1226,7 @@ export function useAdminWorkspaceProvision() {
     },
     onSuccess: (result) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showCreatedToast('Workspace', 'Workspace provisioned successfully');
@@ -1257,7 +1257,7 @@ export function useImpersonation() {
     },
     onSuccess: (result, variables) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showImpersonatingToast(variables.userName);

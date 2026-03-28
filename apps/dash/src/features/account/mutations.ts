@@ -5,7 +5,7 @@ import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToastToast,
+  showApiErrorToast,
 } from '@/lib/errors';
 import { showUpdatedToast } from '@/lib/toasts';
 import type { AccountData, UpdateAccountData } from '@/types';
@@ -48,7 +48,7 @@ export function useUpdateAccountName(onError?: (originalName: string) => void) {
             onError(originalName);
           }
         }
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Account name', 'Your profile has been updated');

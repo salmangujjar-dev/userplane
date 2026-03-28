@@ -18,7 +18,7 @@ import { PaginationControls } from '@/components/shared/pagination-controls';
 import { useAccount } from '@/features/account';
 import { useCreateDomain, useUpdateDomain } from '@/features/domains';
 import { useSendWorkspaceInvites, useUpdateInvitePolicy } from '@/features/workspace';
-import { showErrorToastToast } from '@/lib/errors';
+import { showApiErrorToast } from '@/lib/errors';
 import { showTeammatesInvitedToast } from '@/lib/toasts';
 import { FormEmailSchema } from '@/schemas';
 import type { WorkspaceInvitePolicy } from '@/types';
@@ -445,7 +445,7 @@ export function InviteTeammatesView({
           {
             onSuccess: (result) => {
               if (!result.success) {
-                showErrorToastToast(result.error);
+                showApiErrorToast(result.error);
                 resolve(false);
                 return;
               }
@@ -459,7 +459,7 @@ export function InviteTeammatesView({
         createDomainMutation.mutate(configState.domainUrl, {
           onSuccess: (result) => {
             if (!result.success) {
-              showErrorToastToast(result.error);
+              showApiErrorToast(result.error);
               resolve(false);
               return;
             }
@@ -488,7 +488,7 @@ export function InviteTeammatesView({
         {
           onSuccess: (result) => {
             if (!result.success) {
-              showErrorToastToast(result.error);
+              showApiErrorToast(result.error);
               resolve(false);
               return;
             }
@@ -525,7 +525,7 @@ export function InviteTeammatesView({
       sendInvites.mutate(allEmailsToInvite, {
         onSuccess: (result) => {
           if (!result.success) {
-            showErrorToastToast(result.error);
+            showApiErrorToast(result.error);
             return;
           }
           showTeammatesInvitedToast(allEmailsToInvite.length);

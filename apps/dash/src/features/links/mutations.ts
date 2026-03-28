@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/client';
-import { handleSafeResult, handleUnknownError, showErrorToastToast } from '@/lib/errors';
+import { handleSafeResult, handleUnknownError, showApiErrorToast } from '@/lib/errors';
 import { showCreatedToast, showDeletedToast, showUpdatedToast } from '@/lib/toasts';
 import type { QueryData, QuerySnapshot } from '@/types';
 
@@ -57,7 +57,7 @@ export function useCreateLink(workspaceId: string | null) {
 
         // PLAN_LIMIT_EXCEEDED is handled by the caller via upsell sheet
         if (result.error.code !== 'PLAN_LIMIT_EXCEEDED') {
-          showErrorToastToast(result.error);
+          showApiErrorToast(result.error);
         }
         return;
       }
@@ -140,7 +140,7 @@ export function useUpdateLink(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Link');
@@ -203,7 +203,7 @@ export function useDeleteLink(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showDeletedToast('Link', 'Link has been permanently removed');

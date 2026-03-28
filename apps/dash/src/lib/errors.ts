@@ -55,7 +55,7 @@ export type SafeResult<T> =
  * },
  * onSuccess: (result) => {
  *   if (!result.success) {
- *     showErrorToastToast(result.error);
+ *     showApiErrorToast(result.error);
  *     return;
  *   }
  *   toast.success('Done!');
@@ -96,16 +96,13 @@ export function handleSafeResult<T>(error: unknown, response: T | null): SafeRes
  * ```ts
  * onSuccess: (result) => {
  *   if (!result.success) {
- *     showErrorToastToast(result.error);
+ *     showApiErrorToast(result.error);
  *     return;
  *   }
  * }
  * ```
  */
-export function showErrorToastToast(
-  error: ORPCDefinedError,
-  options?: { retry?: () => void }
-): void {
+export function showApiErrorToast(error: ORPCDefinedError, options?: { retry?: () => void }): void {
   toast.error(error.message, {
     ...(options?.retry && {
       action: { label: 'Retry', onClick: options.retry },

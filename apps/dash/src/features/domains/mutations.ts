@@ -5,7 +5,7 @@ import {
   handleSafeResult,
   handleUnknownError,
   type SafeResult,
-  showErrorToastToast,
+  showApiErrorToast,
 } from '@/lib/errors';
 import {
   showCreatedToast,
@@ -87,7 +87,7 @@ export function useCreateDomain(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showCreatedToast('Domain', 'Domain is pending verification');
@@ -154,7 +154,7 @@ export function useUpdateDomain(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Domain');
@@ -222,7 +222,7 @@ export function useDeleteDomain(workspaceId: string | null) {
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showDeletedToast('Domain', 'Domain has been permanently removed');
@@ -294,7 +294,7 @@ export function useUpdateDomainPreferences(
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
 
@@ -360,7 +360,7 @@ export function useSendDomainInstructions() {
     },
     onSuccess: (result, { emails }) => {
       if (!result.success) {
-        showErrorToastToast(result.error);
+        showApiErrorToast(result.error);
         return;
       }
       showInvitesSentToast(emails.length);
