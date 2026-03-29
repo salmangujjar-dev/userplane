@@ -357,6 +357,7 @@ export const slackService = new SlackService({
   integrationRepo,
   cacheService,
   provisionerService,
+  memberRepo: workspaceMemberRepo,
 });
 
 // Slack Canvas service

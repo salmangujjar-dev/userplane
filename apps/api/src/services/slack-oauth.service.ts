@@ -11,7 +11,9 @@ import type { CacheService } from '@userplane/cache';
 import {
   createProviderMeta,
   createProviderToken,
+  FormEmailSchema,
   provisionerError,
+  type SlackMemberItem,
   workspaceError,
 } from '@userplane/contract';
 
@@ -20,22 +22,29 @@ import {
   exchangeCodeForToken,
   getAuthorizationUrl,
   getUserInfo,
+  listUsers,
+  type SlackUser,
 } from '@/api/clients/slack';
 import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import { deriveWorkspaceUrl } from '@/api/lib/workspace';
 import { captureException } from '@/api/posthog';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
 
 const logger = createLogger('slack-oauth');
+
+/** Maximum number of member suggestions to return */
+const MAX_MEMBER_SUGGESTIONS = 10;
 
 export interface SlackServiceDeps {
   tokenService: TokenService;
   integrationRepo: IntegrationRepository;
   cacheService: CacheService;
   provisionerService: ProvisionerService;
+  memberRepo: WorkspaceMemberRepository;
 }
 
 /**
@@ -355,5 +364,119 @@ export class SlackService {
     await this.deps.cacheService.invalidateIntegration('slack', integration.providerWorkspaceId);
 
     return true;
+  }
+
+  // ============================================================================
+  // MEMBER FETCHING (for invite flow)
+  // ============================================================================
+
+  /**
+   * Fetch members from Slack and normalize their emails.
+   * No caching — this is a one-shot call during the invite flow.
+   * @returns Map of normalized email to SlackUser
+   */
+  private async _fetchAndNormalizeMembers(workspaceId: string): Promise<Map<string, SlackUser>> {
+    const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
+      workspaceId,
+      'slack'
+    );
+
+    if (!integration) {
+      throw workspaceError.INTEGRATION_NOT_FOUND();
+    }
+
+    const providerToken = integration.providerToken as { accessToken: string };
+    const members = await listUsers(providerToken.accessToken);
+
+    if (members.length === 0) {
+      return new Map();
+    }
+
+    const memberEmailMap = new Map<string, SlackUser>();
+    for (const member of members) {
+      const emailResult = FormEmailSchema.safeParse(member.profile.email);
+      if (emailResult.success) {
+        memberEmailMap.set(emailResult.data, member);
+      }
+    }
+
+    return memberEmailMap;
+  }
+
+  /**
+   * Build list of member items from Slack, optionally excluding existing workspace members.
+   * @param workspaceId - The workspace ID
+   * @param options - Configuration for filtering
+   * @returns Array of member items matching the Teammate interface
+   */
+  private async _buildMemberItemList(
+    workspaceId: string,
+    options: { excludeMembers: boolean }
+  ): Promise<SlackMemberItem[]> {
+    const memberEmailMap = await this._fetchAndNormalizeMembers(workspaceId);
+
+    if (memberEmailMap.size === 0) {
+      return [];
+    }
+
+    let existingMemberEmails: Set<string> = new Set();
+    if (options.excludeMembers) {
+      existingMemberEmails = await this.deps.memberRepo.findMatchingMemberEmails(workspaceId, [
+        ...memberEmailMap.keys(),
+      ]);
+    }
+
+    const result: SlackMemberItem[] = [];
+    for (const [normalizedEmail, member] of memberEmailMap) {
+      if (options.excludeMembers && existingMemberEmails.has(normalizedEmail)) {
+        continue;
+      }
+
+      result.push({
+        id: member.id,
+        email: normalizedEmail,
+        name: member.real_name ?? member.profile.display_name ?? null,
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Get members from the connected Slack workspace.
+   * Optionally filters out users who are already workspace members.
+   * @param workspaceId - The workspace ID
+   * @param excludeMembers - If true, excludes users who are already workspace members
+   */
+  async getMembers(
+    workspaceId: string,
+    excludeMembers: boolean = false
+  ): Promise<SlackMemberItem[]> {
+    return this._buildMemberItemList(workspaceId, { excludeMembers });
+  }
+
+  /**
+   * Get suggested members from Slack for the invite modal.
+   * Always excludes existing workspace members and returns empty on any error (graceful degradation).
+   * @param workspaceId - The workspace ID
+   * @param options - Optional configuration { limit?: number }
+   * @returns Object with suggestions array and hasMore flag (never throws)
+   */
+  async suggestMembers(
+    workspaceId: string,
+    options?: { limit?: number }
+  ): Promise<{ suggestions: SlackMemberItem[]; hasMore: boolean }> {
+    try {
+      const limit = Math.min(options?.limit ?? 5, MAX_MEMBER_SUGGESTIONS);
+
+      const members = await this._buildMemberItemList(workspaceId, { excludeMembers: true });
+
+      const hasMore = members.length > limit;
+      const suggestions = hasMore ? members.slice(0, limit) : members;
+
+      return { suggestions, hasMore };
+    } catch {
+      return { suggestions: [], hasMore: false };
+    }
   }
 }

@@ -421,8 +421,8 @@ export class WorkspaceService {
       // 5. Soft delete all recordings in workspace
       await this.deps.recordingRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
 
-      // 6. Soft delete integrations
-      await this.deps.integrationRepo.delete(workspaceId, 'intercom', { tx, deletedAt });
+      // 6. Soft delete all integrations (intercom, slack, zendesk, etc.)
+      await this.deps.integrationRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
 
       return deleted;
     };
@@ -577,6 +577,7 @@ export class WorkspaceService {
         linksToRestore: 0,
         membersToRestore: 0,
         recordingsToRestore: 0,
+        integrationsToRestore: 0,
       };
     }
 
@@ -596,6 +597,7 @@ export class WorkspaceService {
         linksToRestore: 0,
         membersToRestore: 0,
         recordingsToRestore: 0,
+        integrationsToRestore: 0,
       };
     }
 
@@ -604,12 +606,13 @@ export class WorkspaceService {
     const restoration = getRestorationStatus(daysSinceDeletion);
     const reason = getRestorationReason(restoration);
 
-    // 4. Count projects, links, members, and recordings that will be restored
+    // 4. Count projects, links, members, recordings, and integrations that will be restored
     // Only count if restoration is not impossible
     let projectsToRestore = 0;
     let linksToRestore = 0;
     let membersToRestore = 0;
     let recordingsToRestore = 0;
+    let integrationsToRestore = 0;
 
     if (restoration !== 'impossible') {
       projectsToRestore = await this.deps.projectRepo.countByWorkspaceIdAndDeletionTime(
@@ -625,6 +628,10 @@ export class WorkspaceService {
         deletedAt
       );
       recordingsToRestore = await this.deps.recordingRepo.countByWorkspaceIdAndDeletionTime(
+        workspaceId,
+        deletedAt
+      );
+      integrationsToRestore = await this.deps.integrationRepo.countByWorkspaceIdAndDeletionTime(
         workspaceId,
         deletedAt
       );
@@ -644,6 +651,7 @@ export class WorkspaceService {
       linksToRestore,
       membersToRestore,
       recordingsToRestore,
+      integrationsToRestore,
     };
   }
 
@@ -697,6 +705,7 @@ export class WorkspaceService {
         restoredLinks: activeLinks,
         restoredMembers: activeMembers,
         restoredRecordings: activeRecordings,
+        restoredIntegrations: 0,
       };
     }
 
@@ -803,13 +812,13 @@ export class WorkspaceService {
         });
       }
 
-      // 9. Restore intercom integration (best effort)
-      // Only restore integration if deleted at the same time and no duplicate providerWorkspaceId exists
-      let restoredIntegration = null;
+      // 9. Restore all integrations (best effort)
+      // Only restore integrations deleted at the same time, skip if providerWorkspaceId already active
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let restoredIntegrations: any[] = [];
       try {
-        restoredIntegration = await this.deps.integrationRepo.restore(
+        restoredIntegrations = await this.deps.integrationRepo.restoreByWorkspaceIdAndDeletionTime(
           workspaceId,
-          'intercom',
           deletedAt,
           {
             tx,
@@ -817,9 +826,9 @@ export class WorkspaceService {
         );
       } catch (error) {
         // Log but don't fail - best effort
-        logger.error({ err: error, workspaceId }, 'Error restoring intercom integration');
+        logger.error({ err: error, workspaceId }, 'Error restoring integrations');
         captureException(error, undefined, {
-          operation: 'restore_integration',
+          operation: 'restore_integrations',
           workspace_id: workspaceId,
         });
       }
@@ -831,7 +840,7 @@ export class WorkspaceService {
         restoredLinks: restoredLinks.length,
         restoredMembers: restoredMembers.length,
         restoredRecordings: restoredRecordings.length,
-        restoredIntegrations: restoredIntegration ? 1 : 0,
+        restoredIntegrations: restoredIntegrations.length,
       };
     };
 
