@@ -18,6 +18,13 @@ const logger = createLogger('slack-client');
 export const SLACK_BOT_SCOPES =
   'commands,chat:write,chat:write.public,im:write,users:read,users:read.email,team:read';
 
+/**
+ * Maximum number of members to fetch from Slack's users.list API.
+ * Kept low intentionally — the invite UI supports manual email entry
+ * for anyone not in the initial batch, and we don't cache this data.
+ */
+export const SLACK_MEMBER_FETCH_LIMIT = 50;
+
 // =============================================================================
 // Interfaces
 // =============================================================================
@@ -63,6 +70,10 @@ export interface SlackUser {
   real_name?: string;
   deleted: boolean;
   is_bot: boolean;
+  /** Multi-channel guest */
+  is_restricted?: boolean;
+  /** Single-channel guest */
+  is_ultra_restricted?: boolean;
   profile: {
     email?: string;
     display_name?: string;
@@ -253,6 +264,64 @@ export async function getUserInfo(accessToken: string, userId: string): Promise<
 }
 
 /**
+ * List workspace members (single page, capped at SLACK_MEMBER_FETCH_LIMIT).
+ * Filters out bots, deleted users, and users without an email address.
+ * Requires `users:read` and `users:read.email` bot scopes.
+ */
+export async function listUsers(accessToken: string): Promise<SlackUser[]> {
+  try {
+    const params = new URLSearchParams({
+      limit: String(SLACK_MEMBER_FETCH_LIMIT),
+    });
+
+    const response = await fetch(`https://slack.com/api/users.list?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn({ status: response.status, error: errorText }, 'users.list failed');
+      captureException(new Error('slack users.list failed'), undefined, {
+        operation: 'slack_list_users',
+        status: response.status,
+        error_text: errorText,
+      });
+      return [];
+    }
+
+    const data = (await response.json()) as {
+      ok: boolean;
+      members?: SlackUser[];
+      error?: string;
+    };
+
+    if (!data.ok) {
+      logger.warn({ error: data.error }, 'Slack users.list returned ok=false');
+      captureException(new Error('slack users.list returned ok=false'), undefined, {
+        operation: 'slack_list_users',
+        slack_error: data.error,
+      });
+      return [];
+    }
+
+    return (data.members ?? []).filter(
+      (member) =>
+        !member.deleted &&
+        !member.is_bot &&
+        !member.is_restricted &&
+        !member.is_ultra_restricted &&
+        !!member.profile.email
+    );
+  } catch (error) {
+    logger.error({ error }, 'users.list error');
+    captureException(error, undefined, { operation: 'slack_list_users' });
+    return [];
+  }
+}
+
+/**
  * Publish or update a user's App Home tab view
  */
 export async function publishView(
@@ -420,6 +489,59 @@ export async function updateModal(
 }
 
 /**
+ * Get a permalink URL for a specific message in a channel.
+ * Returns the permalink string on success, null on failure.
+ * Read-only API — no additional scopes required.
+ */
+export async function getPermalink(
+  accessToken: string,
+  channel: string,
+  messageTs: string
+): Promise<string | null> {
+  try {
+    const params = new URLSearchParams({ channel, message_ts: messageTs });
+    const response = await fetch(`https://slack.com/api/chat.getPermalink?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn(
+        { status: response.status, error: errorText, channel },
+        'chat.getPermalink failed'
+      );
+      captureException(new Error('slack chat.getPermalink failed'), undefined, {
+        operation: 'slack_get_permalink',
+        status: response.status,
+        error_text: errorText,
+        channel,
+      });
+      return null;
+    }
+
+    const data = (await response.json()) as { ok: boolean; permalink?: string; error?: string };
+
+    if (!data.ok) {
+      logger.warn({ error: data.error, channel }, 'Slack chat.getPermalink returned ok=false');
+      captureException(new Error('slack chat.getPermalink returned ok=false'), undefined, {
+        operation: 'slack_get_permalink',
+        slack_error: data.error,
+        channel,
+      });
+      return null;
+    }
+
+    return data.permalink ?? null;
+  } catch (error) {
+    logger.error({ error, channel }, 'chat.getPermalink error');
+    captureException(error, undefined, { operation: 'slack_get_permalink', channel });
+    return null;
+  }
+}
+
+/**
  * Post a message to a Slack channel
  * Returns the message timestamp (ts) on success, null on failure
  */
@@ -427,7 +549,8 @@ export async function postMessage(
   accessToken: string,
   channel: string,
   blocks: unknown[],
-  text: string
+  text: string,
+  threadTs?: string
 ): Promise<string | null> {
   try {
     const response = await fetch('https://slack.com/api/chat.postMessage', {
@@ -440,6 +563,7 @@ export async function postMessage(
         channel,
         blocks,
         text,
+        ...(threadTs ? { thread_ts: threadTs } : {}),
       }),
     });
 
@@ -491,7 +615,12 @@ export async function postMessage(
  */
 export async function respondToUrl(
   responseUrl: string,
-  payload: { response_type?: 'ephemeral' | 'in_channel'; text: string; blocks?: unknown[] }
+  payload: {
+    response_type?: 'ephemeral' | 'in_channel';
+    text: string;
+    blocks?: unknown[];
+    delete_original?: boolean;
+  }
 ): Promise<boolean> {
   try {
     const response = await fetch(responseUrl, {
@@ -501,6 +630,7 @@ export async function respondToUrl(
         response_type: payload.response_type ?? 'ephemeral',
         text: payload.text,
         blocks: payload.blocks,
+        ...(payload.delete_original ? { delete_original: true } : {}),
       }),
     });
 

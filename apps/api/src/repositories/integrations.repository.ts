@@ -6,7 +6,7 @@
 import type { IntegrationProvider, ProviderMetaFor, ProviderTokenFor } from '@userplane/contract';
 import { extractAccessToken, parseProviderMeta, parseProviderToken } from '@userplane/contract';
 import type { DbClient } from '@userplane/db';
-import { and, eq, sql } from '@userplane/db';
+import { and, count, eq, sql } from '@userplane/db';
 import { integrations } from '@userplane/db';
 
 import type { Transaction } from '@/api/types';
@@ -292,5 +292,82 @@ export class IntegrationRepository {
       .returning();
 
     return restored ? this.parseIntegration(restored, provider) : null;
+  }
+
+  /**
+   * Soft delete all integrations for a workspace (all providers)
+   * Used during workspace deletion to cascade soft-delete to integrations
+   */
+  async softDeleteByWorkspaceId(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const deleted = await dbClient
+      .update(integrations)
+      .set({
+        isDeleted: true,
+        deletedAt: deletedAt,
+      })
+      .where(and(eq(integrations.workspaceId, workspaceId), eq(integrations.isDeleted, false)))
+      .returning();
+
+    return deleted;
+  }
+
+  /**
+   * Restore all integrations for a workspace that were deleted at a specific timestamp
+   * Used during workspace restoration to restore associated integrations
+   * Only restores integrations deleted at the exact same time as the workspace
+   * Skips restoration if the providerWorkspaceId is already connected to another active workspace
+   */
+  async restoreByWorkspaceIdAndDeletionTime(
+    workspaceId: string,
+    deletedAt: Date,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const restored = await dbClient
+      .update(integrations)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+      })
+      .where(
+        sql`workspace_id = ${workspaceId}
+        AND is_deleted = true
+        AND deleted_at = ${deletedAt}
+        AND NOT EXISTS (
+          SELECT 1 FROM ${integrations} AS active
+          WHERE active.provider = ${integrations}.provider
+          AND active.provider_workspace_id = ${integrations}.provider_workspace_id
+          AND active.is_deleted = false
+        )`
+      )
+      .returning();
+
+    return restored;
+  }
+
+  /**
+   * Count integrations for a workspace that were deleted at a specific timestamp
+   * Used for workspace restore info to show how many integrations will be restored
+   */
+  async countByWorkspaceIdAndDeletionTime(workspaceId: string, deletedAt: Date) {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(integrations)
+      .where(
+        and(
+          eq(integrations.workspaceId, workspaceId),
+          eq(integrations.isDeleted, true),
+          eq(integrations.deletedAt, deletedAt)
+        )
+      );
+
+    return result?.count ?? 0;
   }
 }
