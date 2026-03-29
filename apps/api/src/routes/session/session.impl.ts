@@ -192,7 +192,9 @@ async function sendRecordingNotifications(
       await deps.slackNotificationService.notifyRecordingReceived({
         workspaceId: recording.workspaceId,
         channelId: providerData.channelId,
+        channelName: providerData.channelName,
         userId: providerData.userId,
+        threadTs: providerData.threadTs,
         recordingId: recording.recordingId,
         recordingUrl,
       });

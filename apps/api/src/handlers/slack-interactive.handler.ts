@@ -44,6 +44,16 @@ export function createSlackInteractiveRouter(service: SlackCanvasService): Hono<
     const payload = parseResult.data;
 
     switch (payload.type) {
+      case 'message_action':
+        // Fire-and-forget — acknowledge immediately to avoid Slack's timeout.
+        void service.handleMessageShortcut(payload).catch((error) => {
+          logger.error({ error, type: payload.type }, 'handleMessageShortcut failed');
+          captureException(error, undefined, {
+            operation: 'slack_message_shortcut',
+            type: payload.type,
+          });
+        });
+        return c.json({ ok: true });
       case 'block_actions':
         // Fire-and-forget — acknowledge immediately to avoid Slack's timeout.
         // Errors are delivered via DM since block actions have no response_url.

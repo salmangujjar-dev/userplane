@@ -359,6 +359,7 @@ export const restoreWorkspaceImpl = (
           restoredLinks: result.restoredLinks,
           restoredMembers: result.restoredMembers,
           restoredRecordings: result.restoredRecordings,
+          restoredIntegrations: result.restoredIntegrations,
         },
       };
     });
@@ -1882,6 +1883,87 @@ export const deleteSlackIntegrationImpl = (
 };
 
 /**
+ * GET /workspace/:workspaceId/integrations/slack/members - Get Slack workspace members
+ * Requires admin or owner role
+ * Returns members and invite policy (with allowed domains) for UI display
+ */
+export const getSlackMembersImpl = (
+  slackService: SlackService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorizedRateLimited.workspace.integrations.slack.members
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const [members, invitePolicyData] = await Promise.all([
+        slackService.getMembers(input.params.workspaceId, input.query.exclude_members),
+        workspaceService.getInvitePolicy(input.params.workspaceId),
+      ]);
+
+      return {
+        message: 'Slack members retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          members,
+          invitePolicy: invitePolicyData.workspaceInvitePolicy,
+          allowedDomains: invitePolicyData.workspaceInviteDomains,
+        },
+      };
+    });
+};
+
+/**
+ * GET /workspace/:workspaceId/integrations/slack/suggestions - Get Slack member suggestions
+ * Requires workspace membership
+ * Returns suggested members for invite modal, gracefully degrades if not connected
+ */
+export const getSlackSuggestionsImpl = (
+  slackService: SlackService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorizedRateLimited.workspace.integrations.slack.suggestions
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const status = await slackService.getIntegrationStatus(input.params.workspaceId);
+
+      if (!status.connected) {
+        return {
+          message: 'No Slack integration',
+          data: {
+            workspaceId: input.params.workspaceId,
+            connected: false,
+            suggestions: [],
+            hasMore: false,
+          },
+        };
+      }
+
+      const { suggestions, hasMore } = await slackService.suggestMembers(input.params.workspaceId, {
+        limit: input.query.limit,
+      });
+
+      return {
+        message: 'Suggestions retrieved',
+        data: {
+          workspaceId: input.params.workspaceId,
+          connected: true,
+          suggestions,
+          hasMore,
+        },
+      };
+    });
+};
+
+/**
  * Create the workspace procedures object
  * Complete implementation with CRUD, member management, invites, domains, and integrations
  */
@@ -2048,6 +2130,12 @@ export const createWorkspaceProcedures = (
           workspaceService
         ),
         delete: deleteSlackIntegrationImpl(slackService, workspaceMemberService, workspaceService),
+        members: getSlackMembersImpl(slackService, workspaceMemberService, workspaceService),
+        suggestions: getSlackSuggestionsImpl(
+          slackService,
+          workspaceMemberService,
+          workspaceService
+        ),
       },
     },
   };
