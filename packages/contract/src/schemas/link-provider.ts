@@ -81,6 +81,7 @@ export const SlackLinkProviderDataSchema = z.object({
   channelName: z.string().optional(),
   userId: z.string().optional(),
   responseUrl: z.string().optional(),
+  threadTs: z.string().optional(),
   meta: LinkMetaSchema,
 });
 export type SlackLinkProviderData = z.infer<typeof SlackLinkProviderDataSchema>;

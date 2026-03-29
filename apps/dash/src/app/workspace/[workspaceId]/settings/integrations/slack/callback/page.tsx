@@ -60,7 +60,11 @@ function LoadingState() {
 function SuccessState({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
 
-  const handleGoToRecordings = () => {
+  const handleInviteMembers = () => {
+    router.push(`/workspace/${workspaceId}/settings/integrations/slack/invite`);
+  };
+
+  const handleSkip = () => {
     router.push(`/workspace/${workspaceId}/recordings`);
   };
 
@@ -87,16 +91,25 @@ function SuccessState({ workspaceId }: { workspaceId: string }) {
           <div className="flex flex-col items-center gap-3">
             <h1 className="text-xl font-medium text-foreground">Connected successfully</h1>
             <p className="text-sm text-muted-foreground text-center">
-              Your Slack workspace is now connected. Session recordings will be shared to your
-              selected channel.
+              Your Slack workspace is now connected. Invite your teammates to collaborate.
             </p>
           </div>
         </div>
 
         <div className="space-y-4">
-          <Button onClick={handleGoToRecordings} size="lg" className="w-full px-7 py-6">
-            Go to Recordings
+          <Button onClick={handleInviteMembers} size="lg" className="w-full px-7 py-6">
+            Invite Workspace Members
           </Button>
+
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip for now
+            </button>
+          </div>
         </div>
       </div>
     </div>

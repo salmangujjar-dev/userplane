@@ -25,6 +25,7 @@ import type { WorkspaceInvitePolicy } from '@/types';
 
 import { IntercomInviteHeader } from './intercom-invite-header';
 import { InvitePolicyTab } from './invite-policy-tab';
+import { SlackInviteHeader } from './slack-invite-header';
 import type { Teammate } from './types';
 import { WorkspaceDomainsSection } from './workspace-domains-section';
 
@@ -194,7 +195,7 @@ interface InviteTeammatesViewProps {
   allowedDomains: string[] | null;
   initialDomainId: string | null;
   initialDomainUrl: string;
-  variant?: 'direct' | 'intercom';
+  variant?: 'direct' | 'intercom' | 'slack';
   completionLabel?: string;
   onComplete: () => void;
   onSkip: () => void;
@@ -544,7 +545,13 @@ export function InviteTeammatesView({
 
       <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="flex flex-col items-center gap-6">
-          {variant === 'direct' ? <Logo /> : <IntercomInviteHeader />}
+          {variant === 'direct' ? (
+            <Logo />
+          ) : variant === 'slack' ? (
+            <SlackInviteHeader />
+          ) : (
+            <IntercomInviteHeader />
+          )}
 
           <div className="flex flex-col items-center gap-2">
             <h1 className="text-xl font-medium text-foreground">Almost there</h1>

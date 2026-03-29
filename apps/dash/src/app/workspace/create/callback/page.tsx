@@ -13,8 +13,7 @@ import {
   OAuthLoadingState,
 } from '@/components/integrations/intercom';
 import { useFirstWorkspaceDomain } from '@/features/domains';
-import { useIntercomAdmins } from '@/features/integrations';
-import { useInvitePolicy } from '@/features/workspace';
+import { useIntercomAdmins, useSlackMembers } from '@/features/integrations';
 import { type DefinedError, handleSafeResult } from '@/lib/errors';
 import { INTERCOM_APP_STORE_REDIRECT_URL } from '@/lib/intercom-install';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -217,28 +216,37 @@ function IntercomCallbackContent({ flow }: { flow: IntercomFlow }) {
 function SlackPostCreationInviteView({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
 
-  const { data: domainsData, isLoading: domainsLoading } = useFirstWorkspaceDomain(workspaceId);
-  const { data: policyData, isLoading: policyLoading } = useInvitePolicy(workspaceId);
+  const {
+    data: membersData,
+    isLoading: membersLoading,
+    error: membersError,
+  } = useSlackMembers(workspaceId, true);
 
-  const isLoading = domainsLoading || policyLoading;
+  const { data: domainsData, isLoading: domainsLoading } = useFirstWorkspaceDomain(workspaceId);
+
+  const isLoading = membersLoading || domainsLoading;
 
   if (isLoading) {
-    return <InviteLoadingState />;
+    return <InviteLoadingState variant="slack" />;
   }
 
   const firstDomain = domainsData?.success ? domainsData.data.domains[0] : null;
-  const invitePolicy = policyData?.success ? policyData.data.workspaceInvitePolicy : 'private';
-  const allowedDomains = policyData?.success ? policyData.data.workspaceInviteDomains : null;
+
+  // Graceful degradation: if member fetch fails, show invite view with empty
+  // teammates so manual email entry still works and onboarding isn't blocked.
+  const teammates = membersData?.success ? membersData.data.members : [];
+  const invitePolicy = membersData?.success ? membersData.data.invitePolicy : 'private';
+  const allowedDomains = membersData?.success ? membersData.data.allowedDomains : null;
 
   return (
     <InviteTeammatesView
       workspaceId={workspaceId}
-      teammates={[]}
+      teammates={teammates}
       invitePolicy={invitePolicy}
       allowedDomains={allowedDomains}
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
-      variant="direct"
+      variant="slack"
       onComplete={() => router.push(`/workspace/${workspaceId}`)}
       onSkip={() => router.push(`/workspace/${workspaceId}/recordings`)}
     />
@@ -321,12 +329,13 @@ function SlackCallbackContent() {
   }
 
   if (isLoading) {
-    return <OAuthLoadingState />;
+    return <OAuthLoadingState provider="slack" />;
   }
 
   if (error) {
     return (
       <OAuthErrorState
+        provider="slack"
         error={error}
         errorActionPrimary={{
           label: 'Configure Userplane Manually',

@@ -8,20 +8,27 @@ interface IntercomInviteLayoutProps {
   children: ReactNode;
   title: string;
   description: string;
+  /** Override the default header. Falls back to IntercomInviteHeader. */
+  header?: ReactNode;
 }
 
 /**
- * Layout wrapper for Intercom invite-related pages.
+ * Layout wrapper for invite-related pages.
  * Provides consistent styling with AuthIcons background and centered content.
  */
-export function IntercomInviteLayout({ children, title, description }: IntercomInviteLayoutProps) {
+export function IntercomInviteLayout({
+  children,
+  title,
+  description,
+  header,
+}: IntercomInviteLayoutProps) {
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center px-6 py-12 bg-background overflow-hidden">
       <AuthIcons />
 
       <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="flex flex-col items-center gap-6">
-          <IntercomInviteHeader />
+          {header ?? <IntercomInviteHeader />}
 
           <div className="flex flex-col items-center gap-2">
             <h1 className="text-xl font-medium text-foreground">{title}</h1>

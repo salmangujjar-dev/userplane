@@ -16,6 +16,10 @@ export const integrationKeys = {
 
   // Slack
   slack: (workspaceId: string) => [...integrationKeys.all, 'slack', workspaceId] as const,
+  slackMembers: (workspaceId: string, excludeMembers: boolean) =>
+    [...integrationKeys.slack(workspaceId), 'members', { excludeMembers }] as const,
+  slackSuggestions: (workspaceId: string, limit?: number) =>
+    [...integrationKeys.slack(workspaceId), 'suggestions', { limit }] as const,
 } as const;
 
 // Type helpers for query key inference

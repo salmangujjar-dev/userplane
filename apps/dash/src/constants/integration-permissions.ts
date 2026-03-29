@@ -69,14 +69,20 @@ export const integrationPermissions: Record<string, IntegrationConfig> = {
   },
   Slack: {
     name: 'Slack',
-    description: 'Share screen recordings directly in Slack channels',
+    description: 'Create and share screen recordings directly from Slack',
     permissions: [
+      { text: 'Add slash commands to your workspace' },
       { text: 'Send messages to channels and conversations' },
-      { text: 'Upload and share files in channels' },
       { text: 'Access workspace user and channel info' },
       { text: 'Receive events for messages and reactions' },
     ],
-    capabilities: [],
+    capabilities: [
+      'Create recording links with the /userplane slash command',
+      'Share recordings directly in any Slack channel',
+      'Receive notifications when recordings are ready',
+      'View and manage recordings from the App Home tab',
+      'Invite Slack workspace members to collaborate',
+    ],
   },
   Asana: {
     name: 'Asana',

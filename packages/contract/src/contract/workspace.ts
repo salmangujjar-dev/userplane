@@ -36,6 +36,8 @@ import {
   GetInvitePolicySchema,
   GetNotificationPreferencesSchema,
   GetSlackIntegrationSchema,
+  GetSlackMembersSchema,
+  GetSlackSuggestionsSchema,
   GetWorkspaceMembershipSchema,
   GetWorkspaceRestoreInfoSchema,
   GetWorkspaceStatusSchema,
@@ -76,6 +78,8 @@ import {
   SlackIntegrationCallbackDataSchema,
   SlackIntegrationCallbackSchema,
   SlackIntegrationStatusDataSchema,
+  SlackMembersDataSchema,
+  SlackSuggestionsDataSchema,
   SuggestWorkspacesDataSchema,
   SuggestWorkspacesQuerySchema,
   UpdateDomainRecordingPreferencesSchema,
@@ -1434,3 +1438,53 @@ export const deleteSlackIntegration = oc
   })
   .input(DeleteSlackIntegrationSchema)
   .output(ApiResponseSchema(DeleteSlackIntegrationDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/slack/members
+ * Get members from the connected Slack workspace
+ * Requires admin or owner role
+ */
+export const getSlackMembers = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/slack/members',
+    inputStructure: 'detailed',
+    summary: 'Get Slack workspace members',
+    description:
+      'Fetch members from the connected Slack workspace. Use exclude_members=true to filter out users who are already workspace members.',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    INTEGRATION_NOT_FOUND: WorkspaceErrors.INTEGRATION_NOT_FOUND,
+  })
+  .input(GetSlackMembersSchema)
+  .output(ApiResponseSchema(SlackMembersDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/slack/suggestions
+ * Get Slack member suggestions for invite modal
+ * Returns empty array if not connected or on any error (graceful degradation)
+ * Requires workspace membership
+ */
+export const getSlackSuggestions = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/slack/suggestions',
+    inputStructure: 'detailed',
+    summary: 'Get Slack member suggestions',
+    description:
+      'Fetch suggested members from Slack for invite modal. Returns empty if not connected.',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(GetSlackSuggestionsSchema)
+  .output(ApiResponseSchema(SlackSuggestionsDataSchema));

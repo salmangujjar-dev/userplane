@@ -257,3 +257,52 @@ export function useIntercomAdmins(workspaceId: string | null, excludeMembers: bo
     retry: 1,
   });
 }
+
+/**
+ * Hook to fetch Slack workspace members
+ * @param workspaceId - The workspace ID to fetch members for
+ * @param excludeMembers - If true, excludes users who are already workspace members (default: true)
+ */
+export function useSlackMembers(workspaceId: string | null, excludeMembers: boolean = true) {
+  return useQuery({
+    queryKey: integrationKeys.slackMembers(workspaceId ?? '', excludeMembers),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.slack.members({
+        params: { workspaceId },
+        query: { exclude_members: excludeMembers },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: !!workspaceId,
+    staleTime: 1 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+/**
+ * Hook to fetch Slack member suggestions for the invite modal.
+ * Gracefully degrades — returns empty suggestions on any error.
+ */
+export function useSlackSuggestions(limit: number = 5, enabled: boolean = true) {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery({
+    queryKey: integrationKeys.slackSuggestions(workspaceId ?? '', limit),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID');
+      }
+      const [error, response] = await apiClient.workspace.integrations.slack.suggestions({
+        params: { workspaceId },
+        query: { limit },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: enabled && !!workspaceId,
+    staleTime: 60 * 1000,
+    retry: false,
+  });
+}
