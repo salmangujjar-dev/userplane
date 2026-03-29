@@ -1,11 +1,13 @@
 /**
- * SlackNotificationService - Posts messages to Slack channels
- * when recordings are received for links created via Slack
+ * SlackNotificationService - Posts recording notifications to Slack
+ *
+ * When a recording is received for a Slack-created link, sends a DM
+ * to the link creator with a deep link back to the original conversation.
  */
 
-import { postMessage } from '@/api/clients/slack';
+import { getPermalink, postMessage } from '@/api/clients/slack';
 import { createLogger } from '@/api/lib/logger';
-import { buildRecordingReceivedMessage } from '@/api/lib/slack-blocks';
+import { buildRecordingDmMessage } from '@/api/lib/slack-blocks';
 import { captureException } from '@/api/posthog';
 import {
   IntegrationHelper,
@@ -18,17 +20,29 @@ export class SlackNotificationService {
   constructor(private deps: { integrationRepo: IntegrationRepository }) {}
 
   /**
-   * Post a notification to a Slack channel when a recording is received
-   * Fire-and-forget: logs errors but does not throw
+   * Send a DM to the link creator when a recording is received.
+   * Includes a deep link back to the original message when thread context is available.
+   * Fire-and-forget: logs errors but does not throw.
    */
   async notifyRecordingReceived(params: {
     workspaceId: string;
     channelId: string;
+    channelName?: string;
     userId?: string;
+    threadTs?: string;
     recordingId: string;
     recordingUrl: string;
   }): Promise<void> {
-    const { workspaceId, channelId, userId, recordingId, recordingUrl } = params;
+    const { workspaceId, channelId, channelName, userId, threadTs, recordingId, recordingUrl } =
+      params;
+
+    if (!userId) {
+      logger.debug(
+        { workspaceId, recordingId },
+        'No userId available, skipping Slack notification'
+      );
+      return;
+    }
 
     try {
       const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
@@ -42,50 +56,23 @@ export class SlackNotificationService {
       }
 
       const accessToken = IntegrationHelper.getAccessToken(integration);
-      const { blocks, text } = buildRecordingReceivedMessage({ recordingUrl });
 
-      // Try posting to the channel
-      const ts = await postMessage(accessToken, channelId, blocks, text);
-
-      if (ts) {
-        logger.debug(
-          { workspaceId, channelId, recordingId },
-          'Slack recording notification posted'
-        );
-        return;
+      // Get a permalink to the original message/thread if we have context
+      let permalink: string | undefined;
+      if (threadTs && channelId) {
+        permalink = (await getPermalink(accessToken, channelId, threadTs)) ?? undefined;
       }
 
-      // Channel post failed - try DM as fallback if userId is provided
-      logger.warn(
-        { workspaceId, channelId, recordingId },
-        'Failed to post Slack recording notification to channel'
-      );
+      const { blocks, text } = buildRecordingDmMessage({ recordingUrl, permalink, channelName });
+      const ts = await postMessage(accessToken, userId, blocks, text);
 
-      if (userId) {
-        const dmTs = await postMessage(accessToken, userId, blocks, text);
-
-        if (dmTs) {
-          logger.debug(
-            { workspaceId, userId, recordingId },
-            'Slack recording notification sent via DM fallback'
-          );
-        } else {
-          logger.warn(
-            { workspaceId, userId, recordingId },
-            'Failed to send Slack recording notification via DM fallback'
-          );
-          captureException(new Error('failed to post slack recording notification'), undefined, {
-            operation: 'notify_recording_slack',
-            channel_id: channelId,
-            user_id: userId,
-            workspace_id: workspaceId,
-            recording_id: recordingId,
-          });
-        }
+      if (ts) {
+        logger.debug({ userId, recordingId }, 'DM recording notification sent');
       } else {
-        captureException(new Error('failed to post slack recording notification'), undefined, {
-          operation: 'notify_recording_slack',
-          channel_id: channelId,
+        logger.warn({ userId, recordingId }, 'Failed to send DM recording notification');
+        captureException(new Error('failed to send slack DM recording notification'), undefined, {
+          operation: 'notify_recording_slack_dm',
+          user_id: userId,
           workspace_id: workspaceId,
           recording_id: recordingId,
         });

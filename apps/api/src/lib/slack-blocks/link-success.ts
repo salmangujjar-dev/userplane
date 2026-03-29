@@ -25,7 +25,7 @@ export function buildLinkSuccessView(params: { projectName?: string; domainName?
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: 'Your recording link has been created and shared in the channel.',
+          text: 'Your recording link has been created and shared in the conversation.',
         },
       },
       ...(contextParts.length > 0

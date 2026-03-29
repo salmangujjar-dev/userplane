@@ -34,9 +34,11 @@ import {
   buildAccessRequiredView,
   buildErrorEphemeral,
   buildErrorModalView,
+  buildFrozenLoadingModal,
   buildHomeBrowseLinksView,
   buildHomeBrowseRecordingsView,
   buildHomeCreateLinkView,
+  buildHomeFrozenLoadingView,
   buildHomeLinkSuccessView,
   buildHomeTabConnectedView,
   buildHomeTabDisconnectedView,
@@ -45,6 +47,7 @@ import {
   buildLinkCreatedMessage,
   buildLinkCreatorModal,
   buildLinkSuccessView,
+  buildLoadingEphemeral,
   buildLoadingModal,
   type HomeLinkItem,
   type HomeRecordingItem,
@@ -163,7 +166,12 @@ export const SlackViewSubmissionPayloadSchema = z.object({
         z.record(
           z.object({
             type: z.string(),
-            selected_option: z.object({ value: z.string() }).optional(),
+            selected_option: z
+              .object({
+                value: z.string(),
+                text: z.object({ type: z.string(), text: z.string() }).optional(),
+              })
+              .optional(),
             value: z.string().nullable().optional(),
           })
         )
@@ -174,12 +182,31 @@ export const SlackViewSubmissionPayloadSchema = z.object({
 export type SlackViewSubmissionPayload = z.infer<typeof SlackViewSubmissionPayloadSchema>;
 
 /**
+ * Zod schema for message_action (message shortcut) interactive payload.
+ */
+export const SlackMessageActionPayloadSchema = z.object({
+  type: z.literal('message_action'),
+  callback_id: z.string(),
+  trigger_id: z.string(),
+  user: z.object({ id: z.string(), team_id: z.string() }),
+  team: z.object({ id: z.string() }),
+  channel: z.object({ id: z.string(), name: z.string() }),
+  message: z.object({
+    ts: z.string(),
+    thread_ts: z.string().optional(),
+  }),
+  response_url: z.string().optional(),
+});
+export type SlackMessageActionPayload = z.infer<typeof SlackMessageActionPayloadSchema>;
+
+/**
  * Zod schema for the interactive payload discriminator.
  * The handler parses the raw JSON, then validates with this.
  */
 export const SlackInteractivePayloadSchema = z.discriminatedUnion('type', [
   SlackBlockActionPayloadSchema,
   SlackViewSubmissionPayloadSchema,
+  SlackMessageActionPayloadSchema,
   z.object({ type: z.literal('view_closed') }),
 ]);
 
@@ -211,6 +238,7 @@ const ModalPrivateMetadataSchema = z.object({
   channelName: z.string(),
   teamId: z.string(),
   workspaceId: z.string(),
+  threadTs: z.string().optional(),
 });
 type ModalPrivateMetadata = z.infer<typeof ModalPrivateMetadataSchema>;
 
@@ -322,6 +350,9 @@ export class SlackCanvasService {
 
     const accessToken = IntegrationHelper.getAccessToken(integration);
 
+    // --- Phase 1.5: Send ephemeral feedback to the channel --------------------
+    void respondToUrl(responseUrl, buildLoadingEphemeral());
+
     // --- Phase 2: Open loading modal before trigger_id expires ----------------
     const viewId = await openModal(accessToken, triggerId, buildLoadingModal());
     if (!viewId) {
@@ -334,6 +365,118 @@ export class SlackCanvasService {
 
     // --- Phase 3: Verify access (includes slow Slack users.info call) --------
     // Pass the already-fetched integration to avoid a redundant DB query.
+    const accessResult = await this.verifySlackUserAccess(teamId, slackUserId, integration);
+
+    if (accessResult.status !== 'granted') {
+      if (accessResult.status === 'not_workspace_member') {
+        await updateModal(accessToken, viewId, buildAccessRequiredView());
+      } else {
+        await updateModal(
+          accessToken,
+          viewId,
+          buildErrorModalView(this.buildAccessDeniedEphemeral(accessResult).text)
+        );
+      }
+      void respondToUrl(responseUrl, { delete_original: true, text: '' });
+      return;
+    }
+
+    const { workspaceId, userName } = accessResult.context;
+
+    // --- Phase 4: Check capacity & fetch data --------------------------------
+    const hasRoom = await this.deps.entitlementService.hasCapacity(workspaceId, 'links');
+    if (!hasRoom) {
+      await updateModal(
+        accessToken,
+        viewId,
+        buildLimitExceededView({ workspaceId, limitType: 'links' })
+      );
+      void respondToUrl(responseUrl, { delete_original: true, text: '' });
+      return;
+    }
+
+    const { projects, domains } = await this.getProjectsAndDomains(workspaceId);
+    if (projects.length === 0 || domains.length === 0) {
+      await updateModal(
+        accessToken,
+        viewId,
+        buildErrorModalView(
+          'No projects or domains found. Please set up a project and domain in the Userplane dashboard first.'
+        )
+      );
+      void respondToUrl(responseUrl, { delete_original: true, text: '' });
+      return;
+    }
+
+    // --- Phase 5: Replace loading modal with the real form -------------------
+    const privateMetadata: ModalPrivateMetadata = {
+      channelId,
+      channelName,
+      teamId,
+      workspaceId,
+    };
+
+    const modal = buildLinkCreatorModal({ projects, domains, userName });
+    const modalWithMetadata = {
+      ...modal,
+      private_metadata: JSON.stringify(privateMetadata),
+    };
+
+    await updateModal(accessToken, viewId, modalWithMetadata);
+    void respondToUrl(responseUrl, { delete_original: true, text: '' });
+  }
+
+  // ===========================================================================
+  // Message Shortcut
+  // ===========================================================================
+
+  /**
+   * Handle message shortcut (message_action) — "Create recording link"
+   *
+   * Called via fire-and-forget from the handler (HTTP 200 already sent).
+   *
+   * Flow mirrors handleSlashCommand:
+   *  1. Validate callback_id
+   *  2. Look up integration to get access token
+   *  3. Open loading modal immediately (trigger_id is short-lived)
+   *  4. Verify access, check capacity, fetch projects/domains
+   *  5. Replace loading modal with real form, including threadTs in metadata
+   */
+  async handleMessageShortcut(payload: SlackMessageActionPayload): Promise<void> {
+    const { callback_id, trigger_id: triggerId, user, team, channel, message } = payload;
+
+    if (callback_id !== SlackCallbackIds.CREATE_LINK_SHORTCUT) {
+      logger.warn({ callbackId: callback_id }, 'Unknown message shortcut callback_id');
+      return;
+    }
+
+    const teamId = team.id;
+    const slackUserId = user.id;
+    const channelId = channel.id;
+    const channelName = channel.name;
+
+    // Determine thread_ts for reply threading:
+    // - If message is in a thread, reply to the parent thread
+    // - If message is in main channel, start a new thread on that message
+    const threadTs = message.thread_ts ?? message.ts;
+
+    // --- Phase 1: Get access token (single DB query) -------------------------
+    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    if (!integration) {
+      logger.warn({ teamId }, 'Message shortcut: integration not found');
+      return;
+    }
+
+    const accessToken = IntegrationHelper.getAccessToken(integration);
+
+    // --- Phase 2: Open loading modal before trigger_id expires ----------------
+    const viewId = await openModal(accessToken, triggerId, buildLoadingModal());
+    if (!viewId) {
+      logger.warn({ teamId, triggerId }, 'Message shortcut: failed to open loading modal');
+      return;
+    }
+
+    // --- Phase 3: Verify access (includes slow Slack users.info call) --------
     const accessResult = await this.verifySlackUserAccess(teamId, slackUserId, integration);
 
     if (accessResult.status !== 'granted') {
@@ -380,6 +523,7 @@ export class SlackCanvasService {
       channelName,
       teamId,
       workspaceId,
+      threadTs,
     };
 
     const modal = buildLinkCreatorModal({ projects, domains, userName });
@@ -547,7 +691,7 @@ export class SlackCanvasService {
    */
   handleViewSubmission(payload: SlackViewSubmissionPayload): {
     response_action: 'update';
-    view: ReturnType<typeof buildLoadingModal> | ReturnType<typeof buildErrorModalView>;
+    view: ReturnType<typeof buildFrozenLoadingModal> | ReturnType<typeof buildErrorModalView>;
   } | null {
     const { view, user } = payload;
 
@@ -561,10 +705,14 @@ export class SlackCanvasService {
     const linkTitle =
       values[SlackBlockIds.LINK_REFERENCE]?.[SlackActionIds.LINK_REFERENCE_INPUT]?.value ||
       undefined;
-    const projectId =
-      values[SlackBlockIds.PROJECT]?.[SlackActionIds.SELECT_PROJECT]?.selected_option?.value;
-    const domainId =
-      values[SlackBlockIds.DOMAIN]?.[SlackActionIds.SELECT_DOMAIN]?.selected_option?.value;
+    const projectOption =
+      values[SlackBlockIds.PROJECT]?.[SlackActionIds.SELECT_PROJECT]?.selected_option;
+    const domainOption =
+      values[SlackBlockIds.DOMAIN]?.[SlackActionIds.SELECT_DOMAIN]?.selected_option;
+    const projectId = projectOption?.value;
+    const domainId = domainOption?.value;
+    const projectName = projectOption?.text?.text;
+    const domainName = domainOption?.text?.text;
     const customMessage =
       values[SlackBlockIds.CUSTOM_MESSAGE]?.[SlackActionIds.CUSTOM_MESSAGE_INPUT]?.value ||
       undefined;
@@ -600,7 +748,7 @@ export class SlackCanvasService {
       return null;
     }
 
-    const { channelId, channelName, teamId, workspaceId } = metadataResult.data;
+    const { channelId, channelName, teamId, workspaceId, threadTs } = metadataResult.data;
 
     // Fire off async processing — the loading view is returned below
     void this.processLinkCreation({
@@ -614,6 +762,7 @@ export class SlackCanvasService {
       domainId,
       linkTitle,
       customMessage,
+      threadTs,
     }).catch((error) => {
       logger.error({ err: error, workspaceId }, 'processLinkCreation failed');
       captureException(error, undefined, {
@@ -625,7 +774,12 @@ export class SlackCanvasService {
 
     return {
       response_action: 'update',
-      view: buildLoadingModal('Creating your link\u2026'),
+      view: buildFrozenLoadingModal({
+        projectName: projectName ?? 'Unknown project',
+        domainName: domainName ?? 'Unknown domain',
+        linkTitle: linkTitle || undefined,
+        customMessage: customMessage || undefined,
+      }),
     };
   }
 
@@ -646,6 +800,7 @@ export class SlackCanvasService {
     domainId: string;
     linkTitle: string | undefined;
     customMessage: string | undefined;
+    threadTs?: string;
   }): Promise<void> {
     const {
       viewId,
@@ -658,6 +813,7 @@ export class SlackCanvasService {
       domainId,
       linkTitle,
       customMessage,
+      threadTs,
     } = params;
 
     // Get access token (fast DB query)
@@ -711,6 +867,7 @@ export class SlackCanvasService {
           channelId: channelId || undefined,
           channelName: channelName || undefined,
           userId: slackUserId,
+          threadTs: threadTs || undefined,
           meta: undefined,
         }),
       });
@@ -739,7 +896,7 @@ export class SlackCanvasService {
           slackUserId,
           customMessage,
         });
-        await postMessage(accessToken, channelId, message.blocks, message.text);
+        await postMessage(accessToken, channelId, message.blocks, message.text, threadTs);
       }
 
       // Replace loading modal with success view
@@ -1281,6 +1438,17 @@ export class SlackCanvasService {
       await this.handleAppHomeOpened(teamId, slackUserId);
       return;
     }
+
+    // Resolve display names for the frozen loading view
+    const projectName = projects.find((p) => p.id === projectId)?.name ?? 'Unknown project';
+    const domainName = domains.find((d) => d.id === domainId)?.domain ?? 'Unknown domain';
+
+    // Show frozen loading state immediately
+    await publishView(
+      accessToken,
+      slackUserId,
+      buildHomeFrozenLoadingView({ projectName, domainName })
+    );
 
     try {
       // Check capacity

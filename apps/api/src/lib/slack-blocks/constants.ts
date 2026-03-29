@@ -40,6 +40,7 @@ export const SlackActionIds = {
   OPEN_LINK: 'open_link_action',
   VIEW_DASHBOARD: 'view_dashboard_action',
   VIEW_RECORDING: 'view_recording_action',
+  VIEW_MESSAGE: 'view_message_action',
   UPGRADE_WORKSPACE: 'upgrade_workspace_action',
 } as const;
 
@@ -52,4 +53,5 @@ export const SlackBlockIds = {
 
 export const SlackCallbackIds = {
   CREATE_LINK_MODAL: 'create_link_modal',
+  CREATE_LINK_SHORTCUT: 'create_recording_link',
 } as const;
