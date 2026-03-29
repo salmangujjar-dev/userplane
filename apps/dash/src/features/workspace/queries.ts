@@ -26,6 +26,7 @@ import type {
   WorkspaceSuggestionsData,
 } from '@/types';
 
+import { useSlackSuggestions } from '../integrations/queries';
 import { integrationKeys } from '../integrations/query-keys';
 import { workspaceKeys } from './query-keys';
 
@@ -806,4 +807,66 @@ export function useIntercomSuggestions(limit: number = 5, enabled: boolean = tru
     staleTime: 60 * 1000, // 1 minute
     retry: false, // Graceful degradation - don't retry
   });
+}
+
+/** Supported suggestion providers */
+type SuggestionProvider = 'intercom' | 'slack';
+
+/** Unified suggestion shape returned by useIntegrationSuggestions */
+export interface WorkspaceSuggestion {
+  id: string;
+  email: string;
+  name: string | null;
+}
+
+export interface IntegrationSuggestionsResult {
+  /** Which provider the suggestions came from, or null if none connected */
+  provider: SuggestionProvider | null;
+  suggestions: WorkspaceSuggestion[];
+  hasMore: boolean;
+  /** Path to the full invite page for this provider */
+  invitePath: string | null;
+}
+
+/** Maps each provider to its invite page path */
+const PROVIDER_INVITE_PATHS: Record<SuggestionProvider, string> = {
+  intercom: 'settings/integrations/intercom/invite',
+  slack: 'settings/integrations/slack/invite',
+};
+
+/**
+ * Provider-agnostic hook that returns member suggestions from whichever
+ * integration is connected (Intercom, Slack, or none).
+ *
+ * Queries run in parallel. The first provider that reports `connected: true`
+ * with suggestions wins. Falls back to empty if nothing is connected.
+ */
+export function useIntegrationSuggestions(limit: number = 5): IntegrationSuggestionsResult {
+  const workspaceId = useWorkspaceId();
+  const intercom = useIntercomSuggestions(limit);
+  const slack = useSlackSuggestions(limit);
+
+  // Intercom takes priority if connected with suggestions
+  if (intercom.data?.success && intercom.data.data.connected) {
+    return {
+      provider: 'intercom',
+      suggestions: intercom.data.data.suggestions,
+      hasMore: intercom.data.data.hasMore,
+      invitePath: workspaceId
+        ? `/workspace/${workspaceId}/${PROVIDER_INVITE_PATHS.intercom}`
+        : null,
+    };
+  }
+
+  // Slack as fallback
+  if (slack.data?.success && slack.data.data.connected) {
+    return {
+      provider: 'slack',
+      suggestions: slack.data.data.suggestions,
+      hasMore: slack.data.data.hasMore,
+      invitePath: workspaceId ? `/workspace/${workspaceId}/${PROVIDER_INVITE_PATHS.slack}` : null,
+    };
+  }
+
+  return { provider: null, suggestions: [], hasMore: false, invitePath: null };
 }

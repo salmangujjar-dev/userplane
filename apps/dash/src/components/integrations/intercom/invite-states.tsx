@@ -5,6 +5,10 @@ import { Skeleton } from '@userplane/ui/components/skeleton';
 import { useRouter } from 'next/navigation';
 
 import { IntercomInviteLayout } from './intercom-invite-layout';
+import { SlackInviteHeader } from './slack-invite-header';
+
+/** Provider variants supported by the invite states */
+type InviteVariant = 'intercom' | 'slack';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -12,11 +16,14 @@ const ITEMS_PER_PAGE = 6;
  * Loading state shown while fetching teammates data.
  * Skeleton matches the actual InviteTeammatesView structure to prevent layout shifts.
  */
-export function InviteLoadingState() {
+export function InviteLoadingState({ variant = 'intercom' }: { variant?: InviteVariant }) {
+  const header = variant === 'slack' ? <SlackInviteHeader /> : undefined;
+
   return (
     <IntercomInviteLayout
       title="Invite your teammates"
       description="Select team members to invite to your workspace"
+      header={header}
     >
       {/* Tabs skeleton */}
       <div className="w-full">
@@ -69,20 +76,28 @@ export function InviteLoadingState() {
   );
 }
 
+const EMPTY_STATE_DESCRIPTIONS: Record<InviteVariant, string> = {
+  intercom: 'All your Intercom team members are already part of this workspace.',
+  slack: 'All your Slack workspace members are already part of this workspace.',
+};
+
 interface InviteEmptyStateProps {
   workspaceId: string;
+  variant?: InviteVariant;
 }
 
 /**
  * Empty state shown when all teammates are already workspace members.
  */
-export function InviteEmptyState({ workspaceId }: InviteEmptyStateProps) {
+export function InviteEmptyState({ workspaceId, variant = 'intercom' }: InviteEmptyStateProps) {
   const router = useRouter();
+  const header = variant === 'slack' ? <SlackInviteHeader /> : undefined;
 
   return (
     <IntercomInviteLayout
       title="All teammates invited"
-      description="All your Intercom team members are already part of this workspace."
+      description={EMPTY_STATE_DESCRIPTIONS[variant]}
+      header={header}
     >
       <div className="space-y-4">
         <Button
@@ -101,16 +116,23 @@ interface InviteErrorStateProps {
   workspaceId: string;
   message: string;
   onRetry: () => void;
+  variant?: InviteVariant;
 }
 
 /**
  * Error state shown when fetching teammates fails.
  */
-export function InviteErrorState({ workspaceId, message, onRetry }: InviteErrorStateProps) {
+export function InviteErrorState({
+  workspaceId,
+  message,
+  onRetry,
+  variant = 'intercom',
+}: InviteErrorStateProps) {
   const router = useRouter();
+  const header = variant === 'slack' ? <SlackInviteHeader /> : undefined;
 
   return (
-    <IntercomInviteLayout title="Failed to load teammates" description={message}>
+    <IntercomInviteLayout title="Failed to load teammates" description={message} header={header}>
       <div className="space-y-4">
         <Button onClick={onRetry} size="lg" className="w-full px-7 py-6">
           Try Again

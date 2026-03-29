@@ -822,6 +822,7 @@ export const WorkspaceRestoreInfoDataSchema = z.object({
   linksToRestore: z.number().int().nonnegative(),
   membersToRestore: z.number().int().nonnegative(),
   recordingsToRestore: z.number().int().nonnegative(),
+  integrationsToRestore: z.number().int().nonnegative(),
 });
 
 /**
@@ -854,6 +855,7 @@ export const WorkspaceRestoreDataSchema = z.object({
   restoredLinks: z.number().int().nonnegative(),
   restoredMembers: z.number().int().nonnegative(),
   restoredRecordings: z.number().int().nonnegative(),
+  restoredIntegrations: z.number().int().nonnegative(),
 });
 
 /**
@@ -1378,6 +1380,70 @@ export const DeleteSlackIntegrationDataSchema = z.object({
   disconnected: z.literal(true),
 });
 
+// SLACK MEMBER FETCHING
+// ============================================================================
+
+/**
+ * Get Slack members request
+ * Query param exclude_members filters out users who are already workspace members
+ */
+export const GetSlackMembersSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    exclude_members: z.coerce.boolean().default(false),
+  }),
+});
+
+/**
+ * Slack member item — matches the Teammate interface consumed by the invite UI
+ */
+export const SlackMemberItemSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  name: z.string().nullable(),
+});
+
+/**
+ * Get Slack members response
+ * Includes invite policy so the UI can display allowed domains
+ */
+export const SlackMembersDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  members: z.array(SlackMemberItemSchema),
+  invitePolicy: WorkspaceInvitePolicySchema,
+  allowedDomains: z.array(z.string()).nullable(),
+});
+
+// Slack suggestions pagination
+export const SLACK_SUGGESTIONS = {
+  DEFAULT_LIMIT: 5,
+  MAX_LIMIT: 10,
+} as const;
+
+/**
+ * Get Slack suggestions request
+ */
+export const GetSlackSuggestionsSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    limit: z.coerce.number().int().min(1).max(10).optional().default(5),
+  }),
+});
+
+/**
+ * Slack suggestions response
+ */
+export const SlackSuggestionsDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  connected: z.boolean(),
+  suggestions: z.array(SlackMemberItemSchema),
+  hasMore: z.boolean(),
+});
+
 // ============================================================================
 // WORKSPACE LOGO UPLOAD
 // ============================================================================
@@ -1427,3 +1493,6 @@ export type DomainUpdateData = z.infer<typeof DomainUpdateDataSchema>;
 export type IntercomAdminItem = z.infer<typeof IntercomAdminItemSchema>;
 export type IntercomAdminsData = z.infer<typeof IntercomAdminsDataSchema>;
 export type IntercomSuggestionsData = z.infer<typeof IntercomSuggestionsDataSchema>;
+export type SlackMemberItem = z.infer<typeof SlackMemberItemSchema>;
+export type SlackMembersData = z.infer<typeof SlackMembersDataSchema>;
+export type SlackSuggestionsData = z.infer<typeof SlackSuggestionsDataSchema>;

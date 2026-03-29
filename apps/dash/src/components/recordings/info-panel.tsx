@@ -213,7 +213,7 @@ function IntegrationSection({ link }: { link: RecordingMeta['link'] }) {
 
       {link.providerRef && (
         <InfoRow icon={ExternalLink} label="Reference">
-          {isValidUrl(link.providerRef) ? (
+          {isValidUrl(link.providerRef) || link.providerRef.startsWith('slack://') ? (
             <a
               href={link.providerRef}
               target="_blank"

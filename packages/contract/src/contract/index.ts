@@ -211,6 +211,8 @@ export const workspaceContract = {
       authorize: workspace.slackIntegrationAuthorize,
       callback: workspace.slackIntegrationCallback,
       delete: workspace.deleteSlackIntegration,
+      members: workspace.getSlackMembers,
+      suggestions: workspace.getSlackSuggestions,
     },
   },
 };
