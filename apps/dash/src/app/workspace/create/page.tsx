@@ -453,6 +453,66 @@ function IntercomMarketplaceFlow() {
   return <OAuthLoadingState />;
 }
 
+/**
+ * Slack direct flow — auto-initiates Slack OAuth on mount.
+ * Entry point for users arriving via deep-link (e.g. Slack App Directory).
+ */
+function SlackDirectFlow() {
+  const [error, setError] = useState<DefinedError | null>(null);
+  const hasExecutedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasExecutedRef.current) return;
+    hasExecutedRef.current = true;
+
+    const initiateOAuth = async () => {
+      try {
+        const [apiError, response] = await apiClient.provisioner.slack.authorize({
+          query: {},
+        });
+        const result = handleSafeResult(apiError, response?.data ?? null);
+
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
+
+        window.location.href = result.data.authorizationUrl;
+      } catch (err) {
+        setError({
+          defined: true,
+          code: 'UNKNOWN_ERROR',
+          status: 500,
+          message: err instanceof Error ? err.message : 'An unexpected error occurred',
+        });
+      }
+    };
+
+    initiateOAuth();
+  }, []);
+
+  if (error) {
+    return (
+      <OAuthErrorState
+        provider="slack"
+        error={error}
+        errorActionPrimary={{
+          label: 'Try Again',
+          callback: () => window.location.reload(),
+        }}
+        errorActionSecondary={{
+          label: 'Contact Support',
+          callback: () => {
+            window.open(SUPPORT_EMAIL_MAILTO, '_blank');
+          },
+        }}
+      />
+    );
+  }
+
+  return <OAuthLoadingState provider="slack" />;
+}
+
 export default function CreateWorkspacePage() {
   const [flow] = useQueryState('flow', { defaultValue: 'intercom-inapp' });
 
@@ -462,6 +522,10 @@ export default function CreateWorkspacePage() {
 
   if (flow === 'intercom-marketplace') {
     return <IntercomMarketplaceFlow />;
+  }
+
+  if (flow === 'slack') {
+    return <SlackDirectFlow />;
   }
 
   if (flow === 'intercom-inapp') {
