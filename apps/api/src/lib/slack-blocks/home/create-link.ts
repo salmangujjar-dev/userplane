@@ -4,7 +4,7 @@
  * Used when the user taps "Create Link" from the connected home view.
  */
 
-import { SlackActionIds } from './constants';
+import { SlackActionIds } from '../constants';
 
 /**
  * Build the home tab create link form.
@@ -19,24 +19,22 @@ export function buildHomeCreateLinkView(params: {
     blocks: [
       {
         type: 'header',
-        level: 4,
-        text: { type: 'plain_text', text: 'Create a recording link' },
+        text: { type: 'plain_text', text: 'Create a link' },
       },
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: "Pick a project and domain, then hit Create. You'll get a link to share.",
+          text: 'Create a recording link for customer',
         },
       },
       { type: 'divider' },
       {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: '*Project*',
-        },
-        accessory: {
+        type: 'input',
+        block_id: 'project_block',
+        label: { type: 'plain_text', text: 'Project' },
+        hint: { type: 'plain_text', text: 'Select the project for your recordings' },
+        element: {
           type: 'static_select',
           action_id: SlackActionIds.SELECT_PROJECT,
           placeholder: {
@@ -58,12 +56,11 @@ export function buildHomeCreateLinkView(params: {
         },
       },
       {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: '*Domain*',
-        },
-        accessory: {
+        type: 'input',
+        block_id: 'domain_block',
+        label: { type: 'plain_text', text: 'Domain' },
+        hint: { type: 'plain_text', text: 'Select the domain for your recording link' },
+        element: {
           type: 'static_select',
           action_id: SlackActionIds.SELECT_DOMAIN,
           placeholder: {

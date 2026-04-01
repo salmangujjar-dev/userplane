@@ -7,20 +7,8 @@
  * @see https://api.slack.com/block-kit
  */
 
-export * from './access-required';
 export * from './constants';
-export * from './error';
-export * from './home-browse-links';
-export * from './home-browse-recordings';
-export * from './home-connected';
-export * from './home-create-link';
-export * from './home-disconnected';
-export * from './home-link-success';
-export * from './home-not-member';
-export * from './limit-exceeded';
-export * from './link-created-message';
-export * from './link-creator';
-export * from './link-success';
-export * from './loading';
-export * from './recording-received-message';
+export * from './home';
+export * from './messages';
+export * from './modals';
 export * from './urls';

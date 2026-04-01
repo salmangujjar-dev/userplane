@@ -35,6 +35,7 @@ export const SlackActionIds = {
   PAGE_LINKS_NEXT: 'page_links_next',
   // URL-only button action IDs (required by Slack even for link buttons)
   CONNECT_WORKSPACE: 'connect_workspace_action',
+  CREATE_WORKSPACE: 'create_workspace_action',
   REQUEST_ACCESS: 'request_access_action',
   CONTACT_SUPPORT: 'contact_support_action',
   OPEN_LINK: 'open_link_action',

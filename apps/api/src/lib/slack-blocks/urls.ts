@@ -66,6 +66,10 @@ export const slackCanvasUrls = {
     return `${baseUrl}/workspace/${workspaceId}/recordings`;
   },
 
+  createLinkUrl(workspaceId: string): string {
+    return `${baseUrl}/workspace/${workspaceId}/recordings?create_link=true`;
+  },
+
   linkRecordingsUrl(workspaceId: string, linkId: string): string {
     return `${baseUrl}/workspace/${workspaceId}/recordings?links=${linkId}`;
   },

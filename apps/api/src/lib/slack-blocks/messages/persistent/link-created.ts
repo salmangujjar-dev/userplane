@@ -3,7 +3,7 @@
  * Block Kit message for notifying a channel that a recording link was created.
  */
 
-import { SlackActionIds } from './constants';
+import { SlackActionIds } from '../../constants';
 
 /**
  * Build a channel message announcing a newly created recording link.

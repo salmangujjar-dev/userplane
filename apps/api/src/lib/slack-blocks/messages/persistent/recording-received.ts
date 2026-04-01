@@ -1,16 +1,16 @@
 /**
- * Recording Received Messages
- * Block Kit messages for notifying users that a new session recording was submitted.
+ * Recording Received Message
+ * Block Kit message for notifying the link creator that a screen recording was submitted.
  */
 
-import { SlackActionIds } from './constants';
+import { SlackActionIds } from '../../constants';
 
 /**
  * Build a DM message for the link creator with two buttons:
  * - "View Recording" — opens the recording in the dashboard
- * - "View Message" — deep links back to the original Slack message (when permalink available)
+ * - "View Original Message" — deep links back to the original Slack message (when permalink available)
  */
-export function buildRecordingDmMessage(params: {
+export function buildRecordingReceivedMessage(params: {
   recordingUrl: string;
   permalink?: string;
   channelName?: string;
@@ -33,7 +33,7 @@ export function buildRecordingDmMessage(params: {
       type: 'button',
       text: {
         type: 'plain_text',
-        text: 'View Message',
+        text: 'View Original Message',
       },
       action_id: SlackActionIds.VIEW_MESSAGE,
       url: params.permalink,
@@ -45,28 +45,31 @@ export function buildRecordingDmMessage(params: {
   if (params.permalink && params.channelName) {
     contextElements.push({
       type: 'mrkdwn',
-      text: `Originally shared in <${params.permalink}|#${params.channelName}>`,
+      text: `Originally requested in <${params.permalink}|#${params.channelName}>`,
     });
   } else if (params.channelName) {
     contextElements.push({
       type: 'mrkdwn',
-      text: `Originally shared in #${params.channelName}`,
+      text: `Originally requested in #${params.channelName}`,
     });
   }
 
   return {
-    text: 'New recording received',
+    text: 'Recording received',
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '*New recording received*\nSomeone submitted a screen recording for a link you shared.',
+          text: '*Recording received*',
         },
       },
       {
-        type: 'actions',
-        elements: buttons,
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: 'Your requested screen recording is ready to view.',
+        },
       },
       ...(contextElements.length > 0
         ? [
@@ -76,6 +79,11 @@ export function buildRecordingDmMessage(params: {
             },
           ]
         : []),
+      { type: 'divider' },
+      {
+        type: 'actions',
+        elements: buttons,
+      },
     ],
   };
 }

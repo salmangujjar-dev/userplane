@@ -7,8 +7,8 @@
  * Recent Recordings, and Recent Links.
  */
 
-import { SlackActionIds } from './constants';
-import { slackCanvasUrls } from './urls';
+import { SlackActionIds } from '../constants';
+import { slackCanvasUrls } from '../urls';
 
 export interface HomeRecordingItem {
   title: string;
@@ -33,7 +33,7 @@ export interface HomeLinkItem {
 /**
  * Build the home tab view for connected users.
  */
-export function buildHomeTabConnectedView(params: {
+export function buildHomeConnectedView(params: {
   workspaceName: string;
   workspaceId: string;
   dashboardUrl: string;
@@ -46,7 +46,6 @@ export function buildHomeTabConnectedView(params: {
   blocks.push(
     {
       type: 'header',
-      level: 4,
       text: { type: 'plain_text', text: 'Recording Link' },
     },
     {
@@ -69,7 +68,6 @@ export function buildHomeTabConnectedView(params: {
   blocks.push(
     {
       type: 'header',
-      level: 4,
       text: { type: 'plain_text', text: 'Recent Recordings' },
     },
     {
@@ -119,7 +117,6 @@ export function buildHomeTabConnectedView(params: {
   blocks.push(
     {
       type: 'header',
-      level: 4,
       text: { type: 'plain_text', text: 'Recent Links' },
     },
     {
