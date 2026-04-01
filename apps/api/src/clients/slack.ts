@@ -4,7 +4,10 @@
  *
  * Important: Slack API always returns HTTP 200, even on errors.
  * Every response must check `data.ok === true` before using the result.
+ * This is enforced via `z.literal(true)` on the `ok` field in each schema.
  */
+
+import { z } from 'zod';
 
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
@@ -26,60 +29,162 @@ export const SLACK_BOT_SCOPES =
 export const SLACK_MEMBER_FETCH_LIMIT = 50;
 
 // =============================================================================
-// Interfaces
+// Schemas
 // =============================================================================
 
 /**
  * Slack OAuth V2 access token response (success case).
- * Returned by exchangeCodeForToken only when all required fields are present.
  */
-export interface SlackOAuthV2Response {
-  ok: true;
-  access_token: string;
-  token_type: string;
-  scope: string;
-  bot_user_id: string;
-  app_id: string;
-  team: { id: string; name: string };
-  authed_user: { id: string };
-  enterprise?: { id: string; name: string } | null;
-  is_enterprise_install?: boolean;
-}
+const SlackOAuthV2ResponseSchema = z.object({
+  ok: z.literal(true),
+  access_token: z.string(),
+  token_type: z.string(),
+  scope: z.string(),
+  bot_user_id: z.string(),
+  app_id: z.string(),
+  team: z.object({ id: z.string(), name: z.string() }),
+  authed_user: z.object({ id: z.string() }),
+  enterprise: z.object({ id: z.string(), name: z.string() }).nullish(),
+  is_enterprise_install: z.boolean().optional(),
+});
+export type SlackOAuthV2Response = z.infer<typeof SlackOAuthV2ResponseSchema>;
 
 /**
  * Slack auth.test response (success case).
- * Returned by authTest only when all required fields are present.
  */
-export interface SlackAuthTestResponse {
-  ok: true;
-  url: string;
-  team: string;
-  user: string;
-  team_id: string;
-  user_id: string;
-  bot_id?: string;
-  enterprise_id?: string;
-}
+const SlackAuthTestResponseSchema = z.object({
+  ok: z.literal(true),
+  url: z.string(),
+  team: z.string(),
+  user: z.string(),
+  team_id: z.string(),
+  user_id: z.string(),
+  bot_id: z.string().optional(),
+  enterprise_id: z.string().optional(),
+});
+export type SlackAuthTestResponse = z.infer<typeof SlackAuthTestResponseSchema>;
 
 /**
- * Slack user object from users.info
+ * Slack user object from users.info / users.list
  */
-export interface SlackUser {
-  id: string;
-  name: string;
-  real_name?: string;
-  deleted: boolean;
-  is_bot: boolean;
-  /** Multi-channel guest */
-  is_restricted?: boolean;
-  /** Single-channel guest */
-  is_ultra_restricted?: boolean;
-  profile: {
-    email?: string;
-    display_name?: string;
-    real_name?: string;
-    image_48?: string;
-  };
+const SlackUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  real_name: z.string().optional(),
+  deleted: z.boolean(),
+  is_bot: z.boolean(),
+  is_restricted: z.boolean().optional(),
+  is_ultra_restricted: z.boolean().optional(),
+  profile: z.object({
+    email: z.string().optional(),
+    display_name: z.string().optional(),
+    real_name: z.string().optional(),
+    image_48: z.string().optional(),
+  }),
+});
+export type SlackUser = z.infer<typeof SlackUserSchema>;
+
+/** Wraps a single user from users.info */
+const SlackUserInfoResponseSchema = z.object({
+  ok: z.literal(true),
+  user: SlackUserSchema,
+});
+
+/** Wraps member array + pagination cursor from users.list */
+const SlackUsersListResponseSchema = z.object({
+  ok: z.literal(true),
+  members: z.array(SlackUserSchema),
+  response_metadata: z.object({ next_cursor: z.string().optional() }).optional(),
+});
+
+/** Response from views.open — includes the created view ID */
+const SlackViewResponseSchema = z.object({
+  ok: z.literal(true),
+  view: z.object({ id: z.string() }),
+});
+
+/** Response from chat.postMessage — includes the message timestamp */
+const SlackPostMessageResponseSchema = z.object({
+  ok: z.literal(true),
+  ts: z.string(),
+});
+
+/** Response from chat.getPermalink */
+const SlackPermalinkResponseSchema = z.object({
+  ok: z.literal(true),
+  permalink: z.string(),
+});
+
+/** Minimal ok-only response for views.publish, views.update */
+const SlackOkResponseSchema = z.object({
+  ok: z.literal(true),
+});
+
+/** Slack error envelope — used to extract the error string on failure */
+const SlackErrorEnvelopeSchema = z.object({
+  ok: z.literal(false),
+  error: z.string().optional(),
+});
+
+// =============================================================================
+// Request helper
+// =============================================================================
+
+type SlackRequestOptions<T> = {
+  operation: string;
+  url: string;
+  init: RequestInit;
+  schema: z.ZodType<T>;
+  captureContext?: Record<string, unknown>;
+};
+
+/**
+ * Unified Slack API request handler.
+ * Handles fetch, HTTP status check, JSON parsing, Zod validation,
+ * and error logging/capture in a single place.
+ */
+async function slackRequest<T>(opts: SlackRequestOptions<T>): Promise<T | null> {
+  try {
+    const response = await fetch(opts.url, opts.init);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.warn({ status: response.status, error: errorText }, `${opts.operation} failed`);
+      captureException(new Error(`${opts.operation} failed`), undefined, {
+        operation: opts.operation,
+        status: response.status,
+        error_text: errorText,
+        ...opts.captureContext,
+      });
+      return null;
+    }
+
+    const json = await response.json();
+    const result = opts.schema.safeParse(json);
+
+    if (result.success) {
+      return result.data;
+    }
+
+    // Parse failed — likely ok:false from Slack. Extract error message.
+    const errorEnvelope = SlackErrorEnvelopeSchema.safeParse(json);
+    const slackError = errorEnvelope.success ? errorEnvelope.data.error : undefined;
+
+    logger.warn({ error: slackError }, `${opts.operation} returned invalid response`);
+    captureException(new Error(`${opts.operation} returned invalid response`), undefined, {
+      operation: opts.operation,
+      slack_error: slackError,
+      ...opts.captureContext,
+    });
+    return null;
+  } catch (error) {
+    logger.error({ error }, `${opts.operation} error`);
+    captureException(error, undefined, {
+      operation: opts.operation,
+      ...opts.captureContext,
+    });
+    return null;
+  }
 }
 
 // =============================================================================
@@ -106,67 +211,29 @@ export function getAuthorizationUrl(state: string): string {
  * Uses HTTP Basic Auth with client_id:client_secret
  */
 export async function exchangeCodeForToken(code: string): Promise<SlackOAuthV2Response | null> {
-  try {
-    const credentials = Buffer.from(`${env.slack.clientId}:${env.slack.clientSecret}`).toString(
-      'base64'
-    );
+  const credentials = Buffer.from(`${env.slack.clientId}:${env.slack.clientSecret}`).toString(
+    'base64'
+  );
 
-    const body = new URLSearchParams({
-      code,
-      redirect_uri: env.slack.redirectUri,
-      grant_type: 'authorization_code',
-    });
+  const body = new URLSearchParams({
+    code,
+    redirect_uri: env.slack.redirectUri,
+    grant_type: 'authorization_code',
+  });
 
-    const response = await fetch('https://slack.com/api/oauth.v2.access', {
+  return slackRequest({
+    operation: 'slack_token_exchange',
+    url: 'https://slack.com/api/oauth.v2.access',
+    init: {
       method: 'POST',
       headers: {
         Authorization: `Basic ${credentials}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: body.toString(),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.warn({ status: response.status, error: errorText }, 'Token exchange failed');
-      captureException(new Error('token exchange failed with slack'), undefined, {
-        operation: 'slack_token_exchange',
-        status: response.status,
-        error_text: errorText,
-      });
-      return null;
-    }
-
-    const data = (await response.json()) as {
-      ok: boolean;
-      error?: string;
-    } & Partial<SlackOAuthV2Response>;
-
-    if (
-      !data.ok ||
-      !data.access_token ||
-      !data.bot_user_id ||
-      !data.app_id ||
-      !data.team ||
-      !data.authed_user
-    ) {
-      logger.warn(
-        { error: data.error },
-        'Slack token exchange returned ok=false or missing fields'
-      );
-      captureException(new Error('slack token exchange returned ok=false'), undefined, {
-        operation: 'slack_token_exchange',
-        slack_error: data.error,
-      });
-      return null;
-    }
-
-    return data as SlackOAuthV2Response;
-  } catch (error) {
-    logger.error({ error }, 'Token exchange error');
-    captureException(error, undefined, { operation: 'slack_token_exchange' });
-    return null;
-  }
+    },
+    schema: SlackOAuthV2ResponseSchema,
+  });
 }
 
 // =============================================================================
@@ -178,89 +245,30 @@ export async function exchangeCodeForToken(code: string): Promise<SlackOAuthV2Re
  * POST to auth.test with the bot token
  */
 export async function authTest(accessToken: string): Promise<SlackAuthTestResponse | null> {
-  try {
-    const response = await fetch('https://slack.com/api/auth.test', {
+  return slackRequest({
+    operation: 'slack_auth_test',
+    url: 'https://slack.com/api/auth.test',
+    init: {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.warn({ status: response.status, error: errorText }, 'auth.test failed');
-      captureException(new Error('slack auth.test failed'), undefined, {
-        operation: 'slack_auth_test',
-        status: response.status,
-        error_text: errorText,
-      });
-      return null;
-    }
-
-    const data = (await response.json()) as {
-      ok: boolean;
-      error?: string;
-    } & Partial<SlackAuthTestResponse>;
-
-    if (!data.ok || !data.team_id || !data.user_id) {
-      logger.warn({ error: data.error }, 'Slack auth.test returned ok=false or missing fields');
-      captureException(new Error('slack auth.test returned ok=false'), undefined, {
-        operation: 'slack_auth_test',
-        slack_error: data.error,
-      });
-      return null;
-    }
-
-    return data as SlackAuthTestResponse;
-  } catch (error) {
-    logger.error({ error }, 'auth.test error');
-    captureException(error, undefined, { operation: 'slack_auth_test' });
-    return null;
-  }
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+    schema: SlackAuthTestResponseSchema,
+  });
 }
 
 /**
  * Get user info by user ID
  */
 export async function getUserInfo(accessToken: string, userId: string): Promise<SlackUser | null> {
-  try {
-    const params = new URLSearchParams({ user: userId });
-    const response = await fetch(`https://slack.com/api/users.info?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.warn({ status: response.status, error: errorText, userId }, 'users.info failed');
-      captureException(new Error('slack users.info failed'), undefined, {
-        operation: 'slack_get_user_info',
-        status: response.status,
-        error_text: errorText,
-        user_id: userId,
-      });
-      return null;
-    }
-
-    const data = (await response.json()) as { ok: boolean; user?: SlackUser; error?: string };
-
-    if (!data.ok) {
-      logger.warn({ error: data.error, userId }, 'Slack users.info returned ok=false');
-      captureException(new Error('slack users.info returned ok=false'), undefined, {
-        operation: 'slack_get_user_info',
-        slack_error: data.error,
-        user_id: userId,
-      });
-      return null;
-    }
-
-    return data.user ?? null;
-  } catch (error) {
-    logger.error({ error, userId }, 'users.info error');
-    captureException(error, undefined, { operation: 'slack_get_user_info', user_id: userId });
-    return null;
-  }
+  const params = new URLSearchParams({ user: userId });
+  const result = await slackRequest({
+    operation: 'slack_get_user_info',
+    url: `https://slack.com/api/users.info?${params.toString()}`,
+    init: { headers: { Authorization: `Bearer ${accessToken}` } },
+    schema: SlackUserInfoResponseSchema,
+    captureContext: { user_id: userId },
+  });
+  return result?.user ?? null;
 }
 
 /**
@@ -269,56 +277,63 @@ export async function getUserInfo(accessToken: string, userId: string): Promise<
  * Requires `users:read` and `users:read.email` bot scopes.
  */
 export async function listUsers(accessToken: string): Promise<SlackUser[]> {
+  const params = new URLSearchParams({ limit: String(SLACK_MEMBER_FETCH_LIMIT) });
+  const result = await slackRequest({
+    operation: 'slack_list_users',
+    url: `https://slack.com/api/users.list?${params.toString()}`,
+    init: { headers: { Authorization: `Bearer ${accessToken}` } },
+    schema: SlackUsersListResponseSchema,
+  });
+
+  if (!result) return [];
+
+  return result.members.filter(
+    (member) =>
+      !member.deleted &&
+      !member.is_bot &&
+      !member.is_restricted &&
+      !member.is_ultra_restricted &&
+      !!member.profile.email
+  );
+}
+
+/**
+ * List all workspace members with cursor-based pagination.
+ * Filters out bots, deleted users, restricted/ultra-restricted guests.
+ * Does not require email — returns user IDs for view broadcasting.
+ */
+export async function listUsersAll(accessToken: string): Promise<SlackUser[]> {
+  const allMembers: SlackUser[] = [];
+  let cursor: string | undefined;
+
   try {
-    const params = new URLSearchParams({
-      limit: String(SLACK_MEMBER_FETCH_LIMIT),
-    });
+    do {
+      const params = new URLSearchParams({ limit: '200' });
+      if (cursor) params.set('cursor', cursor);
 
-    const response = await fetch(`https://slack.com/api/users.list?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.warn({ status: response.status, error: errorText }, 'users.list failed');
-      captureException(new Error('slack users.list failed'), undefined, {
-        operation: 'slack_list_users',
-        status: response.status,
-        error_text: errorText,
+      const result = await slackRequest({
+        operation: 'slack_list_users_all',
+        url: `https://slack.com/api/users.list?${params.toString()}`,
+        init: { headers: { Authorization: `Bearer ${accessToken}` } },
+        schema: SlackUsersListResponseSchema,
       });
-      return [];
-    }
 
-    const data = (await response.json()) as {
-      ok: boolean;
-      members?: SlackUser[];
-      error?: string;
-    };
+      if (!result) break;
 
-    if (!data.ok) {
-      logger.warn({ error: data.error }, 'Slack users.list returned ok=false');
-      captureException(new Error('slack users.list returned ok=false'), undefined, {
-        operation: 'slack_list_users',
-        slack_error: data.error,
-      });
-      return [];
-    }
+      const filtered = result.members.filter(
+        (member) =>
+          !member.deleted && !member.is_bot && !member.is_restricted && !member.is_ultra_restricted
+      );
+      allMembers.push(...filtered);
 
-    return (data.members ?? []).filter(
-      (member) =>
-        !member.deleted &&
-        !member.is_bot &&
-        !member.is_restricted &&
-        !member.is_ultra_restricted &&
-        !!member.profile.email
-    );
+      cursor = result.response_metadata?.next_cursor || undefined;
+    } while (cursor);
   } catch (error) {
-    logger.error({ error }, 'users.list error');
-    captureException(error, undefined, { operation: 'slack_list_users' });
-    return [];
+    logger.error({ error }, 'slack_list_users_all error');
+    captureException(error, undefined, { operation: 'slack_list_users_all' });
   }
+
+  return allMembers;
 }
 
 /**
@@ -329,49 +344,21 @@ export async function publishView(
   userId: string,
   view: Record<string, unknown>
 ): Promise<boolean> {
-  try {
-    const response = await fetch('https://slack.com/api/views.publish', {
+  const result = await slackRequest({
+    operation: 'slack_publish_view',
+    url: 'https://slack.com/api/views.publish',
+    init: {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        user_id: userId,
-        view,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.warn({ status: response.status, error: errorText, userId }, 'views.publish failed');
-      captureException(new Error('slack views.publish failed'), undefined, {
-        operation: 'slack_publish_view',
-        status: response.status,
-        error_text: errorText,
-        user_id: userId,
-      });
-      return false;
-    }
-
-    const data = (await response.json()) as { ok: boolean; error?: string };
-
-    if (!data.ok) {
-      logger.warn({ error: data.error, userId }, 'Slack views.publish returned ok=false');
-      captureException(new Error('slack views.publish returned ok=false'), undefined, {
-        operation: 'slack_publish_view',
-        slack_error: data.error,
-        user_id: userId,
-      });
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    logger.error({ error, userId }, 'views.publish error');
-    captureException(error, undefined, { operation: 'slack_publish_view', user_id: userId });
-    return false;
-  }
+      body: JSON.stringify({ user_id: userId, view }),
+    },
+    schema: SlackOkResponseSchema,
+    captureContext: { user_id: userId },
+  });
+  return result !== null;
 }
 
 /**
@@ -384,53 +371,21 @@ export async function openModal(
   triggerId: string,
   view: Record<string, unknown>
 ): Promise<string | null> {
-  try {
-    const response = await fetch('https://slack.com/api/views.open', {
+  const result = await slackRequest({
+    operation: 'slack_open_modal',
+    url: 'https://slack.com/api/views.open',
+    init: {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        trigger_id: triggerId,
-        view,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.warn({ status: response.status, error: errorText, triggerId }, 'views.open failed');
-      captureException(new Error('slack views.open failed'), undefined, {
-        operation: 'slack_open_modal',
-        status: response.status,
-        error_text: errorText,
-        trigger_id: triggerId,
-      });
-      return null;
-    }
-
-    const data = (await response.json()) as {
-      ok: boolean;
-      view?: { id: string };
-      error?: string;
-    };
-
-    if (!data.ok) {
-      logger.warn({ error: data.error, triggerId }, 'Slack views.open returned ok=false');
-      captureException(new Error('slack views.open returned ok=false'), undefined, {
-        operation: 'slack_open_modal',
-        slack_error: data.error,
-        trigger_id: triggerId,
-      });
-      return null;
-    }
-
-    return data.view?.id ?? null;
-  } catch (error) {
-    logger.error({ error, triggerId }, 'views.open error');
-    captureException(error, undefined, { operation: 'slack_open_modal', trigger_id: triggerId });
-    return null;
-  }
+      body: JSON.stringify({ trigger_id: triggerId, view }),
+    },
+    schema: SlackViewResponseSchema,
+    captureContext: { trigger_id: triggerId },
+  });
+  return result?.view.id ?? null;
 }
 
 /**
@@ -443,49 +398,21 @@ export async function updateModal(
   viewId: string,
   view: Record<string, unknown>
 ): Promise<boolean> {
-  try {
-    const response = await fetch('https://slack.com/api/views.update', {
+  const result = await slackRequest({
+    operation: 'slack_update_modal',
+    url: 'https://slack.com/api/views.update',
+    init: {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        view_id: viewId,
-        view,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.warn({ status: response.status, error: errorText, viewId }, 'views.update failed');
-      captureException(new Error('slack views.update failed'), undefined, {
-        operation: 'slack_update_modal',
-        status: response.status,
-        error_text: errorText,
-        view_id: viewId,
-      });
-      return false;
-    }
-
-    const data = (await response.json()) as { ok: boolean; error?: string };
-
-    if (!data.ok) {
-      logger.warn({ error: data.error, viewId }, 'Slack views.update returned ok=false');
-      captureException(new Error('slack views.update returned ok=false'), undefined, {
-        operation: 'slack_update_modal',
-        slack_error: data.error,
-        view_id: viewId,
-      });
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    logger.error({ error, viewId }, 'views.update error');
-    captureException(error, undefined, { operation: 'slack_update_modal', view_id: viewId });
-    return false;
-  }
+      body: JSON.stringify({ view_id: viewId, view }),
+    },
+    schema: SlackOkResponseSchema,
+    captureContext: { view_id: viewId },
+  });
+  return result !== null;
 }
 
 /**
@@ -498,47 +425,15 @@ export async function getPermalink(
   channel: string,
   messageTs: string
 ): Promise<string | null> {
-  try {
-    const params = new URLSearchParams({ channel, message_ts: messageTs });
-    const response = await fetch(`https://slack.com/api/chat.getPermalink?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.warn(
-        { status: response.status, error: errorText, channel },
-        'chat.getPermalink failed'
-      );
-      captureException(new Error('slack chat.getPermalink failed'), undefined, {
-        operation: 'slack_get_permalink',
-        status: response.status,
-        error_text: errorText,
-        channel,
-      });
-      return null;
-    }
-
-    const data = (await response.json()) as { ok: boolean; permalink?: string; error?: string };
-
-    if (!data.ok) {
-      logger.warn({ error: data.error, channel }, 'Slack chat.getPermalink returned ok=false');
-      captureException(new Error('slack chat.getPermalink returned ok=false'), undefined, {
-        operation: 'slack_get_permalink',
-        slack_error: data.error,
-        channel,
-      });
-      return null;
-    }
-
-    return data.permalink ?? null;
-  } catch (error) {
-    logger.error({ error, channel }, 'chat.getPermalink error');
-    captureException(error, undefined, { operation: 'slack_get_permalink', channel });
-    return null;
-  }
+  const params = new URLSearchParams({ channel, message_ts: messageTs });
+  const result = await slackRequest({
+    operation: 'slack_get_permalink',
+    url: `https://slack.com/api/chat.getPermalink?${params.toString()}`,
+    init: { headers: { Authorization: `Bearer ${accessToken}` } },
+    schema: SlackPermalinkResponseSchema,
+    captureContext: { channel },
+  });
+  return result?.permalink ?? null;
 }
 
 /**
@@ -552,8 +447,10 @@ export async function postMessage(
   text: string,
   threadTs?: string
 ): Promise<string | null> {
-  try {
-    const response = await fetch('https://slack.com/api/chat.postMessage', {
+  const result = await slackRequest({
+    operation: 'slack_post_message',
+    url: 'https://slack.com/api/chat.postMessage',
+    init: {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -565,41 +462,11 @@ export async function postMessage(
         text,
         ...(threadTs ? { thread_ts: threadTs } : {}),
       }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.warn(
-        { status: response.status, error: errorText, channel },
-        'chat.postMessage failed'
-      );
-      captureException(new Error('slack chat.postMessage failed'), undefined, {
-        operation: 'slack_post_message',
-        status: response.status,
-        error_text: errorText,
-        channel,
-      });
-      return null;
-    }
-
-    const data = (await response.json()) as { ok: boolean; ts?: string; error?: string };
-
-    if (!data.ok) {
-      logger.warn({ error: data.error, channel }, 'Slack chat.postMessage returned ok=false');
-      captureException(new Error('slack chat.postMessage returned ok=false'), undefined, {
-        operation: 'slack_post_message',
-        slack_error: data.error,
-        channel,
-      });
-      return null;
-    }
-
-    return data.ts ?? null;
-  } catch (error) {
-    logger.error({ error, channel }, 'chat.postMessage error');
-    captureException(error, undefined, { operation: 'slack_post_message', channel });
-    return null;
-  }
+    },
+    schema: SlackPostMessageResponseSchema,
+    captureContext: { channel },
+  });
+  return result?.ts ?? null;
 }
 
 /**
