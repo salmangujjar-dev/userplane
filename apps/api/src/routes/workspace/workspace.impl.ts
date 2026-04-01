@@ -13,6 +13,7 @@ import {
   createWorkspaceRestoreMiddleware,
   createWorkspaceRoleMiddleware,
 } from '@/api/middleware/workspace.orpc';
+import { IntegrationHelper } from '@/api/repositories/integrations.repository';
 import type { BillingService } from '@/api/services/billing.service';
 import type { DomainService } from '@/api/services/domain.service';
 import type { EmailService } from '@/api/services/email.service';
@@ -21,6 +22,7 @@ import type { InviteService } from '@/api/services/invite.service';
 import type { LinkService } from '@/api/services/link.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { RecordingService } from '@/api/services/recording.service';
+import type { SlackCanvasService } from '@/api/services/slack-canvas.service';
 import type { SlackService } from '@/api/services/slack-oauth.service';
 import type { TokenService } from '@/api/services/token.service';
 import type { UserService } from '@/api/services/user.service';
@@ -1858,6 +1860,7 @@ export const slackIntegrationCallbackImpl = (
  */
 export const deleteSlackIntegrationImpl = (
   slackService: SlackService,
+  slackCanvasService: SlackCanvasService,
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService
 ) => {
@@ -1870,7 +1873,12 @@ export const deleteSlackIntegrationImpl = (
   return authorizedRateLimited.workspace.integrations.slack.delete
     .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
-      await slackService.disconnectIntegration(input.params.workspaceId);
+      const integration = await slackService.disconnectIntegration(input.params.workspaceId);
+
+      // Best-effort: broadcast disconnected view to all workspace members in the background.
+      // The bot token is still valid on Slack's side after our soft-delete.
+      const accessToken = IntegrationHelper.getAccessToken(integration);
+      void slackCanvasService.broadcastDisconnectedView(accessToken).catch(() => {});
 
       return {
         message: 'Slack disconnected successfully',
@@ -1981,6 +1989,7 @@ export const createWorkspaceProcedures = (
   intercomService: IntercomService,
   zendeskService: ZendeskService,
   slackService: SlackService,
+  slackCanvasService: SlackCanvasService,
   billingService: BillingService
 ) => {
   return {
@@ -2129,7 +2138,12 @@ export const createWorkspaceProcedures = (
           workspaceMemberService,
           workspaceService
         ),
-        delete: deleteSlackIntegrationImpl(slackService, workspaceMemberService, workspaceService),
+        delete: deleteSlackIntegrationImpl(
+          slackService,
+          slackCanvasService,
+          workspaceMemberService,
+          workspaceService
+        ),
         members: getSlackMembersImpl(slackService, workspaceMemberService, workspaceService),
         suggestions: getSlackSuggestionsImpl(
           slackService,

@@ -29,7 +29,10 @@ import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import { deriveWorkspaceUrl } from '@/api/lib/workspace';
 import { captureException } from '@/api/posthog';
-import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type {
+  IntegrationRepository,
+  TypedIntegration,
+} from '@/api/repositories/integrations.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
@@ -342,7 +345,7 @@ export class SlackService {
    * Disconnect Slack integration from a workspace
    * Returns true if disconnected, throws if not found
    */
-  async disconnectIntegration(workspaceId: string): Promise<boolean> {
+  async disconnectIntegration(workspaceId: string): Promise<TypedIntegration<'slack'>> {
     // Get integration first to retrieve providerWorkspaceId for cache invalidation
     const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
       workspaceId,
@@ -363,7 +366,7 @@ export class SlackService {
     // Invalidate caches to prevent stale lookups
     await this.deps.cacheService.invalidateIntegration('slack', integration.providerWorkspaceId);
 
-    return true;
+    return integration;
   }
 
   // ============================================================================
