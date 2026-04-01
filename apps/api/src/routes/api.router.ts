@@ -41,6 +41,7 @@ import {
   recordingRepo,
   recordingService,
   sessionService,
+  slackCanvasService,
   slackService,
   tokenService,
   userService,
@@ -108,6 +109,7 @@ const workspaceProcedures = createWorkspaceProcedures(
   intercomService,
   zendeskService,
   slackService,
+  slackCanvasService,
   billingService
 );
 const recordingProcedures = createRecordingProcedures(
