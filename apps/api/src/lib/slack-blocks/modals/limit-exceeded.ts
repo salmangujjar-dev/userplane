@@ -3,16 +3,18 @@
  * Shown when the workspace has exceeded its recording or link limits.
  */
 
-import { SlackActionIds } from './constants';
-import { slackCanvasUrls } from './urls';
+import { env } from '@/api/env';
+
+import { SlackActionIds } from '../constants';
+import { slackCanvasUrls } from '../urls';
 
 /**
  * Build the limit-exceeded modal view.
  * Prompts the user to upgrade their workspace plan.
  */
-export function buildLimitExceededView(params: {
+export function buildLimitExceededModalView(params: {
   workspaceId: string;
-  limitType?: 'recordings' | 'links';
+  limitType: 'recordings' | 'links';
 }) {
   const upgradeUrl = slackCanvasUrls.upgradeWorkspaceUrl(params.workspaceId);
 
@@ -31,7 +33,14 @@ export function buildLimitExceededView(params: {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: "You've used all the recording links on your current plan. Upgrade to keep creating and sharing.",
+          text: '*You\u2019ve reached your plan limit*',
+        },
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: 'All recording links on your current plan have been used. Upgrade to continue creating and sharing.',
         },
       },
       {
@@ -46,6 +55,18 @@ export function buildLimitExceededView(params: {
             action_id: SlackActionIds.UPGRADE_WORKSPACE,
             url: upgradeUrl,
             style: 'primary',
+          },
+        ],
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: `Need help? Reach out at ${env.support.supportEmail}`,
           },
         ],
       },

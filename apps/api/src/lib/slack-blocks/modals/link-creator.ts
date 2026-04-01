@@ -6,7 +6,7 @@
 
 import { determineLinkTitle } from '@/api/lib/id';
 
-import { SlackActionIds, SlackBlockIds, SlackCallbackIds } from './constants';
+import { SlackActionIds, SlackBlockIds, SlackCallbackIds } from '../constants';
 
 /**
  * Fallback message when no user name is available.
@@ -18,15 +18,13 @@ export const DEFAULT_RECORDING_MESSAGE =
  * Build the link creator modal view.
  * Includes project/domain selectors, optional custom slug, and custom message.
  */
-export function buildLinkCreatorModal(params: {
+export function buildLinkCreatorModalView(params: {
   projects: Array<{ id: string; name: string }>;
   domains: Array<{ id: string; domain: string }>;
   /** User display name - used to personalise the default title and message. */
-  userName?: string;
+  userName: string;
 }) {
-  const defaultMessage = params.userName
-    ? `${params.userName} has requested a screen recording from you`
-    : DEFAULT_RECORDING_MESSAGE;
+  const defaultMessage = `${params.userName} has requested a screen recording from you`;
 
   const defaultTitle = determineLinkTitle(null, params.userName);
 
@@ -52,6 +50,10 @@ export function buildLinkCreatorModal(params: {
         label: {
           type: 'plain_text',
           text: 'Project',
+        },
+        hint: {
+          type: 'plain_text',
+          text: 'Select the project for your recordings',
         },
         element: {
           type: 'static_select',
@@ -81,6 +83,10 @@ export function buildLinkCreatorModal(params: {
         label: {
           type: 'plain_text',
           text: 'Domain',
+        },
+        hint: {
+          type: 'plain_text',
+          text: 'Select the domain for your recording link',
         },
         element: {
           type: 'static_select',
@@ -113,11 +119,11 @@ export function buildLinkCreatorModal(params: {
         optional: true,
         label: {
           type: 'plain_text',
-          text: 'Title',
+          text: 'Link Reference',
         },
         hint: {
           type: 'plain_text',
-          text: 'Give this link a name so you can find it later',
+          text: 'Add a link, ticket, issue number or customer reference',
         },
         element: {
           type: 'plain_text_input',
@@ -139,7 +145,7 @@ export function buildLinkCreatorModal(params: {
         },
         hint: {
           type: 'plain_text',
-          text: "They'll see this when they open the recording link",
+          text: 'Your customers would see this when you request a recording',
         },
         element: {
           type: 'plain_text_input',

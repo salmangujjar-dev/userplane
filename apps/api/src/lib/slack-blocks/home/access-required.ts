@@ -1,19 +1,20 @@
 /**
- * Home Tab — Not Member View
- * Shown when the user's Slack account is not linked to a member
- * of the connected Userplane workspace.
+ * Home Tab — Access Required View
+ * Shown when the user is not a member of the connected Userplane workspace.
  */
 
 import { env } from '@/api/env';
 
-import { SlackActionIds } from './constants';
-import { getSlackCanvasImages, slackCanvasUrls } from './urls';
+import { SlackActionIds } from '../constants';
+import { getSlackCanvasImages, slackCanvasUrls } from '../urls';
 
 /**
- * Build the home tab view for users who are not workspace members.
+ * Build the home tab access-required view.
+ * Directs the user to request workspace access.
  */
-export function buildHomeTabNotMemberView() {
+export function buildHomeAccessRequiredView(params?: { email?: string }) {
   const images = getSlackCanvasImages();
+  const emailHint = params?.email ? ` (\`${params.email}\`)` : '';
 
   return {
     type: 'home' as const,
@@ -25,17 +26,16 @@ export function buildHomeTabNotMemberView() {
       },
       {
         type: 'header',
-        level: 4,
         text: {
           type: 'plain_text',
-          text: "You're almost in!",
+          text: 'Almost there',
         },
       },
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: "Your Slack workspace is connected to Userplane, but your account isn't linked yet. Ask a workspace admin to add you and you'll be good to go.",
+          text: `Your Slack account${emailHint} isn't a member of this Userplane workspace yet.\n\nAsk a workspace admin to add you - it only takes a moment.`,
         },
       },
       {

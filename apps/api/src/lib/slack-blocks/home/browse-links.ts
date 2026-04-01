@@ -1,31 +1,42 @@
 /**
- * Home Tab - Browse Recordings View
- * Full recordings list with filter controls and pagination.
- * Rendered when the user taps "View All" on the recordings section.
+ * Home Tab - Browse Links View
+ * Full links list with filter controls and pagination.
+ * Rendered when the user taps "View All" on the links section.
  */
 
-import { SlackActionIds } from './constants';
-import type { HomeRecordingItem } from './home-connected';
+import { SlackActionIds } from '../constants';
+import { slackCanvasUrls } from '../urls';
+import { BROWSE_PAGE_SIZE } from './browse-recordings';
 
-export interface RecordingFilterState {
-  projectId?: string;
-  domainId?: string;
-  dateRange?: string;
+export interface HomeBrowseLinkItem {
+  linkId: string;
+  title: string;
+  projectName: string;
+  creatorName: string;
+  domainName: string;
+  /** Unix timestamp in seconds for Slack date formatting */
+  createdAtTs: number;
+  linkUrl: string;
+  workspaceId: string;
 }
 
-/** Items per page for browse views */
-export const BROWSE_PAGE_SIZE = 10;
+export interface LinkFilterState {
+  projectId?: string;
+  domainId?: string;
+  status?: string;
+}
 
 /**
- * Build the home tab browse recordings view with filter controls and pagination.
+ * Build the home tab browse links view with filter controls and pagination.
  */
-export function buildHomeBrowseRecordingsView(params: {
+export function buildHomeBrowseLinksView(params: {
   projects: Array<{ id: string; name: string }>;
   domains: Array<{ id: string; domain: string }>;
-  recordings: HomeRecordingItem[];
+  links: HomeBrowseLinkItem[];
   total: number;
   page: number;
-  selectedFilters?: RecordingFilterState;
+  dashboardUrl: string;
+  selectedFilters?: LinkFilterState;
 }) {
   const projectOptions = [
     { text: { type: 'plain_text' as const, text: 'All projects' }, value: 'all' },
@@ -43,15 +54,15 @@ export function buildHomeBrowseRecordingsView(params: {
     })),
   ];
 
-  const dateOptions = [
-    { text: { type: 'plain_text' as const, text: 'Last 7 days' }, value: '7d' },
-    { text: { type: 'plain_text' as const, text: 'Last 30 days' }, value: '30d' },
-    { text: { type: 'plain_text' as const, text: 'All time' }, value: 'all' },
+  const statusOptions = [
+    { text: { type: 'plain_text' as const, text: 'All' }, value: 'all' },
+    { text: { type: 'plain_text' as const, text: 'Active' }, value: 'active' },
+    { text: { type: 'plain_text' as const, text: 'Expired' }, value: 'expired' },
   ];
 
   const selectedProject = params.selectedFilters?.projectId ?? 'all';
   const selectedDomain = params.selectedFilters?.domainId ?? 'all';
-  const selectedDate = params.selectedFilters?.dateRange ?? '7d';
+  const selectedStatus = params.selectedFilters?.status ?? 'all';
 
   const totalPages = Math.max(1, Math.ceil(params.total / BROWSE_PAGE_SIZE));
   const hasPrev = params.page > 1;
@@ -60,14 +71,13 @@ export function buildHomeBrowseRecordingsView(params: {
   const blocks: Array<Record<string, unknown>> = [
     {
       type: 'header',
-      level: 4,
-      text: { type: 'plain_text', text: 'Recordings' },
+      text: { type: 'plain_text', text: 'Recording Links' },
     },
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: 'Screen recordings submitted by your team.',
+        text: 'Recording links shared with your team.',
       },
     },
     {
@@ -75,7 +85,7 @@ export function buildHomeBrowseRecordingsView(params: {
       elements: [
         {
           type: 'static_select',
-          action_id: SlackActionIds.FILTER_RECORDINGS_PROJECT,
+          action_id: SlackActionIds.FILTER_LINKS_PROJECT,
           placeholder: { type: 'plain_text', text: 'Project' },
           options: projectOptions,
           initial_option:
@@ -83,22 +93,22 @@ export function buildHomeBrowseRecordingsView(params: {
         },
         {
           type: 'static_select',
-          action_id: SlackActionIds.FILTER_RECORDINGS_DOMAIN,
+          action_id: SlackActionIds.FILTER_LINKS_DOMAIN,
           placeholder: { type: 'plain_text', text: 'Domain' },
           options: domainOptions,
           initial_option: domainOptions.find((o) => o.value === selectedDomain) ?? domainOptions[0],
         },
         {
           type: 'static_select',
-          action_id: SlackActionIds.FILTER_RECORDINGS_DATE,
-          placeholder: { type: 'plain_text', text: 'Date' },
-          options: dateOptions,
-          initial_option: dateOptions.find((o) => o.value === selectedDate) ?? dateOptions[0],
+          action_id: SlackActionIds.FILTER_LINKS_STATUS,
+          placeholder: { type: 'plain_text', text: 'Status' },
+          options: statusOptions,
+          initial_option: statusOptions.find((o) => o.value === selectedStatus) ?? statusOptions[0],
         },
         {
           type: 'button',
-          text: { type: 'plain_text', text: 'Go' },
-          action_id: SlackActionIds.FILTER_RECORDINGS_GO,
+          text: { type: 'plain_text', text: 'Search' },
+          action_id: SlackActionIds.FILTER_LINKS_GO,
         },
         {
           type: 'button',
@@ -110,25 +120,22 @@ export function buildHomeBrowseRecordingsView(params: {
     { type: 'divider' },
   ];
 
-  if (params.recordings.length > 0) {
-    for (const rec of params.recordings) {
-      const block: Record<string, unknown> = {
+  if (params.links.length > 0) {
+    for (const link of params.links) {
+      const viewUrl = slackCanvasUrls.linkRecordingsUrl(link.workspaceId, link.linkId);
+      blocks.push({
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*${rec.title}*\n${rec.projectName} \u00b7 ${rec.durationFormatted} \u00b7 <!date^${rec.createdAtTs}^{date_short_pretty}|${new Date(rec.createdAtTs * 1000).toLocaleDateString()}>`,
+          text: `*${link.title}*\nCreated by ${link.creatorName} \u00b7 <!date^${link.createdAtTs}^{date_short_pretty}|${new Date(link.createdAtTs * 1000).toLocaleDateString()}>`,
         },
-      };
-
-      if (rec.thumbnailUrl) {
-        block.accessory = {
-          type: 'image',
-          image_url: rec.thumbnailUrl,
-          alt_text: 'Recording thumbnail',
-        };
-      }
-
-      blocks.push(block);
+        accessory: {
+          type: 'button',
+          text: { type: 'plain_text', text: 'View Recording' },
+          action_id: SlackActionIds.VIEW_RECORDING,
+          url: viewUrl,
+        },
+      });
     }
 
     // Pagination controls
@@ -139,7 +146,7 @@ export function buildHomeBrowseRecordingsView(params: {
         paginationElements.push({
           type: 'button',
           text: { type: 'plain_text', text: 'Previous' },
-          action_id: SlackActionIds.PAGE_RECORDINGS_PREV,
+          action_id: SlackActionIds.PAGE_LINKS_PREV,
           value: String(params.page - 1),
         });
       }
@@ -148,7 +155,7 @@ export function buildHomeBrowseRecordingsView(params: {
         paginationElements.push({
           type: 'button',
           text: { type: 'plain_text', text: 'Next' },
-          action_id: SlackActionIds.PAGE_RECORDINGS_NEXT,
+          action_id: SlackActionIds.PAGE_LINKS_NEXT,
           value: String(params.page + 1),
         });
       }
@@ -163,7 +170,7 @@ export function buildHomeBrowseRecordingsView(params: {
   } else {
     blocks.push({
       type: 'context',
-      elements: [{ type: 'plain_text', text: 'No recordings match your filters.' }],
+      elements: [{ type: 'plain_text', text: 'No links match your filters.' }],
     });
   }
 

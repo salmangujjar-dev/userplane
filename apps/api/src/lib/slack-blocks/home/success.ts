@@ -1,20 +1,19 @@
 /**
- * Home Tab - Link Success View
+ * Home Tab — Success View
  * Shown after a recording link is created from the home tab.
  */
 
-import { SlackActionIds } from './constants';
+import { SlackActionIds } from '../constants';
 
 /**
- * Build the home tab link success view.
+ * Build the home tab success view after link creation.
  */
-export function buildHomeLinkSuccessView(params: { linkUrl: string }) {
+export function buildHomeSuccessView(params: { linkUrl: string }) {
   return {
     type: 'home' as const,
     blocks: [
       {
         type: 'header',
-        level: 4,
         text: { type: 'plain_text', text: 'Link created' },
       },
       {
