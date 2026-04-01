@@ -220,6 +220,7 @@ function SlackPostCreationInviteView({ workspaceId }: { workspaceId: string }) {
     data: membersData,
     isLoading: membersLoading,
     error: membersError,
+    refetch: refetchMembers,
   } = useSlackMembers(workspaceId, true);
 
   const { data: domainsData, isLoading: domainsLoading } = useFirstWorkspaceDomain(workspaceId);
@@ -230,13 +231,24 @@ function SlackPostCreationInviteView({ workspaceId }: { workspaceId: string }) {
     return <InviteLoadingState variant="slack" />;
   }
 
+  if (membersError || !membersData?.success) {
+    return (
+      <InviteErrorState
+        workspaceId={workspaceId}
+        variant="slack"
+        message={
+          membersData?.success === false ? membersData.error.message : 'Failed to load teammates'
+        }
+        onRetry={() => refetchMembers()}
+      />
+    );
+  }
+
   const firstDomain = domainsData?.success ? domainsData.data.domains[0] : null;
 
-  // Graceful degradation: if member fetch fails, show invite view with empty
-  // teammates so manual email entry still works and onboarding isn't blocked.
-  const teammates = membersData?.success ? membersData.data.members : [];
-  const invitePolicy = membersData?.success ? membersData.data.invitePolicy : 'private';
-  const allowedDomains = membersData?.success ? membersData.data.allowedDomains : null;
+  const teammates = membersData.data.members;
+  const invitePolicy = membersData.data.invitePolicy;
+  const allowedDomains = membersData.data.allowedDomains;
 
   return (
     <InviteTeammatesView

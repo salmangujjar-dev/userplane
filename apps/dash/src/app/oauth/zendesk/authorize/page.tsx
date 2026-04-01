@@ -99,6 +99,12 @@ function OAuthZendeskAuthorizeContent() {
     return <LoadingScreen message="Setting up..." />;
   }
 
+  // API error from a previous authorize attempt — show full error screen
+  // (window.close on "go back" is appropriate since this page runs in a popup)
+  if (error) {
+    return <ErrorScreen message={error} />;
+  }
+
   function handleCreateWorkspace() {
     const createParams = new URLSearchParams({ flow: 'zendesk' });
     if (subdomainParam) createParams.set('subdomain', subdomainParam);
@@ -212,8 +218,6 @@ function OAuthZendeskAuthorizeContent() {
               ))}
             </div>
           </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button
             onClick={handleAuthorize}
