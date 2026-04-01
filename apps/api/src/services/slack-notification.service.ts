@@ -7,7 +7,7 @@
 
 import { getPermalink, postMessage } from '@/api/clients/slack';
 import { createLogger } from '@/api/lib/logger';
-import { buildRecordingDmMessage } from '@/api/lib/slack-blocks';
+import { buildRecordingReceivedMessage } from '@/api/lib/slack-blocks';
 import { captureException } from '@/api/posthog';
 import {
   IntegrationHelper,
@@ -63,7 +63,11 @@ export class SlackNotificationService {
         permalink = (await getPermalink(accessToken, channelId, threadTs)) ?? undefined;
       }
 
-      const { blocks, text } = buildRecordingDmMessage({ recordingUrl, permalink, channelName });
+      const { blocks, text } = buildRecordingReceivedMessage({
+        recordingUrl,
+        permalink,
+        channelName,
+      });
       const ts = await postMessage(accessToken, userId, blocks, text);
 
       if (ts) {

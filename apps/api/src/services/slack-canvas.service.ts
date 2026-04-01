@@ -20,7 +20,9 @@ import { createLinkProviderData } from '@userplane/contract';
 import { z } from 'zod';
 
 import {
+  getPermalink,
   getUserInfo,
+  listUsersAll,
   openModal,
   postMessage,
   publishView,
@@ -31,24 +33,30 @@ import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
 import {
   BROWSE_PAGE_SIZE,
-  buildAccessRequiredView,
-  buildErrorEphemeral,
-  buildErrorModalView,
-  buildFrozenLoadingModal,
+  buildAccessDeniedModalView,
+  buildAccessRequiredModalView,
+  buildAccountNotFoundModalView,
+  buildCommandFailedMessage,
+  buildFrozenLoadingModalView,
+  buildHomeAccessRequiredView,
   buildHomeBrowseLinksView,
   buildHomeBrowseRecordingsView,
+  buildHomeConnectedView,
   buildHomeCreateLinkView,
+  buildHomeDisconnectedView,
+  buildHomeErrorView,
   buildHomeFrozenLoadingView,
-  buildHomeLinkSuccessView,
-  buildHomeTabConnectedView,
-  buildHomeTabDisconnectedView,
-  buildHomeTabNotMemberView,
-  buildLimitExceededView,
+  buildHomeLimitExceededView,
+  buildHomeSuccessView,
+  buildLimitExceededModalView,
   buildLinkCreatedMessage,
-  buildLinkCreatorModal,
-  buildLinkSuccessView,
-  buildLoadingEphemeral,
-  buildLoadingModal,
+  buildLinkCreationFailedModalView,
+  buildLinkCreatorModalView,
+  buildLoadingModalView,
+  buildSetupIncompleteModalView,
+  buildSuccessModalView,
+  buildWorkspaceNotConnectedMessage,
+  buildWorkspaceNotConnectedModalView,
   type HomeLinkItem,
   type HomeRecordingItem,
   type LinkFilterState,
@@ -225,9 +233,9 @@ interface VerifiedSlackContext {
  */
 type SlackAccessResult =
   | { status: 'granted'; context: VerifiedSlackContext }
-  | { status: 'user_not_found' }
+  | { status: 'user_not_found'; email?: string }
   | { status: 'integration_not_found' }
-  | { status: 'not_workspace_member'; integration: TypedIntegration<'slack'> };
+  | { status: 'not_workspace_member'; integration: TypedIntegration<'slack'>; email?: string };
 
 /**
  * Private metadata stored in modal views.
@@ -278,7 +286,7 @@ export class SlackCanvasService {
     const slackUser = await getUserInfo(accessToken, slackUserId);
     if (!slackUser?.profile.email) {
       logger.debug({ teamId, slackUserId }, 'Could not retrieve Slack user email');
-      await publishView(accessToken, slackUserId, buildHomeTabDisconnectedView({ dashboardUrl }));
+      await publishView(accessToken, slackUserId, buildHomeDisconnectedView({ dashboardUrl }));
       return;
     }
 
@@ -286,7 +294,7 @@ export class SlackCanvasService {
     const user = await this.deps.userRepo.findByEmail(slackUser.profile.email);
     if (!user) {
       logger.debug({ teamId, email: slackUser.profile.email }, 'Userplane user not found');
-      await publishView(accessToken, slackUserId, buildHomeTabDisconnectedView({ dashboardUrl }));
+      await publishView(accessToken, slackUserId, buildHomeDisconnectedView({ dashboardUrl }));
       return;
     }
 
@@ -301,14 +309,18 @@ export class SlackCanvasService {
         { teamId, email: slackUser.profile.email, workspaceId: integration.workspaceId },
         'User is not a workspace member'
       );
-      await publishView(accessToken, slackUserId, buildHomeTabNotMemberView());
+      await publishView(
+        accessToken,
+        slackUserId,
+        buildHomeAccessRequiredView({ email: slackUser.profile.email })
+      );
       return;
     }
 
     const workspaceId = integration.workspaceId;
     const { homeData } = await this.getHomeTabData(workspaceId);
 
-    await publishView(accessToken, slackUserId, buildHomeTabConnectedView(homeData));
+    await publishView(accessToken, slackUserId, buildHomeConnectedView(homeData));
 
     logger.debug({ teamId, slackUserId, workspaceId }, 'Published connected home tab');
   }
@@ -339,26 +351,18 @@ export class SlackCanvasService {
     // --- Phase 1: Get access token (single DB query) -------------------------
     const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
     if (!integration) {
-      await respondToUrl(
-        responseUrl,
-        buildErrorEphemeral(
-          'This Slack workspace is not connected to Userplane. Please connect it from the Userplane dashboard.'
-        )
-      );
+      await respondToUrl(responseUrl, buildWorkspaceNotConnectedMessage());
       return;
     }
 
     const accessToken = IntegrationHelper.getAccessToken(integration);
 
-    // --- Phase 1.5: Send ephemeral feedback to the channel --------------------
-    void respondToUrl(responseUrl, buildLoadingEphemeral());
-
     // --- Phase 2: Open loading modal before trigger_id expires ----------------
-    const viewId = await openModal(accessToken, triggerId, buildLoadingModal());
+    const viewId = await openModal(accessToken, triggerId, buildLoadingModalView());
     if (!viewId) {
       await respondToUrl(
         responseUrl,
-        buildErrorEphemeral('Failed to open the link creation form. Please try again.')
+        buildCommandFailedMessage({ workspaceId: integration.workspaceId })
       );
       return;
     }
@@ -369,15 +373,20 @@ export class SlackCanvasService {
 
     if (accessResult.status !== 'granted') {
       if (accessResult.status === 'not_workspace_member') {
-        await updateModal(accessToken, viewId, buildAccessRequiredView());
+        await updateModal(
+          accessToken,
+          viewId,
+          buildAccessRequiredModalView({ email: accessResult.email })
+        );
       } else {
         await updateModal(
           accessToken,
           viewId,
-          buildErrorModalView(this.buildAccessDeniedEphemeral(accessResult).text)
+          accessResult.status === 'user_not_found'
+            ? buildAccountNotFoundModalView({ email: accessResult.email })
+            : buildWorkspaceNotConnectedModalView()
         );
       }
-      void respondToUrl(responseUrl, { delete_original: true, text: '' });
       return;
     }
 
@@ -389,22 +398,14 @@ export class SlackCanvasService {
       await updateModal(
         accessToken,
         viewId,
-        buildLimitExceededView({ workspaceId, limitType: 'links' })
+        buildLimitExceededModalView({ workspaceId, limitType: 'links' })
       );
-      void respondToUrl(responseUrl, { delete_original: true, text: '' });
       return;
     }
 
     const { projects, domains } = await this.getProjectsAndDomains(workspaceId);
     if (projects.length === 0 || domains.length === 0) {
-      await updateModal(
-        accessToken,
-        viewId,
-        buildErrorModalView(
-          'No projects or domains found. Please set up a project and domain in the Userplane dashboard first.'
-        )
-      );
-      void respondToUrl(responseUrl, { delete_original: true, text: '' });
+      await updateModal(accessToken, viewId, buildSetupIncompleteModalView());
       return;
     }
 
@@ -416,14 +417,13 @@ export class SlackCanvasService {
       workspaceId,
     };
 
-    const modal = buildLinkCreatorModal({ projects, domains, userName });
+    const modal = buildLinkCreatorModalView({ projects, domains, userName });
     const modalWithMetadata = {
       ...modal,
       private_metadata: JSON.stringify(privateMetadata),
     };
 
     await updateModal(accessToken, viewId, modalWithMetadata);
-    void respondToUrl(responseUrl, { delete_original: true, text: '' });
   }
 
   // ===========================================================================
@@ -470,7 +470,7 @@ export class SlackCanvasService {
     const accessToken = IntegrationHelper.getAccessToken(integration);
 
     // --- Phase 2: Open loading modal before trigger_id expires ----------------
-    const viewId = await openModal(accessToken, triggerId, buildLoadingModal());
+    const viewId = await openModal(accessToken, triggerId, buildLoadingModalView());
     if (!viewId) {
       logger.warn({ teamId, triggerId }, 'Message shortcut: failed to open loading modal');
       return;
@@ -481,12 +481,18 @@ export class SlackCanvasService {
 
     if (accessResult.status !== 'granted') {
       if (accessResult.status === 'not_workspace_member') {
-        await updateModal(accessToken, viewId, buildAccessRequiredView());
+        await updateModal(
+          accessToken,
+          viewId,
+          buildAccessRequiredModalView({ email: accessResult.email })
+        );
       } else {
         await updateModal(
           accessToken,
           viewId,
-          buildErrorModalView(this.buildAccessDeniedEphemeral(accessResult).text)
+          accessResult.status === 'user_not_found'
+            ? buildAccountNotFoundModalView({ email: accessResult.email })
+            : buildWorkspaceNotConnectedModalView()
         );
       }
       return;
@@ -500,20 +506,14 @@ export class SlackCanvasService {
       await updateModal(
         accessToken,
         viewId,
-        buildLimitExceededView({ workspaceId, limitType: 'links' })
+        buildLimitExceededModalView({ workspaceId, limitType: 'links' })
       );
       return;
     }
 
     const { projects, domains } = await this.getProjectsAndDomains(workspaceId);
     if (projects.length === 0 || domains.length === 0) {
-      await updateModal(
-        accessToken,
-        viewId,
-        buildErrorModalView(
-          'No projects or domains found. Please set up a project and domain in the Userplane dashboard first.'
-        )
-      );
+      await updateModal(accessToken, viewId, buildSetupIncompleteModalView());
       return;
     }
 
@@ -526,7 +526,7 @@ export class SlackCanvasService {
       threadTs,
     };
 
-    const modal = buildLinkCreatorModal({ projects, domains, userName });
+    const modal = buildLinkCreatorModalView({ projects, domains, userName });
     const modalWithMetadata = {
       ...modal,
       private_metadata: JSON.stringify(privateMetadata),
@@ -660,6 +660,7 @@ export class SlackCanvasService {
           // Silently ignore URL-only button actions and unknown actions
           const urlOnlyActions: string[] = [
             SlackActionIds.CONNECT_WORKSPACE,
+            SlackActionIds.CREATE_WORKSPACE,
             SlackActionIds.REQUEST_ACCESS,
             SlackActionIds.CONTACT_SUPPORT,
             SlackActionIds.OPEN_LINK,
@@ -691,7 +692,7 @@ export class SlackCanvasService {
    */
   handleViewSubmission(payload: SlackViewSubmissionPayload): {
     response_action: 'update';
-    view: ReturnType<typeof buildFrozenLoadingModal> | ReturnType<typeof buildErrorModalView>;
+    view: ReturnType<typeof buildFrozenLoadingModalView>;
   } | null {
     const { view, user } = payload;
 
@@ -774,7 +775,7 @@ export class SlackCanvasService {
 
     return {
       response_action: 'update',
-      view: buildFrozenLoadingModal({
+      view: buildFrozenLoadingModalView({
         projectName: projectName ?? 'Unknown project',
         domainName: domainName ?? 'Unknown domain',
         linkTitle: linkTitle || undefined,
@@ -839,13 +840,7 @@ export class SlackCanvasService {
         { teamId, slackUserId, status: accessResult.status },
         'View submission access denied'
       );
-      await updateModal(
-        accessToken,
-        viewId,
-        buildErrorModalView(
-          'You do not have access to this workspace. Please contact a workspace admin.'
-        )
-      );
+      await updateModal(accessToken, viewId, buildAccessDeniedModalView());
       return;
     }
 
@@ -890,23 +885,32 @@ export class SlackCanvasService {
       );
 
       // Post link message to channel if we have a channel context
+      let messagePermalink: string | undefined;
       if (channelId) {
         const message = buildLinkCreatedMessage({
           linkUrl,
           slackUserId,
           customMessage,
         });
-        await postMessage(accessToken, channelId, message.blocks, message.text, threadTs);
+        const messageTs = await postMessage(
+          accessToken,
+          channelId,
+          message.blocks,
+          message.text,
+          threadTs
+        );
+        if (messageTs) {
+          messagePermalink = (await getPermalink(accessToken, channelId, messageTs)) ?? undefined;
+        }
       }
 
       // Replace loading modal with success view
-      const project = await this.deps.projectRepo.findById(projectId);
       await updateModal(
         accessToken,
         viewId,
-        buildLinkSuccessView({
-          projectName: project?.projectTitle ?? 'Unknown Project',
-          domainName: link.domainUrl || 'Unknown Domain',
+        buildSuccessModalView({
+          linkUrl,
+          messagePermalink,
         })
       );
     } catch (error) {
@@ -915,7 +919,7 @@ export class SlackCanvasService {
         await updateModal(
           accessToken,
           viewId,
-          buildLimitExceededView({ workspaceId, limitType: 'links' })
+          buildLimitExceededModalView({ workspaceId, limitType: 'links' })
         );
         return;
       }
@@ -926,12 +930,51 @@ export class SlackCanvasService {
         operation: 'link_creation',
         workspace_id: workspaceId,
       });
-      await updateModal(
-        accessToken,
-        viewId,
-        buildErrorModalView('Something went wrong while creating the link. Please try again.')
-      );
+      await updateModal(accessToken, viewId, buildLinkCreationFailedModalView({ workspaceId }));
     }
+  }
+
+  // ===========================================================================
+  // Disconnection Broadcasting
+  // ===========================================================================
+
+  /**
+   * Broadcast disconnected home tab view to all workspace members.
+   * Best-effort: logs failures but does not throw.
+   */
+  async broadcastDisconnectedView(accessToken: string): Promise<void> {
+    const dashboardUrl = env.dashboard.baseUrl;
+    const disconnectedView = buildHomeDisconnectedView({ dashboardUrl });
+
+    const members = await listUsersAll(accessToken);
+    if (members.length === 0) {
+      logger.debug('No members found for disconnected view broadcast');
+      return;
+    }
+
+    const BATCH_SIZE = 20;
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < members.length; i += BATCH_SIZE) {
+      const batch = members.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map((member) => publishView(accessToken, member.id, disconnectedView))
+      );
+
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      }
+    }
+
+    logger.debug(
+      { successCount, failCount, total: members.length },
+      'Disconnected view broadcast complete'
+    );
   }
 
   // ===========================================================================
@@ -1051,11 +1094,13 @@ export class SlackCanvasService {
       return { status: 'user_not_found' };
     }
 
+    const email = slackUser.profile.email;
+
     // Find Userplane user by email
-    const user = await this.deps.userRepo.findByEmail(slackUser.profile.email);
+    const user = await this.deps.userRepo.findByEmail(email);
     if (!user) {
-      logger.debug({ email: slackUser.profile.email }, 'Userplane user not found');
-      return { status: 'user_not_found' };
+      logger.debug({ email }, 'Userplane user not found');
+      return { status: 'user_not_found', email };
     }
 
     // Find workspace member
@@ -1066,10 +1111,10 @@ export class SlackCanvasService {
 
     if (!member) {
       logger.debug(
-        { email: slackUser.profile.email, workspaceId: integration.workspaceId },
+        { email, workspaceId: integration.workspaceId },
         'User is not a workspace member'
       );
-      return { status: 'not_workspace_member', integration };
+      return { status: 'not_workspace_member', integration, email };
     }
 
     // Resolve display name for personalization
@@ -1094,28 +1139,6 @@ export class SlackCanvasService {
   // ===========================================================================
   // Private: Error Helpers
   // ===========================================================================
-
-  /**
-   * Build appropriate ephemeral error message when user access is denied
-   */
-  private buildAccessDeniedEphemeral(
-    result: Exclude<SlackAccessResult, { status: 'granted' }>
-  ): ReturnType<typeof buildErrorEphemeral> {
-    switch (result.status) {
-      case 'user_not_found':
-        return buildErrorEphemeral(
-          'Your Slack account is not linked to a Userplane account. Please sign up at userplane.com first.'
-        );
-      case 'integration_not_found':
-        return buildErrorEphemeral(
-          'This Slack workspace is not connected to Userplane. Please connect it from the Userplane dashboard.'
-        );
-      case 'not_workspace_member':
-        return buildErrorEphemeral(
-          'You are not a member of the connected Userplane workspace. Please ask a workspace admin to add you.'
-        );
-    }
-  }
 
   /**
    * Get projects and domains for a workspace
@@ -1150,7 +1173,13 @@ export class SlackCanvasService {
     const { projects, domains } = await this.getProjectsAndDomains(workspaceId);
 
     if (projects.length === 0 || domains.length === 0) {
-      await this.handleAppHomeOpened(teamId, slackUserId);
+      await publishView(
+        accessToken,
+        slackUserId,
+        buildHomeErrorView(
+          'No projects or domains are configured yet. Set them up in your dashboard first.'
+        )
+      );
       return;
     }
 
@@ -1174,11 +1203,12 @@ export class SlackCanvasService {
     const accessToken = IntegrationHelper.getAccessToken(integration);
 
     // Open loading modal before trigger_id expires
-    const viewId = await openModal(accessToken, triggerId, buildLoadingModal());
+    const viewId = await openModal(accessToken, triggerId, buildLoadingModalView());
     if (!viewId) {
-      const errMsg = buildErrorEphemeral(
-        'Failed to open the link creation form. Please try again.'
-      );
+      const errMsg = buildCommandFailedMessage({
+        workspaceId: integration.workspaceId,
+        retryHint: 'Try clicking the button again.',
+      });
       await postMessage(accessToken, slackUserId, errMsg.blocks, errMsg.text);
       return;
     }
@@ -1191,12 +1221,18 @@ export class SlackCanvasService {
         'Block action access denied'
       );
       if (accessResult.status === 'not_workspace_member') {
-        await updateModal(accessToken, viewId, buildAccessRequiredView());
+        await updateModal(
+          accessToken,
+          viewId,
+          buildAccessRequiredModalView({ email: accessResult.email })
+        );
       } else {
         await updateModal(
           accessToken,
           viewId,
-          buildErrorModalView(this.buildAccessDeniedEphemeral(accessResult).text)
+          accessResult.status === 'user_not_found'
+            ? buildAccountNotFoundModalView({ email: accessResult.email })
+            : buildWorkspaceNotConnectedModalView()
         );
       }
       return;
@@ -1210,20 +1246,14 @@ export class SlackCanvasService {
       await updateModal(
         accessToken,
         viewId,
-        buildLimitExceededView({ workspaceId, limitType: 'links' })
+        buildLimitExceededModalView({ workspaceId, limitType: 'links' })
       );
       return;
     }
 
     const { projects, domains } = await this.getProjectsAndDomains(workspaceId);
     if (projects.length === 0 || domains.length === 0) {
-      await updateModal(
-        accessToken,
-        viewId,
-        buildErrorModalView(
-          'No projects or domains found. Please set up a project and domain in the dashboard first.'
-        )
-      );
+      await updateModal(accessToken, viewId, buildSetupIncompleteModalView());
       return;
     }
 
@@ -1234,7 +1264,7 @@ export class SlackCanvasService {
       workspaceId,
     };
 
-    const modal = buildLinkCreatorModal({ projects, domains, userName });
+    const modal = buildLinkCreatorModalView({ projects, domains, userName });
     const modalWithMetadata = {
       ...modal,
       private_metadata: JSON.stringify(privateMetadata),
@@ -1420,7 +1450,34 @@ export class SlackCanvasService {
    */
   private async handleHomeCreateLinkSubmit(teamId: string, slackUserId: string): Promise<void> {
     const accessResult = await this.verifySlackUserAccess(teamId, slackUserId);
-    if (accessResult.status !== 'granted') return;
+    if (accessResult.status !== 'granted') {
+      // Recover from access failure instead of leaving user on frozen loading
+      if (accessResult.status === 'not_workspace_member') {
+        const accessToken = IntegrationHelper.getAccessToken(accessResult.integration);
+        await publishView(
+          accessToken,
+          slackUserId,
+          buildHomeAccessRequiredView({ email: accessResult.email })
+        );
+      } else if (accessResult.status === 'integration_not_found') {
+        // No token available — can't publish a view, fall through
+      } else {
+        // user_not_found — show disconnected so they can sign up
+        const integration = await this.deps.integrationRepo.findByProviderWorkspaceId(
+          'slack',
+          teamId
+        );
+        if (integration) {
+          const accessToken = IntegrationHelper.getAccessToken(integration);
+          await publishView(
+            accessToken,
+            slackUserId,
+            buildHomeDisconnectedView({ dashboardUrl: env.dashboard.baseUrl })
+          );
+        }
+      }
+      return;
+    }
 
     const { workspaceId, workspaceMemberId, integration } = accessResult.context;
     const accessToken = IntegrationHelper.getAccessToken(integration);
@@ -1454,8 +1511,11 @@ export class SlackCanvasService {
       // Check capacity
       const hasRoom = await this.deps.entitlementService.hasCapacity(workspaceId, 'links');
       if (!hasRoom) {
-        // Fall back to home view - user will see the limit when trying via slash command
-        await this.handleAppHomeOpened(teamId, slackUserId);
+        await publishView(
+          accessToken,
+          slackUserId,
+          buildHomeLimitExceededView({ workspaceId, limitType: 'links' })
+        );
         return;
       }
 
@@ -1487,7 +1547,7 @@ export class SlackCanvasService {
         link.recordingCaptureNetworkLog
       );
 
-      await publishView(accessToken, slackUserId, buildHomeLinkSuccessView({ linkUrl }));
+      await publishView(accessToken, slackUserId, buildHomeSuccessView({ linkUrl }));
 
       // Clear cached selection state
       await this.deps.cacheService.delete(this.homeSelectCacheKey(teamId, slackUserId));
@@ -1498,8 +1558,18 @@ export class SlackCanvasService {
         operation: 'home_link_creation',
         workspace_id: workspaceId,
       });
-      // Fall back to connected home view on error
-      await this.handleAppHomeOpened(teamId, slackUserId);
+      await publishView(
+        accessToken,
+        slackUserId,
+        buildHomeErrorView('Something went wrong while creating your link. Please try again.', [
+          {
+            text: 'Create from Dashboard',
+            actionId: SlackActionIds.VIEW_DASHBOARD,
+            url: `${env.dashboard.baseUrl}/workspace/${workspaceId}/recordings?create_link=true`,
+            style: 'primary',
+          },
+        ])
+      );
     }
   }
 
