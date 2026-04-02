@@ -9,7 +9,7 @@ import { buildErrorEphemeral } from './error';
 
 export function buildWorkspaceNotConnectedMessage() {
   const dashboardUrl = slackCanvasUrls.dashboardUrl();
-  const connectUrl = `${dashboardUrl}/_/settings?tab=integrations`;
+  const connectUrl = slackCanvasUrls.slackAuthorizeUrl();
   const createUrl = `${dashboardUrl}/workspace/create?flow=slack`;
 
   return buildErrorEphemeral({

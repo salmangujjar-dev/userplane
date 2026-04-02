@@ -6,13 +6,14 @@
 import { env } from '@/api/env';
 
 import { SlackActionIds } from '../constants';
+import { slackCanvasUrls } from '../urls';
 
 /**
  * Build the home tab view for disconnected users.
  * Offers two paths: connect an existing workspace or create a new one.
  */
 export function buildHomeDisconnectedView(params: { dashboardUrl: string }) {
-  const connectUrl = `${params.dashboardUrl}/_/settings?tab=integrations`;
+  const connectUrl = slackCanvasUrls.slackAuthorizeUrl();
   const createUrl = `${params.dashboardUrl}/workspace/create?flow=slack`;
 
   return {
