@@ -1,0 +1,135 @@
+---
+title: Slack Integration
+description: Connect Userplane to Slack to create recording links from any channel, review sessions from the App Home, and get notified when recordings arrive
+---
+
+The Slack integration lets your support team create recording links without leaving Slack. Agents can use a slash command, a message shortcut, or the App Home to generate links, and get a direct message when a customer submits a recording.
+
+## What the integration does
+
+- Adds a **/userplane slash command** so agents can create recording links from any channel or DM.
+- Adds a **message shortcut** so agents can right-click any Slack message to create a recording link in context.
+- Provides an **App Home** dashboard with recent recordings, recent links, browsing, and inline link creation.
+- Sends a **DM notification** to the agent when a recording arrives.
+- Posts the recording link as a **channel message** when created, so the whole thread has context.
+
+## Connecting Slack
+
+There are two ways to connect Userplane to Slack:
+
+<Note>Only workspace **owners** and **admins** can connect the integration.</Note>
+
+<Tabs>
+  <Tab title="From Slack App Directory">
+    Install Userplane from the Slack App Directory to create a new Userplane workspace as part of setup.
+
+    <Steps>
+      <Step title="Find Userplane in the Slack App Directory">
+        Search for **Userplane** in the Slack App Directory and click **Add to Slack**.
+
+        <Frame caption="Userplane in the Slack App Directory">
+          <img src="/media/slack/oauth/slack-app-directory.png" />
+        </Frame>
+      </Step>
+      <Step title="Authorize">
+        Review the permissions Userplane requests and click **Allow**.
+
+        <Frame caption="Slack authorization screen">
+          <img src="/media/slack/oauth/slack-oauth-consent.png" />
+        </Frame>
+      </Step>
+      <Step title="Create a workspace">
+        After authorizing, you'll be prompted to create a new Userplane workspace.
+
+        <Frame caption="Create your workspace">
+          <img src="/media/slack/oauth/slack-onboarding-create-workspace.png" />
+        </Frame>
+      </Step>
+      <Step title="Invite teammates">
+        Invite your support team to the workspace so they can use the Slack integration.
+
+        <Frame caption="Invite teammates">
+          <img src="/media/slack/oauth/slack-onboarding-invite-teammates.png" />
+        </Frame>
+      </Step>
+      <Step title="Done">
+        The Userplane app is now installed in your Slack workspace. Try `/userplane` in any channel to get started.
+
+        <Frame caption="Connected successfully">
+          <img src="/media/slack/oauth/slack-onboarding-connected.png" />
+        </Frame>
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="From Workspace Settings">
+    If you already have a Userplane workspace, connect Slack from your workspace settings.
+
+    <Steps>
+      <Step title="Open Integrations settings">
+        Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+
+        <Frame caption="Integrations settings">
+          <img src="/media/slack/workspace-settings/pre-connection-modal.png" />
+        </Frame>
+      </Step>
+      <Step title="Click Connect Slack">
+        Click **Connect Slack**. You'll be redirected to Slack to authorize the connection.
+      </Step>
+      <Step title="Authorize">
+        Review the permissions and click **Allow**.
+
+        <Frame caption="Slack authorization screen">
+          <img src="/media/slack/oauth/slack-oauth-consent.png" />
+        </Frame>
+      </Step>
+      <Step title="Done">
+        After authorizing, you'll be redirected back to Userplane and the integration is active.
+
+        <Frame caption="Slack integration connected">
+          <img src="/media/slack/workspace-settings/post-connection-modal.png" />
+        </Frame>
+      </Step>
+    </Steps>
+
+  </Tab>
+</Tabs>
+
+## Permissions granted
+
+When you authorize the Slack connection, Userplane requests the following bot permissions:
+
+- Send messages to channels and DMs.
+- Post messages to public channels without being a member.
+- Look up users by email to match Slack identities to Userplane workspace members.
+- Read basic workspace and team information.
+- Register the `/userplane` slash command.
+
+## Disconnecting Slack
+
+<Steps>
+  <Step title="Open Integrations settings">
+    Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+
+    <Frame caption="Integrations settings">
+      <img src="/media/slack/workspace-settings/post-connection-modal.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Click Disconnect">
+    Click **Disconnect** next to Slack and confirm.
+  </Step>
+</Steps>
+
+<Note>
+  Disconnecting removes the Userplane app from Slack. Existing recordings and links are preserved.
+  All workspace members' Slack notification preferences are cleared and must be re-enabled after
+  reconnecting.
+</Note>
+
+## Related articles
+
+- [Slack App Home](/integrations/slack-home) — the dashboard inside Slack for browsing and creating links.
+- [Slack Slash Command](/integrations/slack-commands) — create recording links from any channel with `/userplane`.
+- [Slack Message Shortcuts](/integrations/slack-shortcuts) — right-click any message to create a link in context.
+- [Slack Notifications](/integrations/slack-notifications) — get notified when recordings arrive.
