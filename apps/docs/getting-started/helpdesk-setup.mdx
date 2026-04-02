@@ -3,16 +3,19 @@ title: Help Desk Setup
 description: Connect Userplane to Intercom, Zendesk, or any help desk via the Chrome extension so your team can request recordings from inside tickets and conversations
 ---
 
-Userplane integrates with Intercom and Zendesk so your support agents can create recording links and view recordings without leaving their help desk. If you use a different help desk, the [Chrome extension](/integrations/chrome-extension) provides the same core workflow alongside any browser-based tool.
+Userplane integrates with Intercom, Zendesk, and Slack so your support agents can create recording links and view recordings without leaving their tools. If you use a different help desk, the [Chrome extension](/integrations/chrome-extension) provides the same core workflow alongside any browser-based tool.
 
 ## Choose your help desk
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card title="Intercom" icon="message" href="#connect-intercom">
     Sidebar app, Cmd+K shortcuts, and macro support inside the Intercom inbox
   </Card>
   <Card title="Zendesk" icon="ticket" href="#connect-zendesk">
     Ticket sidebar, editor button, and top bar app inside Zendesk
+  </Card>
+  <Card title="Slack" icon="slack" href="#connect-slack">
+    Slash command, message shortcuts, and App Home dashboard inside Slack
   </Card>
   <Card title="Chrome Extension" icon="puzzle-piece" href="#chrome-extension">
     Side panel for creating links and viewing recordings alongside any browser-based tool
@@ -122,6 +125,49 @@ See [Intercom Integration](/integrations/intercom) for the full reference.
 
 See [Zendesk Integration](/integrations/zendesk) for the full reference.
 
+## Connect Slack
+
+<Steps>
+  <Step title="Open Integrations settings">
+    Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations).
+
+    <Frame caption="Integrations settings">
+      <img src="/media/slack/workspace-settings/pre-connection-modal.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Click Connect Slack">
+    Click **Connect Slack**. You'll be redirected to Slack to authorize the connection.
+  </Step>
+  <Step title="Authorize">
+    Review the permissions and click **Allow**.
+
+    <Frame caption="Slack authorization">
+      <img src="/media/slack/oauth/slack-oauth-consent.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Done">
+    After authorizing, you'll be redirected back to Userplane and the integration is active.
+
+    <Frame caption="Slack integration connected">
+      <img src="/media/slack/workspace-settings/post-connection-modal.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+### What happens when you connect
+
+- The `/userplane` slash command is registered in your Slack workspace. Agents can type it in any channel to create a recording link.
+- A **message shortcut** is added so agents can right-click any Slack message to create a link in context.
+- The **Userplane App Home** tab appears in Slack with a personal dashboard for each agent.
+- Agents receive **DM notifications** when a recording arrives for a link they created from Slack. Any team member can also opt in to receive Slack DMs for all recordings via [notification preferences](/account/notifications).
+
+<Note>Only workspace **owners** and **admins** can connect the Slack integration.</Note>
+
+See [Slack Integration](/integrations/slack) for the full reference.
+
 ## Chrome Extension
 
 If your team uses a help desk other than Intercom or Zendesk, install the Chrome extension to get the same recording link workflow from a browser side panel.
@@ -192,7 +238,7 @@ Once connected, invite your help desk agents to your Userplane workspace so they
 
   </Step>
   <Step title="Select members to invite">
-    Alternatively, go to [Workspace Settings > Team](https://dash.userplane.io/_/recordings?invite=true) and click
+    Alternatively, go to [Workspace Settings > Team](https://dash.userplane.io/_/settings?tab=team) and click
     **Invite Member**.
     <Frame caption="Go to Team settings">
       <img src="/media/workspace/team/team-list-roles.png" />
@@ -228,6 +274,9 @@ Once connected, invite your help desk agents to your Userplane workspace so they
    <Frame caption="Disconnect Intercom Integration">
      <img src="/media/intercom/workspace-settings/post-connection-modal.png" />
    </Frame>
+   <Frame caption="Disconnect Slack Integration">
+     <img src="/media/slack/workspace-settings/post-connection-modal.png" />
+   </Frame>
 
 <Note>
   Disconnecting removes the Userplane app from your help desk. Existing recordings and links are
@@ -238,6 +287,7 @@ Once connected, invite your help desk agents to your Userplane workspace so they
 
 - [Intercom Integration](/integrations/intercom) — detailed overview of the Intercom integration.
 - [Zendesk Integration](/integrations/zendesk) — detailed overview of the Zendesk integration.
+- [Slack Integration](/integrations/slack) — detailed overview of the Slack integration.
 - [Chrome Extension](/integrations/chrome-extension) — installation and overview of the Chrome extension.
 - [Other Help Desks](/integrations/other-helpdesks) — use the Chrome extension alongside any help desk.
 - [Roles & Permissions](/workspace/roles-permissions) — what each workspace role can do.

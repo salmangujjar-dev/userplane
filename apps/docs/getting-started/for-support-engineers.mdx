@@ -22,7 +22,7 @@ You're the one who gets things set up so the rest of the support team can work e
     </Frame>
   </Step>
   <Step title="Set your invite policy">
-    Go to [Workspace Settings > Invite Policy](https://dash.userplane.io/_/settings?tab=team). Choose the right policy for your org:
+    Go to [Workspace Settings > Invite Policy](https://dash.userplane.io/_/settings?tab=workspace). Choose the right policy for your org:
 
     | Policy | Behavior |
     | --- | --- |
@@ -42,7 +42,7 @@ You're the one who gets things set up so the rest of the support team can work e
 
   </Step>
   <Step title="Invite your team">
-    Go to [Team Settings](https://dash.userplane.io/_/recordings?invite=true) and invite teammates. Later, you can assign roles based on what each person needs to do.
+    Go to [Team Settings](https://dash.userplane.io/_/settings?tab=team) and invite teammates. Later, you can assign roles based on what each person needs to do.
 
     <Frame caption="Invite team members">
       <img src="/media/workspace/team/invite-dialog.png" />
@@ -81,7 +81,7 @@ Domain verification enables first-party branded recording links — customers se
 
 <Steps>
   <Step title="Add your domain">
-    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=domains) and click
+    Go to [Workspace Settings > Domains](https://dash.userplane.io/_/settings?tab=general) and click
     **Add Domain**.
 
     <Frame caption="Add domain">
@@ -202,6 +202,28 @@ Before going live, make sure sensitive customer data doesn't appear in recording
         <Frame caption="Complete sign-in">
           <img src="/media/zendesk/zendesk-oauth/zendesk-complete-sign-in.png" />
         </Frame>
+      </Step>
+    </Steps>
+
+  </Tab>
+  <Tab title="Slack">
+    <Steps>
+      <Step title="Go to Integrations settings">
+        Go to [Workspace Settings > Integrations](https://dash.userplane.io/_/settings?tab=integrations) and click **Connect Slack**.
+
+        <Frame caption="Integrations settings">
+          <img src="/media/slack/workspace-settings/pre-connection-modal.png" />
+        </Frame>
+      </Step>
+      <Step title="Authorize">
+        Complete the OAuth flow. The `/userplane` command, message shortcuts, and App Home become available in your Slack workspace.
+
+        <Frame caption="Slack authorization">
+          <img src="/media/slack/oauth/slack-oauth-consent.png" />
+        </Frame>
+      </Step>
+      <Step title="Invite workspace members">
+        Slack users are matched to Userplane workspace members by email. Invite any agents who need access from [Workspace Settings > Team](https://dash.userplane.io/_/settings?tab=team).
       </Step>
     </Steps>
 

@@ -7,13 +7,13 @@ You're the one talking to customers. This guide gets you from zero to sending yo
 
 ## What you'll be able to do
 
-- Send recording links to customers directly from Intercom, Zendesk, or the Chrome extension
+- Send recording links to customers directly from Intercom, Zendesk, Slack, or the Chrome extension
 - Review screen recordings with console logs and network data alongside the video
 - Use shortcuts and macros to request recordings in seconds
 
 ## Step 1: Join your workspace
 
-Your workspace admin will send you an invite link via email. Click it to create your account and join the workspace. If you haven't received an invite, ask your admin to send one from [Workspace Settings > Team](https://dash.userplane.io/_/recordings?invite=true).
+Your workspace admin will send you an invite link via email. Click it to create your account and join the workspace. If you haven't received an invite, ask your admin to send one from [Workspace Settings > Team](https://dash.userplane.io/_/settings?tab=team).
 
 <Frame caption="Go to Team settings">
   <img src="/media/workspace/team/team-list-roles.png" />
@@ -51,6 +51,23 @@ Your workspace admin will send you an invite link via email. Click it to create 
   </Tab>
   <Tab title="Zendesk">
     Userplane appears automatically in every Zendesk ticket — as a **sidebar app**, a **button in the reply editor**, and in the **top bar**. No pinning required.
+  </Tab>
+  <Tab title="Slack">
+    Userplane lives in Slack as a slash command, a message shortcut, and an App Home tab.
+
+    <Steps>
+      <Step title="Open the Userplane app in Slack">
+        In your Slack sidebar, go to **Apps** and open **Userplane**. The Home tab shows your recent recordings and links.
+
+        <Frame caption="Userplane App Home in Slack">
+          <img src="/media/slack/home/home-connected.png" />
+        </Frame>
+      </Step>
+      <Step title="Try the slash command">
+        In any channel, type `/userplane` and press **Enter** to open the link creator.
+      </Step>
+    </Steps>
+
   </Tab>
   <Tab title="Chrome Extension">
     Userplane opens as a Chrome side panel alongside whatever tab you're working in.
@@ -151,6 +168,39 @@ Your workspace admin will send you an invite link via email. Click it to create 
     </Tip>
 
   </Tab>
+  <Tab title="Slack">
+    <Steps>
+      <Step title="Go to the channel or DM">
+        Find the Slack channel or DM where the customer (or an internal teammate relaying the issue) has described the problem.
+
+        <Frame caption="Slack channel with a customer issue">
+          <img src="/media/slack/commands/slack-channel-context.png" />
+        </Frame>
+      </Step>
+      <Step title="Create a recording link">
+        Type `/userplane` in the channel and press **Enter**. A modal opens — select a **Project** and **Domain**, optionally add a reference, and click **Create**.
+
+        <Frame caption="Link creator modal from /userplane">
+          <img src="/media/slack/commands/slash-command-modal.png" />
+        </Frame>
+      </Step>
+      <Step title="Link is posted to the channel">
+        The recording link is posted as a channel message. Share it with the customer directly or copy it to send via another channel.
+
+        <Frame caption="Recording link posted to channel">
+          <img src="/media/slack/commands/slash-command-link-created.png" />
+        </Frame>
+      </Step>
+      <Step title="Customer records">
+        The customer clicks the link, records their screen, and submits. No installs required on their end.
+      </Step>
+    </Steps>
+
+    <Tip>
+      Use the **message shortcut** instead if you want the recording link posted as a reply to a specific message. Right-click any message and select **Create recording link**. See [Slack Message Shortcuts](/integrations/slack-shortcuts).
+    </Tip>
+
+  </Tab>
   <Tab title="Chrome Extension">
     <Steps>
       <Step title="Open a ticket">
@@ -242,6 +292,8 @@ Once the customer submits, the recording appears in the Userplane dashboard.
 - **Intercom Macros** — embed reusable recording links in Intercom macros so you can request recordings with one click. See [Intercom Macros](/integrations/intercom-macros).
 - **Intercom Shortcuts** — use `Cmd+K` inside a conversation to insert a link instantly. See [Intercom Shortcuts](/integrations/intercom-shortcuts).
 - **Zendesk locations** — use the ticket sidebar, editor button, or top bar to create links from anywhere in Zendesk. See [Zendesk Ticket Sidebar](/integrations/zendesk-ticket-sidebar).
+- **Slack Slash Command** — type `/userplane TICKET-ID` to open the link creator with the reference pre-filled. See [Slack Slash Command](/integrations/slack-commands).
+- **Slack Message Shortcuts** — right-click any message in Slack to create a recording link tied to that thread. See [Slack Message Shortcuts](/integrations/slack-shortcuts).
 - **Chrome Extension Shortcuts** — use `Cmd+Shift+Y`, context menus, or the omnibox for fast link creation from any tab. See [Chrome Extension Shortcuts](/integrations/chrome-extension-shortcuts).
 - **Projects** — organize recordings by product area, customer tier, or issue type. See [Projects](/recording/projects).
 
@@ -259,6 +311,9 @@ Once the customer submits, the recording appears in the Userplane dashboard.
   </Card>
   <Card title="Zendesk Integration" icon="ticket" href="/integrations/zendesk-ticket-sidebar">
     Full guide to using Userplane from inside Zendesk
+  </Card>
+  <Card title="Slack Integration" icon="slack" href="/integrations/slack-commands">
+    Full guide to using Userplane from inside Slack
   </Card>
   <Card title="Chrome Extension" icon="puzzle-piece" href="/integrations/chrome-extension">
     Use the side panel alongside any browser-based tool

@@ -197,7 +197,8 @@
                   "integrations/intercom",
                   "integrations/intercom-inbox",
                   "integrations/intercom-shortcuts",
-                  "integrations/intercom-macros"
+                  "integrations/intercom-macros",
+                  "integrations/intercom-notifications"
                 ]
               },
               {
@@ -208,6 +209,16 @@
                   "integrations/zendesk-ticket-editor",
                   "integrations/zendesk-top-bar",
                   "integrations/zendesk-notifications"
+                ]
+              },
+              {
+                "group": "Slack",
+                "pages": [
+                  "integrations/slack",
+                  "integrations/slack-home",
+                  "integrations/slack-commands",
+                  "integrations/slack-shortcuts",
+                  "integrations/slack-notifications"
                 ]
               },
               {
