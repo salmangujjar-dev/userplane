@@ -94,7 +94,7 @@ export class RecorderBridgeConnection {
       this.state.tabRef = await Promise.resolve(remote.getTabRef());
       logger.debug({ tabRef: this.state.tabRef }, 'got tab ref');
     } catch (error) {
-      logger.error({ err: error }, 'failed to fetch tab ref');
+      logger.warn({ err: error }, 'failed to fetch tab ref');
     }
   }
 
@@ -153,7 +153,7 @@ export class RecorderBridgeConnection {
       logger.debug({ pageUrl: url }, 'got page URL');
       return url;
     } catch (error) {
-      logger.error({ err: error }, 'failed to get page URL');
+      logger.warn({ err: error }, 'failed to get page URL');
       return null;
     }
   }
@@ -181,7 +181,7 @@ export class RecorderBridgeConnection {
       logger.debug({ hasMetadata: !!metadata }, 'got custom metadata');
       return metadata;
     } catch (error) {
-      logger.error({ err: error }, 'failed to get custom metadata');
+      logger.warn({ err: error }, 'failed to get custom metadata');
       return null;
     }
   }
@@ -242,7 +242,7 @@ export class RecorderBridgeConnection {
       await this.crossTab.updateState(state);
       logger.debug({ state }, 'updated cross-tab state');
     } catch (error) {
-      logger.error({ err: error }, 'failed to update cross-tab state');
+      logger.warn({ err: error }, 'failed to update cross-tab state');
     }
   }
 

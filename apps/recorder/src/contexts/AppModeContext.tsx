@@ -303,7 +303,7 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
       bridge.setCrossTabCoordinator(null);
       bridge.disconnect();
       crossTab.disconnect().catch((err) => {
-        logger.error({ err }, 'error disconnecting cross-tab');
+        logger.warn({ err }, 'error disconnecting cross-tab');
       });
     };
   }, [isEmbedded, isRecording]);

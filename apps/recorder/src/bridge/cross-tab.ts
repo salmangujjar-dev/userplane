@@ -325,7 +325,7 @@ export class CrossTabCoordinator {
       };
       await remote.syncRecorderState(tabId, state);
     } catch (error) {
-      logger.error({ err: error }, 'broadcast failed');
+      logger.warn({ err: error }, 'broadcast failed');
     }
   }
 
@@ -349,7 +349,7 @@ export class CrossTabCoordinator {
       };
       await remote.syncCaptureRecorderState(state);
     } catch (error) {
-      logger.error({ err: error }, 'capture state broadcast failed');
+      logger.warn({ err: error }, 'capture state broadcast failed');
     }
   }
 
@@ -616,7 +616,7 @@ export class CrossTabCoordinator {
               self.sendLogsResponse(response);
             })
             .catch((err) => {
-              logger.error({ err }, 'log extraction failed');
+              logger.warn({ err }, 'log extraction failed');
             });
         }
       },
@@ -793,7 +793,7 @@ export class CrossTabCoordinator {
       // Log at debug level to avoid spam (every 5 seconds)
       logger.debug({ recorderTabId, recorderState }, 'health check passed');
     } catch (error) {
-      logger.error({ err: error }, 'health check failed');
+      logger.warn({ err: error }, 'health check failed');
     }
   }
 
@@ -987,7 +987,7 @@ export class CrossTabCoordinator {
       return { success: true };
     }
 
-    logger.error({ retries: this.config.maxRetries }, 'lock acquisition failed');
+    logger.warn({ retries: this.config.maxRetries }, 'lock acquisition failed');
     return {
       success: false,
       error: `Failed to acquire lock after ${this.config.maxRetries} retries`,
@@ -1059,7 +1059,7 @@ export class CrossTabCoordinator {
       logger.debug({ attempt: retries, workerVersion: version }, 'release CAS conflict, retrying');
     }
 
-    logger.error('lock release failed - max retries');
+    logger.warn('lock release failed - max retries');
     return false;
   }
 
@@ -1111,7 +1111,7 @@ export class CrossTabCoordinator {
       logger.debug({ attempt: retries, workerVersion: version }, 'state CAS conflict, retrying');
     }
 
-    logger.error('state update failed - max retries');
+    logger.warn('state update failed - max retries');
     return false;
   }
 
@@ -1145,7 +1145,7 @@ export class CrossTabCoordinator {
       };
       await remote.broadcastStartBlurr();
     } catch (error) {
-      logger.error({ err: error }, 'blur broadcast failed');
+      logger.warn({ err: error }, 'blur broadcast failed');
     }
   }
 
@@ -1167,7 +1167,7 @@ export class CrossTabCoordinator {
       };
       await remote.broadcastStopBlurr();
     } catch (error) {
-      logger.error({ err: error }, 'blur broadcast failed');
+      logger.warn({ err: error }, 'blur broadcast failed');
     }
   }
 
@@ -1206,7 +1206,7 @@ export class CrossTabCoordinator {
         internalEndpoints ?? null
       );
     } catch (error) {
-      logger.error({ err: error }, 'log capture broadcast failed');
+      logger.warn({ err: error }, 'log capture broadcast failed');
     }
   }
 
@@ -1227,7 +1227,7 @@ export class CrossTabCoordinator {
       };
       await remote.broadcastPauseLogCapture();
     } catch (error) {
-      logger.error({ err: error }, 'log capture pause broadcast failed');
+      logger.warn({ err: error }, 'log capture pause broadcast failed');
     }
   }
 
@@ -1247,7 +1247,7 @@ export class CrossTabCoordinator {
       };
       await remote.broadcastStopLogCapture();
     } catch (error) {
-      logger.error({ err: error }, 'log capture stop broadcast failed');
+      logger.warn({ err: error }, 'log capture stop broadcast failed');
     }
   }
 
@@ -1267,7 +1267,7 @@ export class CrossTabCoordinator {
       };
       await remote.broadcastClearLogStore();
     } catch (error) {
-      logger.error({ err: error }, 'clear log store broadcast failed');
+      logger.warn({ err: error }, 'clear log store broadcast failed');
     }
   }
 
@@ -1389,7 +1389,7 @@ export class CrossTabCoordinator {
       };
       await remote.requestLogs(request);
     } catch (error) {
-      logger.error({ err: error }, 'logs request broadcast failed');
+      logger.warn({ err: error }, 'logs request broadcast failed');
     }
   }
 
@@ -1402,7 +1402,7 @@ export class CrossTabCoordinator {
       };
       await remote.respondLogs(response);
     } catch (error) {
-      logger.error({ err: error }, 'logs response send failed');
+      logger.warn({ err: error }, 'logs response send failed');
     }
   }
 
@@ -1508,7 +1508,7 @@ export class CrossTabCoordinator {
       };
       await remote.requestMetadata(request);
     } catch (error) {
-      logger.error({ err: error }, 'metadata request broadcast failed');
+      logger.warn({ err: error }, 'metadata request broadcast failed');
     }
   }
 
@@ -1524,7 +1524,7 @@ export class CrossTabCoordinator {
       };
       await remote.respondMetadata(response);
     } catch (error) {
-      logger.error({ err: error }, 'metadata response send failed');
+      logger.warn({ err: error }, 'metadata response send failed');
     }
   }
 

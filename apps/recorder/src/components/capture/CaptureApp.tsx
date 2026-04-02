@@ -280,7 +280,7 @@ export default function CaptureApp() {
           return bridge.getLogEntries();
         });
       } catch (err) {
-        logger.error({ err }, 'bridge initialization failed');
+        logger.warn({ err }, 'bridge initialization failed');
         if (mounted) {
           dispatch({
             type: 'error',

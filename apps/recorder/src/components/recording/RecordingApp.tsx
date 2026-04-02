@@ -213,7 +213,7 @@ function RecordingAppContent() {
 
     case 'review':
       if (!state.videoUrl) {
-        logger.error('no video URL in review state');
+        logger.warn('no video URL in review state');
         return <PreRecordingLoadingScreen />;
       }
 
@@ -229,7 +229,7 @@ function RecordingAppContent() {
 
     case 'uploading':
       if (!state.videoUrl) {
-        logger.error('no video URL in uploading state');
+        logger.warn('no video URL in uploading state');
         return <PreRecordingLoadingScreen />;
       }
 

@@ -177,7 +177,7 @@ export class MediaCapture {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.mediaRecorder.onerror = (event: any) => {
         const error = new ClientError('CLIENT_MEDIA_CONNECTION_FAILED', event.error);
-        logger.error({ err: error, code: error.code }, 'media recorder error');
+        logger.warn({ err: error, code: error.code }, 'media recorder error');
 
         posthog.captureException(error, {
           error_type: 'media_recorder_error',
@@ -198,7 +198,7 @@ export class MediaCapture {
         // No need to do anything here - onstop handler will fire automatically
       });
     } catch (error) {
-      logger.error({ err: error, mode: this.mode }, 'permission request failed');
+      logger.warn({ err: error, mode: this.mode }, 'permission request failed');
 
       posthog.captureException(error, {
         error_type: 'media_permission_denied',
@@ -400,7 +400,7 @@ export async function requestScreenRecordingPermission(): Promise<boolean> {
     stream.getTracks().forEach((track) => track.stop());
     return true;
   } catch (error) {
-    logger.error({ err: error }, 'screen recording permission denied');
+    logger.warn({ err: error }, 'screen recording permission denied');
 
     posthog.captureException(error, {
       error_type: 'permission_check_failed',

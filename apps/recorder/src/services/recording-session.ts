@@ -98,7 +98,7 @@ export class RecordingSession {
     const result = handleServerResult(error, response?.data);
 
     if (!result.ok) {
-      logger.error({ err: result.error }, 'initialization failed');
+      logger.debug({ err: result.error }, 'initialization failed');
       return result;
     }
 
@@ -323,7 +323,7 @@ export class RecordingSession {
     const result = handleServerResult(error, response?.data);
 
     if (!result.ok) {
-      logger.error({ err: result.error }, 'upload initialization failed');
+      logger.debug({ err: result.error }, 'upload initialization failed');
       return result;
     }
 
@@ -529,7 +529,7 @@ export class RecordingSession {
     const result = handleServerResult(error, response?.data);
 
     if (!result.ok) {
-      logger.error({ err: result.error }, 'upload acknowledgment failed');
+      logger.debug({ err: result.error }, 'upload acknowledgment failed');
       return result;
     }
 
