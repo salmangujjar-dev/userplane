@@ -9,7 +9,9 @@ import type { ZendeskTokenResponse } from '@/api/clients/zendesk';
 import { setInstallationSettings } from '@/api/clients/zendesk';
 import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
+import { captureException } from '@/api/posthog';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 
 const logger = createLogger('zendesk-oauth');
 
@@ -24,6 +26,7 @@ interface CreateIntegrationParams {
   installationId?: number;
   jwtSecret: string;
   integrationRepo: IntegrationRepository;
+  memberRepo: WorkspaceMemberRepository;
   cacheService: CacheService;
 }
 
@@ -39,6 +42,7 @@ export async function createZendeskIntegration(params: CreateIntegrationParams):
     installationId,
     jwtSecret,
     integrationRepo,
+    memberRepo,
     cacheService,
   } = params;
 
@@ -86,6 +90,17 @@ export async function createZendeskIntegration(params: CreateIntegrationParams):
     );
   }
 
+  // Enable Zendesk channel for all workspace members
+  try {
+    await memberRepo.enableIncomingEventChannel(workspaceId, 'zendesk');
+  } catch (error) {
+    logger.error({ err: error, workspaceId }, 'Failed to enable Zendesk channel for members');
+    captureException(error, undefined, {
+      operation: 'enable_zendesk_channel_on_connect',
+      workspace_id: workspaceId,
+    });
+  }
+
   // Warm cache
   await cacheService.setIntegrationByProviderWorkspace('zendesk', subdomain, { workspaceId });
 
@@ -96,6 +111,7 @@ export async function createZendeskIntegration(params: CreateIntegrationParams):
 
 export interface ZendeskServiceDeps {
   integrationRepo: IntegrationRepository;
+  memberRepo: WorkspaceMemberRepository;
   cacheService: CacheService;
 }
 
@@ -152,6 +168,18 @@ export class ZendeskService {
 
     if (!deleted) {
       throw workspaceError.INTEGRATION_NOT_FOUND();
+    }
+
+    // Clean up notification channel preferences
+    try {
+      await this.deps.memberRepo.clearIncomingEventChannel(workspaceId, 'zendesk');
+    } catch (error) {
+      // Log but don't fail - integration is already disconnected
+      logger.error({ err: error, workspaceId }, 'Error cleaning up Zendesk notification channels');
+      captureException(error, undefined, {
+        operation: 'disconnect_zendesk_channel_cleanup',
+        workspace_id: workspaceId,
+      });
     }
 
     // Invalidate caches
