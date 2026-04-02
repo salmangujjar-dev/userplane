@@ -78,6 +78,20 @@
       "when": 1772764288926,
       "tag": "0010_cooing_big_bertha",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1775034410194,
+      "tag": "0011_complex_supreme_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1775035527884,
+      "tag": "0012_condemned_gabe_jones",
+      "breakpoints": true
     }
   ]
 }

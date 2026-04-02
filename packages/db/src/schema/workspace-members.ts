@@ -1,6 +1,15 @@
 import type { WorkspaceRole } from '@userplane/contract';
 import { relations, sql } from 'drizzle-orm';
-import { boolean, check, index, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 
 import { WORKSPACE_ROLE_VALUES } from '../constants';
 import { links } from './links';
@@ -34,11 +43,12 @@ export const workspaceMembers = pgTable(
     // Admins and members can opt out of this notification
     // Owners cannot opt out of this notification
     notifyUsageEvents: boolean('notify_usage_events').default(true).notNull(),
-    // For accepting emails for incoming recordings and screenshots
-    // This includes notifications for new recordings and screenshots
-    // This is disabled by default to avoid spamming users
-    // Members, Admins and Owners can opt in and opt out of this notification
-    notifyIncomingEvents: boolean('notify_incoming_events').default(false).notNull(),
+    // Per-channel notification preferences for incoming recordings and screenshots
+    // JSONB: { email: boolean, slack?: boolean, intercom?: boolean, zendesk?: boolean }
+    // Each channel is independently toggleable. Disabled by default to avoid spamming.
+    notifyIncomingEvents: jsonb('notify_incoming_events')
+      .default(sql`'{"email": false}'::jsonb`)
+      .notNull(),
     // For accepting admin emails related to workspace
     // This includes notifications for new members, access requests, and role changes
     // Admins are not notified by default to avoid spamming them

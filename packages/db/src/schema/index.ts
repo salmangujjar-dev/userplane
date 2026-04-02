@@ -14,6 +14,7 @@ export * from './subscriptions';
 export * from './user';
 export * from './verification';
 export * from './webhook-events';
+export * from './workspace-member-identities';
 export * from './workspace-members';
 export * from './workspaces';
 
@@ -28,6 +29,7 @@ import { session } from './session';
 import { subscriptions } from './subscriptions';
 import { user } from './user';
 import { verification } from './verification';
+import { workspaceMemberIdentities } from './workspace-member-identities';
 import { workspaceMembers } from './workspace-members';
 import { workspaces } from './workspaces';
 
@@ -69,3 +71,6 @@ export type NewSubscription = typeof subscriptions.$inferInsert;
 
 export type Integration = typeof integrations.$inferSelect;
 export type NewIntegration = typeof integrations.$inferInsert;
+
+export type WorkspaceMemberIdentity = typeof workspaceMemberIdentities.$inferSelect;
+export type NewWorkspaceMemberIdentity = typeof workspaceMemberIdentities.$inferInsert;
