@@ -7,6 +7,41 @@ import { getMarketingUrl } from './urls';
  */
 export const FOOTER_COPYRIGHT = 'Userplane. All rights reserved.';
 
+const ASK_QUERY = encodeURIComponent(
+  "What does Userplane(tryuserplane.com) do? It's a support tool that helps SaaS teams resolve support issues faster by capturing recordings, logs, and session data from customer\nRead: https://userplane.io/index.md"
+);
+
+/**
+ * "Ask about Userplane on" AI chat links
+ */
+export const FOOTER_AI_LINKS = [
+  {
+    label: 'ChatGPT',
+    icon: '/icons/chatgpt.svg',
+    href: `https://chatgpt.com/?q=${ASK_QUERY}`,
+  },
+  {
+    label: 'Claude',
+    icon: '/icons/claude.svg',
+    href: `https://claude.ai/new?q=${ASK_QUERY}`,
+  },
+  {
+    label: 'Perplexity',
+    icon: '/icons/perplexity.svg',
+    href: `https://www.perplexity.ai/search?q=${ASK_QUERY}`,
+  },
+  {
+    label: 'Gemini',
+    icon: '/icons/gemini.svg',
+    href: 'https://gemini.google.com/share/1dc00ffdf75c',
+  },
+  {
+    label: 'Grok',
+    icon: '/icons/grok.svg',
+    href: `https://grok.com/?q=${ASK_QUERY}`,
+  },
+] as const;
+
 /**
  * Footer navigation links organized by section
  */
