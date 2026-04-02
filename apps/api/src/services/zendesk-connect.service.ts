@@ -18,6 +18,7 @@ import {
   type RedisClient,
 } from '@/api/lib/zendesk-oauth-flow';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
 
@@ -34,6 +35,7 @@ export interface ZendeskConnectServiceDeps {
   redis: RedisClient | null;
   tokenService: TokenService;
   integrationRepo: IntegrationRepository;
+  memberRepo: WorkspaceMemberRepository;
   provisionerService: ProvisionerService;
   cacheService: CacheService;
   jwtSecret: string;
@@ -129,6 +131,7 @@ export class ZendeskConnectService {
       store,
       tokenService: this.deps.tokenService,
       integrationRepo: this.deps.integrationRepo,
+      memberRepo: this.deps.memberRepo,
       provisionerService: this.deps.provisionerService,
       cacheService: this.deps.cacheService,
       jwtSecret: this.deps.jwtSecret,

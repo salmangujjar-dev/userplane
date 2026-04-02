@@ -14,6 +14,7 @@ import { exchangeCodeForToken, getMe } from '@/api/clients/zendesk';
 import { createLogger } from '@/api/lib/logger';
 import { deriveWorkspaceName, deriveWorkspaceUrl } from '@/api/lib/workspace';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
 import { createZendeskIntegration } from '@/api/services/zendesk-oauth.service';
@@ -84,6 +85,7 @@ export async function completeZendeskOAuth<T extends BasePendingAuth>(params: {
   store: OAuthStateStore;
   tokenService: TokenService;
   integrationRepo: IntegrationRepository;
+  memberRepo: WorkspaceMemberRepository;
   provisionerService: ProvisionerService;
   cacheService: CacheService;
   jwtSecret: string;
@@ -187,6 +189,7 @@ export async function completeZendeskOAuth<T extends BasePendingAuth>(params: {
     installationId,
     jwtSecret,
     integrationRepo,
+    memberRepo: params.memberRepo,
     cacheService,
   });
 

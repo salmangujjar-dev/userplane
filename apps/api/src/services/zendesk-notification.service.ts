@@ -111,6 +111,7 @@ export class ZendeskNotificationService {
     });
 
     await this.deps.integrationRepo.updateProviderToken(integration.id, updatedToken);
+    await this.deps.cacheService.invalidateIntegration('zendesk', integration.providerWorkspaceId);
 
     logger.debug({ integrationId: integration.id }, 'Zendesk token refreshed and persisted');
     return result.data.access_token;

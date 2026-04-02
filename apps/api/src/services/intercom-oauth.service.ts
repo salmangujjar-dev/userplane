@@ -29,6 +29,7 @@ import {
 } from '@/api/clients/intercom';
 import { generateIntegrationId } from '@/api/lib/id';
 import { deriveWorkspaceUrl } from '@/api/lib/workspace';
+import { captureException } from '@/api/posthog';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { InviteService } from '@/api/services/invite.service';
@@ -149,8 +150,15 @@ export class IntercomService {
       providerMeta: createProviderMeta('intercom', { region }),
     });
 
-    // Note: Admin invites are now handled via the UI flow
-    // Users can select which admins to invite on the invite page
+    // 4. Enable Intercom channel for all workspace members
+    try {
+      await this.deps.memberRepo.enableIncomingEventChannel(workspace.workspaceId, 'intercom');
+    } catch (error) {
+      captureException(error, undefined, {
+        operation: 'enable_intercom_channel_on_connect',
+        workspace_id: workspace.workspaceId,
+      });
+    }
 
     return {
       created: true,
@@ -312,7 +320,17 @@ export class IntercomService {
       providerMeta: createProviderMeta('intercom', { region: region as IntercomRegion }),
     });
 
-    // 9. Warm cache for future lookups
+    // 9. Enable Intercom channel for all workspace members
+    try {
+      await this.deps.memberRepo.enableIncomingEventChannel(workspaceId, 'intercom');
+    } catch (error) {
+      captureException(error, undefined, {
+        operation: 'enable_intercom_channel_on_connect',
+        workspace_id: workspaceId,
+      });
+    }
+
+    // 10. Warm cache for future lookups
     await this.deps.cacheService.setIntegrationByProviderWorkspace('intercom', me.app.id_code, {
       workspaceId,
     });
@@ -367,6 +385,17 @@ export class IntercomService {
 
     if (!deleted) {
       throw workspaceError.INTEGRATION_NOT_FOUND();
+    }
+
+    // Clean up notification channel preferences
+    try {
+      await this.deps.memberRepo.clearIncomingEventChannel(workspaceId, 'intercom');
+    } catch (error) {
+      // Log but don't fail - integration is already disconnected
+      captureException(error, undefined, {
+        operation: 'disconnect_intercom_channel_cleanup',
+        workspace_id: workspaceId,
+      });
     }
 
     // Invalidate caches to prevent stale lookups
