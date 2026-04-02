@@ -1,0 +1,112 @@
+---
+title: Slack Message Shortcuts
+description: Right-click any Slack message to create a recording link in context, with the link posted back to that thread
+---
+
+When you [connect Slack](/integrations/slack), a **Create recording link** shortcut is added to every message's context menu. Use it when a customer describes an issue in Slack and you want to create a recording link tied to that exact message.
+
+## Using the message shortcut
+
+<Steps>
+  <Step title="Open the message menu">
+    Hover over any message in Slack and click the **three-dot menu** (More actions), or right-click the message.
+
+    <Frame caption="Message context menu">
+      <img src="/media/slack/shortcuts/message-shortcut-menu.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Select Create recording link">
+    Click **Create recording link** from the list of shortcuts.
+
+    <Frame caption="Selecting the Userplane shortcut">
+      <img src="/media/slack/shortcuts/message-shortcut-select.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Fill in the link details">
+    The same link creator modal opens. Select a **Project** and **Domain**, and optionally edit the **Link Reference** and **Message for the recipient**.
+
+    <Frame caption="Link creator modal">
+      <img src="/media/slack/shortcuts/message-shortcut-modal.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Click Create">
+    Click **Create**. The recording link is posted back to the channel as a reply to the original message.
+
+    <Frame caption="Recording link posted as a reply">
+      <img src="/media/slack/shortcuts/message-shortcut-link-created.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+## Thread-aware behavior
+
+The shortcut posts the recording link where it's most useful based on where the message lives:
+
+- **Message in a thread** — the link is posted as another reply in the same thread, keeping the conversation together.
+- **Message in the main channel** — the link is posted as a new thread reply on that message, starting a thread.
+
+This means the context of the original message is preserved and visible to anyone reviewing the thread later.
+
+## After the link is created
+
+- The recording link appears as a reply to the original message.
+- You receive a DM when the customer submits the recording. See [Slack Notifications](/integrations/slack-notifications).
+- The recording and link appear in your Userplane dashboard.
+
+## Viewing recordings
+
+When the customer submits, open the recording in Userplane for full playback.
+
+<Steps>
+  <Step title="Recording received">
+    You get a DM in Slack with a **View Recording** button and a **View Original Message** button that deep-links back to the Slack thread.
+
+    <Frame caption="Recording received notification">
+      <img src="/media/slack/notifications/recording-received-dm.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Review the session">
+    Watch the video and inspect the captured data.
+
+    <Tabs>
+      <Tab title="Recording">
+        <Frame caption="Recording playback">
+          <img src="/media/playback/media/player-playback-screen.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Console logs">
+        <Frame caption="Console log list">
+          <img src="/media/playback/console/console-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Network logs">
+        <Frame caption="Network request list">
+          <img src="/media/playback/network/network-panel-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Actions">
+        <Frame caption="Actions list">
+          <img src="/media/playback/actions/actions-list-view.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
+
+## Requirements
+
+- The Slack integration must be [connected](/integrations/slack).
+- The agent must be a member of the Userplane workspace (matched by email).
+
+## Related articles
+
+- [Slack Slash Command](/integrations/slack-commands) — create recording links by typing `/userplane`.
+- [Slack App Home](/integrations/slack-home) — browse and manage recording links from the Userplane tab.
+- [Slack Notifications](/integrations/slack-notifications) — recording arrival notifications.
+- [Slack Integration](/integrations/slack) — overview and connection guide.

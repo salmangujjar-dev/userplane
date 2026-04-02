@@ -1,0 +1,129 @@
+---
+title: Slack Slash Command
+description: Use /userplane in any Slack channel or DM to create a recording link without leaving the conversation
+---
+
+When you [connect Slack](/integrations/slack), the `/userplane` command is registered in your Slack workspace. Type it in any channel or DM to open a link creation form as a modal — no need to switch tabs or open the Userplane dashboard.
+
+## Using the slash command
+
+<Steps>
+  <Step title="Type /userplane">
+    In any Slack channel, DM, or thread, type `/userplane` and press **Enter**.
+
+    <Frame caption="/userplane command in a Slack channel">
+      <img src="/media/slack/commands/slash-command-input.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Fill in the link details">
+    A modal opens with a form. Select a **Project** and **Domain**, and optionally edit the **Link Reference** and **Message for the recipient**.
+
+    <Frame caption="Link creator modal">
+      <img src="/media/slack/commands/slash-command-modal.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Click Create">
+    Click **Create**. The link is generated and posted to the channel as a message the team can see.
+
+    <Frame caption="Recording link posted to channel">
+      <img src="/media/slack/commands/slash-command-link-created.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+## Pre-filling the link reference
+
+You can pass optional text directly in the command to pre-fill the **Link Reference** field:
+
+```
+/userplane TICKET-1234
+/userplane Login bug — checkout flow
+/userplane https://github.com/org/repo/issues/99
+```
+
+Whatever you type after `/userplane` appears in the Link Reference field when the modal opens. You can edit it before submitting or leave it as-is.
+
+<Frame caption="Link reference pre-filled from command text">
+  <img src="/media/slack/commands/slash-command-prefilled-reference.png" />
+</Frame>
+
+<Tip>
+  This pairs well with ticket workflows — copy the ticket ID from your help desk, type `/userplane
+  TICKET-ID`, and the reference is already set when the modal opens.
+</Tip>
+
+## After the link is created
+
+- A message is posted to the channel with a **Share Recording** button customers can use to open the link.
+- You receive a DM when the customer submits the recording. See [Slack Notifications](/integrations/slack-notifications).
+- The recording link appears in your Userplane dashboard under [Links](https://dash.userplane.io/_/links).
+
+<Frame caption="Recording link confirmation modal">
+  <img src="/media/slack/commands/slash-command-success-modal.png" />
+</Frame>
+
+## Viewing recordings
+
+When the customer submits, open the recording in Userplane for full playback.
+
+<Steps>
+  <Step title="Recording received">
+    You get a DM in Slack with a **View Recording** button. Click it to open the recording in Userplane.
+
+    <Frame caption="Recording received notification">
+      <img src="/media/slack/notifications/recording-received-dm.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Review the session">
+    Watch the video and inspect the captured data.
+
+    <Tabs>
+      <Tab title="Recording">
+        <Frame caption="Recording playback">
+          <img src="/media/playback/media/player-playback-screen.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Console logs">
+        <Frame caption="Console log list">
+          <img src="/media/playback/console/console-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Network logs">
+        <Frame caption="Network request list">
+          <img src="/media/playback/network/network-panel-list-view.png" />
+        </Frame>
+      </Tab>
+      <Tab title="Actions">
+        <Frame caption="Actions list">
+          <img src="/media/playback/actions/actions-list-view.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
+
+  </Step>
+</Steps>
+
+## When to use slash command vs. other surfaces
+
+|                        | Slash command (`/userplane`)         | Message shortcut                        | App Home                    |
+| ---------------------- | ------------------------------------ | --------------------------------------- | --------------------------- |
+| **Access**             | Type in any channel or DM            | Right-click any message                 | Open the Userplane app tab  |
+| **Best for**           | Quick link creation mid-conversation | Linking a request to a specific message | Browsing and managing links |
+| **Posts to**           | The channel you typed in             | The message's channel or thread         | Doesn't post to a channel   |
+| **Pre-fill reference** | Yes — add text after `/userplane`    | No                                      | No                          |
+
+## Requirements
+
+- The Slack integration must be [connected](/integrations/slack).
+- The agent must be a member of the Userplane workspace (matched by email).
+
+## Related articles
+
+- [Slack App Home](/integrations/slack-home) — browse recordings and manage links from Slack.
+- [Slack Message Shortcuts](/integrations/slack-shortcuts) — create links from a message context menu.
+- [Slack Notifications](/integrations/slack-notifications) — recording arrival notifications.
+- [Link Reference](/recording/link-reference) — how references help you find recordings later.

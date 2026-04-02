@@ -1,0 +1,138 @@
+---
+title: Slack App Home
+description: Browse recordings, manage links, and create new recording links from the Userplane tab inside Slack
+---
+
+When you [connect Slack](/integrations/slack), a **Userplane** tab appears in the Apps section of your Slack sidebar. The App Home gives you a personal dashboard — recent recordings, recent links, and an inline form for creating new ones — without leaving Slack.
+
+## Dashboard overview
+
+Open the Userplane app in Slack and click the **Home** tab. You'll see:
+
+- **Recent Recordings** — the three most recent recordings in your workspace, with thumbnails and links to open them in Userplane.
+- **Recent Links** — the three most recent recording links you've created.
+- **Create Link** — a button to open the inline link creation form.
+
+<Frame caption="Userplane App Home — connected view">
+  <img src="/media/slack/home/home-connected.png" />
+</Frame>
+
+<Note>
+  The App Home shows data specific to your account. If your email isn't matched to a workspace
+  member, you'll see an access prompt instead.
+</Note>
+
+## Creating a link
+
+<Steps>
+  <Step title="Click Create Link">
+    In the App Home, click **Create Link**.
+
+    <Frame caption="Create Link button in App Home">
+      <img src="/media/slack/home/home-create-link-button.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Select a project and domain">
+    Choose the **Project** and **Domain** from the dropdowns. Your last selection is remembered for the next time.
+
+    <Frame caption="Inline create link form">
+      <img src="/media/slack/home/home-create-link-form.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Click Create">
+    Click **Create**. The link is generated and the App Home updates to show a success view with the new link URL.
+
+    <Frame caption="Link created — success view">
+      <img src="/media/slack/home/home-link-created-success.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+## Browsing recordings
+
+<Steps>
+  <Step title="Click View All in the Recordings section">
+    From the App Home, click **View All** under Recent Recordings to open the full browse view.
+
+    <Frame caption="Browse recordings view">
+      <img src="/media/slack/home/home-browse-recordings.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Apply filters">
+    Use the filter dropdowns to narrow by **Project**, **Domain**, or **Date Range** (last 7 days, last 30 days, or all time).
+  </Step>
+  <Step title="Click Go">
+    Click **Go** to apply your filters. Results update in the same view.
+  </Step>
+  <Step title="Navigate pages">
+    Use the **Next** and **Previous** buttons to move through paginated results (10 recordings per page).
+  </Step>
+  <Step title="Open a recording">
+    Click any recording to open it in Userplane for full playback and inspection.
+  </Step>
+</Steps>
+
+## Browsing links
+
+<Steps>
+  <Step title="Click View All in the Links section">
+    From the App Home, click **View All** under Recent Links.
+
+    <Frame caption="Browse links view">
+      <img src="/media/slack/home/home-browse-links.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Apply filters">
+    Filter by **Project**, **Domain**, or **Status** (active, expired, or all).
+  </Step>
+  <Step title="Click Go">
+    Click **Go** to apply your filters.
+  </Step>
+  <Step title="Navigate pages">
+    Use **Next** and **Previous** to page through results.
+  </Step>
+</Steps>
+
+## Viewing recordings
+
+When a customer completes a recording, click it from the App Home or browse view to open it in Userplane. You'll have access to the full playback view with synchronized session data.
+
+<Tabs>
+  <Tab title="Recording">
+    <Frame caption="Recording playback">
+      <img src="/media/playback/media/player-playback-screen.png" />
+    </Frame>
+  </Tab>
+  <Tab title="Console logs">
+    <Frame caption="Console log list">
+      <img src="/media/playback/console/console-list-view.png" />
+    </Frame>
+  </Tab>
+  <Tab title="Network logs">
+    <Frame caption="Network request list">
+      <img src="/media/playback/network/network-panel-list-view.png" />
+    </Frame>
+  </Tab>
+  <Tab title="Actions">
+    <Frame caption="Actions list">
+      <img src="/media/playback/actions/actions-list-view.png" />
+    </Frame>
+  </Tab>
+</Tabs>
+
+## Requirements
+
+- The Slack integration must be [connected](/integrations/slack).
+- The agent must be a member of the Userplane workspace (matched by email).
+
+## Related articles
+
+- [Slack Integration](/integrations/slack) — overview and connection guide.
+- [Slack Slash Command](/integrations/slack-commands) — create recording links from any channel.
+- [Slack Message Shortcuts](/integrations/slack-shortcuts) — create links from a message context menu.
+- [Slack Notifications](/integrations/slack-notifications) — recording arrival notifications in Slack.

@@ -1,0 +1,53 @@
+---
+title: Intercom Notifications
+description: Automatic admin notes when customers complete recordings from Intercom conversations
+---
+
+When a customer completes a recording from a link created in an Intercom conversation, Userplane automatically posts an admin note to that conversation. This keeps the conversation thread up to date without any manual steps.
+
+## What gets posted
+
+The admin note includes a notification that the recording has been received and a direct link to view it in Userplane. Click the link to open the recording detail view with video playback, console logs, and network data.
+
+<Note>Admin notes are only visible to your team — your customer won't see them.</Note>
+
+## How notifications are triggered
+
+Intercom notifications are context-tied. Userplane posts a note when:
+
+1. A recording link was created from an Intercom conversation (via the [inbox sidebar](/integrations/intercom-inbox) or [Cmd+K shortcut](/integrations/intercom-shortcuts)), and
+2. The customer submits a recording using that link.
+
+Links created outside of Intercom — such as from the Userplane dashboard or a reusable link — are not associated with a conversation and will not trigger an admin note.
+
+## Enabling Intercom notifications
+
+<Steps>
+  <Step title="Open notification preferences">
+    Go to [Account Settings > Notifications](https://dash.userplane.io/_/account?tab=workspaces).
+  </Step>
+  <Step title="Enable Intercom">Toggle **Intercom** on under Incoming Recordings.</Step>
+</Steps>
+
+The Intercom channel only appears if your workspace admin has connected the Intercom integration. If you do not see it, ask your admin to [connect Intercom](/integrations/intercom).
+
+## Disabling Intercom notifications
+
+<Steps>
+  <Step title="Open notification preferences">
+    Go to [Account Settings > Notifications](https://dash.userplane.io/_/account?tab=workspaces).
+  </Step>
+  <Step title="Disable Intercom">Toggle **Intercom** off under Incoming Recordings.</Step>
+</Steps>
+
+## Requirements
+
+- The Intercom integration must be [connected](/integrations/intercom) by a workspace owner or admin.
+- The recording link must have been created from an Intercom conversation — links created elsewhere are not associated with a conversation and won't trigger a note.
+
+## Related articles
+
+- [Intercom Integration](/integrations/intercom) — overview and connection guide.
+- [Using Userplane in Intercom](/integrations/intercom-inbox) — how the inbox sidebar app works.
+- [Intercom Shortcuts](/integrations/intercom-shortcuts) — use Cmd+K to create links fast.
+- [Notification Channels & Preferences](/account/notifications) — configure all notification types and channels.
