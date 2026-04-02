@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/client';
+import { workspaceKeys } from '@/features/workspace';
 import { handleSafeResult, showApiErrorToast } from '@/lib/errors';
 import { useWorkspaceId } from '@/stores/workspace';
 
@@ -85,8 +86,10 @@ export function useIntercomDisconnect() {
         showApiErrorToast(result.error);
         return;
       }
-      // Invalidate integration status after disconnect
+      // Invalidate integration status and notification preferences after disconnect
+      // (server clears notifyIncomingEvents.intercom when Intercom is disconnected)
       queryClient.invalidateQueries({ queryKey: integrationKeys.intercom(workspaceId ?? '') });
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.notifications(workspaceId ?? '') });
     },
   });
 }
@@ -140,7 +143,10 @@ export function useZendeskDisconnect() {
         showApiErrorToast(result.error);
         return;
       }
+      // Invalidate integration status and notification preferences after disconnect
+      // (server clears notifyIncomingEvents.zendesk when Zendesk is disconnected)
       queryClient.invalidateQueries({ queryKey: integrationKeys.zendesk(workspaceId ?? '') });
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.notifications(workspaceId ?? '') });
     },
   });
 }
@@ -228,8 +234,10 @@ export function useSlackDisconnect() {
         showApiErrorToast(result.error);
         return;
       }
-      // Invalidate integration status after disconnect
+      // Invalidate integration status and notification preferences after disconnect
+      // (server clears notifyChannels.slack when Slack is disconnected)
       queryClient.invalidateQueries({ queryKey: integrationKeys.slack(workspaceId ?? '') });
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.notifications(workspaceId ?? '') });
     },
   });
 }
