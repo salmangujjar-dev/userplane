@@ -142,6 +142,13 @@ export const entitlementService = new EntitlementService({
   cacheService,
 });
 
+// Notification channel service (repos only, no service deps)
+export const notificationChannelService = new NotificationChannelService({
+  memberRepo: workspaceMemberRepo,
+  memberIdentityRepo,
+  integrationRepo,
+});
+
 // Level 1: Services with no dependencies on other services
 export const workspaceMemberService = new WorkspaceMemberService({
   memberRepo: workspaceMemberRepo,
@@ -149,6 +156,7 @@ export const workspaceMemberService = new WorkspaceMemberService({
   integrationRepo,
   entitlementService,
   cacheService,
+  notificationChannelService,
 });
 
 export const userService = new UserService({
@@ -180,6 +188,7 @@ export const zendeskNotificationService = new ZendeskNotificationService({
 export const slackNotificationService = new SlackNotificationService({
   integrationRepo,
   memberIdentityRepo,
+  memberRepo: workspaceMemberRepo,
 });
 
 // Unified notification dispatch center
@@ -396,13 +405,6 @@ export const slackCanvasService = new SlackCanvasService({
   entitlementService,
   workspaceRepo,
   cacheService,
-});
-
-// Notification channel service
-export const notificationChannelService = new NotificationChannelService({
-  memberRepo: workspaceMemberRepo,
-  memberIdentityRepo,
-  integrationRepo,
 });
 
 // Export tokenService, emailService, and repositories for use in routes

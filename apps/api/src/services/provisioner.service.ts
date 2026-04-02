@@ -230,6 +230,7 @@ export class ProvisionerService {
         {
           userId,
           workspaceId: createdWorkspace.workspaceId!,
+          userEmail,
         },
         { tx }
       );
