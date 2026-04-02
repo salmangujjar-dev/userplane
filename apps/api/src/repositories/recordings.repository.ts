@@ -43,6 +43,7 @@ export interface RecordingListRow {
   createdAt: Date;
   creatorId: string;
   creatorName: string;
+  linkTitle: string | null;
 }
 
 /**
@@ -234,12 +235,14 @@ export class RecordingRepository {
         createdAt: recordings.createdAt,
         creatorId: workspaceMembers.workspaceMemberId,
         creatorName: user.name,
+        linkTitle: links.linkTitle,
       })
       .from(recordings)
       .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.workspaceMemberId))
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
       .innerJoin(projects, eq(recordings.projectId, projects.projectId))
       .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
+      .innerJoin(links, eq(recordings.recordingLinkId, links.linkId))
       .where(and(whereConditions, eq(projects.isDeleted, false), eq(workspaces.isDeleted, false)))
       .orderBy(orderBy)
       .limit(limit)

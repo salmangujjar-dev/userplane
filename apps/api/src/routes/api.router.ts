@@ -118,7 +118,8 @@ const provisionerProcedures = createProvisionerProcedures(
   provisionerService,
   emailService,
   intercomService,
-  slackService
+  slackService,
+  slackCanvasService
 );
 const statusProcedures = createStatusProcedures();
 const adminProcedures = createAdminProcedures(

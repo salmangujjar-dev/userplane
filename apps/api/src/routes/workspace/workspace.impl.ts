@@ -1876,6 +1876,7 @@ export const slackIntegrationAuthorizeImpl = (
  */
 export const slackIntegrationCallbackImpl = (
   slackService: SlackService,
+  slackCanvasService: SlackCanvasService,
   workspaceMemberService: WorkspaceMemberService,
   workspaceService: WorkspaceService
 ) => {
@@ -1894,6 +1895,16 @@ export const slackIntegrationCallbackImpl = (
         userId: context.user.id,
         workspaceId: input.params.workspaceId,
       });
+
+      // Best-effort: publish connected home tab to the user who just connected
+      // so they see a fresh dashboard immediately without reopening the app.
+      void slackCanvasService
+        .publishConnectedViewForUser(
+          result.accessToken,
+          input.params.workspaceId,
+          result.authedSlackUserId
+        )
+        .catch(() => {});
 
       return {
         message: 'Slack connected successfully',
@@ -2196,6 +2207,7 @@ export const createWorkspaceProcedures = (
         ),
         callback: slackIntegrationCallbackImpl(
           slackService,
+          slackCanvasService,
           workspaceMemberService,
           workspaceService
         ),

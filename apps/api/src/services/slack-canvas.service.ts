@@ -923,8 +923,24 @@ export class SlackCanvasService {
   }
 
   // ===========================================================================
-  // Disconnection Broadcasting
+  // View Broadcasting
   // ===========================================================================
+
+  /**
+   * Publish the connected home tab view to the user who just completed OAuth.
+   * Best-effort: logs failures but does not throw.
+   */
+  async publishConnectedViewForUser(
+    accessToken: string,
+    workspaceId: string,
+    slackUserId: string
+  ): Promise<void> {
+    const { homeData } = await this.getHomeTabData(workspaceId);
+    const connectedView = buildHomeConnectedView(homeData);
+    await publishView(accessToken, slackUserId, connectedView);
+
+    logger.debug({ workspaceId, slackUserId }, 'Published connected home tab for authed user');
+  }
 
   /**
    * Broadcast disconnected home tab view to all workspace members.
@@ -1317,7 +1333,8 @@ export class SlackCanvasService {
     const dashboardUrl = `${env.dashboard.baseUrl}/workspace/${workspaceId}`;
 
     const recordings: HomeRecordingItem[] = recordingsResult.recordings.map((r) => ({
-      title: r.creator.name ? `Recording by ${r.creator.name}` : 'Screen recording',
+      title: r.linkTitle || 'Untitled',
+      creatorName: r.creator.name ?? 'Unknown',
       projectName: 'Recording',
       durationFormatted: this.formatDuration(r.recordingDurationMs),
       createdAtTs: Math.floor(r.createdAt.getTime() / 1000),
@@ -1372,7 +1389,8 @@ export class SlackCanvasService {
     );
 
     const recordings: HomeRecordingItem[] = recordingsResult.recordings.map((r) => ({
-      title: r.creator.name ? `Recording by ${r.creator.name}` : 'Screen recording',
+      title: r.linkTitle || 'Untitled',
+      creatorName: r.creator.name ?? 'Unknown',
       projectName: 'Recording',
       durationFormatted: this.formatDuration(r.recordingDurationMs),
       createdAtTs: Math.floor(r.createdAt.getTime() / 1000),

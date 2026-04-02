@@ -128,6 +128,7 @@ export class RecordingService {
         workspaceMemberId: row.creatorId,
         name: row.creatorName,
       },
+      linkTitle: row.linkTitle,
     }));
 
     return {

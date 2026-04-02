@@ -41,7 +41,7 @@ function PostCreationInviteView({
     if (isMarketplace) {
       window.location.href = INTERCOM_APP_STORE_REDIRECT_URL;
     } else {
-      router.push(`/workspace/${workspaceId}`);
+      router.push(`/workspace/${workspaceId}/recordings`);
     }
   };
 
@@ -259,7 +259,7 @@ function SlackPostCreationInviteView({ workspaceId }: { workspaceId: string }) {
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
       variant="slack"
-      onComplete={() => router.push(`/workspace/${workspaceId}`)}
+      onComplete={() => router.push(`/workspace/${workspaceId}/recordings`)}
       onSkip={() => router.push(`/workspace/${workspaceId}/recordings`)}
     />
   );

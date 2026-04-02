@@ -67,11 +67,19 @@ export interface SlackIntegrationStatus {
 export interface SlackIntegrationConnectResult {
   connected: true;
   providerWorkspaceId: string;
+  accessToken: string;
+  authedSlackUserId: string;
 }
 
 type WorkspaceCreationResult =
   | { created: false; workspaceUrl?: string }
-  | { created: true; workspaceId: string; workspaceName: string };
+  | {
+      created: true;
+      workspaceId: string;
+      workspaceName: string;
+      accessToken: string;
+      authedSlackUserId: string;
+    };
 
 export class SlackService {
   constructor(private deps: SlackServiceDeps) {}
@@ -210,6 +218,8 @@ export class SlackService {
       created: true,
       workspaceId: result.workspaceId,
       workspaceName: result.workspaceName,
+      accessToken: tokenResponse.access_token,
+      authedSlackUserId: tokenResponse.authed_user.id,
     };
   }
 
@@ -338,6 +348,8 @@ export class SlackService {
     return {
       connected: true,
       providerWorkspaceId: teamId,
+      accessToken: tokenResponse.access_token,
+      authedSlackUserId: tokenResponse.authed_user.id,
     };
   }
 

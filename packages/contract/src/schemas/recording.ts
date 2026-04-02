@@ -82,6 +82,7 @@ export const RecordingItemSchema = z.object({
   expiresAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
   creator: RecordingCreatorSchema,
+  linkTitle: z.string().nullable(),
 });
 
 /**
