@@ -4,6 +4,7 @@
  */
 
 export type {
+  IncomingEventChannels,
   NotificationFieldMetadata,
   WorkspaceNotificationPreferences,
 } from '@userplane/contract';

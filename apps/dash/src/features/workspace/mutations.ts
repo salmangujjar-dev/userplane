@@ -66,13 +66,24 @@ export function useUpdateNotifications(options?: { onError?: () => void }) {
         workspaceKeys.notifications(workspaceId),
         (old) => {
           if (!old?.success) return old;
+
+          // For notifyIncomingEvents, merge partial JSONB; for others, simple spread
+          const { notifyIncomingEvents, ...booleanPrefs } = notifications;
+          const currentIncoming = old.data.notificationPreferences.notifyIncomingEvents;
+          const mergedIncoming = notifyIncomingEvents
+            ? typeof currentIncoming === 'object' && currentIncoming !== null
+              ? { ...currentIncoming, ...notifyIncomingEvents }
+              : notifyIncomingEvents
+            : currentIncoming;
+
           return {
             ...old,
             data: {
               ...old.data,
               notificationPreferences: {
                 ...old.data.notificationPreferences,
-                ...notifications,
+                ...booleanPrefs,
+                notifyIncomingEvents: mergedIncoming,
               },
             },
           };

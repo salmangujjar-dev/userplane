@@ -4,6 +4,7 @@
  */
 
 import type {
+  IncomingEventChannels,
   JoinWorkspaceDataSchema,
   LeaveWorkspaceDataSchema,
   WorkspaceItem,
@@ -13,8 +14,13 @@ import type { z } from 'zod';
 
 /**
  * Workspace notification preferences (partial for updates)
+ * notifyIncomingEvents accepts partial channels for per-channel toggles
  */
-export type WorkspaceNotifications = Partial<WorkspaceNotificationPreferences>;
+export type WorkspaceNotifications = Partial<
+  Omit<WorkspaceNotificationPreferences, 'notifyIncomingEvents'> & {
+    notifyIncomingEvents: Partial<IncomingEventChannels>;
+  }
+>;
 
 // Re-export contract types
 export type {
@@ -67,6 +73,7 @@ export interface WorkspacesData {
  */
 export interface NotificationPreferencesData {
   notificationPreferences: WorkspaceNotifications;
+  availableChannels: string[];
 }
 
 /**
