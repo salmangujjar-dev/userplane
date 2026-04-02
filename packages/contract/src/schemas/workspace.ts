@@ -85,12 +85,28 @@ export const HexColorSchema = z
 // ============================================================================
 
 /**
+ * Incoming event notification channels
+ * Controls which delivery channels a member receives recording notifications on.
+ * Email is always present; integration channels are opt-in when connected.
+ */
+export const IncomingEventChannelsSchema = z.object({
+  email: z.boolean(),
+  slack: z.boolean().optional(),
+  intercom: z.boolean().optional(),
+  zendesk: z.boolean().optional(),
+});
+export type IncomingEventChannels = z.infer<typeof IncomingEventChannelsSchema>;
+
+/** Default incoming event channels for new members */
+export const DEFAULT_INCOMING_EVENT_CHANNELS: IncomingEventChannels = { email: false };
+
+/**
  * Workspace notification preferences
  */
 export const WorkspaceNotificationPreferencesSchema = z.object({
   notifyFeatureHighlights: z.boolean(),
   notifyUsageEvents: z.boolean(),
-  notifyIncomingEvents: z.boolean(),
+  notifyIncomingEvents: IncomingEventChannelsSchema,
   notifyAdminEvents: z.boolean(),
 });
 
@@ -102,10 +118,18 @@ export type WorkspaceNotificationPreferences = z.infer<
 >;
 
 /**
- * Notification field metadata for UI rendering
+ * Simple boolean notification field keys (excludes notifyIncomingEvents which is JSONB)
+ */
+export type BooleanNotificationKey =
+  | 'notifyFeatureHighlights'
+  | 'notifyUsageEvents'
+  | 'notifyAdminEvents';
+
+/**
+ * Notification field metadata for UI rendering (boolean-type fields only)
  */
 export interface NotificationFieldMetadata {
-  key: keyof WorkspaceNotificationPreferences;
+  key: BooleanNotificationKey;
   id: string;
   label: string;
   description: string;
@@ -118,8 +142,9 @@ export interface NotificationFieldMetadata {
 }
 
 /**
- * Notification configuration with metadata
- * Single source of truth for all notification preferences
+ * Boolean notification fields — single source of truth
+ * notifyIncomingEvents is excluded because it's a multi-channel JSONB
+ * with its own rendering (per-channel toggles, not a single boolean toggle).
  */
 export const NOTIFICATION_FIELDS: readonly NotificationFieldMetadata[] = [
   {
@@ -148,19 +173,6 @@ export const NOTIFICATION_FIELDS: readonly NotificationFieldMetadata[] = [
     },
   },
   {
-    key: 'notifyIncomingEvents',
-    id: 'incoming-events',
-    label: 'Incoming recordings',
-    description: 'Notify about new recordings and screenshots',
-    visibleForRoles: ['owner', 'admin', 'member'],
-    // Disabled by default to avoid spamming users
-    defaultForRoles: {
-      owner: false,
-      admin: false,
-      member: false,
-    },
-  },
-  {
     key: 'notifyAdminEvents',
     id: 'admin-events',
     label: 'Admin notifications',
@@ -184,14 +196,23 @@ export const NOTIFICATION_FIELDS: readonly NotificationFieldMetadata[] = [
 export function getDefaultNotificationPreferences(
   role: 'owner' | 'admin' | 'member'
 ): WorkspaceNotificationPreferences {
-  return NOTIFICATION_FIELDS.reduce((acc, field) => {
-    acc[field.key] = field.defaultForRoles[role];
-    return acc;
-  }, {} as WorkspaceNotificationPreferences);
+  const prefs = NOTIFICATION_FIELDS.reduce(
+    (acc, field) => {
+      acc[field.key] = field.defaultForRoles[role];
+      return acc;
+    },
+    {} as Record<BooleanNotificationKey, boolean>
+  );
+
+  return {
+    ...prefs,
+    notifyIncomingEvents: DEFAULT_INCOMING_EVENT_CHANNELS,
+  };
 }
 
 /**
- * Helper to get visible notification fields for a role
+ * Helper to get visible boolean notification fields for a role
+ * notifyIncomingEvents is excluded — it uses per-channel rendering
  */
 export function getVisibleNotificationFields(
   role: 'owner' | 'admin' | 'member'
@@ -200,25 +221,26 @@ export function getVisibleNotificationFields(
 }
 
 /**
- * Helper to get notification keys a role is allowed to change.
+ * Helper to get boolean notification keys a role is allowed to change.
  * visible = editable; hidden fields are enforced by the backend.
+ * notifyIncomingEvents is always editable (per-channel toggles) and excluded from this list.
  */
 export function getEditableNotificationKeys(
   role: 'owner' | 'admin' | 'member'
-): Array<keyof WorkspaceNotificationPreferences> {
+): Array<BooleanNotificationKey> {
   return NOTIFICATION_FIELDS.filter((f) => f.visibleForRoles.includes(role)).map((f) => f.key);
 }
 
 /**
- * Helper to get the locked (non-editable) notification overrides for a role.
+ * Helper to get the locked (non-editable) boolean notification overrides for a role.
  * Returns the default values for keys the role cannot edit.
  * Used to force correct values on role transitions.
  */
 export function getLockedNotificationOverrides(
   role: 'owner' | 'admin' | 'member'
-): Partial<WorkspaceNotificationPreferences> {
+): Partial<Record<BooleanNotificationKey, boolean>> {
   const editable = new Set(getEditableNotificationKeys(role));
-  const overrides: Partial<WorkspaceNotificationPreferences> = {};
+  const overrides: Partial<Record<BooleanNotificationKey, boolean>> = {};
   for (const field of NOTIFICATION_FIELDS) {
     if (!editable.has(field.key)) {
       overrides[field.key] = field.defaultForRoles[role];
@@ -530,11 +552,17 @@ export const GetNotificationPreferencesSchema = z.object({
 });
 
 /**
+ * Available notification channels based on active integrations
+ */
+export const AvailableChannelsSchema = z.array(z.string());
+
+/**
  * Notification preferences get response
  */
 export const NotificationPreferencesGetDataSchema = z.object({
   workspaceId: WorkspaceIdSchema,
   notificationPreferences: WorkspaceNotificationPreferencesSchema,
+  availableChannels: AvailableChannelsSchema,
 });
 
 /**
@@ -547,7 +575,7 @@ export const UpdateNotificationPreferencesSchema = z.object({
   body: z.object({
     notifyFeatureHighlights: z.boolean().optional(),
     notifyUsageEvents: z.boolean().optional(),
-    notifyIncomingEvents: z.boolean().optional(),
+    notifyIncomingEvents: IncomingEventChannelsSchema.partial().optional(),
     notifyAdminEvents: z.boolean().optional(),
   }),
 });
