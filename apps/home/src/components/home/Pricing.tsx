@@ -156,7 +156,7 @@ export default function Pricing() {
               <div className="text-base md:text-lg text-gray-400">per month</div>
             </div>
 
-            <Button asChild className="rounded-full px-7 py-6" size="lg" variant="secondary">
+            <Button asChild className="px-7 py-6" size="lg" variant="secondary">
               <a className="flex items-center gap-2 font-medium" href={SIGNUP_URL}>
                 Get Started <ChevronRight />
               </a>
