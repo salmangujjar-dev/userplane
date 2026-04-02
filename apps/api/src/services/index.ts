@@ -34,6 +34,7 @@ import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { RefundRepository } from '@/api/repositories/refunds.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
 import { UserRepository } from '@/api/repositories/users.repository';
+import { WorkspaceMemberIdentityRepository } from '@/api/repositories/workspace-member-identities.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 // Repositories
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
@@ -52,16 +53,19 @@ import { emailService } from '@/api/services/email.service';
 import { EntitlementService } from '@/api/services/entitlement.service';
 import { IntercomCanvasService } from '@/api/services/intercom-canvas.service';
 import { IntercomHealthCheckService } from '@/api/services/intercom-health-check.service';
+import { IntercomNotificationService } from '@/api/services/intercom-notification.service';
 import { IntercomService } from '@/api/services/intercom-oauth.service';
 import { InviteService } from '@/api/services/invite.service';
 import { LinkService } from '@/api/services/link.service';
 import { NotificationService } from '@/api/services/notification.service';
+import { NotificationChannelService } from '@/api/services/notification-channel.service';
 import { PlanMetadataResolver } from '@/api/services/plan-metadata-resolver';
 import { ProjectService } from '@/api/services/project.service';
 import { ProvisionerService } from '@/api/services/provisioner.service';
 import { RecordingService } from '@/api/services/recording.service';
 import { SessionService } from '@/api/services/session.service';
 import { SlackCanvasService } from '@/api/services/slack-canvas.service';
+import { SlackNotificationService } from '@/api/services/slack-notification.service';
 import { SlackService } from '@/api/services/slack-oauth.service';
 import { tokenService } from '@/api/services/token.service';
 import { UserService } from '@/api/services/user.service';
@@ -71,6 +75,7 @@ import { WorkspaceMemberService } from '@/api/services/workspace-member.service'
 import { ZendeskAppService } from '@/api/services/zendesk-app.service';
 import { ZendeskAppOAuthService } from '@/api/services/zendesk-app-oauth.service';
 import { ZendeskConnectService } from '@/api/services/zendesk-connect.service';
+import { ZendeskNotificationService } from '@/api/services/zendesk-notification.service';
 import { ZendeskService } from '@/api/services/zendesk-oauth.service';
 
 // Initialize repositories
@@ -89,6 +94,7 @@ const adminRepo = new AdminRepository(db);
 const adminWorkspaceRepo = new AdminWorkspaceRepository(db);
 const adminRecordingRepo = new AdminRecordingRepository(db);
 const integrationRepo = new IntegrationRepository(db);
+const memberIdentityRepo = new WorkspaceMemberIdentityRepository(db);
 
 // Initialize services in dependency order
 // Level 0: Pure utility services (no deps)
@@ -139,6 +145,8 @@ export const entitlementService = new EntitlementService({
 // Level 1: Services with no dependencies on other services
 export const workspaceMemberService = new WorkspaceMemberService({
   memberRepo: workspaceMemberRepo,
+  memberIdentityRepo,
+  integrationRepo,
   entitlementService,
   cacheService,
 });
@@ -163,9 +171,24 @@ export const recordingService = new RecordingService({
   billingService,
 });
 
+// Provider notification services
+export const intercomNotificationService = new IntercomNotificationService({ integrationRepo });
+export const zendeskNotificationService = new ZendeskNotificationService({
+  integrationRepo,
+  cacheService,
+});
+export const slackNotificationService = new SlackNotificationService({
+  integrationRepo,
+  memberIdentityRepo,
+});
+
+// Unified notification dispatch center
 export const notificationService = new NotificationService({
   emailService,
   memberRepo: workspaceMemberRepo,
+  slackNotificationService,
+  intercomNotificationService,
+  zendeskNotificationService,
 });
 
 // Level 2: Services that depend on level 1
@@ -202,6 +225,7 @@ export const workspaceService = new WorkspaceService({
   tokenService,
   db,
   workspaceMemberRepo,
+  memberIdentityRepo,
   projectRepo,
   domainRepo,
   linkRepo,
@@ -227,10 +251,6 @@ export const domainService = new DomainService({
   domainRepo,
   tokenService,
   billingService,
-  emailService,
-  workspaceService,
-  userService,
-  linkRepo,
   cacheService,
 });
 
@@ -305,6 +325,7 @@ export const intercomHealthCheckService = new IntercomHealthCheckService({
 // Zendesk OAuth service
 export const zendeskService = new ZendeskService({
   integrationRepo,
+  memberRepo: workspaceMemberRepo,
   cacheService,
 });
 
@@ -323,6 +344,7 @@ export const zendeskConnectService = new ZendeskConnectService({
   redis,
   tokenService,
   integrationRepo,
+  memberRepo: workspaceMemberRepo,
   provisionerService,
   cacheService,
   jwtSecret: env.zendesk.jwtSecret,
@@ -333,6 +355,7 @@ export const zendeskAppOAuthService = new ZendeskAppOAuthService({
   redis,
   tokenService,
   integrationRepo,
+  memberRepo: workspaceMemberRepo,
   provisionerService,
   cacheService,
   jwtSecret: env.zendesk.jwtSecret,
@@ -358,6 +381,7 @@ export const slackService = new SlackService({
   cacheService,
   provisionerService,
   memberRepo: workspaceMemberRepo,
+  memberIdentityRepo,
 });
 
 // Slack Canvas service
@@ -372,6 +396,13 @@ export const slackCanvasService = new SlackCanvasService({
   entitlementService,
   workspaceRepo,
   cacheService,
+});
+
+// Notification channel service
+export const notificationChannelService = new NotificationChannelService({
+  memberRepo: workspaceMemberRepo,
+  memberIdentityRepo,
+  integrationRepo,
 });
 
 // Export tokenService, emailService, and repositories for use in routes

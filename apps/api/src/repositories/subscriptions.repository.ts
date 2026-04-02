@@ -32,6 +32,10 @@ export interface UpdateSubscriptionData {
   status?: 'pending' | 'active' | 'on_hold' | 'cancelled' | 'failed' | 'expired';
   planId?: PlanId;
   productId?: string;
+  /** External DodoPayments subscription ID. Updated during plan changes when a new subscription replaces the old one. */
+  subscriptionId?: string;
+  /** External DodoPayments customer ID. Updated when the payment provider reassigns the customer. */
+  customerId?: string;
   currentPeriodStart?: Date;
   currentPeriodEnd?: Date;
   cancelledAt?: Date | null;
@@ -166,6 +170,26 @@ export class SubscriptionRepository {
         updatedAt: new Date(),
       })
       .where(eq(subscriptions.subscriptionId, subscriptionId))
+      .returning();
+
+    return updated ? this.transformSubscription(updated) : null;
+  }
+
+  /**
+   * Update subscription by internal ID.
+   * Used when the external subscription ID itself is changing (e.g. plan change creates a new DodoPayments subscription)
+   * and we need to target the row without relying on the old external ID.
+   */
+  async updateById(id: string, data: UpdateSubscriptionData, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(subscriptions)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(subscriptions.id, id))
       .returning();
 
     return updated ? this.transformSubscription(updated) : null;

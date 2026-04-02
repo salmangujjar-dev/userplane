@@ -270,54 +270,34 @@ export class SlackCanvasService {
   async handleAppHomeOpened(teamId: string, slackUserId: string): Promise<void> {
     const dashboardUrl = env.dashboard.baseUrl;
 
-    // Look up integration by team_id
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
-
+    // Look up integration (cache-first)
+    const integration = await this.getIntegrationCached(teamId);
     if (!integration) {
-      // Cannot publish a home tab view without a valid bot token.
-      // Slack will show the default empty home tab for disconnected workspaces.
       logger.debug({ teamId, slackUserId }, 'No integration found for app home');
       return;
     }
 
     const accessToken = IntegrationHelper.getAccessToken(integration);
 
-    // Get Slack user email
-    const slackUser = await getUserInfo(accessToken, slackUserId);
-    if (!slackUser?.profile.email) {
-      logger.debug({ teamId, slackUserId }, 'Could not retrieve Slack user email');
-      await publishView(accessToken, slackUserId, buildHomeDisconnectedView({ dashboardUrl }));
-      return;
-    }
+    // Verify user access (single code path shared with slash commands, modals, etc.)
+    const accessResult = await this.verifySlackUserAccess(teamId, slackUserId, integration);
 
-    // Find Userplane user by email
-    const user = await this.deps.userRepo.findByEmail(slackUser.profile.email);
-    if (!user) {
-      logger.debug({ teamId, email: slackUser.profile.email }, 'Userplane user not found');
-      await publishView(accessToken, slackUserId, buildHomeDisconnectedView({ dashboardUrl }));
-      return;
-    }
-
-    // Check workspace membership
-    const member = await this.deps.workspaceMemberRepo.findByUserAndWorkspace(
-      user.id,
-      integration.workspaceId
-    );
-
-    if (!member) {
-      logger.debug(
-        { teamId, email: slackUser.profile.email, workspaceId: integration.workspaceId },
-        'User is not a workspace member'
-      );
+    if (accessResult.status === 'not_workspace_member') {
       await publishView(
         accessToken,
         slackUserId,
-        buildHomeAccessRequiredView({ email: slackUser.profile.email })
+        buildHomeAccessRequiredView({ email: accessResult.email })
       );
       return;
     }
 
-    const workspaceId = integration.workspaceId;
+    if (accessResult.status !== 'granted') {
+      // user_not_found or integration_not_found — show disconnected view
+      await publishView(accessToken, slackUserId, buildHomeDisconnectedView({ dashboardUrl }));
+      return;
+    }
+
+    const { workspaceId } = accessResult.context;
     const { homeData } = await this.getHomeTabData(workspaceId);
 
     await publishView(accessToken, slackUserId, buildHomeConnectedView(homeData));
@@ -346,10 +326,18 @@ export class SlackCanvasService {
    * failure), fall back to response_url for error delivery.
    */
   async handleSlashCommand(payload: SlackSlashCommandPayload): Promise<void> {
-    const { teamId, userId: slackUserId, triggerId, channelId, channelName, responseUrl } = payload;
+    const {
+      teamId,
+      userId: slackUserId,
+      triggerId,
+      channelId,
+      channelName,
+      responseUrl,
+      text,
+    } = payload;
 
-    // --- Phase 1: Get access token (single DB query) -------------------------
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    // --- Phase 1: Get access token (cache-first) ------------------------------
+    const integration = await this.getIntegrationCached(teamId);
     if (!integration) {
       await respondToUrl(responseUrl, buildWorkspaceNotConnectedMessage());
       return;
@@ -417,7 +405,7 @@ export class SlackCanvasService {
       workspaceId,
     };
 
-    const modal = buildLinkCreatorModalView({ projects, domains, userName });
+    const modal = buildLinkCreatorModalView({ projects, domains, userName, linkReference: text });
     const modalWithMetadata = {
       ...modal,
       private_metadata: JSON.stringify(privateMetadata),
@@ -460,8 +448,8 @@ export class SlackCanvasService {
     // - If message is in main channel, start a new thread on that message
     const threadTs = message.thread_ts ?? message.ts;
 
-    // --- Phase 1: Get access token (single DB query) -------------------------
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    // --- Phase 1: Get access token (cache-first) ------------------------------
+    const integration = await this.getIntegrationCached(teamId);
     if (!integration) {
       logger.warn({ teamId }, 'Message shortcut: integration not found');
       return;
@@ -817,8 +805,8 @@ export class SlackCanvasService {
       threadTs,
     } = params;
 
-    // Get access token (fast DB query)
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    // Get access token (cache-first)
+    const integration = await this.getIntegrationCached(teamId);
     if (!integration) {
       // Integration removed between modal open and submit (e.g. app uninstalled).
       // Without the access token we cannot call views.update, so the modal stays
@@ -1077,9 +1065,7 @@ export class SlackCanvasService {
     slackUserId: string,
     existingIntegration?: TypedIntegration<'slack'>
   ): Promise<SlackAccessResult> {
-    const integration =
-      existingIntegration ??
-      (await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId));
+    const integration = existingIntegration ?? (await this.getIntegrationCached(teamId));
 
     if (!integration) {
       return { status: 'integration_not_found' };
@@ -1195,7 +1181,7 @@ export class SlackCanvasService {
     slackUserId: string,
     triggerId: string
   ): Promise<void> {
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    const integration = await this.getIntegrationCached(teamId);
     if (!integration) {
       logger.warn({ teamId }, 'Block action: integration not found');
       return;
@@ -1278,7 +1264,29 @@ export class SlackCanvasService {
   // ===========================================================================
 
   /**
-   * Lightweight context lookup - single DB query.
+   * Cache-first integration lookup by Slack team ID.
+   * Tries Redis cache first (30-min TTL), falls back to DB, warms cache on miss.
+   * Use for all read paths. Skip for destructive paths (uninstall, token revoke).
+   */
+  private async getIntegrationCached(teamId: string): Promise<TypedIntegration<'slack'> | null> {
+    const cached = await this.deps.cacheService.getIntegrationByProviderWorkspace<
+      TypedIntegration<'slack'>
+    >('slack', teamId);
+    if (cached) {
+      logger.debug({ teamId, workspaceId: cached.workspaceId }, 'Integration cache hit');
+      return cached;
+    }
+
+    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    if (!integration) return null;
+
+    await this.deps.cacheService.setIntegrationByProviderWorkspace('slack', teamId, integration);
+    logger.debug({ teamId, workspaceId: integration.workspaceId }, 'Integration cached');
+    return integration;
+  }
+
+  /**
+   * Lightweight context lookup with cache-first integration.
    * Use for read-only browse/page actions where full access verification is overkill.
    */
   private async getSlackContext(teamId: string): Promise<{
@@ -1286,7 +1294,7 @@ export class SlackCanvasService {
     accessToken: string;
     workspaceId: string;
   } | null> {
-    const integration = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+    const integration = await this.getIntegrationCached(teamId);
     if (!integration) return null;
     return {
       integration,
@@ -1299,16 +1307,14 @@ export class SlackCanvasService {
    * Fetch all data needed for the connected home tab in one method.
    */
   private async getHomeTabData(workspaceId: string) {
-    const workspace = await this.deps.workspaceRepo.findById(workspaceId);
+    const [workspace, recordingsResult, linksResult] = await Promise.all([
+      this.deps.workspaceRepo.findById(workspaceId),
+      this.deps.recordingService.getByWorkspaceIdPaginated(workspaceId, 1, 3),
+      this.deps.linkService.getByWorkspaceIdPaginated(workspaceId, 1, 3),
+    ]);
+
     const workspaceName = workspace?.workspaceName ?? 'Your Workspace';
     const dashboardUrl = `${env.dashboard.baseUrl}/workspace/${workspaceId}`;
-
-    const recordingsResult = await this.deps.recordingService.getByWorkspaceIdPaginated(
-      workspaceId,
-      1,
-      3
-    );
-    const linksResult = await this.deps.linkService.getByWorkspaceIdPaginated(workspaceId, 1, 3);
 
     const recordings: HomeRecordingItem[] = recordingsResult.recordings.map((r) => ({
       title: r.creator.name ? `Recording by ${r.creator.name}` : 'Screen recording',
@@ -1449,38 +1455,31 @@ export class SlackCanvasService {
    * Reads cached project/domain selections and creates the link.
    */
   private async handleHomeCreateLinkSubmit(teamId: string, slackUserId: string): Promise<void> {
-    const accessResult = await this.verifySlackUserAccess(teamId, slackUserId);
+    // Fetch integration once (cache-first), reuse for access check and error views
+    const integration = await this.getIntegrationCached(teamId);
+    if (!integration) return;
+
+    const accessToken = IntegrationHelper.getAccessToken(integration);
+    const accessResult = await this.verifySlackUserAccess(teamId, slackUserId, integration);
+
     if (accessResult.status !== 'granted') {
-      // Recover from access failure instead of leaving user on frozen loading
       if (accessResult.status === 'not_workspace_member') {
-        const accessToken = IntegrationHelper.getAccessToken(accessResult.integration);
         await publishView(
           accessToken,
           slackUserId,
           buildHomeAccessRequiredView({ email: accessResult.email })
         );
-      } else if (accessResult.status === 'integration_not_found') {
-        // No token available — can't publish a view, fall through
-      } else {
-        // user_not_found — show disconnected so they can sign up
-        const integration = await this.deps.integrationRepo.findByProviderWorkspaceId(
-          'slack',
-          teamId
+      } else if (accessResult.status === 'user_not_found') {
+        await publishView(
+          accessToken,
+          slackUserId,
+          buildHomeDisconnectedView({ dashboardUrl: env.dashboard.baseUrl })
         );
-        if (integration) {
-          const accessToken = IntegrationHelper.getAccessToken(integration);
-          await publishView(
-            accessToken,
-            slackUserId,
-            buildHomeDisconnectedView({ dashboardUrl: env.dashboard.baseUrl })
-          );
-        }
       }
       return;
     }
 
-    const { workspaceId, workspaceMemberId, integration } = accessResult.context;
-    const accessToken = IntegrationHelper.getAccessToken(integration);
+    const { workspaceId, workspaceMemberId } = accessResult.context;
 
     // Read cached selections
     const cached = await this.getHomeSelectState(teamId, slackUserId);

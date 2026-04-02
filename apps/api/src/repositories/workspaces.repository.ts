@@ -470,6 +470,29 @@ export class WorkspaceRepository {
   }
 
   /**
+   * Update the DodoPayments customer ID on a workspace.
+   * Called during initial subscription creation to link the workspace to its payment customer.
+   */
+  async updateDodoCustomerId(
+    workspaceId: string,
+    dodoCustomerId: string,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(workspaces)
+      .set({ dodoCustomerId })
+      .where(eq(workspaces.workspaceId, workspaceId))
+      .returning({
+        workspaceId: workspaces.workspaceId,
+        dodoCustomerId: workspaces.dodoCustomerId,
+      });
+
+    return updated || null;
+  }
+
+  /**
    * Find workspaces that match a user's email domain with pagination
    * Used for suggesting workspaces to users without any workspaces
    * Excludes private workspaces and workspaces user is already a member of

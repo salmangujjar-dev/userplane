@@ -15,7 +15,7 @@
 
 import type { CacheService } from '@userplane/cache';
 import type { AddonItems } from '@userplane/contract';
-import { type DbClient, eq, subscriptions, workspaces } from '@userplane/db';
+import type { DbClient } from '@userplane/db';
 import type { getDodoPaymentsClient } from '@userplane/payments/client';
 import { getPlanIdFromProductId } from '@userplane/payments/products';
 import { validateTransition } from '@userplane/payments/state-machine';
@@ -409,14 +409,11 @@ export class WebhookProcessorService {
           'Subscription ID changed'
         );
 
-        await (tx as unknown as DbClient)
-          .update(subscriptions)
-          .set({
-            subscriptionId,
-            customerId,
-            updatedAt: new Date(),
-          })
-          .where(eq(subscriptions.id, existingWorkspaceSubscription.id));
+        await this.deps.subscriptionRepo.updateById(
+          existingWorkspaceSubscription.id,
+          { subscriptionId, customerId },
+          { tx }
+        );
       }
     } else {
       // Create new subscription with featureGates
@@ -754,12 +751,7 @@ export class WebhookProcessorService {
     customerId: string,
     options?: { tx?: Transaction }
   ) {
-    const dbClient = options?.tx || this.deps.db;
-
-    await (dbClient as unknown as DbClient)
-      .update(workspaces)
-      .set({ dodoCustomerId: customerId })
-      .where(eq(workspaces.workspaceId, workspaceId));
+    await this.deps.workspaceRepo.updateDodoCustomerId(workspaceId, customerId, options);
   }
 
   /**

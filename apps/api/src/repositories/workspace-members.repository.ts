@@ -3,12 +3,16 @@
  * Handles all database operations for workspace member entities
  */
 
-import type { WorkspaceNotificationPreferences } from '@userplane/contract';
+import type { IncomingEventChannels, WorkspaceNotificationPreferences } from '@userplane/contract';
+import { DEFAULT_INCOMING_EVENT_CHANNELS, IncomingEventChannelsSchema } from '@userplane/contract';
 import type { DbClient, WorkspaceRole } from '@userplane/db';
 import { and, asc, count, eq, gte, ilike, inArray, sql } from '@userplane/db';
 import { user, workspaceMembers } from '@userplane/db';
 
+import { createLogger } from '@/api/lib/logger';
 import type { CreateWorkspaceMemberInput, Transaction } from '@/api/types';
+
+const logger = createLogger('workspace-member-repository');
 
 export class WorkspaceMemberRepository {
   constructor(private db: DbClient) {}
@@ -421,23 +425,32 @@ export class WorkspaceMemberRepository {
   }
 
   /**
-   * Update notification preferences for a workspace member
+   * Update notification preferences for a workspace member.
+   * Boolean fields are set directly. notifyIncomingEvents is merged via JSONB || operator.
    */
   async updateNotificationPreferences(
     memberId: string,
     preferences: Partial<{
       notifyFeatureHighlights: boolean;
       notifyUsageEvents: boolean;
-      notifyIncomingEvents: boolean;
+      notifyIncomingEvents: Partial<IncomingEventChannels>;
       notifyAdminEvents: boolean;
     }>,
     options?: { tx?: Transaction }
   ) {
     const dbClient = options?.tx || this.db;
 
+    const { notifyIncomingEvents, ...booleanPrefs } = preferences;
+
+    // Build set clause: boolean fields directly, JSONB via merge
+    const setClause: Record<string, unknown> = { ...booleanPrefs };
+    if (notifyIncomingEvents) {
+      setClause.notifyIncomingEvents = sql`${workspaceMembers.notifyIncomingEvents} || ${JSON.stringify(notifyIncomingEvents)}::jsonb`;
+    }
+
     const [updated] = await dbClient
       .update(workspaceMembers)
-      .set(preferences)
+      .set(setClause)
       .where(
         and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, false))
       )
@@ -508,6 +521,12 @@ export class WorkspaceMemberRepository {
 
     const normalizedEmails = emails.map((e) => e.toLowerCase());
 
+    // notifyIncomingEvents is JSONB — check email key; notifyAdminEvents is boolean
+    const preferenceCondition =
+      preferenceColumn === 'notifyIncomingEvents'
+        ? sql`${workspaceMembers.notifyIncomingEvents}->>'email' = 'true'`
+        : eq(workspaceMembers[preferenceColumn], true);
+
     const rows = await this.db
       .select({
         email: sql<string>`LOWER(${user.email})`,
@@ -518,7 +537,7 @@ export class WorkspaceMemberRepository {
         and(
           eq(workspaceMembers.workspaceId, workspaceId),
           eq(workspaceMembers.isDeleted, false),
-          eq(workspaceMembers[preferenceColumn], true),
+          preferenceCondition,
           inArray(sql`LOWER(${user.email})`, normalizedEmails)
         )
       );
@@ -555,5 +574,90 @@ export class WorkspaceMemberRepository {
       );
 
     return new Set(members.map((m) => m.email));
+  }
+
+  /**
+   * Parse the notifyIncomingEvents JSONB column with Zod validation
+   */
+  parseIncomingEventChannels(raw: unknown): IncomingEventChannels {
+    const result = IncomingEventChannelsSchema.safeParse(raw);
+    if (!result.success) {
+      logger.warn(
+        { raw, errors: result.error.flatten() },
+        'Invalid notifyIncomingEvents data, using defaults'
+      );
+      return DEFAULT_INCOMING_EVENT_CHANNELS;
+    }
+    return result.data;
+  }
+
+  /**
+   * Remove a specific channel key from notifyIncomingEvents for all members in a workspace.
+   * Used when an integration is disconnected (e.g., removing 'slack' from all members).
+   */
+  async clearIncomingEventChannel(
+    workspaceId: string,
+    channelKey: string,
+    options?: { tx?: Transaction }
+  ) {
+    if (channelKey === 'email') {
+      throw new Error('Cannot remove the email channel');
+    }
+
+    const dbClient = options?.tx || this.db;
+
+    return dbClient
+      .update(workspaceMembers)
+      .set({
+        notifyIncomingEvents: sql`${workspaceMembers.notifyIncomingEvents} - ${channelKey}`,
+      })
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.isDeleted, false),
+          sql`${workspaceMembers.notifyIncomingEvents} ? ${channelKey}`
+        )
+      )
+      .returning();
+  }
+
+  /**
+   * Enable a specific channel in notifyIncomingEvents for all active members in a workspace.
+   * Used when an integration is first connected (e.g., Slack connected → all members get slack: true).
+   */
+  async enableIncomingEventChannel(
+    workspaceId: string,
+    channelKey: string,
+    options?: { tx?: Transaction }
+  ) {
+    const dbClient = options?.tx || this.db;
+
+    return dbClient
+      .update(workspaceMembers)
+      .set({
+        notifyIncomingEvents: sql`${workspaceMembers.notifyIncomingEvents} || ${JSON.stringify({ [channelKey]: true })}::jsonb`,
+      })
+      .where(
+        and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.isDeleted, false))
+      )
+      .returning();
+  }
+
+  /**
+   * Reset notifyIncomingEvents to default for a specific member.
+   * Used during member removal/leave to clean up channel preferences.
+   */
+  async resetIncomingEventChannels(memberId: string, options?: { tx?: Transaction }) {
+    const dbClient = options?.tx || this.db;
+
+    const [updated] = await dbClient
+      .update(workspaceMembers)
+      .set({ notifyIncomingEvents: DEFAULT_INCOMING_EVENT_CHANNELS })
+      .where(
+        and(eq(workspaceMembers.workspaceMemberId, memberId), eq(workspaceMembers.isDeleted, false))
+      )
+      .returning();
+
+    return updated || null;
   }
 }
