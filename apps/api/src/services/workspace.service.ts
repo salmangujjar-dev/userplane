@@ -19,6 +19,7 @@ import { LinkRepository } from '@/api/repositories/links.repository';
 import { ProjectRepository } from '@/api/repositories/projects.repository';
 import { RecordingRepository } from '@/api/repositories/recordings.repository';
 import { SubscriptionRepository } from '@/api/repositories/subscriptions.repository';
+import { WorkspaceMemberIdentityRepository } from '@/api/repositories/workspace-member-identities.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { BillingService } from '@/api/services/billing.service';
@@ -41,6 +42,7 @@ export interface WorkspaceServiceDeps {
   tokenService: TokenService;
   db: DbClient;
   workspaceMemberRepo: WorkspaceMemberRepository;
+  memberIdentityRepo: WorkspaceMemberIdentityRepository;
   projectRepo: ProjectRepository;
   domainRepo: DomainRepository;
   linkRepo: LinkRepository;
@@ -49,7 +51,7 @@ export interface WorkspaceServiceDeps {
   subscriptionRepo: SubscriptionRepository;
   integrationRepo: IntegrationRepository;
   billingService: BillingService;
-  dodoClient?: DodoPayments;
+  dodoClient: DodoPayments;
   cacheService: CacheService;
 }
 
@@ -400,6 +402,9 @@ export class WorkspaceService {
     // Cancel active subscription before deletion
     await this.deleteWorkspaceSubscription(workspaceId);
 
+    // Capture active integrations before deletion for cache invalidation
+    const integrations = await this.deps.integrationRepo.findByWorkspaceId(workspaceId);
+
     // Use transaction for atomic deletion
     const performDeletion = async (tx: Transaction) => {
       // 1. Soft delete the workspace
@@ -411,6 +416,9 @@ export class WorkspaceService {
 
       // 2. Soft delete all workspace members
       await this.deps.workspaceMemberRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
+
+      // 2b. Soft delete all member identities (notification channel identities)
+      await this.deps.memberIdentityRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
 
       // 3. Soft delete all projects in workspace
       await this.deps.projectRepo.softDeleteByWorkspaceId(workspaceId, deletedAt, { tx });
@@ -436,7 +444,7 @@ export class WorkspaceService {
     }
 
     // Clean up all workspace-related caches after successful deletion
-    await this.cleanupWorkspaceCaches(workspaceId);
+    await this.cleanupWorkspaceCaches(workspaceId, integrations);
 
     return deleted;
   }
@@ -444,8 +452,12 @@ export class WorkspaceService {
   /**
    * Clean up all caches related to a workspace
    * Called during workspace deletion to remove stale cache entries
+   * Accepts pre-fetched integrations since they're soft-deleted by this point
    */
-  private async cleanupWorkspaceCaches(workspaceId: string): Promise<void> {
+  private async cleanupWorkspaceCaches(
+    workspaceId: string,
+    integrations: Array<{ provider: string; providerWorkspaceId: string }>
+  ): Promise<void> {
     try {
       // Clear billing caches
       await this.deps.cacheService.invalidateWorkspaceBilling(workspaceId);
@@ -467,6 +479,14 @@ export class WorkspaceService {
         if (domainIds.length > 0) {
           await this.deps.cacheService.invalidateDomainRecordingPrefsBatch(domainIds);
         }
+      }
+
+      // Clear integration caches (slack, intercom, zendesk, etc.)
+      for (const integration of integrations) {
+        await this.deps.cacheService.invalidateIntegration(
+          integration.provider,
+          integration.providerWorkspaceId
+        );
       }
 
       logger.debug({ workspaceId }, 'Cleaned up caches for deleted workspace');
@@ -501,10 +521,6 @@ export class WorkspaceService {
     workspaceId: string,
     cancelImmediately: boolean = false
   ): Promise<void> {
-    if (!this.deps.subscriptionRepo || !this.deps.dodoClient) {
-      return;
-    }
-
     try {
       const subscription = await this.deps.subscriptionRepo.findByWorkspaceId(workspaceId);
 
@@ -789,6 +805,23 @@ export class WorkspaceService {
         logger.error({ err: error, workspaceId }, 'Error restoring workspace members');
         captureException(error, undefined, {
           operation: 'restore_members',
+          workspace_id: workspaceId,
+        });
+      }
+
+      // 7b. Restore member identities (best effort)
+      // Only restore identities deleted at the same time as the workspace
+      try {
+        await this.deps.memberIdentityRepo.restoreByWorkspaceIdAndDeletionTime(
+          workspaceId,
+          deletedAt,
+          { tx }
+        );
+      } catch (error) {
+        // Log but don't fail - best effort
+        logger.error({ err: error, workspaceId }, 'Error restoring member identities');
+        captureException(error, undefined, {
+          operation: 'restore_member_identities',
           workspace_id: workspaceId,
         });
       }

@@ -35,6 +35,7 @@ import {
   inviteService,
   linkRepo,
   linkService,
+  notificationChannelService,
   notificationService,
   projectService,
   provisionerService,
@@ -51,9 +52,6 @@ import {
   zendeskAppService,
   zendeskService,
 } from '@/api/services';
-import { IntercomNotificationService } from '@/api/services/intercom-notification.service';
-import { SlackNotificationService } from '@/api/services/slack-notification.service';
-import { ZendeskNotificationService } from '@/api/services/zendesk-notification.service';
 
 import { createAccountProcedures } from './account/account.impl';
 import { createAdminProcedures } from './admin/admin.impl';
@@ -79,20 +77,10 @@ export type { WorkspaceContext } from '@/api/middleware/workspace.orpc';
 /**
  * Implemented procedures
  */
-const intercomNotificationService = new IntercomNotificationService({ integrationRepo });
-const zendeskNotificationService = new ZendeskNotificationService({
-  integrationRepo,
-  cacheService,
-});
-const slackNotificationService = new SlackNotificationService({ integrationRepo });
 const sessionProcedures = createSessionProcedures(
   sessionService,
   recordingRepo,
-  workspaceMemberRepo,
-  notificationService,
-  intercomNotificationService,
-  zendeskNotificationService,
-  slackNotificationService
+  notificationService
 );
 const accountProcedures = createAccountProcedures(userService);
 const workspaceProcedures = createWorkspaceProcedures(
@@ -110,7 +98,8 @@ const workspaceProcedures = createWorkspaceProcedures(
   zendeskService,
   slackService,
   slackCanvasService,
-  billingService
+  billingService,
+  notificationChannelService
 );
 const recordingProcedures = createRecordingProcedures(
   recordingService,

@@ -16,12 +16,8 @@ import {
   type DomainSortField,
   type SortDirection,
 } from '@/api/repositories/domains.repository';
-import type { LinkRepository } from '@/api/repositories/links.repository';
 import type { BillingService } from '@/api/services/billing.service';
-import type { EmailService } from '@/api/services/email.service';
 import { TokenService } from '@/api/services/token.service';
-import type { UserService } from '@/api/services/user.service';
-import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { Transaction } from '@/api/types';
 
 const logger = createLogger('domain-service');
@@ -30,10 +26,6 @@ export interface DomainServiceDeps {
   domainRepo: DomainRepository;
   tokenService: TokenService;
   billingService: BillingService;
-  emailService?: EmailService;
-  workspaceService?: WorkspaceService;
-  userService?: UserService;
-  linkRepo?: LinkRepository;
   cacheService: CacheService;
 }
 

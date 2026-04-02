@@ -129,6 +129,14 @@ export function generateIntegrationId(): string {
 }
 
 /**
+ * Generate a unique ID for workspace member identities
+ * @returns ID with 'mid_' prefix + 12-character alphanumeric ID
+ */
+export function generateMemberIdentityId(): string {
+  return `mid_${nanoid()}`;
+}
+
+/**
  * Short suffix length for fallback link titles
  * 4 characters with 62-char alphabet = ~14.7 million combinations
  */

@@ -272,6 +272,22 @@ export async function getUserInfo(accessToken: string, userId: string): Promise<
 }
 
 /**
+ * Look up a Slack user by email address.
+ * Requires `users:read.email` bot scope.
+ */
+export async function lookupByEmail(accessToken: string, email: string): Promise<SlackUser | null> {
+  const params = new URLSearchParams({ email });
+  const result = await slackRequest({
+    operation: 'slack_lookup_by_email',
+    url: `https://slack.com/api/users.lookupByEmail?${params.toString()}`,
+    init: { headers: { Authorization: `Bearer ${accessToken}` } },
+    schema: SlackUserInfoResponseSchema,
+    captureContext: { email },
+  });
+  return result?.user ?? null;
+}
+
+/**
  * List workspace members (single page, capped at SLACK_MEMBER_FETCH_LIMIT).
  * Filters out bots, deleted users, and users without an email address.
  * Requires `users:read` and `users:read.email` bot scopes.

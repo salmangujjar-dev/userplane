@@ -3,20 +3,15 @@
  * Implements the session contract defined in @userplane/contract
  */
 import { implement } from '@orpc/server';
-import { parseLinkProviderData, sessionContract, sessionError } from '@userplane/contract';
+import { sessionContract, sessionError } from '@userplane/contract';
 
 import { REQUEST_HEADERS } from '@/api/constants/headers';
 import { createLogger } from '@/api/lib/logger';
 import type { InitialContext } from '@/api/middleware/auth.orpc';
 import { captureException } from '@/api/posthog';
 import type { RecordingRepository } from '@/api/repositories/recordings.repository';
-import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
-import type { IntercomNotificationService } from '@/api/services/intercom-notification.service';
 import type { NotificationService } from '@/api/services/notification.service';
 import type { SessionService } from '@/api/services/session.service';
-import type { SlackNotificationService } from '@/api/services/slack-notification.service';
-import type { ZendeskNotificationService } from '@/api/services/zendesk-notification.service';
-import { emailUrls } from '@/api/utils/email-urls';
 
 /**
  * Create the implementer from the session contract with initial context
@@ -121,18 +116,14 @@ export const initUploadImpl = (sessionService: SessionService) => {
 
 /**
  * Send post-upload notifications for a completed recording.
- * - Email to the recording creator
- * - Admin note to Intercom conversation (if link originated from Intercom)
+ * All channel orchestration (email, Slack, Intercom, Zendesk)
+ * is handled internally by NotificationService.
  */
 async function sendRecordingNotifications(
   recordingId: string,
   deps: {
     recordingRepo: RecordingRepository;
-    workspaceMemberRepo: WorkspaceMemberRepository;
     notificationService: NotificationService;
-    intercomNotificationService: IntercomNotificationService;
-    zendeskNotificationService: ZendeskNotificationService;
-    slackNotificationService: SlackNotificationService;
   }
 ): Promise<void> {
   const recording = await deps.recordingRepo.findByIdWithDetailsAndStatusGroup(
@@ -145,61 +136,7 @@ async function sendRecordingNotifications(
     return;
   }
 
-  // Email notification to the recording creator
-  const creator = await deps.workspaceMemberRepo.findByIdWithUser(recording.creatorId);
-  if (creator) {
-    await deps.notificationService.sendSafeRecordingReceived(
-      recording.workspaceId,
-      { to: creator.userEmail },
-      {
-        workspaceId: recording.workspaceId,
-        recordingId: recording.recordingId,
-      }
-    );
-  }
-
-  // Admin note to Intercom conversation if link originated from Intercom
-  if (recording.linkProviderType === 'intercom' && recording.linkProviderId) {
-    const providerData = parseLinkProviderData('intercom', recording.linkProviderData);
-    if (providerData?.adminId) {
-      const recordingUrl = emailUrls.recording.view(recording.workspaceId, recording.recordingId);
-      await deps.intercomNotificationService.notifyRecordingReceived({
-        workspaceId: recording.workspaceId,
-        conversationId: recording.linkProviderId,
-        adminId: providerData.adminId,
-        recordingId: recording.recordingId,
-        recordingUrl,
-      });
-    }
-  }
-
-  // Internal note on Zendesk ticket if link originated from Zendesk
-  if (recording.linkProviderType === 'zendesk' && recording.linkProviderId) {
-    const recordingUrl = emailUrls.recording.view(recording.workspaceId, recording.recordingId);
-    await deps.zendeskNotificationService.notifyRecordingReceived({
-      workspaceId: recording.workspaceId,
-      ticketId: recording.linkProviderId,
-      recordingId: recording.recordingId,
-      recordingUrl,
-    });
-  }
-
-  // Message to Slack channel if link originated from Slack
-  if (recording.linkProviderType === 'slack' && recording.linkProviderId) {
-    const providerData = parseLinkProviderData('slack', recording.linkProviderData);
-    if (providerData?.channelId) {
-      const recordingUrl = emailUrls.recording.view(recording.workspaceId, recording.recordingId);
-      await deps.slackNotificationService.notifyRecordingReceived({
-        workspaceId: recording.workspaceId,
-        channelId: providerData.channelId,
-        channelName: providerData.channelName,
-        userId: providerData.userId,
-        threadTs: providerData.threadTs,
-        recordingId: recording.recordingId,
-        recordingUrl,
-      });
-    }
-  }
+  await deps.notificationService.sendSafeRecordingReceived(recording);
 }
 
 /**
@@ -211,11 +148,7 @@ async function sendRecordingNotifications(
 export const completeUploadImpl = (
   sessionService: SessionService,
   recordingRepo: RecordingRepository,
-  workspaceMemberRepo: WorkspaceMemberRepository,
-  notificationService: NotificationService,
-  intercomNotificationService: IntercomNotificationService,
-  zendeskNotificationService: ZendeskNotificationService,
-  slackNotificationService: SlackNotificationService
+  notificationService: NotificationService
 ) => {
   return os.upload.complete.use(requireUploadToken).handler(async ({ input, context }) => {
     const result = await sessionService.markAsAvailable(
@@ -229,11 +162,7 @@ export const completeUploadImpl = (
       try {
         await sendRecordingNotifications(result.recordingId, {
           recordingRepo,
-          workspaceMemberRepo,
           notificationService,
-          intercomNotificationService,
-          zendeskNotificationService,
-          slackNotificationService,
         });
       } catch (error) {
         sessionLogger.error({ err: error }, 'Error sending recording notifications');
@@ -260,25 +189,13 @@ export const completeUploadImpl = (
 export const createSessionProcedures = (
   sessionService: SessionService,
   recordingRepo: RecordingRepository,
-  workspaceMemberRepo: WorkspaceMemberRepository,
-  notificationService: NotificationService,
-  intercomNotificationService: IntercomNotificationService,
-  zendeskNotificationService: ZendeskNotificationService,
-  slackNotificationService: SlackNotificationService
+  notificationService: NotificationService
 ) => {
   return {
     init: getSessionImpl(sessionService),
     upload: {
       init: initUploadImpl(sessionService),
-      complete: completeUploadImpl(
-        sessionService,
-        recordingRepo,
-        workspaceMemberRepo,
-        notificationService,
-        intercomNotificationService,
-        zendeskNotificationService,
-        slackNotificationService
-      ),
+      complete: completeUploadImpl(sessionService, recordingRepo, notificationService),
     },
   };
 };

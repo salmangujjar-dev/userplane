@@ -20,6 +20,7 @@ import type { EmailService } from '@/api/services/email.service';
 import type { IntercomService } from '@/api/services/intercom-oauth.service';
 import type { InviteService } from '@/api/services/invite.service';
 import type { LinkService } from '@/api/services/link.service';
+import type { NotificationChannelService } from '@/api/services/notification-channel.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { RecordingService } from '@/api/services/recording.service';
 import type { SlackCanvasService } from '@/api/services/slack-canvas.service';
@@ -605,23 +606,28 @@ export const leaveWorkspaceImpl = (
  */
 export const getNotificationPreferencesImpl = (
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  notificationChannelService: NotificationChannelService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorizedRateLimited.workspace.notifications.get
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      const notificationPreferences = await workspaceMemberService.getNotificationPreferences(
-        context.user.id,
-        input.params.workspaceId
-      );
+      const [notificationPreferences, availableChannels] = await Promise.all([
+        workspaceMemberService.getNotificationPreferences(
+          context.user.id,
+          input.params.workspaceId
+        ),
+        notificationChannelService.getAvailableChannels(input.params.workspaceId),
+      ]);
 
       return {
         message: 'Notification preferences retrieved successfully',
         data: {
           workspaceId: input.params.workspaceId,
           notificationPreferences,
+          availableChannels,
         },
       };
     });
@@ -630,21 +636,67 @@ export const getNotificationPreferencesImpl = (
 /**
  * PATCH /workspace/:workspaceId/notifications - Update notification preferences
  * Requires workspace member
+ *
+ * Accepts boolean fields (feature highlights, usage, admin) and
+ * notifyIncomingEvents as a partial channel map { email?, slack?, intercom?, zendesk? }.
+ * For Slack, enabling triggers identity resolution (email → Slack user ID).
  */
 export const updateNotificationPreferencesImpl = (
   workspaceMemberService: WorkspaceMemberService,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  notificationChannelService: NotificationChannelService
 ) => {
   const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
   return authorizedRateLimited.workspace.notifications.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input, context }) => {
-      await workspaceMemberService.updateNotificationPreferences(
-        context.user.id,
-        input.params.workspaceId,
-        input.body
-      );
+      const { notifyIncomingEvents, ...booleanPrefs } = input.body;
+
+      // Handle Slack channel toggle separately (requires identity resolution)
+      if (notifyIncomingEvents?.slack !== undefined) {
+        const member = await workspaceMemberService.getMember(
+          context.user.id,
+          input.params.workspaceId
+        );
+        if (member) {
+          if (notifyIncomingEvents.slack) {
+            await notificationChannelService.enableChannel(
+              member.workspaceMemberId,
+              input.params.workspaceId,
+              context.user.email,
+              'slack'
+            );
+          } else {
+            await notificationChannelService.disableChannel(member.workspaceMemberId, 'slack');
+          }
+        }
+      }
+
+      // Build remaining channel updates (excluding slack which was handled above)
+      const remainingChannels = notifyIncomingEvents
+        ? Object.fromEntries(
+            Object.entries(notifyIncomingEvents).filter(([key]) => key !== 'slack')
+          )
+        : undefined;
+
+      // Update boolean prefs + non-slack channel prefs in one write
+      const hasUpdates =
+        Object.keys(booleanPrefs).length > 0 ||
+        (remainingChannels && Object.keys(remainingChannels).length > 0);
+
+      if (hasUpdates) {
+        await workspaceMemberService.updateNotificationPreferences(
+          context.user.id,
+          input.params.workspaceId,
+          {
+            ...booleanPrefs,
+            ...(remainingChannels && Object.keys(remainingChannels).length > 0
+              ? { notifyIncomingEvents: remainingChannels }
+              : {}),
+          }
+        );
+      }
 
       return {
         message: 'Notification preferences updated successfully',
@@ -1990,7 +2042,8 @@ export const createWorkspaceProcedures = (
   zendeskService: ZendeskService,
   slackService: SlackService,
   slackCanvasService: SlackCanvasService,
-  billingService: BillingService
+  billingService: BillingService,
+  notificationChannelService: NotificationChannelService
 ) => {
   return {
     list: getAllWorkspacesImpl(workspaceService),
@@ -2026,8 +2079,16 @@ export const createWorkspaceProcedures = (
     },
 
     notifications: {
-      get: getNotificationPreferencesImpl(workspaceMemberService, workspaceService),
-      update: updateNotificationPreferencesImpl(workspaceMemberService, workspaceService),
+      get: getNotificationPreferencesImpl(
+        workspaceMemberService,
+        workspaceService,
+        notificationChannelService
+      ),
+      update: updateNotificationPreferencesImpl(
+        workspaceMemberService,
+        workspaceService,
+        notificationChannelService
+      ),
     },
 
     linkSettings: {

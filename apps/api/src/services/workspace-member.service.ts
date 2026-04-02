@@ -4,7 +4,7 @@
  */
 
 import type { CacheService } from '@userplane/cache';
-import type { WorkspaceRole } from '@userplane/contract';
+import type { IncomingEventChannels, WorkspaceRole } from '@userplane/contract';
 import {
   billingError,
   getDefaultNotificationPreferences,
@@ -16,6 +16,8 @@ import {
 import { generateWorkspaceMemberId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';
+import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
+import type { WorkspaceMemberIdentityRepository } from '@/api/repositories/workspace-member-identities.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { EntitlementService } from '@/api/services/entitlement.service';
 import type { Transaction } from '@/api/types';
@@ -24,6 +26,8 @@ const logger = createLogger('workspace-member-service');
 
 export interface WorkspaceMemberServiceDeps {
   memberRepo: WorkspaceMemberRepository;
+  memberIdentityRepo: WorkspaceMemberIdentityRepository;
+  integrationRepo: IntegrationRepository;
   entitlementService: EntitlementService;
   cacheService: CacheService;
 }
@@ -88,6 +92,9 @@ export class WorkspaceMemberService {
         workspaceMemberId: member.workspaceMemberId,
         workspaceRole: member.workspaceRole,
       });
+
+      // Enable notification channels for active integrations
+      await this.enableChannelsForActiveIntegrations(member.workspaceMemberId, params.workspaceId);
     }
 
     return member;
@@ -170,6 +177,9 @@ export class WorkspaceMemberService {
         workspaceMemberId: member.workspaceMemberId,
         workspaceRole: member.workspaceRole,
       });
+
+      // Enable notification channels for active integrations
+      await this.enableChannelsForActiveIntegrations(member.workspaceMemberId, params.workspaceId);
     }
 
     return member;
@@ -267,6 +277,16 @@ export class WorkspaceMemberService {
         throw workspaceError.WORKSPACE_MEMBER_LAST_OWNER_REMOVE();
       }
     }
+
+    // Reset notification channels before soft-deleting
+    await this.deps.memberRepo.resetIncomingEventChannels(params.memberId, options);
+
+    // Soft-delete associated identities with same timestamp
+    await this.deps.memberIdentityRepo.softDeleteByMemberId(
+      params.memberId,
+      params.deletedAt,
+      options
+    );
 
     const result = await this.deps.memberRepo.softDelete(
       params.memberId,
@@ -423,11 +443,20 @@ export class WorkspaceMemberService {
         }
 
         // Only member in workspace - soft delete and signal to delete workspace
+        // Note: identity cleanup will happen via workspace deletion cascade
         await this.deps.memberRepo.softDelete(member.workspaceMemberId, deletedAt, options);
         // Note: No need to release seat when workspace is being deleted
         return { shouldDeleteWorkspace: true };
       }
     }
+
+    // Reset notification channels and soft-delete identities before leaving
+    await this.deps.memberRepo.resetIncomingEventChannels(member.workspaceMemberId, options);
+    await this.deps.memberIdentityRepo.softDeleteByMemberId(
+      member.workspaceMemberId,
+      deletedAt,
+      options
+    );
 
     await this.deps.memberRepo.softDelete(member.workspaceMemberId, deletedAt, options);
 
@@ -461,7 +490,9 @@ export class WorkspaceMemberService {
     return {
       notifyFeatureHighlights: member.notifyFeatureHighlights,
       notifyUsageEvents: member.notifyUsageEvents,
-      notifyIncomingEvents: member.notifyIncomingEvents,
+      notifyIncomingEvents: this.deps.memberRepo.parseIncomingEventChannels(
+        member.notifyIncomingEvents
+      ),
       notifyAdminEvents: member.notifyAdminEvents,
     };
   }
@@ -478,7 +509,7 @@ export class WorkspaceMemberService {
     preferences: Partial<{
       notifyFeatureHighlights: boolean;
       notifyUsageEvents: boolean;
-      notifyIncomingEvents: boolean;
+      notifyIncomingEvents: Partial<IncomingEventChannels>;
       notifyAdminEvents: boolean;
     }>,
     options?: { tx?: Transaction }
@@ -492,13 +523,21 @@ export class WorkspaceMemberService {
       throw workspaceError.WORKSPACE_MEMBER_NOT_IN_WORKSPACE();
     }
 
-    // Strip keys the role cannot edit (hidden = non-editable)
+    // Strip boolean keys the role cannot edit (hidden = non-editable)
+    // notifyIncomingEvents (JSONB channels) is always editable by all roles
     const editableKeys = new Set(getEditableNotificationKeys(member.workspaceRole));
-    const filtered: typeof preferences = {};
-    for (const [key, value] of Object.entries(preferences)) {
-      if (editableKeys.has(key as keyof typeof preferences) && value !== undefined) {
-        (filtered as Record<string, boolean>)[key] = value;
+    const { notifyIncomingEvents, ...booleanPrefs } = preferences;
+
+    const filtered: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(booleanPrefs)) {
+      if (editableKeys.has(key as Parameters<typeof editableKeys.has>[0]) && value !== undefined) {
+        filtered[key] = value;
       }
+    }
+
+    // Include notifyIncomingEvents if provided (all roles can edit channels)
+    if (notifyIncomingEvents) {
+      filtered.notifyIncomingEvents = notifyIncomingEvents;
     }
 
     // Nothing editable after filtering -- skip the DB write
@@ -508,7 +547,7 @@ export class WorkspaceMemberService {
 
     return this.deps.memberRepo.updateNotificationPreferences(
       member.workspaceMemberId,
-      filtered,
+      filtered as Parameters<typeof this.deps.memberRepo.updateNotificationPreferences>[1],
       options
     );
   }
@@ -519,5 +558,39 @@ export class WorkspaceMemberService {
    */
   async countByWorkspace(workspaceId: string): Promise<number> {
     return this.deps.memberRepo.countByWorkspace(workspaceId);
+  }
+
+  /**
+   * Enable notification channels for active integrations on a member.
+   * Called when a member joins — sets channel preferences based on what's connected.
+   * Best-effort: logs errors but doesn't fail member creation.
+   */
+  private async enableChannelsForActiveIntegrations(
+    workspaceMemberId: string,
+    workspaceId: string
+  ): Promise<void> {
+    try {
+      const integrations = await this.deps.integrationRepo.findByWorkspaceId(workspaceId);
+      if (integrations.length === 0) return;
+
+      const channelDefaults: Record<string, boolean> = {};
+      for (const integration of integrations) {
+        channelDefaults[integration.provider] = true;
+      }
+
+      await this.deps.memberRepo.updateNotificationPreferences(workspaceMemberId, {
+        notifyIncomingEvents: channelDefaults,
+      });
+    } catch (error) {
+      logger.error(
+        { err: error, workspaceMemberId, workspaceId },
+        'Failed to enable channels for active integrations'
+      );
+      captureException(error, undefined, {
+        operation: 'enable_channels_on_member_join',
+        workspace_member_id: workspaceMemberId,
+        workspace_id: workspaceId,
+      });
+    }
   }
 }

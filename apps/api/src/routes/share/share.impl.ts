@@ -95,23 +95,15 @@ export const viewSharedRecordingImpl = (
 
     const { rid, wid, wmid } = result.payload;
 
-    // Fetch recording detail (throws appropriate errors if not found/deleted)
+    // Fetch recording detail + all resources in a single pass (1 DB query + 1 prefs query)
     let recording;
+    let resources;
     try {
-      recording = await recordingService.getById(rid, wid);
+      ({ recording, resources } = await recordingService.getDetailWithResources(rid, wid));
     } catch {
       // Map recording errors to share-specific errors
       throw shareError.RECORDING_NOT_FOUND();
     }
-
-    // Fetch all resources in parallel
-    const [video, thumbnail, consoleLog, networkLog, action] = await Promise.all([
-      recordingService.getVideoResource(rid, wid),
-      recordingService.getThumbnailResource(rid, wid),
-      recordingService.getConsoleLogResource(rid, wid),
-      recordingService.getNetworkLogResource(rid, wid),
-      recordingService.getActionResource(rid, wid),
-    ]);
 
     // Get sharer info
     const sharer = await workspaceMemberRepo.findByIdWithUser(wmid);
@@ -123,13 +115,7 @@ export const viewSharedRecordingImpl = (
       message: 'Shared recording retrieved successfully',
       data: {
         recording,
-        resources: {
-          video,
-          thumbnail,
-          consoleLog,
-          networkLog,
-          action,
-        },
+        resources,
         sharedBy: {
           name: sharerName,
         },

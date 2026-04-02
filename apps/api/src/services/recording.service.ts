@@ -44,6 +44,17 @@ export interface RecordingServiceDeps {
   billingService: BillingService;
 }
 
+type CapturePreferences = Awaited<ReturnType<RecordingRepository['getDomainCapturePreferences']>>;
+
+interface RecordingWithRefs {
+  recordingVideoRef: string | null;
+  recordingThumbnailRef: string | null;
+  recordingConsoleLogRef: string | null;
+  recordingNetworkLogsRef: string | null;
+  recordingActionRef: string | null;
+  recordingDurationMs: number;
+}
+
 /**
  * Default items per page
  */
@@ -188,6 +199,44 @@ export class RecordingService {
    * Throws RECORDING_GONE if recording has been deleted
    */
   async getById(recordingId: string, workspaceId: string): Promise<RecordingDetail> {
+    const row = await this.validateDetailedRecordingAccess(recordingId, workspaceId);
+    return this.toRecordingDetail(row);
+  }
+
+  /**
+   * Get recording detail and all resources in a single pass.
+   * Fetches the recording once and reuses it for both the detail transformation
+   * and resource URL generation — eliminates redundant DB queries.
+   */
+  async getDetailWithResources(
+    recordingId: string,
+    workspaceId: string
+  ): Promise<{
+    recording: RecordingDetail;
+    resources: {
+      video: ResourceResponse;
+      thumbnail: ResourceResponse;
+      consoleLog: ResourceResponse;
+      networkLog: ResourceResponse;
+      action: ResourceResponse;
+    };
+  }> {
+    const row = await this.validateDetailedRecordingAccess(recordingId, workspaceId);
+    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+
+    const [recording, video, thumbnail, consoleLog, networkLog, action] = await Promise.all([
+      this.toRecordingDetail(row),
+      this.generateVideoResource(row),
+      this.generateThumbnailResource(row),
+      this.generateConsoleLogResource(row, prefs),
+      this.generateNetworkLogResource(row, prefs),
+      this.generateActionResource(row, prefs),
+    ]);
+
+    return { recording, resources: { video, thumbnail, consoleLog, networkLog, action } };
+  }
+
+  private async validateDetailedRecordingAccess(recordingId: string, workspaceId: string) {
     const row = await this.deps.recordingRepo.findByIdWithDetailsAndStatusGroup(recordingId);
 
     if (!row) {
@@ -202,6 +251,12 @@ export class RecordingService {
       throw recordingError.RECORDING_NOT_FOUND();
     }
 
+    return row;
+  }
+
+  private toRecordingDetail(
+    row: NonNullable<Awaited<ReturnType<RecordingRepository['findByIdWithDetailsAndStatusGroup']>>>
+  ): RecordingDetail {
     return {
       recordingId: row.recordingId,
       recordingDurationMs: row.recordingDurationMs,
@@ -246,7 +301,82 @@ export class RecordingService {
    */
   async getVideoResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
     const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+    return this.generateVideoResource(recording);
+  }
 
+  /**
+   * Get thumbnail resource for an available recording
+   * Only works with recordings that have uploadStatus = 'available'
+   */
+  async getThumbnailResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+    return this.generateThumbnailResource(recording);
+  }
+
+  /**
+   * Get console log resource for an available recording
+   * Only works with recordings that have uploadStatus = 'available'
+   * Returns captureEnabled to indicate current domain preference
+   */
+  async getConsoleLogResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+    return this.generateConsoleLogResource(recording, prefs);
+  }
+
+  /**
+   * Get network log resource for an available recording
+   * Only works with recordings that have uploadStatus = 'available'
+   * Returns captureEnabled to indicate current domain preference
+   */
+  async getNetworkLogResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+    return this.generateNetworkLogResource(recording, prefs);
+  }
+
+  /**
+   * Get client action resource for an available recording
+   * Only works with recordings that have uploadStatus = 'available'
+   * Returns captureEnabled to indicate current domain preference
+   */
+  async getActionResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+    return this.generateActionResource(recording, prefs);
+  }
+
+  /**
+   * Get all resources for a recording in a single batch.
+   * Validates access and fetches capture preferences once, then generates
+   * all presigned URLs in parallel. Eliminates redundant DB queries when
+   * multiple resources are needed at once (e.g. share page).
+   */
+  async getAllResources(
+    recordingId: string,
+    workspaceId: string
+  ): Promise<{
+    video: ResourceResponse;
+    thumbnail: ResourceResponse;
+    consoleLog: ResourceResponse;
+    networkLog: ResourceResponse;
+    action: ResourceResponse;
+  }> {
+    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
+    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+
+    const [video, thumbnail, consoleLog, networkLog, action] = await Promise.all([
+      this.generateVideoResource(recording),
+      this.generateThumbnailResource(recording),
+      this.generateConsoleLogResource(recording, prefs),
+      this.generateNetworkLogResource(recording, prefs),
+      this.generateActionResource(recording, prefs),
+    ]);
+
+    return { video, thumbnail, consoleLog, networkLog, action };
+  }
+
+  private async generateVideoResource(recording: RecordingWithRefs): Promise<ResourceResponse> {
     if (!recording.recordingVideoRef) {
       return {
         url: null,
@@ -263,7 +393,6 @@ export class RecordingService {
         { expiresIn: PRESIGNED_URL_EXPIRY }
       );
 
-      // Determine video type based on URL
       const videoType = this.getVideoType(url);
 
       return {
@@ -313,13 +442,7 @@ export class RecordingService {
     }
   }
 
-  /**
-   * Get thumbnail resource for an available recording
-   * Only works with recordings that have uploadStatus = 'available'
-   */
-  async getThumbnailResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
-    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
-
+  private async generateThumbnailResource(recording: RecordingWithRefs): Promise<ResourceResponse> {
     if (!recording.recordingThumbnailRef) {
       return { url: null, message: 'Thumbnail not available for this recording' };
     }
@@ -335,14 +458,10 @@ export class RecordingService {
     }
   }
 
-  /**
-   * Get console log resource for an available recording
-   * Only works with recordings that have uploadStatus = 'available'
-   * Returns captureEnabled to indicate current domain preference
-   */
-  async getConsoleLogResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
-    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
-    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+  private async generateConsoleLogResource(
+    recording: RecordingWithRefs,
+    prefs: CapturePreferences
+  ): Promise<ResourceResponse> {
     const captureEnabled = prefs?.captureClientLog ?? false;
 
     if (!recording.recordingConsoleLogRef) {
@@ -374,14 +493,10 @@ export class RecordingService {
     }
   }
 
-  /**
-   * Get network log resource for an available recording
-   * Only works with recordings that have uploadStatus = 'available'
-   * Returns captureEnabled to indicate current domain preference
-   */
-  async getNetworkLogResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
-    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
-    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+  private async generateNetworkLogResource(
+    recording: RecordingWithRefs,
+    prefs: CapturePreferences
+  ): Promise<ResourceResponse> {
     const captureEnabled = prefs?.captureNetworkLog ?? false;
 
     if (!recording.recordingNetworkLogsRef) {
@@ -411,14 +526,10 @@ export class RecordingService {
     }
   }
 
-  /**
-   * Get client action resource for an available recording
-   * Only works with recordings that have uploadStatus = 'available'
-   * Returns captureEnabled to indicate current domain preference
-   */
-  async getActionResource(recordingId: string, workspaceId: string): Promise<ResourceResponse> {
-    const recording = await this.validateAvailableRecordingAccess(recordingId, workspaceId);
-    const prefs = await this.deps.recordingRepo.getDomainCapturePreferences(recordingId);
+  private async generateActionResource(
+    recording: RecordingWithRefs,
+    prefs: CapturePreferences
+  ): Promise<ResourceResponse> {
     const captureEnabled = prefs?.captureClientAction ?? false;
 
     if (!recording.recordingActionRef) {

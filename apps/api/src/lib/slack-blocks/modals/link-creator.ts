@@ -23,10 +23,14 @@ export function buildLinkCreatorModalView(params: {
   domains: Array<{ id: string; domain: string }>;
   /** User display name - used to personalise the default title and message. */
   userName: string;
+  /** Optional text from slash command to pre-fill the link reference field. */
+  linkReference?: string;
 }) {
   const defaultMessage = `${params.userName} has requested a screen recording from you`;
 
-  const defaultTitle = determineLinkTitle(null, params.userName);
+  const defaultTitle = params.linkReference?.trim()
+    ? params.linkReference.trim()
+    : determineLinkTitle(null, params.userName);
 
   return {
     type: 'modal' as const,

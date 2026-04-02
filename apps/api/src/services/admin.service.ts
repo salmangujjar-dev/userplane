@@ -17,8 +17,8 @@ const logger = createLogger('admin-service');
 export interface AdminServiceDeps {
   adminRepo: AdminRepository;
   adminUserIds: string[];
-  workspaceService?: WorkspaceService;
-  workspaceMemberRepo?: WorkspaceMemberRepository;
+  workspaceService: WorkspaceService;
+  workspaceMemberRepo: WorkspaceMemberRepository;
 }
 
 export class AdminService {
@@ -144,7 +144,7 @@ export class AdminService {
     // Delete workspaces where user has specified roles
     const deleteRoles = options?.deleteWorkspacesForRoles ?? ['owner'];
 
-    if (deleteRoles.length > 0 && this.deps.workspaceService && this.deps.workspaceMemberRepo) {
+    if (deleteRoles.length > 0) {
       try {
         const deletedAt = new Date();
         const workspacesToDelete = new Set<string>();
