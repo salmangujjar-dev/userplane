@@ -13,6 +13,7 @@ import { slackCanvasUrls } from '../urls';
 export interface HomeRecordingItem {
   title: string;
   projectName: string;
+  creatorName: string;
   durationFormatted: string;
   /** Unix timestamp in seconds for Slack date formatting */
   createdAtTs: number;
@@ -90,7 +91,7 @@ export function buildHomeConnectedView(params: {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*${rec.title}*\n${rec.projectName} \u00b7 ${rec.durationFormatted} \u00b7 <!date^${rec.createdAtTs}^{date_short_pretty}|${new Date(rec.createdAtTs * 1000).toLocaleDateString()}>`,
+          text: `*${rec.title} Recording*\nRequested by ${rec.creatorName} \u00b7 ${rec.durationFormatted} \u00b7 <!date^${rec.createdAtTs}^{date_short_pretty}|${new Date(rec.createdAtTs * 1000).toLocaleDateString()}>`,
         },
       };
 

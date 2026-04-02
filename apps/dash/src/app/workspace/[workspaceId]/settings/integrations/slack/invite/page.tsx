@@ -62,7 +62,7 @@ export default function SlackInvitePage() {
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
       variant="slack"
-      onComplete={() => router.push(`/workspace/${workspaceId}/settings`)}
+      onComplete={() => router.push(`/workspace/${workspaceId}/recordings`)}
       onSkip={() => router.push(`/workspace/${workspaceId}/recordings`)}
     />
   );

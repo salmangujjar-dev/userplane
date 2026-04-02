@@ -7,6 +7,7 @@ import { authorizedRateLimited } from '@/api/middleware/rate-limit.orpc';
 import type { EmailService } from '@/api/services/email.service';
 import type { IntercomService } from '@/api/services/intercom-oauth.service';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
+import type { SlackCanvasService } from '@/api/services/slack-canvas.service';
 import type { SlackService } from '@/api/services/slack-oauth.service';
 
 /**
@@ -146,7 +147,11 @@ export const slackAuthorizeImpl = (slackService: SlackService) => {
  * GET /provisioner/slack/callback - Handle Slack OAuth callback
  * Exchanges code for token and creates workspace (onboarding flow only)
  */
-export const slackCallbackImpl = (slackService: SlackService, emailService: EmailService) => {
+export const slackCallbackImpl = (
+  slackService: SlackService,
+  slackCanvasService: SlackCanvasService,
+  emailService: EmailService
+) => {
   return authorizedRateLimited.provisioner.slack.callback.handler(async ({ input, context }) => {
     const result = await slackService.handleCallback({
       code: input.query.code,
@@ -157,7 +162,7 @@ export const slackCallbackImpl = (slackService: SlackService, emailService: Emai
       userRole: context.user.role,
     });
 
-    // Send welcome email if workspace was created
+    // Send welcome email and broadcast connected home tab if workspace was created
     if (result.created) {
       await emailService.sendSafeWelcomeEmailSubscription(
         { to: context.user.email },
@@ -166,6 +171,16 @@ export const slackCallbackImpl = (slackService: SlackService, emailService: Emai
           workspaceId: result.workspaceId,
         }
       );
+
+      // Best-effort: publish connected home tab to the user who just connected
+      // so they see a fresh dashboard immediately without reopening the app.
+      void slackCanvasService
+        .publishConnectedViewForUser(
+          result.accessToken,
+          result.workspaceId,
+          result.authedSlackUserId
+        )
+        .catch(() => {});
     }
 
     return {
@@ -182,7 +197,8 @@ export const createProvisionerProcedures = (
   provisionerService: ProvisionerService,
   emailService: EmailService,
   intercomService: IntercomService,
-  slackService: SlackService
+  slackService: SlackService,
+  slackCanvasService: SlackCanvasService
 ) => {
   return {
     createWorkspace: createWorkspaceImpl(provisionerService, emailService),
@@ -192,7 +208,7 @@ export const createProvisionerProcedures = (
     },
     slack: {
       authorize: slackAuthorizeImpl(slackService),
-      callback: slackCallbackImpl(slackService, emailService),
+      callback: slackCallbackImpl(slackService, slackCanvasService, emailService),
     },
   };
 };
