@@ -86,6 +86,10 @@ export const slackCanvasUrls = {
     return `${baseUrl}/workspace/suggest`;
   },
 
+  slackAuthorizeUrl(): string {
+    return `${baseUrl}/oauth/slack/authorize`;
+  },
+
   signUpUrl(): string {
     return `${baseUrl}/auth`;
   },

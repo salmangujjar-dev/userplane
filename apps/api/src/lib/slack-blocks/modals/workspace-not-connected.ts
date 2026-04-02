@@ -15,9 +15,9 @@ export function buildWorkspaceNotConnectedModalView() {
       'This Slack workspace isn\u2019t connected to Userplane yet. Connect it from your dashboard to get started.',
     actions: [
       {
-        text: 'Open Dashboard',
+        text: 'Connect Workspace',
         actionId: SlackActionIds.CONNECT_WORKSPACE,
-        url: slackCanvasUrls.dashboardUrl(),
+        url: slackCanvasUrls.slackAuthorizeUrl(),
         style: 'primary',
       },
     ],
