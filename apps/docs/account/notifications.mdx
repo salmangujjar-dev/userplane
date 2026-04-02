@@ -1,18 +1,37 @@
 ---
-title: Notification Preferences
-description: Control which email notifications you receive from Userplane
+title: Notification Channels & Preferences
+description: Configure how and where you receive notifications from Userplane
 ---
 
-Userplane sends email notifications to keep you informed about recordings, usage, and workspace activity. You can enable or disable each notification type from your workspace settings, subject to your role.
+Userplane sends notifications to keep you informed about recordings, usage, and workspace activity. You can control which notification types you receive and, for incoming recordings, which channels deliver them.
 
-## Notification toggles
+## Notification types
 
-| Notification            | Description                                                                    | Configurable by      |
-| ----------------------- | ------------------------------------------------------------------------------ | -------------------- |
-| **Feature highlights**  | Updates about new features and product improvements.                           | Owner, Admin, Member |
-| **Usage notifications** | Alerts when your workspace approaches or exceeds usage limits.                 | Admin, Member        |
-| **Incoming recordings** | Notifications when a new recording is submitted.                               | Owner, Admin, Member |
-| **Admin notifications** | Workspace administration events (member joins, access requests, role changes). | Admin                |
+| Notification            | Description                                                                                      | Configurable by      |
+| ----------------------- | ------------------------------------------------------------------------------------------------ | -------------------- |
+| **Feature highlights**  | Updates about new features and product improvements.                                             | Owner, Admin, Member |
+| **Usage notifications** | Alerts when your workspace approaches or exceeds usage limits.                                   | Admin, Member        |
+| **Incoming recordings** | Notifications when a new recording is submitted — delivered via one or more channels you choose. | Owner, Admin, Member |
+| **Admin notifications** | Workspace administration events (member joins, access requests, role changes).                   | Admin                |
+
+## Notification channels
+
+Incoming recording notifications can be delivered through any combination of the following channels:
+
+| Channel      | What it does                                                                   | Requires                                   |
+| ------------ | ------------------------------------------------------------------------------ | ------------------------------------------ |
+| **Email**    | Sends an email when a recording arrives.                                       | Nothing — always available.                |
+| **Slack**    | Sends a direct message in Slack when a recording arrives.                      | Active Slack integration + matching email. |
+| **Intercom** | Posts an admin note to the Intercom conversation the recording link came from. | Active Intercom integration.               |
+| **Zendesk**  | Posts an internal note to the Zendesk ticket the recording link came from.     | Active Zendesk integration.                |
+
+Email is always available. Slack, Intercom, and Zendesk channels appear only when your workspace admin has connected the respective integration.
+
+<Note>
+  Intercom and Zendesk notifications are context-tied — they only fire when the recording link was
+  created from a conversation or ticket in that tool. Slack and email notifications fire for all
+  incoming recordings regardless of where the link was created.
+</Note>
 
 ## Configuring preferences
 
@@ -25,7 +44,7 @@ Userplane sends email notifications to keep you informed about recordings, usage
     </Frame>
 
   </Step>
-  <Step title="Toggle notifications">
+  <Step title="Toggle notification types">
     Toggle each notification type on or off. Changes are saved automatically.
 
     <Frame caption="Workspace notification preferences">
@@ -33,9 +52,19 @@ Userplane sends email notifications to keep you informed about recordings, usage
     </Frame>
 
   </Step>
+  <Step title="Configure incoming recording channels">
+    Under **Incoming Recordings**, toggle each channel individually. Only channels with active integrations are shown alongside Email.
+
+    Enable the channels you want — you can use more than one at a time.
+
+    <Frame caption="Incoming recording channel toggles">
+      <img src="/media/slack/notifications/notification-preferences.png" />
+    </Frame>
+
+  </Step>
 </Steps>
 
-Only toggles your role can control are shown. If you do not see a notification type, it is either always enabled or not applicable for your role.
+Only toggles your role can control are shown. If a notification type is missing, it is either always enabled or not applicable for your role.
 
 ## Role-based rules
 
@@ -45,22 +74,24 @@ Only toggles your role can control are shown. If you do not see a notification t
 
 ## Defaults
 
-<Frame caption="Default notification preferences">
-  <img src="/media/workspace/notification/notification-toggles.png" />
-</Frame>
-
 | Notification            | Default state                                                 |
 | ----------------------- | ------------------------------------------------------------- |
 | **Feature highlights**  | Enabled for all roles                                         |
 | **Usage notifications** | Enabled for all roles                                         |
-| **Incoming recordings** | Disabled for all roles                                        |
+| **Incoming recordings** | All channels disabled for all roles (opt-in)                  |
 | **Admin notifications** | Enabled for owners (locked), disabled for admins (can opt in) |
 
 <Info>
-  Incoming recording notifications are opt-in. Enable this toggle to receive an email each time a
-  recording is submitted.
+  Incoming recording notifications are opt-in across all channels. Enable the channels you want to
+  use — each one can be toggled independently.
 </Info>
 
 ## Role changes
 
-When a member's role changes (promotion or demotion), notification preferences that the new role cannot control are automatically set to their correct value. For example, promoting someone to owner forces usage and admin notifications on. Demoting an owner to member forces admin notifications off. Preferences the new role can control are left unchanged.
+When a member's role changes, notification preferences that the new role cannot control are automatically set to their correct value. For example, promoting someone to owner forces usage and admin notifications on. Demoting an owner to member forces admin notifications off. Preferences the new role can control are left unchanged.
+
+## Channel-specific guides
+
+- [Slack Notifications](/integrations/slack-notifications) — how Slack DMs work and how to enable them.
+- [Intercom Notifications](/integrations/intercom-notifications) — how admin notes are posted to Intercom conversations.
+- [Zendesk Notifications](/integrations/zendesk-notifications) — how internal notes are posted to Zendesk tickets.
