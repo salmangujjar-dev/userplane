@@ -25,7 +25,7 @@ function MobileNavLink({
     return (
       <Button
         asChild
-        className={`rounded-full border-[0.5px] hover:brightness-99 ${className}`}
+        className={`border-[0.5px] hover:brightness-99 ${className}`}
         onClick={onClick}
         variant="secondary"
       >
@@ -106,11 +106,7 @@ export default function Header() {
       </div>
 
       <div className="hidden flex-1 justify-end gap-1 md:flex">
-        <Button
-          asChild
-          className="rounded-full border-[0.5px] hover:brightness-99"
-          variant="secondary"
-        >
+        <Button asChild className="border-[0.5px] hover:brightness-99" variant="secondary">
           <a className="flex items-center gap-2 px-5 py-5 font-medium" href={SIGNUP_URL}>
             Get Started
           </a>

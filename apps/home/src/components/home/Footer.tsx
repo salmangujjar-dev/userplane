@@ -1,6 +1,9 @@
 import Logo from '@userplane/ui/components/logo';
 import { Separator } from '@userplane/ui/components/separator';
 
+import CCPAIcon from '@/components/icons/CCPAIcon';
+import GDPRIcon from '@/components/icons/GDPRIcon';
+import { TALLY_COMPLIANCE_FORM_URL } from '@/constants/contact';
 import { FOOTER_AI_LINKS, FOOTER_COPYRIGHT, FOOTER_LINKS } from '@/constants/footer';
 
 const NAV_SECTIONS = [
@@ -22,6 +25,26 @@ export default function Footer() {
                 <p className="max-w-sm text-muted-foreground text-sm">
                   &copy; {new Date().getFullYear()} {FOOTER_COPYRIGHT}
                 </p>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={TALLY_COMPLIANCE_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                  >
+                    <GDPRIcon className="size-4 text-muted-foreground" />
+                    <span className="text-muted-foreground text-xs">GDPR</span>
+                  </a>
+                  <a
+                    href={TALLY_COMPLIANCE_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                  >
+                    <CCPAIcon className="size-4 text-muted-foreground" />
+                    <span className="text-muted-foreground text-xs">CCPA</span>
+                  </a>
+                </div>
               </div>
 
               <Separator className="flex lg:hidden" />
@@ -73,7 +96,7 @@ export default function Footer() {
                 href="https://status.userplane.io"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group isolate block rounded-lg bg-linear-to-r from-emerald-500/60 to-emerald-500/20 p-px"
+                className="group isolate block rounded-lg"
               >
                 <div className="relative z-10 flex h-8 items-center justify-center gap-2 rounded-[7px] bg-background px-2.5">
                   <svg

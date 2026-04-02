@@ -174,7 +174,7 @@ function PlanCard({ plan, highlights, isAnnual }: PlanCardProps) {
       {/* CTA Button */}
       <Button
         asChild
-        className={`w-full rounded-full mb-6 ${
+        className={`w-full mb-6 ${
           isPopular
             ? 'bg-foreground text-background hover:bg-foreground/90'
             : 'bg-white text-foreground border border-zinc-300 hover:bg-zinc-50'
@@ -354,7 +354,7 @@ function MobileFeatureComparison({ cycle, onCycleChange }: FeatureComparisonTabl
       {/* CTA for selected plan */}
       <Button
         asChild
-        className={`w-full rounded-full ${
+        className={`w-full ${
           selectedPlan.isPopular
             ? 'bg-foreground text-background hover:bg-foreground/90'
             : 'bg-white text-foreground border border-zinc-300 hover:bg-zinc-50'
@@ -465,7 +465,7 @@ function DesktopFeatureComparisonTable({ cycle, onCycleChange }: FeatureComparis
                   <Button
                     asChild
                     size="sm"
-                    className={`mt-2 rounded-full ${
+                    className={`mt-2 ${
                       plan.isPopular
                         ? 'bg-foreground text-background hover:bg-foreground/90'
                         : 'bg-white text-foreground border border-zinc-300 hover:bg-zinc-50'

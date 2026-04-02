@@ -70,17 +70,12 @@ export default function CTA() {
 
             {/* CTA buttons */}
             <div className="flex flex-col items-center gap-4 sm:flex-row">
-              <Button asChild className="w-full rounded-full px-7 py-6 md:w-fit" size="lg">
+              <Button asChild className="w-full px-7 py-6 md:w-fit" size="lg">
                 <a className="flex items-center gap-2 font-medium" href={CTA_PRIMARY_BUTTON.href}>
                   {CTA_PRIMARY_BUTTON.text} <ChevronRight />
                 </a>
               </Button>
-              <Button
-                asChild
-                className="w-full rounded-full px-7 py-6 md:w-fit"
-                variant="secondary"
-                size="lg"
-              >
+              <Button asChild className="w-full px-7 py-6 md:w-fit" variant="secondary" size="lg">
                 <a
                   className="flex items-center gap-2 font-medium"
                   href={CTA_SECONDARY_BUTTON.href}

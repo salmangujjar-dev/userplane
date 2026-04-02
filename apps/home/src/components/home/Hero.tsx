@@ -61,18 +61,13 @@ export default function Hero() {
           <p className="md:text-lg max-w-2xl">{HERO_DESCRIPTION}</p>
 
           <div className="flex w-fit flex-wrap items-center justify-center gap-3">
-            <Button asChild className="w-full rounded-full px-7 py-6 md:w-fit" size="lg">
+            <Button asChild className="w-full px-7 py-6 md:w-fit" size="lg">
               <a className="flex items-center gap-2 font-medium" href={HERO_PRIMARY_BUTTON.href}>
                 {HERO_PRIMARY_BUTTON.text} <ChevronRight />
               </a>
             </Button>
 
-            <Button
-              asChild
-              className="w-full rounded-full px-7 py-6 md:w-fit"
-              variant="secondary"
-              size="lg"
-            >
+            <Button asChild className="w-full px-7 py-6 md:w-fit" variant="secondary" size="lg">
               <a className="flex items-center gap-2 font-medium" href={HERO_SECONDARY_BUTTON.href}>
                 {HERO_SECONDARY_BUTTON.text}
               </a>
