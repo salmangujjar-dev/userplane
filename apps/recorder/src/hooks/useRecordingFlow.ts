@@ -123,35 +123,35 @@ export function useRecordingFlow(
 
   useEffect(() => {
     if (!linkToken || linkToken.trim() === '') {
-      logger.error('no link token provided');
+      logger.debug('no link token provided');
       setError(createClientError('CLIENT_LINK_TOKEN_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (!action || action.trim() === '') {
-      logger.error('no action provided');
+      logger.debug('no action provided');
       setError(createClientError('CLIENT_LINK_ACTION_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (action !== 'recording') {
-      logger.error({ action }, 'invalid action');
+      logger.debug({ action }, 'invalid action');
       setError(createClientError('CLIENT_LINK_ACTION_INVALID'));
       setFlowState('error');
       return;
     }
 
     if (!workspaceIds || workspaceIds.length === 0) {
-      logger.error('no workspace IDs provided');
+      logger.debug('no workspace IDs provided');
       setError(createClientError('CLIENT_LINK_WORKSPACE_MISSING'));
       setFlowState('error');
       return;
     }
 
     if (!isScreenRecordingSupported()) {
-      logger.error('screen recording not supported');
+      logger.debug('screen recording not supported');
       setError(createClientError('CLIENT_BROWSER_UNSUPPORTED'));
       setFlowState('error');
       return;
@@ -238,7 +238,7 @@ export function useRecordingFlow(
     const result = await session.initialize(linkToken);
 
     if (!result.ok) {
-      logger.error({ err: result.error }, 'session initialization failed');
+      logger.warn({ err: result.error }, 'session initialization failed');
       setError(result.error);
       setFlowState('error');
       return;
@@ -329,7 +329,7 @@ export function useRecordingFlow(
         }
       }, 1000);
     } catch (err) {
-      logger.error({ err, mode }, 'recording start failed');
+      logger.warn({ err, mode }, 'recording start failed');
 
       posthog.captureException(err, {
         error_type: 'recording_start_failed',
@@ -401,7 +401,7 @@ export function useRecordingFlow(
 
       transitionToState('review');
     } catch (err) {
-      logger.error({ err }, 'recording stop failed');
+      logger.warn({ err }, 'recording stop failed');
 
       posthog.captureException(err, {
         error_type: 'recording_stop_failed',
@@ -470,7 +470,7 @@ export function useRecordingFlow(
     );
 
     if (!initResult.ok) {
-      logger.error({ err: initResult.error }, 'upload initialization failed');
+      logger.warn({ err: initResult.error }, 'upload initialization failed');
       setError(initResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -489,7 +489,7 @@ export function useRecordingFlow(
     );
 
     if (!storageResult.ok) {
-      logger.error({ err: storageResult.error }, 'storage upload failed');
+      logger.warn({ err: storageResult.error }, 'storage upload failed');
       setError(storageResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -501,7 +501,7 @@ export function useRecordingFlow(
     const ackResult = await sessionRef.current.acknowledgeUpload(newUploadState);
 
     if (!ackResult.ok) {
-      logger.error({ err: ackResult.error }, 'upload acknowledgment failed');
+      logger.warn({ err: ackResult.error }, 'upload acknowledgment failed');
       setError(ackResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -519,7 +519,7 @@ export function useRecordingFlow(
 
   async function retryUpload() {
     if (!uploadState) {
-      logger.error('no upload state for retry');
+      logger.warn('no upload state for retry');
       setError(createClientError('CLIENT_UPLOAD_STATE_MISSING'));
       setFlowState('error');
       return;
@@ -544,7 +544,7 @@ export function useRecordingFlow(
     );
 
     if (!storageResult.ok) {
-      logger.error({ err: storageResult.error }, 'retry storage upload failed');
+      logger.warn({ err: storageResult.error }, 'retry storage upload failed');
       setError(storageResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -556,7 +556,7 @@ export function useRecordingFlow(
     const ackResult = await sessionRef.current.acknowledgeUpload(uploadState);
 
     if (!ackResult.ok) {
-      logger.error({ err: ackResult.error }, 'retry acknowledgment failed');
+      logger.warn({ err: ackResult.error }, 'retry acknowledgment failed');
       setError(ackResult.error);
       setFlowState('error');
       setIsProcessing(false);
@@ -618,7 +618,7 @@ export function useRecordingFlow(
 
       setFlowState('setup');
     } catch (err) {
-      logger.error({ err }, 'error during start over');
+      logger.warn({ err }, 'error during start over');
       setFlowState('setup');
     } finally {
       setIsProcessing(false);

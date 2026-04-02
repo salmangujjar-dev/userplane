@@ -126,7 +126,7 @@ function VerificationAppContent() {
 
     case 'verified':
       if (!state.result) {
-        logger.error('no result in verified state');
+        logger.warn('no result in verified state');
         return <VerifyingScreen />;
       }
       return <VerifiedScreen domainUrl={state.result.domainUrl} />;

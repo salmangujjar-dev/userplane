@@ -134,7 +134,7 @@ export class VerificationBridgeConnection {
 
       return { success: true, data: result.data };
     } catch (error) {
-      logger.error({ err: error }, 'verification request failed');
+      logger.warn({ err: error }, 'verification request failed');
       return {
         success: false,
         error: createVerificationError('VERIFICATION_BRIDGE_COMMUNICATION_ERROR'),

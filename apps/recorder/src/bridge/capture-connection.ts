@@ -154,7 +154,7 @@ export class CaptureBridgeConnection {
       this.customMetadata = await Promise.resolve(remote.extractMetadata());
       logger.debug({ hasMetadata: !!this.customMetadata }, 'fetched custom metadata');
     } catch (error) {
-      logger.error({ err: error }, 'failed to fetch initial data');
+      logger.warn({ err: error }, 'failed to fetch initial data');
     }
   }
 

@@ -34,7 +34,7 @@ export function createRecorderClient() {
     },
     credentials: 'omit',
     onError: (error) => {
-      logger.error({ err: error }, 'api client error');
+      logger.warn({ err: error }, 'api client error');
 
       posthog.captureException(error, {
         error_type: 'api_client_error',

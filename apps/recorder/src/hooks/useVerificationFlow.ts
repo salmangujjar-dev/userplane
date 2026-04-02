@@ -97,7 +97,7 @@ export function useVerificationFlow(
     }
 
     if (!bridge) {
-      logger.error('no bridge connection available');
+      logger.warn('no bridge connection available');
 
       const error = new Error('No bridge connection available for verification');
       posthog.captureException(error, {
@@ -120,7 +120,7 @@ export function useVerificationFlow(
     const verificationResult = await bridge.requestVerification(token, workspaceIds);
 
     if (!verificationResult.success) {
-      logger.error({ err: verificationResult.error }, 'verification failed');
+      logger.warn({ err: verificationResult.error }, 'verification failed');
       setError(verificationResult.error ?? null);
       setFlowState('error');
       return;
