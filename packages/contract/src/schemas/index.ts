@@ -23,6 +23,7 @@ export * from './invite.errors';
 export * from './link';
 export * from './link.errors';
 export * from './link-provider';
+export * from './member-identity';
 export * from './project';
 export * from './project.errors';
 export * from './provisioner';

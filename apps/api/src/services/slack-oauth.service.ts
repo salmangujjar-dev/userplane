@@ -33,6 +33,7 @@ import type {
   IntegrationRepository,
   TypedIntegration,
 } from '@/api/repositories/integrations.repository';
+import type { WorkspaceMemberIdentityRepository } from '@/api/repositories/workspace-member-identities.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
@@ -48,6 +49,7 @@ export interface SlackServiceDeps {
   cacheService: CacheService;
   provisionerService: ProvisionerService;
   memberRepo: WorkspaceMemberRepository;
+  memberIdentityRepo: WorkspaceMemberIdentityRepository;
 }
 
 /**
@@ -172,7 +174,7 @@ export class SlackService {
     }
 
     // 7. Create integration record
-    await this.deps.integrationRepo.create({
+    const integration = await this.deps.integrationRepo.create({
       id: generateIntegrationId(),
       workspaceId: result.workspaceId,
       provider: 'slack',
@@ -191,10 +193,18 @@ export class SlackService {
       }),
     });
 
-    // 8. Warm cache for future lookups
-    await this.deps.cacheService.setIntegrationByProviderWorkspace('slack', teamId, {
-      workspaceId: result.workspaceId,
-    });
+    // 8. Enable Slack channel for all workspace members
+    try {
+      await this.deps.memberRepo.enableIncomingEventChannel(result.workspaceId, 'slack');
+    } catch (error) {
+      logger.error(
+        { err: error, workspaceId: result.workspaceId },
+        'Failed to enable Slack channel for members'
+      );
+    }
+
+    // 9. Warm cache with full integration for canvas service lookups
+    await this.deps.cacheService.setIntegrationByProviderWorkspace('slack', teamId, integration);
 
     return {
       created: true,
@@ -278,6 +288,8 @@ export class SlackService {
       isEnterpriseInstall: tokenResponse.is_enterprise_install,
     });
 
+    let integration: TypedIntegration<'slack'>;
+
     if (existingWorkspaceIntegration) {
       // Re-installation: update token and metadata
       // Slack scopes are additive on re-install and a new token is issued each time
@@ -285,18 +297,25 @@ export class SlackService {
         { workspaceId, teamId },
         'Slack re-installation detected, updating existing integration'
       );
+      // Invalidate stale cache before DB updates to prevent serving old tokens
+      await this.deps.cacheService.invalidateIntegration('slack', teamId);
       await this.deps.integrationRepo.updateProviderToken(
         existingWorkspaceIntegration.id,
         providerToken
       );
-      // Also update metadata in case team name or enterprise details changed
       await this.deps.integrationRepo.updateProviderMeta(
         existingWorkspaceIntegration.id,
         providerMeta
       );
+      // Re-fetch from DB to get the authoritative state (correct updatedAt, etc.)
+      const fresh = await this.deps.integrationRepo.findByProviderWorkspaceId('slack', teamId);
+      if (!fresh) {
+        throw workspaceError.INTEGRATION_NOT_FOUND();
+      }
+      integration = fresh;
     } else {
       // 6. Create new integration record
-      await this.deps.integrationRepo.create({
+      integration = await this.deps.integrationRepo.create({
         id: generateIntegrationId(),
         workspaceId,
         provider: 'slack',
@@ -304,12 +323,17 @@ export class SlackService {
         providerToken,
         providerMeta,
       });
+
+      // 6b. Enable Slack channel for all workspace members
+      try {
+        await this.deps.memberRepo.enableIncomingEventChannel(workspaceId, 'slack');
+      } catch (error) {
+        logger.error({ err: error, workspaceId }, 'Failed to enable Slack channel for members');
+      }
     }
 
-    // 7. Warm cache for future lookups
-    await this.deps.cacheService.setIntegrationByProviderWorkspace('slack', teamId, {
-      workspaceId,
-    });
+    // 7. Warm cache with full integration for canvas service lookups
+    await this.deps.cacheService.setIntegrationByProviderWorkspace('slack', teamId, integration);
 
     return {
       connected: true,
@@ -361,6 +385,29 @@ export class SlackService {
 
     if (!deleted) {
       throw workspaceError.INTEGRATION_NOT_FOUND();
+    }
+
+    // Clean up notification channel preferences and identities
+    const deletedAt = new Date();
+    try {
+      // Remove 'slack' key from notifyIncomingEvents for all workspace members
+      await this.deps.memberRepo.clearIncomingEventChannel(workspaceId, 'slack');
+      // Soft-delete all Slack identities for this workspace
+      await this.deps.memberIdentityRepo.softDeleteByWorkspaceAndProvider(
+        workspaceId,
+        'slack',
+        deletedAt
+      );
+    } catch (error) {
+      // Log but don't fail - integration is already disconnected
+      logger.error(
+        { err: error, workspaceId },
+        'Error cleaning up Slack notification channels during disconnect'
+      );
+      captureException(error, undefined, {
+        operation: 'disconnect_slack_channel_cleanup',
+        workspace_id: workspaceId,
+      });
     }
 
     // Invalidate caches to prevent stale lookups
