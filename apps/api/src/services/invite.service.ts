@@ -188,12 +188,14 @@ export class InviteService {
     let alreadyMember = false;
 
     try {
+      const invitee = await this.deps.userService.getById(userId);
       await this.deps.db.transaction(async (tx) => {
         await this.deps.workspaceMemberService.addMember(
           {
             userId,
             workspaceId: workspace.workspaceId,
             role: 'member',
+            userEmail: invitee.email,
           },
           { tx }
         );
@@ -253,12 +255,14 @@ export class InviteService {
 
     // If userId provided, accept the invite
     if (userId) {
+      const invitee = await this.deps.userService.getById(userId);
       await this.deps.db.transaction(async (tx) => {
         await this.deps.workspaceMemberService.addMember(
           {
             userId,
             workspaceId: workspace.workspaceId,
             role: 'member',
+            userEmail: invitee.email,
           },
           { tx }
         );
@@ -345,6 +349,7 @@ export class InviteService {
             userId,
             workspaceId,
             role: 'member',
+            userEmail,
           },
           { tx }
         );
@@ -533,6 +538,7 @@ export class InviteService {
           userId,
           workspaceId,
           role: 'member',
+          userEmail,
         },
         { tx }
       );

@@ -9,9 +9,10 @@
  * Fire-and-forget: logs errors but does not throw.
  */
 
-import { extractProviderUserId } from '@userplane/contract';
+import { createMemberIdentityMeta, extractProviderUserId } from '@userplane/contract';
 
-import { getPermalink, postMessage } from '@/api/clients/slack';
+import { getPermalink, lookupByEmail, postMessage } from '@/api/clients/slack';
+import { generateMemberIdentityId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import { buildRecordingReceivedMessage } from '@/api/lib/slack-blocks';
 import { captureException } from '@/api/posthog';
@@ -20,12 +21,14 @@ import {
   type IntegrationRepository,
 } from '@/api/repositories/integrations.repository';
 import type { WorkspaceMemberIdentityRepository } from '@/api/repositories/workspace-member-identities.repository';
+import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 
 const logger = createLogger('slack-notification-service');
 
 export interface SlackNotificationServiceDeps {
   integrationRepo: IntegrationRepository;
   memberIdentityRepo: WorkspaceMemberIdentityRepository;
+  memberRepo: WorkspaceMemberRepository;
 }
 
 export class SlackNotificationService {
@@ -127,31 +130,7 @@ export class SlackNotificationService {
     const { workspaceMemberId, workspaceId, recordingId, recordingUrl, skipUserId } = params;
 
     try {
-      // 1. Look up member identity
-      const identity = await this.deps.memberIdentityRepo.findByMemberAndProvider(
-        workspaceMemberId,
-        'slack'
-      );
-      if (!identity) {
-        logger.warn(
-          { workspaceMemberId, workspaceId },
-          'Slack channel enabled but no identity found, skipping'
-        );
-        return;
-      }
-
-      const slackUserId = extractProviderUserId('slack', identity.providerMeta);
-
-      // 2. Dedup: skip if context-tied notification already sent to this user
-      if (skipUserId && skipUserId === slackUserId) {
-        logger.debug(
-          { workspaceMemberId, slackUserId },
-          'Skipping preference-based Slack DM (already sent via context-tied notification)'
-        );
-        return;
-      }
-
-      // 3. Get integration token
+      // 1. Get integration token (needed for both identity resolution and sending)
       const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
         workspaceId,
         'slack'
@@ -165,6 +144,34 @@ export class SlackNotificationService {
       }
 
       const accessToken = IntegrationHelper.getAccessToken(integration);
+
+      // 2. Look up member identity, lazily resolve if missing
+      let identity = await this.deps.memberIdentityRepo.findByMemberAndProvider(
+        workspaceMemberId,
+        'slack'
+      );
+      if (!identity) {
+        identity = await this.lazyResolveSlackIdentity(
+          workspaceMemberId,
+          workspaceId,
+          accessToken,
+          integration.providerMeta.teamId
+        );
+        if (!identity) {
+          return; // lazyResolveSlackIdentity already logged, will retry on next notification
+        }
+      }
+
+      const slackUserId = extractProviderUserId('slack', identity.providerMeta);
+
+      // 3. Dedup: skip if context-tied notification already sent to this user
+      if (skipUserId && skipUserId === slackUserId) {
+        logger.debug(
+          { workspaceMemberId, slackUserId },
+          'Skipping preference-based Slack DM (already sent via context-tied notification)'
+        );
+        return;
+      }
 
       // 4. Build message and send DM
       const { blocks, text } = buildRecordingReceivedMessage({ recordingUrl });
@@ -200,6 +207,80 @@ export class SlackNotificationService {
         workspace_id: workspaceId,
         recording_id: recordingId,
       });
+    }
+  }
+
+  /**
+   * Lazily resolve a Slack identity for a member who has slack enabled
+   * but no identity record. Creates the identity if email matches a Slack user.
+   * Does NOT modify preferences on failure — the issue may be transient.
+   */
+  private async lazyResolveSlackIdentity(
+    workspaceMemberId: string,
+    workspaceId: string,
+    accessToken: string,
+    teamId: string
+  ) {
+    try {
+      const member = await this.deps.memberRepo.findByIdWithUser(workspaceMemberId);
+      if (!member) {
+        logger.warn(
+          { workspaceMemberId },
+          'Member not found during lazy Slack identity resolution'
+        );
+        return null;
+      }
+
+      const slackUser = await lookupByEmail(accessToken, member.userEmail);
+      if (!slackUser) {
+        logger.warn(
+          { workspaceMemberId, workspaceId, email: member.userEmail },
+          'Slack user not found by email during lazy identity resolution'
+        );
+        return null;
+      }
+
+      const meta = createMemberIdentityMeta('slack', {
+        userId: slackUser.id,
+        teamId,
+        email: member.userEmail,
+      });
+
+      // Race-safe: if another notification already created the identity, use it
+      const existingIdentity = await this.deps.memberIdentityRepo.findByMemberAndProvider(
+        workspaceMemberId,
+        'slack'
+      );
+      if (existingIdentity) {
+        return existingIdentity;
+      }
+
+      const identity = await this.deps.memberIdentityRepo.create({
+        id: generateMemberIdentityId(),
+        workspaceMemberId,
+        workspaceId,
+        provider: 'slack',
+        providerMeta: meta,
+      });
+
+      logger.info(
+        { workspaceMemberId, workspaceId, slackUserId: slackUser.id },
+        'Lazily resolved Slack identity'
+      );
+
+      return identity;
+    } catch (error) {
+      logger.error(
+        { err: error, workspaceMemberId, workspaceId },
+        'Failed to lazily resolve Slack identity'
+      );
+      captureException(error, undefined, {
+        component: 'slack_notification',
+        operation: 'lazy_resolve_slack_identity',
+        workspace_member_id: workspaceMemberId,
+        workspace_id: workspaceId,
+      });
+      return null;
     }
   }
 }

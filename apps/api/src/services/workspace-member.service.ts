@@ -20,6 +20,7 @@ import type { IntegrationRepository } from '@/api/repositories/integrations.repo
 import type { WorkspaceMemberIdentityRepository } from '@/api/repositories/workspace-member-identities.repository';
 import { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { EntitlementService } from '@/api/services/entitlement.service';
+import type { NotificationChannelService } from '@/api/services/notification-channel.service';
 import type { Transaction } from '@/api/types';
 
 const logger = createLogger('workspace-member-service');
@@ -30,6 +31,7 @@ export interface WorkspaceMemberServiceDeps {
   integrationRepo: IntegrationRepository;
   entitlementService: EntitlementService;
   cacheService: CacheService;
+  notificationChannelService: NotificationChannelService;
 }
 
 export class WorkspaceMemberService {
@@ -42,7 +44,10 @@ export class WorkspaceMemberService {
    * Throws WORKSPACE_MEMBER_IDS_REQUIRED if params are invalid
    * Throws WORKSPACE_MEMBER_ALREADY_EXISTS if user is already a member
    */
-  async addOwner(params: { userId: string; workspaceId: string }, options?: { tx?: Transaction }) {
+  async addOwner(
+    params: { userId: string; workspaceId: string; userEmail: string },
+    options?: { tx?: Transaction }
+  ) {
     if (!params.userId || !params.workspaceId) {
       throw workspaceError.WORKSPACE_MEMBER_IDS_REQUIRED();
     }
@@ -94,7 +99,11 @@ export class WorkspaceMemberService {
       });
 
       // Enable notification channels for active integrations
-      await this.enableChannelsForActiveIntegrations(member.workspaceMemberId, params.workspaceId);
+      await this.enableChannelsForActiveIntegrations(
+        member.workspaceMemberId,
+        params.workspaceId,
+        params.userEmail
+      );
     }
 
     return member;
@@ -110,7 +119,7 @@ export class WorkspaceMemberService {
    * Throws PLAN_LIMIT_EXCEEDED if seat limit reached
    */
   async addMember(
-    params: { userId: string; workspaceId: string; role: WorkspaceRole },
+    params: { userId: string; workspaceId: string; role: WorkspaceRole; userEmail: string },
     options?: { tx?: Transaction }
   ) {
     if (!params.userId || !params.workspaceId) {
@@ -179,7 +188,11 @@ export class WorkspaceMemberService {
       });
 
       // Enable notification channels for active integrations
-      await this.enableChannelsForActiveIntegrations(member.workspaceMemberId, params.workspaceId);
+      await this.enableChannelsForActiveIntegrations(
+        member.workspaceMemberId,
+        params.workspaceId,
+        params.userEmail
+      );
     }
 
     return member;
@@ -563,24 +576,48 @@ export class WorkspaceMemberService {
   /**
    * Enable notification channels for active integrations on a member.
    * Called when a member joins — sets channel preferences based on what's connected.
+   * For Slack: resolves identity inline via email lookup before enabling.
+   * For other channels: just toggles the JSONB preference.
    * Best-effort: logs errors but doesn't fail member creation.
    */
   private async enableChannelsForActiveIntegrations(
     workspaceMemberId: string,
-    workspaceId: string
+    workspaceId: string,
+    userEmail: string
   ): Promise<void> {
     try {
       const integrations = await this.deps.integrationRepo.findByWorkspaceId(workspaceId);
       if (integrations.length === 0) return;
 
-      const channelDefaults: Record<string, boolean> = {};
+      const nonSlackDefaults: Record<string, boolean> = {};
+
       for (const integration of integrations) {
-        channelDefaults[integration.provider] = true;
+        if (integration.provider === 'slack') {
+          // Slack: resolve identity inline so notifications work immediately
+          try {
+            await this.deps.notificationChannelService.enableChannel(
+              workspaceMemberId,
+              workspaceId,
+              userEmail,
+              'slack'
+            );
+          } catch (error) {
+            logger.warn(
+              { err: error, workspaceMemberId, workspaceId },
+              'Failed to resolve Slack identity for new member, skipping Slack channel'
+            );
+          }
+        } else {
+          // Intercom/Zendesk: no identity needed, just toggle JSONB
+          nonSlackDefaults[integration.provider] = true;
+        }
       }
 
-      await this.deps.memberRepo.updateNotificationPreferences(workspaceMemberId, {
-        notifyIncomingEvents: channelDefaults,
-      });
+      if (Object.keys(nonSlackDefaults).length > 0) {
+        await this.deps.memberRepo.updateNotificationPreferences(workspaceMemberId, {
+          notifyIncomingEvents: nonSlackDefaults,
+        });
+      }
     } catch (error) {
       logger.error(
         { err: error, workspaceMemberId, workspaceId },
