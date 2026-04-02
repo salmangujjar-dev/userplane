@@ -56,7 +56,7 @@ export default defineConfig({
           posthogPlugin({
             personalApiKey: process.env.POSTHOG_PERSONAL_API_KEY!,
             projectId: process.env.POSTHOG_PROJECT_ID!,
-            host: process.env.WXT_POSTHOG_HOST || 'https://us.i.posthog.com',
+            host: process.env.WXT_POSTHOG_HOST || 'https://i.userplane.io',
             sourcemaps: { enabled: true, deleteAfterUpload: true },
           }),
         ]

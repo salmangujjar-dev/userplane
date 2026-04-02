@@ -37,7 +37,7 @@ export const STORAGE = {
 // =============================================================================
 
 export const POSTHOG = {
-  HOST: 'https://us.i.posthog.com',
+  HOST: 'https://i.userplane.io',
 } as const;
 
 // =============================================================================

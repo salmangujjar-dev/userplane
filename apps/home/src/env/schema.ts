@@ -69,11 +69,18 @@ const storageEnvSchema = z.object({
   PUBLIC_SKIP_IMAGE_TRANSFORM: booleanWithDefault(false),
 });
 
+/** PostHog env vars schema */
+const posthogEnvSchema = z.object({
+  PUBLIC_POSTHOG_KEY: z.string().optional(),
+  PUBLIC_POSTHOG_HOST: stringWithDefault('https://i.userplane.io'),
+});
+
 /** Combined raw environment variables schema */
 export const rawEnvSchema = z.object({
   ...appEnvSchema.shape,
   ...urlEnvSchema.shape,
   ...storageEnvSchema.shape,
+  ...posthogEnvSchema.shape,
 });
 
 /** Raw parsed environment type */

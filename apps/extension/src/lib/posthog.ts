@@ -5,7 +5,7 @@ import { PostHog } from 'posthog-js/dist/module.no-external';
 // and must NOT run in the background service worker context.
 
 const POSTHOG_KEY = import.meta.env.WXT_POSTHOG_KEY || '';
-const POSTHOG_HOST = import.meta.env.WXT_POSTHOG_HOST || 'https://us.i.posthog.com';
+const POSTHOG_HOST = import.meta.env.WXT_POSTHOG_HOST || 'https://i.userplane.io';
 
 let posthogInstance: PostHog | null = null;
 
