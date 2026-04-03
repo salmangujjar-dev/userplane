@@ -1,0 +1,62 @@
+---
+import HomepageLayout from '../layouts/HomepageLayout.astro';
+import Hero from '../components/integrations/Hero';
+import LogoMarquee from '../components/integrations/LogoMarquee';
+import Steps from '../components/integrations/Steps';
+import FeatureShowcase from '../components/integrations/FeatureShowcase';
+import CallToAction from '../components/integrations/CallToAction';
+import ComplianceBanner from '../components/integrations/ComplianceBanner';
+import ResourceLinks from '../components/integrations/ResourceLinks';
+
+import {
+  INTERCOM_GRADIENT,
+  INTERCOM_HERO,
+  INTERCOM_STEPS,
+  INTERCOM_FEATURES,
+  INTERCOM_COMPLIANCE,
+  INTERCOM_RESOURCES,
+  INTERCOM_CTA,
+} from '../constants/intercom';
+import { INTEGRATION_LOGOS, INTEGRATION_LOGOS_LABEL } from '../constants/integrations';
+
+const gradientVars = `--gradient-1: ${INTERCOM_GRADIENT.stops[0]}; --gradient-2: ${INTERCOM_GRADIENT.stops[1]}; --gradient-3: ${INTERCOM_GRADIENT.stops[2]}; --gradient-4: ${INTERCOM_GRADIENT.stops[3]};`;
+---
+
+<HomepageLayout
+  title="Intercom Integration | Userplane - Screen Recordings for Intercom"
+  description="Request and receive screen recordings without leaving Intercom. Capture console logs, network requests, and session data attached to every conversation."
+  keywords="intercom screen recording, intercom integration, screen recording for intercom, intercom support tool, userplane, customer support, bug reporting"
+>
+  <main class="flex flex-col" style={gradientVars}>
+    <Hero
+      headline={INTERCOM_HERO.headline}
+      description={INTERCOM_HERO.description}
+      primaryCTA={INTERCOM_HERO.primaryCTA}
+      secondaryCTA={INTERCOM_HERO.secondaryCTA}
+      preview={INTERCOM_HERO.preview}
+      client:load
+    />
+    <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} client:load />
+    <Steps headline={INTERCOM_STEPS.headline} steps={INTERCOM_STEPS.steps} client:visible />
+    <FeatureShowcase features={INTERCOM_FEATURES} client:visible />
+    <ComplianceBanner
+      label={INTERCOM_COMPLIANCE.label}
+      headline={INTERCOM_COMPLIANCE.headline}
+      badges={INTERCOM_COMPLIANCE.badges}
+      client:visible
+    />
+    <ResourceLinks
+      label={INTERCOM_RESOURCES.label}
+      headline={INTERCOM_RESOURCES.headline}
+      links={INTERCOM_RESOURCES.links}
+      seeAllHref={INTERCOM_RESOURCES.seeAllHref}
+      client:visible
+    />
+    <CallToAction
+      headline={INTERCOM_CTA.headline}
+      primaryCTA={INTERCOM_CTA.primaryCTA}
+      secondaryCTA={INTERCOM_CTA.secondaryCTA}
+      client:load
+    />
+  </main>
+</HomepageLayout>

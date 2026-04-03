@@ -1,0 +1,103 @@
+---
+import HomepageLayout from '../../layouts/HomepageLayout.astro';
+import JsonLd from '../../components/seo/JsonLd.astro';
+import Hero from '../../components/integrations/Hero';
+import LogoMarquee from '../../components/integrations/LogoMarquee';
+import Steps from '../../components/integrations/Steps';
+import FeatureShowcase from '../../components/integrations/FeatureShowcase';
+import CallToAction from '../../components/integrations/CallToAction';
+import ComplianceBanner from '../../components/integrations/ComplianceBanner';
+import ResourceLinks from '../../components/integrations/ResourceLinks';
+
+import { INTEGRATION_REGISTRY } from '../../constants/integrations/registry';
+import { INTEGRATION_LOGOS, INTEGRATION_LOGOS_LABEL } from '../../constants/integrations';
+
+import type { IntegrationConfig } from '../../constants/integrations';
+
+export function getStaticPaths() {
+  return Object.values(INTEGRATION_REGISTRY).map((config) => ({
+    params: { slug: config.slug },
+    props: { config },
+  }));
+}
+
+interface Props {
+  config: IntegrationConfig;
+}
+
+const { config } = Astro.props;
+
+const relatedIntegrations = Object.values(INTEGRATION_REGISTRY)
+  .filter((c) => c.slug !== config.slug)
+  .map(({ slug, name, seo }) => ({ slug, name, seo }));
+
+const gradientVars = `--gradient-1: ${config.gradient.stops[0]}; --gradient-2: ${config.gradient.stops[1]}; --gradient-3: ${config.gradient.stops[2]}; --gradient-4: ${config.gradient.stops[3]};`;
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: new URL('/', Astro.site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Integrations',
+      item: new URL('/integrations', Astro.site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: config.name,
+      item: new URL(`/integrations/${config.slug}`, Astro.site).href,
+    },
+  ],
+};
+---
+
+<HomepageLayout
+  title={config.seo.title}
+  description={config.seo.description}
+  keywords={config.seo.keywords}
+  ogImage={config.seo.ogImage}
+>
+  <JsonLd data={config.jsonLd} />
+  <JsonLd data={breadcrumb} />
+  <main class="flex flex-col" style={gradientVars}>
+    <Hero
+      headline={config.hero.headline}
+      description={config.hero.description}
+      primaryCTA={config.hero.primaryCTA}
+      secondaryCTA={config.hero.secondaryCTA}
+      preview={config.hero.preview}
+      client:load
+    />
+    <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} client:load />
+    <Steps headline={config.steps.headline} steps={config.steps.steps} client:visible />
+    <FeatureShowcase features={config.features} client:visible />
+    <ComplianceBanner
+      label={config.compliance.label}
+      headline={config.compliance.headline}
+      badges={config.compliance.badges}
+      client:visible
+    />
+    <ResourceLinks
+      label={config.resources.label}
+      headline={config.resources.headline}
+      links={config.resources.links}
+      seeAllHref={config.resources.seeAllHref}
+      relatedIntegrations={relatedIntegrations}
+      client:visible
+    />
+    <CallToAction
+      headline={config.cta.headline}
+      primaryCTA={config.cta.primaryCTA}
+      secondaryCTA={config.cta.secondaryCTA}
+      client:load
+    />
+  </main>
+</HomepageLayout>

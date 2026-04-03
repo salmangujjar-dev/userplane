@@ -6,9 +6,10 @@ import Pricing from '../components/home/Pricing';
 import Features from '../components/home/Features';
 import FAQ from '../components/home/FAQ';
 import CTA from '../components/home/CTA';
+import { SPOTLIGHT_IMAGE } from '../constants/spotlight';
 ---
 
-<HomepageLayout>
+<HomepageLayout preloadImage={SPOTLIGHT_IMAGE}>
   <main class="flex flex-col items-center">
     <Hero />
     <Spotlight client:visible />
