@@ -1,0 +1,105 @@
+---
+import HomepageLayout from '../../layouts/HomepageLayout.astro';
+import JsonLd from '../../components/seo/JsonLd.astro';
+import Hero from '../../components/integrations/Hero';
+import LogoMarquee from '../../components/integrations/LogoMarquee';
+import IntegrationBrowser from '../../components/integrations/IntegrationBrowser';
+import CallToAction from '../../components/integrations/CallToAction';
+import { INTEGRATION_REGISTRY } from '../../constants/integrations/registry';
+import { INTEGRATION_LOGOS, INTEGRATION_LOGOS_LABEL } from '../../constants/integrations';
+import { SIGNUP_URL } from '../../constants/onboarding';
+import { TALLY_SALES_FORM_URL } from '../../constants/contact';
+
+const integrations = Object.values(INTEGRATION_REGISTRY);
+
+const browserEntries = integrations.map((config) => ({
+  slug: config.slug,
+  name: config.name,
+  description: config.seo.description,
+  pageHref: `/integrations/${config.slug}`,
+  docsHref: config.resources.seeAllHref,
+  image: config.hero.preview
+    ? { src: config.hero.preview.src, alt: config.hero.preview.alt }
+    : undefined,
+  gradientStops: config.gradient.stops,
+  resources: config.resources.links.map((l) => ({
+    label: l.label,
+    title: l.title,
+    description: l.description,
+    href: l.href,
+  })),
+}));
+
+const gradientVars = [
+  '--gradient-1: rgba(234, 179, 8, 0.2)',
+  '--gradient-2: rgba(180, 160, 40, 0.2)',
+  '--gradient-3: rgba(60, 130, 220, 0.2)',
+  '--gradient-4: rgba(59, 130, 246, 0.2)',
+].join('; ');
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: new URL('/', Astro.site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Integrations',
+      item: new URL('/integrations', Astro.site).href,
+    },
+  ],
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Userplane Integrations',
+  description:
+    'Screen recording integrations for your support stack. Connect Userplane to the tools your team already uses.',
+  url: new URL('/integrations', Astro.site).href,
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: integrations.map((config, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: new URL(`/integrations/${config.slug}`, Astro.site).href,
+      name: `Userplane for ${config.name}`,
+    })),
+  },
+};
+---
+
+<HomepageLayout
+  title="Integrations | Userplane - Screen Recordings for Your Support Stack"
+  description="Connect Userplane to the tools your team already uses. Screen recording integrations for Intercom, Zendesk, Slack, Chrome, and more."
+  keywords="userplane integrations, screen recording integrations, support tool integrations, intercom integration, zendesk integration, slack integration, chrome extension"
+  ogImage="/images/preview/og-integrations.webp"
+>
+  <JsonLd data={breadcrumb} />
+  <JsonLd data={jsonLd} />
+  <main class="flex flex-col" style={gradientVars}>
+    <Hero
+      headline={{ lines: ['Screen recordings for your'], accent: 'support stack' }}
+      description="Connect Userplane to the tools your team already uses. Request, capture, and replay customer screen recordings without leaving your workflow."
+      primaryCTA={{ text: 'Get started', href: SIGNUP_URL }}
+      secondaryCTA={{ text: 'View docs', href: 'https://docs.userplane.co' }}
+      preview={{ src: 'https://placehold.co/1440x800', alt: 'Userplane integrations overview' }}
+      client:load
+    />
+    <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} client:load />
+
+    <IntegrationBrowser integrations={browserEntries} client:load />
+    <CallToAction
+      headline={{ lines: ['Screen recordings that', 'live inside your'], accent: 'workflow' }}
+      primaryCTA={{ text: 'Get Started', href: SIGNUP_URL }}
+      secondaryCTA={{ text: 'Talk to a Human', href: TALLY_SALES_FORM_URL }}
+      client:load
+    />
+  </main>
+</HomepageLayout>

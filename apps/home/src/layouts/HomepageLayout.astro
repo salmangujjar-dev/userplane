@@ -8,12 +8,19 @@ interface Props {
   description?: string;
   keywords?: string;
   ogImage?: string;
+  preloadImage?: { src: string; srcSet: string; sizes: string };
 }
 
-const { title, description, keywords, ogImage } = Astro.props;
+const { title, description, keywords, ogImage, preloadImage } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description} keywords={keywords} ogImage={ogImage}>
+<BaseLayout
+  title={title}
+  description={description}
+  keywords={keywords}
+  ogImage={ogImage}
+  preloadImage={preloadImage}
+>
   <Header client:idle />
   <slot />
   <Footer />
