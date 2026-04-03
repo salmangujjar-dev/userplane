@@ -20,7 +20,7 @@ export const NAV_LINKS = {
   home: getMarketingUrl('/'),
   features: getMarketingUrl('/#features'),
   pricing: getMarketingUrl('/pricing'),
-  integrations: getMarketingUrl('/#integrations'),
+  integrations: getMarketingUrl('/integrations'),
   roadmap: getMarketingUrl('/roadmap'),
   blog: getMarketingUrl('/blog'),
   help: getMarketingUrl('/help'),

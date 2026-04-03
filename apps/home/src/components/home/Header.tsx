@@ -99,6 +99,12 @@ export default function Header() {
         </a>
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
+          href={NAV_LINKS.integrations}
+        >
+          Integrations
+        </a>
+        <a
+          className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
           href={NAV_LINKS.help}
         >
           Support
@@ -161,6 +167,9 @@ export default function Header() {
                   </MobileNavLink>
                   <MobileNavLink href="/#pricing" onClick={closeMenu}>
                     Pricing
+                  </MobileNavLink>
+                  <MobileNavLink href={NAV_LINKS.integrations} onClick={closeMenu}>
+                    Integrations
                   </MobileNavLink>
                   <MobileNavLink href={NAV_LINKS.help} onClick={closeMenu}>
                     Support
