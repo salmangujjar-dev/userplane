@@ -1,13 +1,24 @@
 ---
 import HomepageLayout from '../layouts/HomepageLayout.astro';
-import Highlight from '../components/home/Highlight';
+import JsonLd from '../components/seo/JsonLd.astro';
+import Highlight from '../components/shared/Highlight';
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site).href },
+    { '@type': 'ListItem', position: 2, name: 'Demo', item: new URL('/demo', Astro.site).href },
+  ],
+};
 ---
 
 <HomepageLayout
-  title="Demo | Userplane - One Click Screen Recordings for Intercom"
-  description="See Userplane in action. Interactive product demo showing how to request and capture screen recordings from your Intercom customers."
-  keywords="intercom screen recording, intercom integration, screen recording for intercom, intercom support tool, userplane, product demo, interactive demo"
+  title="Demo | Userplane - See Screen Recordings in Action"
+  description="See Userplane in action. Interactive product demo showing how to request and capture screen recordings from your customers."
+  keywords="userplane demo, product demo, screen recording demo, interactive demo, customer support demo"
 >
+  <JsonLd data={breadcrumb} />
   <div
     class="mx-auto flex w-full max-w-7xl flex-col items-center justify-start px-6 md:px-12 text-center py-12"
   >

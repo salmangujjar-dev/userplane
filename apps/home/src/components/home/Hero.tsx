@@ -7,10 +7,10 @@ import {
   HERO_HIGHLIGHTS,
   HERO_PRIMARY_BUTTON,
   HERO_SECONDARY_BUTTON,
-} from '@/constants/hero';
-import type { HighlightColor } from '@/constants/types';
+} from '@/constants/home/hero';
+import type { HighlightColor } from '@/types/highlight';
 
-import Highlight from './Highlight';
+import Highlight from '../shared/Highlight';
 
 interface WordSegment {
   text: string;

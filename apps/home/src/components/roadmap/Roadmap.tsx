@@ -1,11 +1,8 @@
 import { useState } from 'react';
 
-export interface RoadmapProps {
-  title: string;
-  description: string;
-  status: 'completed' | 'inProgress' | 'notStarted' | 'planned';
-  date?: string;
-}
+import type { RoadmapProps } from '@/types/roadmap';
+
+export type { RoadmapProps };
 
 interface RoadmapComponentProps {
   items: RoadmapProps[];

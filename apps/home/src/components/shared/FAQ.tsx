@@ -1,7 +1,7 @@
 import { Minus, Plus } from 'lucide-react';
 import { useState } from 'react';
 
-import { FAQ_HEADING, FAQ_HIGHLIGHTS, FAQ_ITEMS, type FAQItem } from '@/constants/faq';
+import { FAQ_HEADING, FAQ_HIGHLIGHTS, FAQ_ITEMS, type FAQItem } from '@/constants/home/faq';
 
 import Highlight from './Highlight';
 

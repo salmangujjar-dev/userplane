@@ -14,11 +14,11 @@ import {
 } from '@userplane/pricing';
 import type { APIRoute } from 'astro';
 
-import { FAQ_ITEMS } from '@/constants/faq';
-import { FEATURES } from '@/constants/features';
-import { HERO_DESCRIPTION, HERO_HEADING } from '@/constants/hero';
-import { formatLlmsLinks } from '@/constants/llms';
-import { PRICING_FAQ_ITEMS } from '@/constants/pricing-page';
+import { FAQ_ITEMS } from '@/constants/home/faq';
+import { FEATURES } from '@/constants/home/features';
+import { HERO_DESCRIPTION, HERO_HEADING } from '@/constants/home/hero';
+import { formatLlmsLinks } from '@/constants/llms/llms';
+import { PRICING_FAQ_ITEMS } from '@/constants/pricing/pricing-page';
 
 function formatFeatureValue(value: FeatureValue): string {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';

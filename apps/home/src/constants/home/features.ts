@@ -1,18 +1,11 @@
 import { mergeTransformOptions } from '@userplane/storage/media';
 
-import { mediaClient } from '../lib/media';
-import type { HighlightConfig } from './types';
+import type { Feature } from '@/types/features';
+import type { HighlightConfig } from '@/types/highlight';
 
-/**
- * Feature card data
- */
-export interface Feature {
-  image: string;
-  imageMobile: string;
-  imageAlt: string;
-  title: string;
-  description: string;
-}
+import { mediaClient } from '../../lib/media';
+
+export type { Feature };
 
 /**
  * Features section heading

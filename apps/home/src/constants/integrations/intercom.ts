@@ -1,5 +1,8 @@
+import { mergeTransformOptions } from '@userplane/storage/media';
+
+import { mediaClient } from '../../lib/media';
 import { SIGNUP_URL } from '../onboarding';
-import { defineIntegration } from './_defaults';
+import { defineIntegration } from './defaults';
 
 export const intercomConfig = defineIntegration({
   slug: 'intercom',
@@ -31,42 +34,11 @@ export const intercomConfig = defineIntegration({
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
-      src: 'https://placehold.co/1440x800/f8f8f8/cccccc?text=Intercom+Integration',
+      src: mediaClient.getMicrositeMediaUrl('microsites/intercom/hero.png', {
+        transform: mergeTransformOptions('feature', { width: 1440 }),
+      }),
       alt: 'Userplane screen recording inside an Intercom conversation',
     },
-  },
-  steps: {
-    headline: {
-      before: 'Userplane',
-      segments: [
-        { accent: 'captures', after: 'what your customer sees,' },
-        { accent: 'attaches', after: 'technical context, and delivers' },
-        { accent: 'resolution', after: 'without the back and forth.' },
-      ],
-    },
-    steps: [
-      {
-        number: '01',
-        title: 'Request a recording from the Messenger',
-        description:
-          'Open the Userplane app inside your Intercom conversation and send a recording request. Your customer receives a one-click link — no downloads or extensions required.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+01',
-      },
-      {
-        number: '02',
-        title: 'Customer records their screen',
-        description:
-          'Your customer clicks the link, grants screen access, and shows you the issue. Console logs, network requests, and browser metadata are captured in the background automatically.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+02',
-      },
-      {
-        number: '03',
-        title: 'Replay the recording in Intercom',
-        description:
-          'The completed recording appears directly in your Intercom conversation. Watch the replay with a full timeline of console errors, network failures, and step-by-step user actions.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+03',
-      },
-    ],
   },
   features: [
     {
@@ -81,7 +53,9 @@ export const intercomConfig = defineIntegration({
         'Recordings linked to conversation threads',
         'Works with Intercom Inbox and Help Desk',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Native+Intercom+Messenger+app',
+      image: mediaClient.getMicrositeMediaUrl('microsites/intercom/feat-01.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
     {
       number: '02',
@@ -95,7 +69,9 @@ export const intercomConfig = defineIntegration({
         'Browser, OS, and viewport metadata',
         'Timestamped user action trail',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Console+logs+and+network+data',
+      image: mediaClient.getMicrositeMediaUrl('microsites/intercom/feat-02.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
     {
       number: '03',
@@ -109,7 +85,9 @@ export const intercomConfig = defineIntegration({
         'GDPR and CCPA compliant by design',
         'Customer-controlled consent flow',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Privacy+controls',
+      image: mediaClient.getMicrositeMediaUrl('microsites/intercom/feat-03.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
   ],
 });

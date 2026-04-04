@@ -14,7 +14,7 @@ import {
 } from '@userplane/pricing';
 import type { APIRoute } from 'astro';
 
-import { formatLlmsLinks } from '@/constants/llms';
+import { formatLlmsLinks } from '@/constants/llms/llms';
 
 function formatFeatureValue(value: FeatureValue): string {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';

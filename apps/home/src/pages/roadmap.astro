@@ -1,6 +1,8 @@
 ---
 import HomepageLayout from '../layouts/HomepageLayout.astro';
-import { RoadmapComponent, type RoadmapProps } from '../components/home/Roadmap';
+import JsonLd from '../components/seo/JsonLd.astro';
+import { RoadmapComponent } from '../components/roadmap/Roadmap';
+import type { RoadmapProps } from '@/types/roadmap';
 import { TALLY_FEATURE_REQUEST_URL } from '../constants/contact';
 
 /**
@@ -358,7 +360,23 @@ const roadmapItems: RoadmapProps[] = [
 <HomepageLayout
   title="Roadmap — Userplane"
   description="See what's coming next and help shape our development priorities."
+  keywords="userplane roadmap, product roadmap, upcoming features, screen recording features, feature requests"
 >
+  <JsonLd
+    data={{
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site).href },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Roadmap',
+          item: new URL('/roadmap', Astro.site).href,
+        },
+      ],
+    }}
+  />
   <div
     class="mx-auto flex w-full max-w-7xl flex-col items-center justify-start px-12 text-center py-12"
   >

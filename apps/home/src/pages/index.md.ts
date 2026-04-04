@@ -6,9 +6,9 @@ import {
 } from '@userplane/pricing';
 import type { APIRoute } from 'astro';
 
-import { FEATURES } from '@/constants/features';
-import { HERO_DESCRIPTION, HERO_HEADING } from '@/constants/hero';
-import { formatLlmsLinks } from '@/constants/llms';
+import { FEATURES } from '@/constants/home/features';
+import { HERO_DESCRIPTION, HERO_HEADING } from '@/constants/home/hero';
+import { formatLlmsLinks } from '@/constants/llms/llms';
 
 function buildContent(): string {
   const monthlyPlans = filterPlansByCycle(BASE_PRICING_PLANS, 'monthly');

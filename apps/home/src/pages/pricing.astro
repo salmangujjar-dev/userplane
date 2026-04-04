@@ -1,6 +1,50 @@
 ---
 import HomepageLayout from '../layouts/HomepageLayout.astro';
-import PricingPage from '../components/home/PricingPage';
+import JsonLd from '../components/seo/JsonLd.astro';
+import PricingPage from '../components/pricing/PricingPage';
+import { PRICING_FAQ_ITEMS } from '../constants/pricing/pricing-page';
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: PRICING_FAQ_ITEMS.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
+    },
+  })),
+};
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Userplane',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  offers: {
+    '@type': 'Offer',
+    price: '79',
+    priceCurrency: 'USD',
+    priceValidUntil: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
+    availability: 'https://schema.org/InStock',
+  },
+};
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site).href },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Pricing',
+      item: new URL('/pricing', Astro.site).href,
+    },
+  ],
+};
 ---
 
 <HomepageLayout
@@ -8,6 +52,9 @@ import PricingPage from '../components/home/PricingPage';
   description="Simple, transparent pricing for teams of all sizes. Choose the plan that fits your needs with no hidden fees."
   keywords="pricing, plans, screen recording, customer support, debugging, Userplane pricing"
 >
+  <JsonLd data={breadcrumb} />
+  <JsonLd data={softwareLd} />
+  <JsonLd data={faqLd} />
   <main class="flex flex-col items-center">
     <PricingPage client:load />
   </main>

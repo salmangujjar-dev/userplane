@@ -3,10 +3,9 @@
  * Used by /index.md, /pricing.md, /faq.md, /llms.txt, /llms-full.txt
  */
 
-export interface LlmsLink {
-  label: string;
-  url: string;
-}
+import type { LlmsLink } from '@/types/llms';
+
+export type { LlmsLink };
 
 /**
  * All LLM-facing links — single source of truth

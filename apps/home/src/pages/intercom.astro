@@ -2,21 +2,17 @@
 import HomepageLayout from '../layouts/HomepageLayout.astro';
 import Hero from '../components/integrations/Hero';
 import LogoMarquee from '../components/integrations/LogoMarquee';
-import Steps from '../components/integrations/Steps';
 import FeatureShowcase from '../components/integrations/FeatureShowcase';
 import CallToAction from '../components/integrations/CallToAction';
-import ComplianceBanner from '../components/integrations/ComplianceBanner';
 import ResourceLinks from '../components/integrations/ResourceLinks';
 
 import {
   INTERCOM_GRADIENT,
   INTERCOM_HERO,
-  INTERCOM_STEPS,
   INTERCOM_FEATURES,
-  INTERCOM_COMPLIANCE,
   INTERCOM_RESOURCES,
   INTERCOM_CTA,
-} from '../constants/intercom';
+} from '../constants/integrations/intercom-legacy';
 import { INTEGRATION_LOGOS, INTEGRATION_LOGOS_LABEL } from '../constants/integrations';
 
 const gradientVars = `--gradient-1: ${INTERCOM_GRADIENT.stops[0]}; --gradient-2: ${INTERCOM_GRADIENT.stops[1]}; --gradient-3: ${INTERCOM_GRADIENT.stops[2]}; --gradient-4: ${INTERCOM_GRADIENT.stops[3]};`;
@@ -37,14 +33,7 @@ const gradientVars = `--gradient-1: ${INTERCOM_GRADIENT.stops[0]}; --gradient-2:
       client:load
     />
     <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} client:load />
-    <Steps headline={INTERCOM_STEPS.headline} steps={INTERCOM_STEPS.steps} client:visible />
     <FeatureShowcase features={INTERCOM_FEATURES} client:visible />
-    <ComplianceBanner
-      label={INTERCOM_COMPLIANCE.label}
-      headline={INTERCOM_COMPLIANCE.headline}
-      badges={INTERCOM_COMPLIANCE.badges}
-      client:visible
-    />
     <ResourceLinks
       label={INTERCOM_RESOURCES.label}
       headline={INTERCOM_RESOURCES.headline}

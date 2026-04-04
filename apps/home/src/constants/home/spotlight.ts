@@ -1,6 +1,6 @@
 import { mergeTransformOptions } from '@userplane/storage/media';
 
-import { mediaClient } from '../lib/media';
+import { mediaClient } from '../../lib/media';
 
 /**
  * Spotlight image responsive sources

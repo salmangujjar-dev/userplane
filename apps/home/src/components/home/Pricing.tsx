@@ -3,9 +3,9 @@ import { Button } from '@userplane/ui/components/button';
 import { ChevronRight } from 'lucide-react';
 
 import { SIGNUP_URL } from '@/constants/onboarding';
-import { PRICING_HEADING, PRICING_HIGHLIGHTS } from '@/constants/pricing';
+import { PRICING_HEADING, PRICING_HIGHLIGHTS } from '@/constants/pricing/pricing';
 
-import Highlight from './Highlight';
+import Highlight from '../shared/Highlight';
 
 function PricingFeatureItem({ text, included, subFeatures }: PlanFeatureHighlight) {
   return (

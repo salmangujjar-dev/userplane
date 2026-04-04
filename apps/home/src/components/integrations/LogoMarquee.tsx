@@ -1,7 +1,7 @@
 import { mergeTransformOptions } from '@userplane/storage/media';
 
-import type { IntegrationLogo } from '@/constants/integrations';
 import { mediaClient } from '@/lib/media';
+import type { IntegrationLogo } from '@/types/integrations';
 
 interface LogoMarqueeProps {
   label: string;

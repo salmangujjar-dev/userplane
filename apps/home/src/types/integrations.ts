@@ -15,18 +15,6 @@ export interface IntegrationHeadline {
   accent: string;
 }
 
-export interface StepsHeadline {
-  before: string;
-  segments: Array<{ accent: string; after: string }>;
-}
-
-export interface StepData {
-  number: string;
-  title: string;
-  description: string;
-  image?: string;
-}
-
 export interface FeatureData {
   number: string;
   title: string;
@@ -34,12 +22,6 @@ export interface FeatureData {
   tagline: string;
   capabilities: string[];
   image?: string;
-}
-
-export interface ComplianceBadge {
-  title: string;
-  description: string;
-  icon: 'gdpr' | 'ccpa';
 }
 
 export interface ResourceLink {
@@ -75,16 +57,7 @@ export interface IntegrationConfig {
     secondaryCTA: ButtonConfig;
     preview: { src: string; alt: string };
   };
-  steps: {
-    headline: StepsHeadline;
-    steps: StepData[];
-  };
   features: FeatureData[];
-  compliance: {
-    label: string;
-    headline: { bold: string; muted: string };
-    badges: ComplianceBadge[];
-  };
   resources: {
     label: string;
     headline: string;

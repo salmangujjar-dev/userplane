@@ -1,4 +1,5 @@
-import type { IntegrationConfig } from './_types';
+import type { IntegrationConfig } from '@/types/integrations';
+
 import { chromeExtensionConfig } from './chrome-extension';
 import { intercomConfig } from './intercom';
 import { slackConfig } from './slack';

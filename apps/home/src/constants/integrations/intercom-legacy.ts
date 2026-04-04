@@ -1,16 +1,17 @@
-import { TALLY_SALES_FORM_URL } from './contact';
+import { mergeTransformOptions } from '@userplane/storage/media';
+
 import type {
   ButtonConfig,
-  ComplianceBadge,
   FeatureData,
   GradientConfig,
   IntegrationHeadline,
   ResourceLink,
-  StepData,
-  StepsHeadline,
-} from './integrations';
-import { SIGNUP_URL } from './onboarding';
-import { getDocsUrl } from './urls';
+} from '@/types/integrations';
+
+import { mediaClient } from '../../lib/media';
+import { TALLY_SALES_FORM_URL } from '../contact';
+import { SIGNUP_URL } from '../onboarding';
+import { getDocsUrl } from '../urls';
 
 // ── Gradient ──
 
@@ -41,48 +42,11 @@ export const INTERCOM_HERO: {
   primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
   secondaryCTA: { text: 'See Demo', href: '/demo' },
   preview: {
-    src: 'https://placehold.co/1440x800/f8f8f8/cccccc?text=Intercom+Integration',
+    src: mediaClient.getMicrositeMediaUrl('microsites/intercom/hero.png', {
+      transform: mergeTransformOptions('feature', { width: 1440 }),
+    }),
     alt: 'Intercom integration preview',
   },
-};
-
-// ── Steps ──
-
-export const INTERCOM_STEPS: {
-  headline: StepsHeadline;
-  steps: StepData[];
-} = {
-  headline: {
-    before: 'Userplane',
-    segments: [
-      { accent: 'captures', after: 'what your customer sees,' },
-      { accent: 'attaches', after: 'technical context, and delivers' },
-      { accent: 'resolution', after: 'without the back and forth.' },
-    ],
-  },
-  steps: [
-    {
-      number: '01',
-      title: 'Send a recording request from Intercom',
-      description:
-        'With one click from your Intercom conversation, send a recording link to your customer. No installs or browser extensions needed.',
-      image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+01',
-    },
-    {
-      number: '02',
-      title: 'Customer records what went wrong',
-      description:
-        'Your customer clicks the link and records their screen. Console logs, network requests, and session metadata are captured automatically.',
-      image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+02',
-    },
-    {
-      number: '03',
-      title: 'Replay with complete context',
-      description:
-        'The recording appears right in your Intercom conversation with console errors, network waterfall, and browser metadata attached.',
-      image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+03',
-    },
-  ],
 };
 
 // ── Features ──
@@ -100,7 +64,9 @@ export const INTERCOM_FEATURES: FeatureData[] = [
       'Conversation-linked recordings',
       'No context switching',
     ],
-    image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Native+Intercom+messenger+app',
+    image: mediaClient.getMicrositeMediaUrl('microsites/intercom/feat-01.png', {
+      transform: mergeTransformOptions('feature', { width: 864 }),
+    }),
   },
   {
     number: '02',
@@ -114,7 +80,9 @@ export const INTERCOM_FEATURES: FeatureData[] = [
       'Browser & OS metadata',
       'Step-by-step user actions',
     ],
-    image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Automatic+technical+context',
+    image: mediaClient.getMicrositeMediaUrl('microsites/intercom/feat-02.png', {
+      transform: mergeTransformOptions('feature', { width: 864 }),
+    }),
   },
   {
     number: '03',
@@ -128,37 +96,11 @@ export const INTERCOM_FEATURES: FeatureData[] = [
       'GDPR & CCPA compliant',
       'Customer consent controls',
     ],
-    image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Privacy-first+recording',
+    image: mediaClient.getMicrositeMediaUrl('microsites/intercom/feat-03.png', {
+      transform: mergeTransformOptions('feature', { width: 864 }),
+    }),
   },
 ];
-
-// ── Compliance ──
-
-export const INTERCOM_COMPLIANCE: {
-  label: string;
-  headline: { bold: string; muted: string };
-  badges: ComplianceBadge[];
-} = {
-  label: 'Security',
-  headline: {
-    bold: 'Secure by design.',
-    muted: 'Safe by default.',
-  },
-  badges: [
-    {
-      title: 'GDPR',
-      description:
-        'Fully compliant with GDPR. Customer data is processed and stored in accordance with EU data protection regulations.',
-      icon: 'gdpr',
-    },
-    {
-      title: 'CCPA',
-      description:
-        'Compliant with the California Consumer Privacy Act. Users retain full control over their personal information.',
-      icon: 'ccpa',
-    },
-  ],
-};
 
 // ── Resources ──
 

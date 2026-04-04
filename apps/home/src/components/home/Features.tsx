@@ -3,9 +3,9 @@ import {
   FEATURES,
   FEATURES_HEADING,
   FEATURES_HIGHLIGHTS,
-} from '@/constants/features';
+} from '@/constants/home/features';
 
-import Highlight from './Highlight';
+import Highlight from '../shared/Highlight';
 
 function FeatureCard({ image, imageMobile, imageAlt, title, description }: Feature) {
   return (

@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 
-import type { ResourceLink, IntegrationConfig } from '@/constants/integrations';
+import type { IntegrationConfig, ResourceLink } from '@/types/integrations';
 
 interface ResourceLinksProps {
   label: string;

@@ -3,16 +3,14 @@ import HomepageLayout from '../../layouts/HomepageLayout.astro';
 import JsonLd from '../../components/seo/JsonLd.astro';
 import Hero from '../../components/integrations/Hero';
 import LogoMarquee from '../../components/integrations/LogoMarquee';
-import Steps from '../../components/integrations/Steps';
 import FeatureShowcase from '../../components/integrations/FeatureShowcase';
 import CallToAction from '../../components/integrations/CallToAction';
-import ComplianceBanner from '../../components/integrations/ComplianceBanner';
 import ResourceLinks from '../../components/integrations/ResourceLinks';
 
 import { INTEGRATION_REGISTRY } from '../../constants/integrations/registry';
 import { INTEGRATION_LOGOS, INTEGRATION_LOGOS_LABEL } from '../../constants/integrations';
 
-import type { IntegrationConfig } from '../../constants/integrations';
+import type { IntegrationConfig } from '@/types/integrations';
 
 export function getStaticPaths() {
   return Object.values(INTEGRATION_REGISTRY).map((config) => ({
@@ -77,14 +75,7 @@ const breadcrumb = {
       client:load
     />
     <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} client:load />
-    <Steps headline={config.steps.headline} steps={config.steps.steps} client:visible />
     <FeatureShowcase features={config.features} client:visible />
-    <ComplianceBanner
-      label={config.compliance.label}
-      headline={config.compliance.headline}
-      badges={config.compliance.badges}
-      client:visible
-    />
     <ResourceLinks
       label={config.resources.label}
       headline={config.resources.headline}
