@@ -24,6 +24,7 @@ export default function LogoMarquee({ label, logos }: LogoMarqueeProps) {
                     transform: mergeTransformOptions('icon', {
                       width: 24,
                       height: 24,
+                      dpr: 2,
                     }),
                   })}
                   alt={logo.name}
