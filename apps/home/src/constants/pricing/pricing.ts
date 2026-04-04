@@ -1,4 +1,4 @@
-import type { HighlightConfig } from './types';
+import type { HighlightConfig } from '@/types/highlight';
 
 /**
  * Pricing section heading

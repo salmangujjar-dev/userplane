@@ -1,17 +1,24 @@
 ---
 import BaseLayout from './BaseLayout.astro';
-import Header from '../components/home/Header';
-import Footer from '../components/home/Footer';
+import Header from '../components/layout/Header';
+import Footer from '../components/layout/Footer';
 
 interface Props {
   title: string;
   description?: string;
+  keywords?: string;
+  ogImage?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, keywords, ogImage } = Astro.props;
 ---
 
-<BaseLayout title={`${title} — Userplane`} description={description}>
+<BaseLayout
+  title={`${title} — Userplane`}
+  description={description}
+  keywords={keywords}
+  ogImage={ogImage}
+>
   <Header client:idle />
   <main class="mx-auto flex max-w-4xl flex-col gap-12 px-4 py-10">
     <slot />

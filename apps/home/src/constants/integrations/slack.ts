@@ -1,5 +1,8 @@
+import { mergeTransformOptions } from '@userplane/storage/media';
+
+import { mediaClient } from '../../lib/media';
 import { SIGNUP_URL } from '../onboarding';
-import { defineIntegration } from './_defaults';
+import { defineIntegration } from './defaults';
 
 export const slackConfig = defineIntegration({
   slug: 'slack',
@@ -31,42 +34,11 @@ export const slackConfig = defineIntegration({
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
-      src: 'https://placehold.co/1440x800/f8f8f8/cccccc?text=Slack+Integration',
+      src: mediaClient.getMicrositeMediaUrl('microsites/slack/hero.png', {
+        transform: mergeTransformOptions('feature', { width: 1440 }),
+      }),
       alt: 'Userplane screen recording posted in a Slack thread',
     },
-  },
-  steps: {
-    headline: {
-      before: 'Userplane',
-      segments: [
-        { accent: 'captures', after: 'what your customer sees,' },
-        { accent: 'posts', after: 'the recording to your thread, and gives you' },
-        { accent: 'context', after: 'to resolve issues fast.' },
-      ],
-    },
-    steps: [
-      {
-        number: '01',
-        title: 'Request a recording from a channel or thread',
-        description:
-          'Use the Userplane bot in any Slack channel or thread to generate a recording link. Share it with your customer or teammate — no installs, extensions, or sign-ups required on their end.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+01',
-      },
-      {
-        number: '02',
-        title: 'Customer records their screen',
-        description:
-          'Your customer opens the link and records what went wrong. Console logs, network requests, and browser metadata are captured silently in the background while they show you the issue.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+02',
-      },
-      {
-        number: '03',
-        title: 'Recording posts back to the thread',
-        description:
-          'The Userplane bot posts the completed recording directly into the Slack thread where you requested it. Watch the replay with console errors, network failures, and a step-by-step action trail — all without leaving Slack.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+03',
-      },
-    ],
   },
   features: [
     {
@@ -81,7 +53,9 @@ export const slackConfig = defineIntegration({
         'Works in public channels, private channels, and DMs',
         'Unfurled recording previews with thumbnails',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Slack+bot+integration',
+      image: mediaClient.getMicrositeMediaUrl('microsites/slack/feat-01.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
     {
       number: '02',
@@ -95,7 +69,9 @@ export const slackConfig = defineIntegration({
         'Browser, OS, and viewport metadata',
         'Timestamped trail of user actions',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Thread-linked+recordings',
+      image: mediaClient.getMicrositeMediaUrl('microsites/slack/feat-02.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
     {
       number: '03',
@@ -109,7 +85,9 @@ export const slackConfig = defineIntegration({
         'GDPR and CCPA compliant by design',
         'Customer-controlled consent flow',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Privacy+controls',
+      image: mediaClient.getMicrositeMediaUrl('microsites/slack/feat-03.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
   ],
 });

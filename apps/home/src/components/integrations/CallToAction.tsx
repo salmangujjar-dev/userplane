@@ -1,7 +1,7 @@
 import { Button } from '@userplane/ui/components/button';
 import { ChevronRight } from 'lucide-react';
 
-import type { ButtonConfig, IntegrationHeadline } from '@/constants/integrations';
+import type { ButtonConfig, IntegrationHeadline } from '@/types/integrations';
 
 import GradientBlur from './GradientBlur';
 

@@ -1,5 +1,6 @@
-import { SIGNUP_URL } from './onboarding';
-import type { HighlightConfig } from './types';
+import type { HighlightConfig } from '@/types/highlight';
+
+import { SIGNUP_URL } from '../onboarding';
 
 export const HERO_HEADING = 'Resolve support issues without the back and forth';
 

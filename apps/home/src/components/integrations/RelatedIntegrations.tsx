@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 
-import type { IntegrationConfig } from '@/constants/integrations';
+import type { IntegrationConfig } from '@/types/integrations';
 
 interface RelatedIntegrationsProps {
   integrations: Array<Pick<IntegrationConfig, 'slug' | 'name' | 'seo'>>;

@@ -1,15 +1,53 @@
 ---
 import HomepageLayout from '../layouts/HomepageLayout.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
 import Hero from '../components/home/Hero';
 import Spotlight from '../components/home/Spotlight';
 import Pricing from '../components/home/Pricing';
 import Features from '../components/home/Features';
-import FAQ from '../components/home/FAQ';
+import FAQ from '../components/shared/FAQ';
 import CTA from '../components/home/CTA';
-import { SPOTLIGHT_IMAGE } from '../constants/spotlight';
+import { SPOTLIGHT_IMAGE } from '../constants/home/spotlight';
+import { FAQ_ITEMS } from '../constants/home/faq';
+
+const organizationLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Userplane',
+  url: new URL('/', Astro.site).href,
+  logo: new URL('/images/preview/preview.webp', Astro.site).href,
+};
+
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Userplane',
+  url: new URL('/', Astro.site).href,
+};
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
+    },
+  })),
+};
 ---
 
-<HomepageLayout preloadImage={SPOTLIGHT_IMAGE}>
+<HomepageLayout
+  preloadImage={SPOTLIGHT_IMAGE}
+  title="Userplane - One Click Screen Recordings for Customer Support"
+  description="Request screen recordings from your customers showing exactly what went wrong. Captures console logs, network data, and user steps. Works with Intercom, Zendesk, Slack, and Chrome."
+  keywords="screen recording, customer support screen recording, one click screen recording, customer debugging tool, userplane, support team tools, bug reproduction, console logs capture, intercom screen recording, zendesk screen recording"
+>
+  <JsonLd data={organizationLd} />
+  <JsonLd data={websiteLd} />
+  <JsonLd data={faqLd} />
   <main class="flex flex-col items-center">
     <Hero />
     <Spotlight client:visible />

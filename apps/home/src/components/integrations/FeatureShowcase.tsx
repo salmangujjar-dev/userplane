@@ -1,4 +1,4 @@
-import type { FeatureData } from '@/constants/integrations';
+import type { FeatureData } from '@/types/integrations';
 
 import GlassCard from './GlassCard';
 import GradientBlur from './GradientBlur';
@@ -45,16 +45,13 @@ export default function FeatureShowcase({ features }: FeatureShowcaseProps) {
               <GlassCard
                 className="h-full w-full shrink-0 md:min-w-[864px]"
                 overlay={
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 sm:h-60 bg-gradient-to-t from-background to-transparent" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 sm:h-60 bg-linear-to-t from-background to-transparent" />
                 }
               >
                 <img
-                  src={
-                    feature.image ??
-                    `https://placehold.co/864x640/f8f8f8/cccccc?text=${feature.title.replace(/ /g, '+')}`
-                  }
+                  src={feature.image}
                   alt={feature.title}
-                  className="h-full w-full object-cover object-left-top"
+                  className="h-full w-full object-cover object-top-left"
                 />
               </GlassCard>
             </div>

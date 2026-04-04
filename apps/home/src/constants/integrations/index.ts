@@ -1,20 +1,6 @@
-// Re-export all types
-export type {
-  ButtonConfig,
-  ComplianceBadge,
-  FeatureData,
-  GradientConfig,
-  IntegrationConfig,
-  IntegrationHeadline,
-  IntegrationLogo,
-  ResourceLink,
-  StepData,
-  StepsHeadline,
-} from './_types';
-
 // ── Shared data across all integration pages ──
 
-import type { IntegrationLogo } from './_types';
+import type { IntegrationLogo } from '@/types/integrations';
 
 export const INTEGRATION_LOGOS_LABEL = 'Works with the tools you already use';
 

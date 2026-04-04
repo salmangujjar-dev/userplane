@@ -1,6 +1,6 @@
-import { HELP_HEADING, HELP_HIGHLIGHTS } from '@/constants/help';
+import { HELP_HEADING, HELP_HIGHLIGHTS } from '@/constants/help/help';
 
-import Highlight from '../home/Highlight';
+import Highlight from '../shared/Highlight';
 
 /**
  * Help page header with highlighted title.

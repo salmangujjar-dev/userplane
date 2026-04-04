@@ -1,14 +1,12 @@
+import type { IntegrationConfig } from '@/types/integrations';
+
 import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
 import { getDocsUrl, getMarketingUrl } from '../urls';
-import type { IntegrationConfig } from './_types';
 
 type RequiredOverrides = Pick<IntegrationConfig, 'slug' | 'name' | 'url' | 'gradient'>;
 type OptionalOverrides = Partial<
-  Pick<
-    IntegrationConfig,
-    'seo' | 'jsonLd' | 'hero' | 'steps' | 'features' | 'compliance' | 'resources' | 'cta'
-  >
+  Pick<IntegrationConfig, 'seo' | 'jsonLd' | 'hero' | 'features' | 'resources' | 'cta'>
 >;
 
 export function defineIntegration(
@@ -46,40 +44,9 @@ export function defineIntegration(
       primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
       secondaryCTA: { text: 'See Demo', href: '/demo' },
       preview: {
-        src: `https://placehold.co/1440x800/f8f8f8/cccccc?text=${encodeURIComponent(name)}+Integration`,
+        src: '',
         alt: `${name} integration preview`,
       },
-    },
-    steps: {
-      headline: {
-        before: 'Userplane',
-        segments: [
-          { accent: 'captures', after: 'what your customer sees,' },
-          { accent: 'attaches', after: 'technical context, and delivers' },
-          { accent: 'resolution', after: 'without the back and forth.' },
-        ],
-      },
-      steps: [
-        {
-          number: '01',
-          title: `Send a recording request from ${name}`,
-          description: `With one click from your ${name} conversation, send a recording link to your customer. No installs or browser extensions needed.`,
-          image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+01',
-        },
-        {
-          number: '02',
-          title: 'Customer records what went wrong',
-          description:
-            'Your customer clicks the link and records their screen. Console logs, network requests, and session metadata are captured automatically.',
-          image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+02',
-        },
-        {
-          number: '03',
-          title: 'Replay with complete context',
-          description: `The recording appears right in your ${name} workspace with console errors, network waterfall, and browser metadata attached.`,
-          image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+03',
-        },
-      ],
     },
     features: [
       {
@@ -93,7 +60,7 @@ export function defineIntegration(
           'Conversation-linked recordings',
           'No context switching',
         ],
-        image: `https://placehold.co/864x540/f8f8f8/cccccc?text=Native+${encodeURIComponent(name)}+integration`,
+        image: '',
       },
       {
         number: '02',
@@ -107,7 +74,7 @@ export function defineIntegration(
           'Browser & OS metadata',
           'Step-by-step user actions',
         ],
-        image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Automatic+technical+context',
+        image: '',
       },
       {
         number: '03',
@@ -121,30 +88,9 @@ export function defineIntegration(
           'GDPR & CCPA compliant',
           'Customer consent controls',
         ],
-        image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Privacy-first+recording',
+        image: '',
       },
     ],
-    compliance: {
-      label: 'Security',
-      headline: {
-        bold: 'Secure by design.',
-        muted: 'Safe by default.',
-      },
-      badges: [
-        {
-          title: 'GDPR',
-          description:
-            'Fully compliant with GDPR. Customer data is processed and stored in accordance with EU data protection regulations.',
-          icon: 'gdpr',
-        },
-        {
-          title: 'CCPA',
-          description:
-            'Compliant with the California Consumer Privacy Act. Users retain full control over their personal information.',
-          icon: 'ccpa',
-        },
-      ],
-    },
     resources: {
       label: 'Resources',
       headline: 'The Latest',

@@ -1,5 +1,8 @@
+import { mergeTransformOptions } from '@userplane/storage/media';
+
+import { mediaClient } from '../../lib/media';
 import { SIGNUP_URL } from '../onboarding';
-import { defineIntegration } from './_defaults';
+import { defineIntegration } from './defaults';
 
 export const chromeExtensionConfig = defineIntegration({
   slug: 'chrome-extension',
@@ -31,42 +34,11 @@ export const chromeExtensionConfig = defineIntegration({
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
-      src: 'https://placehold.co/1440x800/f8f8f8/cccccc?text=Chrome+Extension',
+      src: mediaClient.getMicrositeMediaUrl('microsites/chrome-extension/hero.png', {
+        transform: mergeTransformOptions('feature', { width: 1440 }),
+      }),
       alt: 'Userplane Chrome Extension recording a browser session',
     },
-  },
-  steps: {
-    headline: {
-      before: 'Userplane',
-      segments: [
-        { accent: 'records', after: 'your screen,' },
-        { accent: 'captures', after: 'technical context, and' },
-        { accent: 'shares', after: 'it with your team instantly.' },
-      ],
-    },
-    steps: [
-      {
-        number: '01',
-        title: 'Click the Userplane extension icon in Chrome',
-        description:
-          'Open any web page and click the Userplane icon in your browser toolbar. The recorder starts instantly -- no configuration, no login screens, no setup wizards.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+01',
-      },
-      {
-        number: '02',
-        title: 'Record your screen with automatic technical capture',
-        description:
-          'Walk through the issue on screen while Userplane silently captures console logs, network requests, and browser metadata in the background. Everything your engineering team needs is recorded automatically.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+02',
-      },
-      {
-        number: '03',
-        title: 'Share the recording with your support team instantly',
-        description:
-          'Stop the recording and get a shareable link immediately. Recordings can be linked to support conversations so your team has full context without a single follow-up question.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+03',
-      },
-    ],
   },
   features: [
     {
@@ -81,7 +53,9 @@ export const chromeExtensionConfig = defineIntegration({
         'No SDK or code changes required',
         'Lightweight browser extension',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=One-click+browser+capture',
+      image: mediaClient.getMicrositeMediaUrl('microsites/chrome-extension/feat-01.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
     {
       number: '02',
@@ -95,7 +69,9 @@ export const chromeExtensionConfig = defineIntegration({
         'Browser & OS metadata',
         'Automatic background collection',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Automatic+technical+context',
+      image: mediaClient.getMicrositeMediaUrl('microsites/chrome-extension/feat-02.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
     {
       number: '03',
@@ -109,7 +85,9 @@ export const chromeExtensionConfig = defineIntegration({
         'No file uploads or downloads',
         'Instant availability after capture',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Instant+sharing',
+      image: mediaClient.getMicrositeMediaUrl('microsites/chrome-extension/feat-03.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
   ],
 });

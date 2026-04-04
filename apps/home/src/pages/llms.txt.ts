@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 
-import { HERO_DESCRIPTION, HERO_HEADING } from '@/constants/hero';
-import { formatLlmsLinks } from '@/constants/llms';
+import { HERO_DESCRIPTION, HERO_HEADING } from '@/constants/home/hero';
+import { formatLlmsLinks } from '@/constants/llms/llms';
 
 const content = `# Userplane - ${HERO_HEADING}
 

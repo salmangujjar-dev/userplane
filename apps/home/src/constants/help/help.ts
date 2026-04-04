@@ -1,16 +1,9 @@
-import type { HighlightConfig } from './types';
-import { getDocsUrl } from './urls';
+import type { HelpTopic } from '@/types/help';
+import type { HighlightConfig } from '@/types/highlight';
 
-/**
- * Help topic definition
- * Each topic links to an external docs page at docs.userplane.io
- */
-export interface HelpTopic {
-  title: string;
-  subtitle: string;
-  href: string;
-  highlights: HighlightConfig[];
-}
+import { getDocsUrl } from '../urls';
+
+export type { HelpTopic };
 
 /**
  * Help page heading

@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 
-import type { HelpTopic } from '@/constants/help';
+import type { HelpTopic } from '@/types/help';
 
 interface TopicCardProps {
   topic: HelpTopic;

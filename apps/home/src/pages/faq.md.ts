@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
 
-import { FAQ_ITEMS } from '@/constants/faq';
-import { formatLlmsLinks } from '@/constants/llms';
-import { PRICING_FAQ_ITEMS } from '@/constants/pricing-page';
+import { FAQ_ITEMS } from '@/constants/home/faq';
+import { formatLlmsLinks } from '@/constants/llms/llms';
+import { PRICING_FAQ_ITEMS } from '@/constants/pricing/pricing-page';
 
 function buildContent(): string {
   // Deduplicate by question text — prefer the longer answer

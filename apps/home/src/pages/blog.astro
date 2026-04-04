@@ -1,5 +1,6 @@
 ---
 import HomepageLayout from '../layouts/HomepageLayout.astro';
+import JsonLd from '../components/seo/JsonLd.astro';
 import { getCollection } from 'astro:content';
 import BlogHeader from '../components/blog/BlogHeader';
 import BlogPostList from '../components/blog/BlogPostList';
@@ -18,13 +19,23 @@ const posts = allPosts
     date: post.data.date.toISOString().split('T')[0],
     author: post.data.author,
   }));
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site).href },
+    { '@type': 'ListItem', position: 2, name: 'Blog', item: new URL('/blog', Astro.site).href },
+  ],
+};
 ---
 
 <HomepageLayout
-  title="Blog | Userplane - One Click Screen Recordings for Intercom"
-  description="Your frontrow seat to everything Userplane"
-  keywords="intercom screen recording, intercom integration, screen recording for intercom, intercom support tool, userplane, intercom customer support, capture network logs, error traces recording, intercom screen capture, intercom app, blog"
+  title="Blog | Userplane"
+  description="Tips, guides, and updates from the Userplane team on customer support, screen recordings, and debugging workflows."
+  keywords="userplane blog, customer support tips, screen recording guides, debugging workflows, support team resources"
 >
+  <JsonLd data={breadcrumb} />
   <div
     class="mx-auto flex w-full max-w-7xl flex-col items-center justify-start px-12 text-center py-12"
   >

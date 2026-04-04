@@ -1,4 +1,4 @@
-import type { HelpTopic } from '@/constants/help';
+import type { HelpTopic } from '@/types/help';
 
 import TopicCard from './TopicCard';
 

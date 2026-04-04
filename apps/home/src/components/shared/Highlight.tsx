@@ -1,4 +1,4 @@
-import type { HighlightColor } from '../../constants/types';
+import type { HighlightColor } from '@/types/highlight';
 
 interface HighlightProps {
   children: React.ReactNode;

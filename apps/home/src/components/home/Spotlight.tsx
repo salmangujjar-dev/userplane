@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { SPOTLIGHT_IMAGE, SPOTLIGHT_VIDEO } from '@/constants/spotlight';
+import { SPOTLIGHT_IMAGE, SPOTLIGHT_VIDEO } from '@/constants/home/spotlight';
 
 export default function Spotlight() {
   const [playing, setPlaying] = useState(false);

@@ -1,22 +1,7 @@
-import type { HighlightConfig } from './types';
+import type { FAQItem, FAQLink } from '@/types/faq';
+import type { HighlightConfig } from '@/types/highlight';
 
-/**
- * FAQ link configuration
- * `text` is matched within the answer string and rendered as a link
- */
-export interface FAQLink {
-  text: string;
-  href: string;
-}
-
-/**
- * FAQ item interface
- */
-export interface FAQItem {
-  question: string;
-  answer: string;
-  link?: FAQLink;
-}
+export type { FAQItem, FAQLink };
 
 /**
  * FAQ section heading

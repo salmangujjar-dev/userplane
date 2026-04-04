@@ -1,5 +1,8 @@
+import { mergeTransformOptions } from '@userplane/storage/media';
+
+import { mediaClient } from '../../lib/media';
 import { SIGNUP_URL } from '../onboarding';
-import { defineIntegration } from './_defaults';
+import { defineIntegration } from './defaults';
 
 export const zendeskConfig = defineIntegration({
   slug: 'zendesk',
@@ -31,42 +34,11 @@ export const zendeskConfig = defineIntegration({
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
-      src: 'https://placehold.co/1440x800/f8f8f8/cccccc?text=Zendesk+Integration',
+      src: mediaClient.getMicrositeMediaUrl('microsites/zendesk/hero.png', {
+        transform: mergeTransformOptions('feature', { width: 1440 }),
+      }),
       alt: 'Zendesk ticket sidebar with Userplane recording request',
     },
-  },
-  steps: {
-    headline: {
-      before: 'Userplane',
-      segments: [
-        { accent: 'captures', after: 'what your customer sees,' },
-        { accent: 'attaches', after: 'it to the ticket, and delivers' },
-        { accent: 'resolution', after: 'without the back and forth.' },
-      ],
-    },
-    steps: [
-      {
-        number: '01',
-        title: 'Request a recording from the ticket sidebar',
-        description:
-          'Open any Zendesk ticket and click the Userplane widget in the sidebar. A recording link is sent to the customer instantly -- no copy-pasting or tab switching required.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+01',
-      },
-      {
-        number: '02',
-        title: 'Customer records their screen',
-        description:
-          'Your customer clicks the link and records what went wrong. No browser extension or software install needed -- everything runs in the browser.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+02',
-      },
-      {
-        number: '03',
-        title: 'Recording attaches to the ticket with full context',
-        description:
-          'The finished recording appears on the Zendesk ticket alongside console logs, a network waterfall, browser metadata, and a step-by-step action trail.',
-        image: 'https://placehold.co/400x220/f8f8f8/cccccc?text=Step+03',
-      },
-    ],
   },
   features: [
     {
@@ -81,7 +53,9 @@ export const zendeskConfig = defineIntegration({
         'Ticket-linked recordings',
         'Works with Zendesk Support & Suite',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Zendesk+Marketplace+app',
+      image: mediaClient.getMicrositeMediaUrl('microsites/zendesk/feat-01.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
     {
       number: '02',
@@ -95,7 +69,9 @@ export const zendeskConfig = defineIntegration({
         'Browser & OS metadata',
         'Step-by-step user action trail',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Automatic+technical+context',
+      image: mediaClient.getMicrositeMediaUrl('microsites/zendesk/feat-02.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
     {
       number: '03',
@@ -109,7 +85,9 @@ export const zendeskConfig = defineIntegration({
         'GDPR & CCPA compliant',
         'Customer consent controls',
       ],
-      image: 'https://placehold.co/864x540/f8f8f8/cccccc?text=Privacy-first+recording',
+      image: mediaClient.getMicrositeMediaUrl('microsites/zendesk/feat-03.png', {
+        transform: mergeTransformOptions('feature', { width: 864 }),
+      }),
     },
   ],
 });

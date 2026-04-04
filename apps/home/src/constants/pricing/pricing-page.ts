@@ -1,4 +1,7 @@
-import type { HighlightConfig } from './types';
+import type { HighlightConfig } from '@/types/highlight';
+import type { PricingFAQItem } from '@/types/pricing';
+
+export type { PricingFAQItem };
 
 /**
  * Pricing page heading
@@ -47,14 +50,6 @@ export const PRICING_FAQ_HIGHLIGHTS: HighlightConfig[] = [
   { wordIndex: 0, color: 'yellow' },
   { wordIndex: 2, color: 'blue' },
 ];
-
-/**
- * Pricing page FAQ items
- */
-export interface PricingFAQItem {
-  question: string;
-  answer: string;
-}
 
 export const PRICING_FAQ_ITEMS: PricingFAQItem[] = [
   {

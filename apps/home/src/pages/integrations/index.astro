@@ -7,8 +7,10 @@ import IntegrationBrowser from '../../components/integrations/IntegrationBrowser
 import CallToAction from '../../components/integrations/CallToAction';
 import { INTEGRATION_REGISTRY } from '../../constants/integrations/registry';
 import { INTEGRATION_LOGOS, INTEGRATION_LOGOS_LABEL } from '../../constants/integrations';
+import { mergeTransformOptions } from '@userplane/storage/media';
 import { SIGNUP_URL } from '../../constants/onboarding';
 import { TALLY_SALES_FORM_URL } from '../../constants/contact';
+import { mediaClient } from '../../lib/media';
 
 const integrations = Object.values(INTEGRATION_REGISTRY);
 
@@ -89,7 +91,12 @@ const jsonLd = {
       description="Connect Userplane to the tools your team already uses. Request, capture, and replay customer screen recordings without leaving your workflow."
       primaryCTA={{ text: 'Get started', href: SIGNUP_URL }}
       secondaryCTA={{ text: 'View docs', href: 'https://docs.userplane.co' }}
-      preview={{ src: 'https://placehold.co/1440x800', alt: 'Userplane integrations overview' }}
+      preview={{
+        src: mediaClient.getMicrositeMediaUrl('microsites/integrations/hero.png', {
+          transform: mergeTransformOptions('feature', { width: 1440 }),
+        }),
+        alt: 'Userplane integrations overview',
+      }}
       client:load
     />
     <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} client:load />
