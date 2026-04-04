@@ -20,11 +20,11 @@ export interface SiteMeta {
  * Individual apps can override specific fields as needed
  */
 export const SITE_META: SiteMeta = {
-  title: 'Userplane - One Click Screen Recordings for Intercom',
+  title: 'Userplane - One Click Screen Recordings for Customer Support',
   description:
-    "Request screen recordings directly in Intercom with console logs, network data and user steps showing exactly what went wrong. See the issue through your customer's lens",
+    'Request screen recordings from your customers with console logs, network data, and user steps showing exactly what went wrong. Works with Intercom, Zendesk, Slack, and more.',
   keywords:
-    'intercom screen recording, intercom integration, screen recording for intercom, request customer screen recording, intercom support tool, userplane, userplane intercom, intercom customer support, capture network logs, error traces recording, intercom screen capture, intercom app, intercom messenger, support team tools, customer issue tracking, bug reproduction, console logs capture',
+    'screen recording, customer support screen recording, request screen recording, customer issue tracking, bug reproduction, console logs capture, network data recording, userplane, intercom integration, zendesk integration, slack integration, support team tools',
   locale: 'en_US',
   favicon: '/favicon.svg',
   ogImage: '/images/preview/preview.webp',
