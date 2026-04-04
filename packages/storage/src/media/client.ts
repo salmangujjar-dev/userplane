@@ -22,6 +22,7 @@ import type {
   IconAssetKey,
   IntegrationAssetKey,
   IntercomCanvasAssetKey,
+  MicrositeAssetKey,
   PreviewAssetKey,
   SlackAssetKey,
   SpotlightAssetKey,
@@ -54,6 +55,7 @@ const CATEGORY_PROFILES: Record<string, TransformProfile> = {
   hero: 'general',
   preview: 'general',
   spotlight: 'general',
+  microsites: 'feature',
 };
 
 // =============================================================================
@@ -236,6 +238,11 @@ export class MediaClient {
 
   /** Get CDN URL for a spotlight asset */
   getSpotlightMediaUrl(key: SpotlightAssetKey, options?: GetMediaUrlOptions): string {
+    return this.getMediaUrl(key, options);
+  }
+
+  /** Get CDN URL for a microsite asset */
+  getMicrositeMediaUrl(key: MicrositeAssetKey, options?: GetMediaUrlOptions): string {
     return this.getMediaUrl(key, options);
   }
 }
