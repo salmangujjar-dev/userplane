@@ -116,9 +116,17 @@ export default function IntegrationBrowser({ integrations }: IntegrationBrowserP
                   </a>
 
                   {/* Description */}
-                  <p className="mb-6 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+                  <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
                     {item.description}
                   </p>
+
+                  {/* Learn more */}
+                  <a
+                    href={item.pageHref}
+                    className="mb-6 mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-foreground hover:underline"
+                  >
+                    Learn more <ChevronRight className="size-3.5" />
+                  </a>
 
                   {/* Bleed image with brand gradient on hover */}
                   {item.image && (
@@ -139,33 +147,37 @@ export default function IntegrationBrowser({ integrations }: IntegrationBrowserP
                           alt={item.image.alt}
                           className="w-full object-cover transition-transform duration-300 group-hover/img:scale-[1.02]"
                         />
-                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-background to-transparent" />
                       </a>
                     </div>
                   )}
 
                   {/* Resource links */}
                   <div className="grid grid-cols-1 gap-5 border-t border-border/20 pt-6 sm:grid-cols-3">
-                    {item.resources.map((res) => (
-                      <a
-                        key={res.title}
-                        href={res.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group/res block"
-                      >
-                        <div className="mb-2 flex items-center gap-2">
-                          <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                            {res.label}
-                          </span>
-                          <ChevronRight className="size-3 text-muted-foreground transition-transform group-hover/res:translate-x-0.5" />
-                        </div>
-                        <p className="mb-1 text-[14px] font-medium text-foreground">{res.title}</p>
-                        <p className="line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
-                          {res.description}
-                        </p>
-                      </a>
-                    ))}
+                    {item.resources.map((res) => {
+                      const isExternal = res.href.startsWith('http');
+                      return (
+                        <a
+                          key={res.title}
+                          href={res.href}
+                          {...(isExternal && { target: '_blank', rel: 'noopener noreferrer' })}
+                          className="group/res block"
+                        >
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                              {res.label}
+                            </span>
+                            <ChevronRight className="size-3 text-muted-foreground transition-transform group-hover/res:translate-x-0.5" />
+                          </div>
+                          <p className="mb-1 text-[14px] font-medium text-foreground">
+                            {res.title}
+                          </p>
+                          <p className="line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
+                            {res.description}
+                          </p>
+                        </a>
+                      );
+                    })}
                   </div>
 
                   {/* Footer links */}

@@ -3,7 +3,6 @@ import { ChevronRight } from 'lucide-react';
 
 import type { ButtonConfig, IntegrationHeadline } from '@/types/integrations';
 
-import FadeEdge from './FadeEdge';
 import GlassCard from './GlassCard';
 import GradientBlur from './GradientBlur';
 
@@ -66,15 +65,7 @@ export default function Hero({
               blur={50}
             />
 
-            <GlassCard
-              className="h-[360px] w-full min-w-0 sm:h-[480px] md:h-[640px] md:min-w-[1440px] lg:h-[800px]"
-              overlay={
-                <>
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 sm:h-60 lg:h-80 bg-linear-to-t from-background to-transparent" />
-                  <FadeEdge direction="right" />
-                </>
-              }
-            >
+            <GlassCard className="h-[360px] w-full min-w-0 sm:h-[480px] md:h-[640px] md:min-w-[1440px] lg:h-[800px]">
               <img
                 src={preview.src}
                 alt={preview.alt}

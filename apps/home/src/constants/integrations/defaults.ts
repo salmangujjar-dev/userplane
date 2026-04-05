@@ -6,15 +6,20 @@ import { getDocsUrl, getMarketingUrl } from '../urls';
 
 type RequiredOverrides = Pick<IntegrationConfig, 'slug' | 'name' | 'url' | 'gradient'>;
 type OptionalOverrides = Partial<
-  Pick<IntegrationConfig, 'seo' | 'jsonLd' | 'hero' | 'features' | 'resources' | 'cta'>
+  Pick<
+    IntegrationConfig,
+    'shortName' | 'seo' | 'jsonLd' | 'hero' | 'features' | 'resources' | 'cta'
+  >
 >;
 
 export function defineIntegration(
   overrides: RequiredOverrides & OptionalOverrides
 ): IntegrationConfig {
   const { name, slug, url } = overrides;
+  const shortName = overrides.shortName ?? name;
 
   return {
+    shortName,
     seo: {
       title: `${name} Integration | Userplane - Screen Recordings for ${name}`,
       description: `Request and receive screen recordings without leaving ${name}. Capture console logs, network requests, and session data attached to every conversation.`,
@@ -30,17 +35,19 @@ export function defineIntegration(
       url: getMarketingUrl(`/integrations/${slug}`),
       sameAs: url,
       offers: {
-        '@type': 'Offer',
-        price: '0',
+        '@type': 'AggregateOffer',
+        lowPrice: '0',
+        highPrice: '249',
         priceCurrency: 'USD',
+        offerCount: 4,
       },
     },
     hero: {
       headline: {
         lines: ['Screen recordings that', 'live inside'],
-        accent: name,
+        accent: shortName,
       },
-      description: `Userplane is the screen recording layer for support teams using ${name}. Request, capture, and replay customer issues with full technical context.`,
+      description: `Userplane is the screen recording layer for support teams using ${shortName}. Request, capture, and replay customer issues with full technical context.`,
       primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
       secondaryCTA: { text: 'See Demo', href: '/demo' },
       preview: {
@@ -51,8 +58,8 @@ export function defineIntegration(
     features: [
       {
         number: '01',
-        title: `Native ${name} integration`,
-        description: `Userplane lives inside ${name}. Your team can request recordings without switching tabs or copying links. The entire workflow happens where your conversations already live.`,
+        title: `Native ${shortName} integration`,
+        description: `Userplane lives inside ${shortName}. Your team can request recordings without switching tabs or copying links. The entire workflow happens where your conversations already live.`,
         tagline: 'Seamless integration',
         capabilities: [
           'One-click recording requests',
@@ -96,6 +103,12 @@ export function defineIntegration(
       headline: 'The Latest',
       links: [
         {
+          label: 'Integration',
+          title: `Userplane for ${shortName}`,
+          description: `See how Userplane works inside ${shortName} — features, setup, and what your team gets out of the box.`,
+          href: getMarketingUrl(`/integrations/${slug}`),
+        },
+        {
           label: 'Quickstart',
           title: `Getting Started with ${name}`,
           description: `Set up Userplane in your ${name} workspace and send your first recording request in minutes.`,
@@ -108,20 +121,13 @@ export function defineIntegration(
             'Learn how recordings capture console logs, network requests, and session metadata automatically.',
           href: getDocsUrl('/recording/requesting'),
         },
-        {
-          label: 'Developer',
-          title: 'Developer Installation Guide',
-          description:
-            'Technical guide for installing the Userplane SDK and configuring it for your application.',
-          href: getDocsUrl('/developer/installation'),
-        },
       ],
       seeAllHref: getDocsUrl(''),
     },
     cta: {
       headline: {
         lines: ['Screen recordings that', 'live inside'],
-        accent: name,
+        accent: shortName,
       },
       primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
       secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },

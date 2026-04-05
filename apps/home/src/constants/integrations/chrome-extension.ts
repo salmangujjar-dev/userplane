@@ -7,6 +7,7 @@ import { defineIntegration } from './defaults';
 export const chromeExtensionConfig = defineIntegration({
   slug: 'chrome-extension',
   name: 'Chrome Extension',
+  shortName: 'Chrome',
   url: 'https://chrome.google.com/webstore',
   gradient: {
     stops: [
