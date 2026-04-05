@@ -41,6 +41,8 @@ export interface IntegrationLogo {
 export interface IntegrationConfig {
   slug: string;
   name: string;
+  /** Shorter display name for contexts where the full name reads awkwardly (e.g. "Chrome" instead of "Chrome Extension") */
+  shortName: string;
   url: string;
   seo: {
     title: string;

@@ -16,7 +16,7 @@ const integrations = Object.values(INTEGRATION_REGISTRY);
 
 const browserEntries = integrations.map((config) => ({
   slug: config.slug,
-  name: config.name,
+  name: config.shortName,
   description: config.seo.description,
   pageHref: `/integrations/${config.slug}`,
   docsHref: config.resources.seeAllHref,
