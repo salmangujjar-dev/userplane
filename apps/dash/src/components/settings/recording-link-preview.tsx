@@ -4,7 +4,6 @@ import { CSSProperties } from 'react';
 
 import { useRecordingLinkPreview } from '@/hooks/use-recording-link-preview';
 import { addAlpha } from '@/lib/colors';
-import { mediaClient } from '@/lib/media';
 
 interface RecordingLinkPreviewProps {
   customizeRecordingLink: boolean;
@@ -213,7 +212,7 @@ export function RecordingLinkPreview({
           ) : (
             <>
               <Image
-                src={mediaClient.getBrandMediaUrl('brand/logo-dark.svg')}
+                src="/logo-dark.svg"
                 alt="Userplane"
                 width={24}
                 height={24}

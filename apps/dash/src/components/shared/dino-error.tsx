@@ -4,8 +4,6 @@ import { Button } from '@userplane/ui/components/button';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 
-import { mediaClient } from '@/lib/media';
-
 interface DinoErrorProps {
   title?: string;
   description?: string;
@@ -26,13 +24,7 @@ export function DinoError({
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 py-12">
       <div className="flex flex-col items-center gap-3 max-w-md">
-        <Image
-          src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-          alt="Error"
-          width={120}
-          height={120}
-          className="mb-2"
-        />
+        <Image src="/icons/dino.svg" alt="Error" width={120} height={120} className="mb-2" />
         <h1 className="text-xl font-medium text-foreground">{title}</h1>
         <p className="text-sm text-muted-foreground text-center">{description}</p>
       </div>

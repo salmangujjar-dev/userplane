@@ -13,7 +13,6 @@ import {
   RECORDING_IN_PROGRESS_COPY,
 } from '@/constants';
 import { useElapsedTime } from '@/hooks/useElapsedTime';
-import { mediaClient } from '@/lib/media';
 import type { RecordingPreferences } from '@/types/session-preferences';
 import { formatElapsedTime } from '@/utils/format-time';
 
@@ -122,7 +121,7 @@ export default function RecordingInProgressScreen({
         ) : (
           <div className="mb-6 sm:mb-8">
             <Image
-              src={mediaClient.getIconMediaUrl('icons/video.svg')}
+              src="/icons/video.svg"
               alt="Recording"
               width={64}
               height={64}

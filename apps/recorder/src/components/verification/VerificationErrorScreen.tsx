@@ -8,7 +8,6 @@ import { Button } from '@userplane/ui/components/button';
 import Image from 'next/image';
 
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
-import { mediaClient } from '@/lib/media';
 
 import VerificationScreenLayout from './VerificationScreenLayout';
 
@@ -55,7 +54,7 @@ export default function VerificationErrorScreen({
 
         <div className="mb-8">
           <Image
-            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+            src="/icons/dino.svg"
             alt="Error"
             width={128}
             height={128}

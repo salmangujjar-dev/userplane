@@ -15,7 +15,6 @@ import { AuthIcons } from '@/components/auth/auth-icons';
 import { useAccount } from '@/features/account';
 import { useWorkspaceCount } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
-import { mediaClient } from '@/lib/media';
 import {
   showAccountDeletionEmailFailedToast,
   showAccountDeletionEmailSentToast,
@@ -163,7 +162,7 @@ function RequestDeleteContent() {
 
           <div className="flex flex-col items-center gap-6">
             <Image
-              src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+              src="/icons/dino.svg"
               alt="Error"
               width={120}
               height={120}
@@ -206,7 +205,7 @@ function RequestDeleteContent() {
         <div className="space-y-6">
           <div className="flex justify-center">
             <Image
-              src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+              src="/icons/dino.svg"
               alt="Dino"
               width={120}
               height={120}

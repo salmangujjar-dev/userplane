@@ -38,7 +38,6 @@ import { useWorkspaceDomains } from '@/features/domains';
 import { useCreateLink } from '@/features/links';
 import { useWorkspaceProjects } from '@/features/projects';
 import { usePlanLimitHandler } from '@/hooks/use-plan-limit-handler';
-import { mediaClient } from '@/lib/media';
 import { showCopiedToClipboardToast, showCopyFailedToast } from '@/lib/toasts';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -499,12 +498,7 @@ function ErrorView({
 
         <div className="flex flex-col items-center space-y-4">
           <div className="flex justify-center py-4">
-            <Image
-              src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-              alt="Error"
-              width={120}
-              height={120}
-            />
+            <Image src="/icons/dino.svg" alt="Error" width={120} height={120} />
           </div>
         </div>
       </div>

@@ -8,7 +8,6 @@ import Image from 'next/image';
 import { type ReactNode, useState } from 'react';
 
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR, PRE_RECORDING_COPY } from '@/constants';
-import { mediaClient } from '@/lib/media';
 import type { RecordingMode } from '@/services/media-capture';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
@@ -79,7 +78,7 @@ export default function PreRecordingScreen({
             }}
           >
             <Image
-              src={mediaClient.getIconMediaUrl('icons/desktop.svg')}
+              src="/icons/desktop.svg"
               alt="Screen + Voice"
               width={48}
               height={48}
@@ -99,7 +98,7 @@ export default function PreRecordingScreen({
             }}
           >
             <Image
-              src={mediaClient.getIconMediaUrl('icons/monitor.svg')}
+              src="/icons/monitor.svg"
               alt="Screen only"
               width={48}
               height={48}

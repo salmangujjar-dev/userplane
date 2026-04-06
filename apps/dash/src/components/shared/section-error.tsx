@@ -4,8 +4,6 @@ import { Button } from '@userplane/ui/components/button';
 import { RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 
-import { mediaClient } from '@/lib/media';
-
 interface SectionErrorProps {
   title?: string;
   description?: string;
@@ -19,13 +17,7 @@ export function SectionError({
 }: SectionErrorProps) {
   return (
     <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl border border-dashed">
-      <Image
-        src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-        alt="Error"
-        width={64}
-        height={64}
-        className="mb-4 opacity-50"
-      />
+      <Image src="/icons/dino.svg" alt="Error" width={64} height={64} className="mb-4 opacity-50" />
       <p className="text-sm font-medium text-foreground mb-1">{title}</p>
       <p className="text-xs text-muted-foreground text-center mb-4">{description}</p>
       {onRetry && (

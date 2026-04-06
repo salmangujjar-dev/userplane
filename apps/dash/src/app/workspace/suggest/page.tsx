@@ -16,7 +16,6 @@ import { PaginationControls } from '@/components/shared/pagination-controls';
 import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { WORKSPACE_SUGGESTIONS_PAGINATION } from '@/constants';
 import { useJoinWorkspace, useWorkspaceSuggestions } from '@/features/workspace';
-import { mediaClient } from '@/lib/media';
 import { showWorkspaceSuggestionsLoadFailedToast } from '@/lib/toasts';
 
 const ITEMS_PER_PAGE = WORKSPACE_SUGGESTIONS_PAGINATION.DEFAULT_PER_PAGE;
@@ -91,13 +90,7 @@ function WorkspaceSuggestError({ errorMessage }: WorkspaceSuggestErrorProps) {
   return (
     <WorkspaceSuggestLayout>
       <div className="flex flex-col items-center gap-3">
-        <Image
-          src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-          alt="Dino"
-          width={120}
-          height={120}
-          className="mb-2"
-        />
+        <Image src="/icons/dino.svg" alt="Dino" width={120} height={120} className="mb-2" />
         <h1 className="text-xl font-medium text-foreground">Unable to Load Suggestions</h1>
         <p className="text-sm text-muted-foreground text-center">
           {errorMessage ?? 'Something went wrong while loading workspace suggestions.'}

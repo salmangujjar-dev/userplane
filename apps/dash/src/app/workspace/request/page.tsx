@@ -17,7 +17,6 @@ import {
   useDeclineAccessRequest,
   useValidateAccessRequest,
 } from '@/features/workspace';
-import { mediaClient } from '@/lib/media';
 import {
   showAccessRequestApproveFailedToast,
   showAccessRequestDeclineFailedToast,
@@ -161,13 +160,7 @@ function AccessRequestPageContent() {
     return (
       <AccessRequestLayout>
         <div className="flex flex-col items-center gap-3">
-          <Image
-            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-            alt="Dino"
-            width={120}
-            height={120}
-            className="mb-2"
-          />
+          <Image src="/icons/dino.svg" alt="Dino" width={120} height={120} className="mb-2" />
           <h1 className="text-xl font-medium text-foreground">Invalid Request</h1>
           <p className="text-sm text-muted-foreground text-center">
             No access request token provided
@@ -191,13 +184,7 @@ function AccessRequestPageContent() {
     return (
       <AccessRequestLayout>
         <div className="flex flex-col items-center gap-3">
-          <Image
-            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-            alt="Dino"
-            width={120}
-            height={120}
-            className="mb-2"
-          />
+          <Image src="/icons/dino.svg" alt="Dino" width={120} height={120} className="mb-2" />
           <h1 className="text-xl font-medium text-foreground">Invalid Request</h1>
           <p className="text-sm text-muted-foreground text-center">{validationError.message}</p>
         </div>
@@ -219,13 +206,7 @@ function AccessRequestPageContent() {
     return (
       <AccessRequestLayout>
         <div className="flex flex-col items-center gap-3">
-          <Image
-            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
-            alt="Dino"
-            width={120}
-            height={120}
-            className="mb-2"
-          />
+          <Image src="/icons/dino.svg" alt="Dino" width={120} height={120} className="mb-2" />
           <h1 className="text-xl font-medium text-foreground">Invalid Request</h1>
           <p className="text-sm text-muted-foreground text-center">
             {validateResult.error.message}
