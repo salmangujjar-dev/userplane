@@ -11,18 +11,14 @@
 
 export type {
   AssetKey,
-  AuthAssetKey,
   BrandAssetKey,
   FeatureAssetKey,
-  HeroAssetKey,
   IconAssetKey,
   IntegrationAssetKey,
   IntercomCanvasAssetKey,
   MicrositeAssetKey,
-  PreviewAssetKey,
   SpotlightAssetKey,
   TileAssetKey,
-  ZendeskAssetKey,
 } from './types';
 
 // =============================================================================
@@ -62,12 +58,5 @@ export { ASSET_MANIFEST } from './manifest.generated';
 // Registry
 // =============================================================================
 
-export type { AuthProviderAsset, IntegrationAsset } from './registry';
-export {
-  AUTH_PROVIDER_REGISTRY,
-  getAuthProviderAsset,
-  getAuthProviderAssets,
-  getIntegrationAsset,
-  getIntegrationAssets,
-  INTEGRATION_REGISTRY,
-} from './registry';
+export type { IntegrationAsset } from './registry';
+export { getIntegrationAsset, getIntegrationAssets, INTEGRATION_REGISTRY } from './registry';

@@ -4,11 +4,10 @@
  * Types are derived from the auto-generated manifest for compile-time safety.
  */
 
-import type { AuthAssetKey, IntegrationAssetKey } from './types';
+import type { IntegrationAssetKey } from './types';
 
 // Derive name types from asset key unions
 type IntegrationName = IntegrationAssetKey extends `integrations/${infer Name}.webp` ? Name : never;
-type AuthProviderName = AuthAssetKey extends `auth/${infer Name}.webp` ? Name : never;
 
 /**
  * Integration asset metadata
@@ -54,27 +53,13 @@ const INTEGRATION_NAMES = [
   'zoho',
 ] as const satisfies readonly IntegrationName[];
 
-const AUTH_PROVIDER_NAMES = [
-  'crisp',
-  'discord',
-  'freshdesk',
-  'happyfox',
-  'helpscout',
-  'hiver',
-  'intercom',
-  'jira',
-  'linear',
-  'pylon',
-  'slack',
-  'zendesk',
-] as const satisfies readonly AuthProviderName[];
-
 // =============================================================================
 // Integration Registry
 // =============================================================================
 
 const INTEGRATION_LABELS: Record<IntegrationName, string> = {
   asana: 'Asana',
+  chrome: 'Chrome',
   clickup: 'ClickUp',
   crisp: 'Crisp',
   discord: 'Discord',
@@ -124,54 +109,4 @@ export function getIntegrationAssets(): IntegrationAsset[] {
 
 export function getIntegrationAsset(name: IntegrationName): IntegrationAsset {
   return INTEGRATION_REGISTRY[name];
-}
-
-// =============================================================================
-// Auth Provider Registry
-// =============================================================================
-
-const AUTH_PROVIDER_LABELS: Record<AuthProviderName, string> = {
-  crisp: 'Crisp',
-  discord: 'Discord',
-  freshdesk: 'Freshdesk',
-  happyfox: 'HappyFox',
-  helpscout: 'Help Scout',
-  hiver: 'Hiver',
-  intercom: 'Intercom',
-  jira: 'Jira',
-  linear: 'Linear',
-  pylon: 'Pylon',
-  slack: 'Slack',
-  zendesk: 'Zendesk',
-} as const;
-
-export interface AuthProviderAsset {
-  name: AuthProviderName;
-  label: string;
-  alt: string;
-  path: AuthAssetKey;
-}
-
-export const AUTH_PROVIDER_REGISTRY: Record<AuthProviderName, AuthProviderAsset> =
-  Object.fromEntries(
-    AUTH_PROVIDER_NAMES.map((name) => {
-      const path: AuthAssetKey = `auth/${name}.webp`;
-      return [
-        name,
-        {
-          name,
-          label: AUTH_PROVIDER_LABELS[name],
-          alt: `${AUTH_PROVIDER_LABELS[name]} Logo`,
-          path,
-        },
-      ];
-    })
-  ) as Record<AuthProviderName, AuthProviderAsset>;
-
-export function getAuthProviderAssets(): AuthProviderAsset[] {
-  return Object.values(AUTH_PROVIDER_REGISTRY);
-}
-
-export function getAuthProviderAsset(name: AuthProviderName): AuthProviderAsset {
-  return AUTH_PROVIDER_REGISTRY[name];
 }
