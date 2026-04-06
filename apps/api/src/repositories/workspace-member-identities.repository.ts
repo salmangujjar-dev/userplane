@@ -7,7 +7,7 @@
 import type { MemberIdentityMetaFor, MemberIdentityProvider } from '@userplane/contract';
 import { parseMemberIdentityMeta } from '@userplane/contract';
 import type { DbClient } from '@userplane/db';
-import { and, eq } from '@userplane/db';
+import { and, eq, sql } from '@userplane/db';
 import { workspaceMemberIdentities } from '@userplane/db';
 
 import type { Transaction } from '@/api/types';
@@ -132,6 +132,77 @@ export class WorkspaceMemberIdentityRepository {
       );
 
     return results.map((r) => this.parseMemberIdentity(r, r.provider as MemberIdentityProvider));
+  }
+
+  /**
+   * Reverse lookup: find active identity by provider user ID within a workspace.
+   * Uses JSONB containment to match the userId inside providerMeta.
+   */
+  async findByProviderUserId<P extends MemberIdentityProvider>(
+    workspaceId: string,
+    provider: P,
+    providerUserId: string
+  ): Promise<TypedMemberIdentity<P> | null> {
+    const [identity] = await this.db
+      .select()
+      .from(workspaceMemberIdentities)
+      .where(
+        and(
+          eq(workspaceMemberIdentities.workspaceId, workspaceId),
+          eq(workspaceMemberIdentities.provider, provider),
+          eq(workspaceMemberIdentities.isDeleted, false),
+          sql`${workspaceMemberIdentities.providerMeta} @> jsonb_build_object('userId', ${providerUserId}::text)`
+        )
+      )
+      .limit(1);
+
+    return identity ? this.parseMemberIdentity(identity, provider) : null;
+  }
+
+  /**
+   * Find all active identities for a workspace + provider combination.
+   * Used for batch operations like bulk identity resolution.
+   */
+  async findActiveByWorkspaceAndProvider<P extends MemberIdentityProvider>(
+    workspaceId: string,
+    provider: P
+  ): Promise<TypedMemberIdentity<P>[]> {
+    const results = await this.db
+      .select()
+      .from(workspaceMemberIdentities)
+      .where(
+        and(
+          eq(workspaceMemberIdentities.workspaceId, workspaceId),
+          eq(workspaceMemberIdentities.provider, provider),
+          eq(workspaceMemberIdentities.isDeleted, false)
+        )
+      );
+
+    return results.map((r) => this.parseMemberIdentity(r, provider));
+  }
+
+  /**
+   * Batch insert multiple identities in a single query.
+   * Callers must pre-filter to avoid unique constraint violations.
+   */
+  async createMany<P extends MemberIdentityProvider>(
+    data: CreateMemberIdentityInput<P>[],
+    options?: { tx?: Transaction }
+  ): Promise<void> {
+    if (data.length === 0) return;
+
+    const dbClient = options?.tx || this.db;
+
+    await dbClient.insert(workspaceMemberIdentities).values(
+      data.map((d) => ({
+        id: d.id,
+        workspaceMemberId: d.workspaceMemberId,
+        workspaceId: d.workspaceId,
+        provider: d.provider,
+        providerMeta: d.providerMeta,
+        isDeleted: false,
+      }))
+    );
   }
 
   /**

@@ -9,6 +9,7 @@
 
 import type { CacheService } from '@userplane/cache';
 import {
+  createMemberIdentityMeta,
   createProviderMeta,
   createProviderToken,
   FormEmailSchema,
@@ -23,9 +24,10 @@ import {
   getAuthorizationUrl,
   getUserInfo,
   listUsers,
+  listUsersAll,
   type SlackUser,
 } from '@/api/clients/slack';
-import { generateIntegrationId } from '@/api/lib/id';
+import { generateIntegrationId, generateMemberIdentityId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import { deriveWorkspaceUrl } from '@/api/lib/workspace';
 import { captureException } from '@/api/posthog';
@@ -33,7 +35,10 @@ import type {
   IntegrationRepository,
   TypedIntegration,
 } from '@/api/repositories/integrations.repository';
-import type { WorkspaceMemberIdentityRepository } from '@/api/repositories/workspace-member-identities.repository';
+import type {
+  CreateMemberIdentityInput,
+  WorkspaceMemberIdentityRepository,
+} from '@/api/repositories/workspace-member-identities.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { ProvisionerService } from '@/api/services/provisioner.service';
 import type { TokenService } from '@/api/services/token.service';
@@ -211,7 +216,17 @@ export class SlackService {
       );
     }
 
-    // 9. Warm cache with full integration for canvas service lookups
+    // 9. Bulk-resolve Slack identities for existing members (best-effort, non-blocking)
+    this.bulkResolveSlackIdentities(result.workspaceId, tokenResponse.access_token, teamId).catch(
+      (error) => {
+        logger.error(
+          { err: error, workspaceId: result.workspaceId },
+          'Unhandled error in bulk Slack identity resolution'
+        );
+      }
+    );
+
+    // 10. Warm cache with full integration for canvas service lookups
     await this.deps.cacheService.setIntegrationByProviderWorkspace('slack', teamId, integration);
 
     return {
@@ -342,7 +357,17 @@ export class SlackService {
       }
     }
 
-    // 7. Warm cache with full integration for canvas service lookups
+    // 7. Bulk-resolve Slack identities for all workspace members (best-effort, non-blocking)
+    this.bulkResolveSlackIdentities(workspaceId, tokenResponse.access_token, teamId).catch(
+      (error) => {
+        logger.error(
+          { err: error, workspaceId },
+          'Unhandled error in bulk Slack identity resolution'
+        );
+      }
+    );
+
+    // 8. Warm cache with full integration for canvas service lookups
     await this.deps.cacheService.setIntegrationByProviderWorkspace('slack', teamId, integration);
 
     return {
@@ -426,6 +451,97 @@ export class SlackService {
     await this.deps.cacheService.invalidateIntegration('slack', integration.providerWorkspaceId);
 
     return integration;
+  }
+
+  // ============================================================================
+  // BULK IDENTITY RESOLUTION
+  // ============================================================================
+
+  /**
+   * Bulk-resolve Slack identities for all workspace members.
+   * Fetches all Slack users in one paginated API call, then matches by normalized
+   * email against workspace members to create identity records in a single batch insert.
+   *
+   * Best-effort: never throws. Callers should fire-and-forget with .catch().
+   */
+  private async bulkResolveSlackIdentities(
+    workspaceId: string,
+    accessToken: string,
+    teamId: string
+  ): Promise<void> {
+    try {
+      // 1. Fetch all Slack workspace members (paginated at 200/page)
+      const slackUsers = await listUsersAll(accessToken);
+      if (slackUsers.length === 0) return;
+
+      // 2. Build normalized email → SlackUser map (skip users without email)
+      const slackEmailMap = new Map<string, SlackUser>();
+      for (const slackUser of slackUsers) {
+        if (!slackUser.profile.email) continue;
+        const emailResult = FormEmailSchema.safeParse(slackUser.profile.email);
+        if (emailResult.success) {
+          slackEmailMap.set(emailResult.data, slackUser);
+        }
+      }
+
+      if (slackEmailMap.size === 0) return;
+
+      // 3. Fetch all workspace members with emails (single query — workspaces are small at this stage)
+      const memberCount = await this.deps.memberRepo.countByWorkspace(workspaceId);
+      if (memberCount === 0) return;
+
+      const members = await this.deps.memberRepo.findByWorkspaceWithUsersPaginated(
+        workspaceId,
+        memberCount,
+        0
+      );
+
+      // 4. Fetch existing Slack identities to skip already-resolved members
+      const existingIdentities =
+        await this.deps.memberIdentityRepo.findActiveByWorkspaceAndProvider(workspaceId, 'slack');
+      const resolvedMemberIds = new Set(existingIdentities.map((i) => i.workspaceMemberId));
+
+      // 5. Match workspace members to Slack users by normalized email
+      const newIdentities: CreateMemberIdentityInput<'slack'>[] = [];
+
+      for (const member of members) {
+        if (resolvedMemberIds.has(member.workspaceMemberId)) continue;
+
+        const emailResult = FormEmailSchema.safeParse(member.userEmail);
+        if (!emailResult.success) continue;
+
+        const slackUser = slackEmailMap.get(emailResult.data);
+        if (!slackUser) continue;
+
+        newIdentities.push({
+          id: generateMemberIdentityId(),
+          workspaceMemberId: member.workspaceMemberId,
+          workspaceId,
+          provider: 'slack',
+          providerMeta: createMemberIdentityMeta('slack', {
+            userId: slackUser.id,
+            teamId,
+            email: emailResult.data,
+          }),
+        });
+      }
+
+      // 6. Batch insert all new identities in a single query
+      if (newIdentities.length > 0) {
+        await this.deps.memberIdentityRepo.createMany(newIdentities);
+      }
+
+      logger.info(
+        { workspaceId, created: newIdentities.length, totalMembers: members.length },
+        'Bulk-resolved Slack identities'
+      );
+    } catch (error) {
+      logger.error({ err: error, workspaceId }, 'Failed to bulk-resolve Slack identities');
+      captureException(error, undefined, {
+        operation: 'bulk_resolve_slack_identities',
+        workspace_id: workspaceId,
+      });
+    }
   }
 
   // ============================================================================
