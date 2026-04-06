@@ -10,14 +10,10 @@ import type { AssetKey } from './manifest.generated';
 export type IntegrationAssetKey = Extract<AssetKey, `integrations/${string}`>;
 export type BrandAssetKey = Extract<AssetKey, `brand/${string}`>;
 export type TileAssetKey = Extract<AssetKey, `tiles/${string}`>;
-export type AuthAssetKey = Extract<AssetKey, `auth/${string}`>;
 export type IconAssetKey = Extract<AssetKey, `icons/${string}`>;
 export type IntercomCanvasAssetKey = Extract<AssetKey, `intercom-canvas/${string}`>;
-export type ZendeskAssetKey = Extract<AssetKey, `zendesk/${string}`>;
 export type SlackAssetKey = Extract<AssetKey, `slack/${string}`>;
 export type FeatureAssetKey = Extract<AssetKey, `features/${string}`>;
-export type HeroAssetKey = Extract<AssetKey, `hero/${string}`>;
-export type PreviewAssetKey = Extract<AssetKey, `preview/${string}`>;
 export type SpotlightAssetKey = Extract<AssetKey, `spotlight/${string}`>;
 export type MicrositeAssetKey = Extract<AssetKey, `microsites/${string}`>;
 

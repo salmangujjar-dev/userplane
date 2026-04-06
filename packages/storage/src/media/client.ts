@@ -15,19 +15,15 @@ import {
   type TransformProfile,
 } from './transform';
 import type {
-  AuthAssetKey,
   BrandAssetKey,
   FeatureAssetKey,
-  HeroAssetKey,
   IconAssetKey,
   IntegrationAssetKey,
   IntercomCanvasAssetKey,
   MicrositeAssetKey,
-  PreviewAssetKey,
   SlackAssetKey,
   SpotlightAssetKey,
   TileAssetKey,
-  ZendeskAssetKey,
 } from './types';
 
 // =============================================================================
@@ -47,13 +43,10 @@ const CATEGORY_PROFILES: Record<string, TransformProfile> = {
   integrations: 'icon',
   brand: 'brand',
   tiles: 'general',
-  auth: 'icon',
   icons: 'icon',
   'intercom-canvas': 'general',
   slack: 'general',
   features: 'feature',
-  hero: 'general',
-  preview: 'general',
   spotlight: 'general',
   microsites: 'feature',
 };
@@ -102,7 +95,7 @@ export interface GetMediaUrlOptions {
  * const logoUrl = client.getBrandMediaUrl('brand/logo-dark.svg');
  *
  * // Get URL with custom transform options
- * const avatarUrl = client.getMediaUrl('auth/slack.png', {
+ * const iconUrl = client.getMediaUrl('integrations/slack.webp', {
  *   transform: { width: 48, height: 48 }
  * });
  *
@@ -196,11 +189,6 @@ export class MediaClient {
     return this.getMediaUrl(key, options);
   }
 
-  /** Get CDN URL for an auth asset */
-  getAuthMediaUrl(key: AuthAssetKey, options?: GetMediaUrlOptions): string {
-    return this.getMediaUrl(key, options);
-  }
-
   /** Get CDN URL for an icon asset */
   getIconMediaUrl(key: IconAssetKey, options?: GetMediaUrlOptions): string {
     return this.getMediaUrl(key, options);
@@ -211,11 +199,6 @@ export class MediaClient {
     return this.getMediaUrl(key, options);
   }
 
-  /** Get CDN URL for a zendesk app asset */
-  getZendeskMediaUrl(key: ZendeskAssetKey, options?: GetMediaUrlOptions): string {
-    return this.getMediaUrl(key, options);
-  }
-
   /** Get CDN URL for a slack canvas asset */
   getSlackMediaUrl(key: SlackAssetKey, options?: GetMediaUrlOptions): string {
     return this.getMediaUrl(key, options);
@@ -223,16 +206,6 @@ export class MediaClient {
 
   /** Get CDN URL for a feature asset */
   getFeatureMediaUrl(key: FeatureAssetKey, options?: GetMediaUrlOptions): string {
-    return this.getMediaUrl(key, options);
-  }
-
-  /** Get CDN URL for a hero asset */
-  getHeroMediaUrl(key: HeroAssetKey, options?: GetMediaUrlOptions): string {
-    return this.getMediaUrl(key, options);
-  }
-
-  /** Get CDN URL for a preview asset */
-  getPreviewMediaUrl(key: PreviewAssetKey, options?: GetMediaUrlOptions): string {
     return this.getMediaUrl(key, options);
   }
 
