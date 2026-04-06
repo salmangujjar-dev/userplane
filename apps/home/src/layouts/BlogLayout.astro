@@ -2,6 +2,9 @@
 import BaseLayout from './BaseLayout.astro';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import { INTEGRATION_REGISTRY } from '../constants/integrations/registry';
+import { NAV_LINKS } from '../constants/navigation';
+import { getDocsUrl } from '../constants/urls';
 
 interface Props {
   title: string;
@@ -11,10 +14,29 @@ interface Props {
 }
 
 const { title, description, keywords, ogImage } = Astro.props;
+
+const dropdownEntries = Object.values(INTEGRATION_REGISTRY).map((config) => ({
+  slug: config.slug,
+  name: config.name,
+  shortName: config.shortName,
+  description: config.seo.description,
+  pageHref: `/integrations/${config.slug}`,
+  docsHref: config.resources.seeAllHref,
+  icon: config.icon,
+  image: config.hero.preview.src
+    ? { src: config.hero.preview.src, alt: config.hero.preview.alt }
+    : undefined,
+  gradientStops: config.gradient.stops,
+}));
 ---
 
 <BaseLayout title={title} description={description} keywords={keywords} ogImage={ogImage}>
-  <Header client:idle />
+  <Header
+    integrations={dropdownEntries}
+    integrationsHref={NAV_LINKS.integrations}
+    docsHref={getDocsUrl('')}
+    client:idle
+  />
   <main class="grow">
     <slot />
   </main>

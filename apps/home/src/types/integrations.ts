@@ -1,5 +1,9 @@
 // ── Shared types for integration microsites ──
 
+import type { IntegrationAssetKey } from '@userplane/storage/media';
+
+import type { HighlightConfig } from './highlight';
+
 export interface GradientConfig {
   /** 4 RGBA color stops for the integration's brand gradient */
   stops: [string, string, string, string];
@@ -10,9 +14,18 @@ export interface ButtonConfig {
   href: string;
 }
 
+export interface HeadlineIcon {
+  wordIndex: number;
+  /** Where to place the icon relative to the word (default: 'before') */
+  position?: 'before' | 'after';
+  src: string;
+  alt: string;
+}
+
 export interface IntegrationHeadline {
   lines: string[];
-  accent: string;
+  highlights?: HighlightConfig[];
+  icons?: HeadlineIcon[];
 }
 
 export interface FeatureData {
@@ -22,6 +35,7 @@ export interface FeatureData {
   tagline: string;
   capabilities: string[];
   image?: string;
+  learnMoreHref?: string;
 }
 
 export interface ResourceLink {
@@ -33,7 +47,7 @@ export interface ResourceLink {
 
 export interface IntegrationLogo {
   name: string;
-  asset: `integrations/${string}.webp`;
+  asset: IntegrationAssetKey;
 }
 
 // ── Unified config for a single integration microsite ──
@@ -44,6 +58,8 @@ export interface IntegrationConfig {
   /** Shorter display name for contexts where the full name reads awkwardly (e.g. "Chrome" instead of "Chrome Extension") */
   shortName: string;
   url: string;
+  /** Brand icon for nav dropdowns, cards, etc. */
+  icon: { src: string; alt: string };
   seo: {
     title: string;
     description: string;
@@ -54,12 +70,15 @@ export interface IntegrationConfig {
   gradient: GradientConfig;
   hero: {
     headline: IntegrationHeadline;
-    description: string;
+    description: string[];
     primaryCTA: ButtonConfig;
     secondaryCTA: ButtonConfig;
     preview: { src: string; alt: string };
   };
   features: FeatureData[];
+  browser: {
+    links: ResourceLink[];
+  };
   resources: {
     label: string;
     headline: string;
@@ -68,6 +87,7 @@ export interface IntegrationConfig {
   };
   cta: {
     headline: IntegrationHeadline;
+    description?: string;
     primaryCTA: ButtonConfig;
     secondaryCTA: ButtonConfig;
   };

@@ -25,9 +25,17 @@ interface Props {
 
 const { config } = Astro.props;
 
-const relatedIntegrations = Object.values(INTEGRATION_REGISTRY)
+const integrationLinks = Object.values(INTEGRATION_REGISTRY)
   .filter((c) => c.slug !== config.slug)
-  .map(({ slug, name, seo }) => ({ slug, name, seo }));
+  .slice(0, 3)
+  .map(({ slug, name, seo }) => ({
+    label: 'Integration',
+    title: name,
+    description: seo.description,
+    href: `/integrations/${slug}`,
+  }));
+
+const resourceLinks = [...config.resources.links, ...integrationLinks];
 
 const gradientVars = `--gradient-1: ${config.gradient.stops[0]}; --gradient-2: ${config.gradient.stops[1]}; --gradient-3: ${config.gradient.stops[2]}; --gradient-4: ${config.gradient.stops[3]};`;
 
@@ -79,13 +87,16 @@ const breadcrumb = {
     <ResourceLinks
       label={config.resources.label}
       headline={config.resources.headline}
-      links={config.resources.links}
-      seeAllHref={config.resources.seeAllHref}
-      relatedIntegrations={relatedIntegrations}
+      links={resourceLinks}
+      footerLinks={[
+        { text: 'View all integrations', href: '/integrations' },
+        { text: 'See all docs', href: config.resources.seeAllHref, external: true },
+      ]}
       client:visible
     />
     <CallToAction
       headline={config.cta.headline}
+      description={config.cta.description}
       primaryCTA={config.cta.primaryCTA}
       secondaryCTA={config.cta.secondaryCTA}
       client:load
