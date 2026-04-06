@@ -2,6 +2,7 @@
 
 import { Button } from '@userplane/ui/components/button';
 import Logo from '@userplane/ui/components/logo';
+import { toast } from '@userplane/ui/components/sonner';
 import { ArrowLeftRight, Check, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -48,6 +49,13 @@ function OAuthZendeskAuthorizeContent() {
     const data = workspacesResult?.success ? workspacesResult.data : null;
     return data?.workspaces ?? [];
   }, [workspacesResult]);
+
+  const selectedRole = useMemo(() => {
+    const ws = workspaces.find((w) => w.workspaceId === selectedWorkspaceId);
+    return ws?.workspaceMembership?.workspaceRole ?? null;
+  }, [workspaces, selectedWorkspaceId]);
+
+  const canConnect = selectedRole === 'owner' || selectedRole === 'admin';
 
   // Auto-select first workspace
   useEffect(() => {
@@ -220,7 +228,14 @@ function OAuthZendeskAuthorizeContent() {
           </div>
 
           <Button
-            onClick={handleAuthorize}
+            onClick={
+              canConnect
+                ? handleAuthorize
+                : () =>
+                    toast.info('Request workspace admin to connect Zendesk', {
+                      id: 'integration-connect-permission',
+                    })
+            }
             disabled={isSubmitting || !selectedWorkspaceId}
             size="lg"
             className="w-full px-7 py-6"

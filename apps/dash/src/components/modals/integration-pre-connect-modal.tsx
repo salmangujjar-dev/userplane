@@ -9,12 +9,14 @@ import {
   DialogTitle,
 } from '@userplane/ui/components/dialog';
 import Logo from '@userplane/ui/components/logo';
+import { toast } from '@userplane/ui/components/sonner';
 import { ArrowLeftRight, CheckCircle2, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
 import { SUPPORT_LINKS } from '@/constants';
 import { getIntegrationConfig } from '@/constants/integration-permissions';
+import { useCanEditWorkspace } from '@/features/workspace';
 
 interface IntegrationPreConnectModalProps {
   open: boolean;
@@ -35,6 +37,7 @@ export function IntegrationPreConnectModal({
 }: IntegrationPreConnectModalProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const config = getIntegrationConfig(integrationName);
+  const { canEdit, isLoading: isLoadingRole } = useCanEditWorkspace();
 
   const handleConnect = async () => {
     setIsConnecting(true);
@@ -111,7 +114,19 @@ export function IntegrationPreConnectModal({
             >
               Cancel
             </Button>
-            <Button type="button" className="px-6" onClick={handleConnect} disabled={isConnecting}>
+            <Button
+              type="button"
+              className="px-6"
+              onClick={
+                canEdit && !isLoadingRole
+                  ? handleConnect
+                  : () =>
+                      toast.info(`Request workspace admin to connect ${config.name}`, {
+                        id: 'integration-connect-permission',
+                      })
+              }
+              disabled={isConnecting}
+            >
               {isConnecting ? 'Connecting...' : 'Connect'}
             </Button>
           </div>
