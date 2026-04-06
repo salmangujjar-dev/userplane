@@ -16,7 +16,7 @@
 
 import { ORPCError } from '@orpc/server';
 import type { CacheService } from '@userplane/cache';
-import { createLinkProviderData } from '@userplane/contract';
+import { createLinkProviderData, createMemberIdentityMeta } from '@userplane/contract';
 import { z } from 'zod';
 
 import {
@@ -30,6 +30,7 @@ import {
   updateModal,
 } from '@/api/clients/slack';
 import { env } from '@/api/env';
+import { generateMemberIdentityId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import {
   BROWSE_PAGE_SIZE,
@@ -74,6 +75,7 @@ import type {
 import { IntegrationHelper } from '@/api/repositories/integrations.repository';
 import type { ProjectRepository } from '@/api/repositories/projects.repository';
 import type { UserRepository } from '@/api/repositories/users.repository';
+import type { WorkspaceMemberIdentityRepository } from '@/api/repositories/workspace-member-identities.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { EntitlementService } from '@/api/services/entitlement.service';
@@ -90,6 +92,7 @@ export interface SlackCanvasServiceDeps {
   integrationRepo: IntegrationRepository;
   userRepo: UserRepository;
   workspaceMemberRepo: WorkspaceMemberRepository;
+  memberIdentityRepo: WorkspaceMemberIdentityRepository;
   linkService: LinkService;
   recordingService: RecordingService;
   projectRepo: ProjectRepository;
@@ -1073,6 +1076,11 @@ export class SlackCanvasService {
   /**
    * Verify that a Slack user is a member of the connected Userplane workspace.
    *
+   * DB-first: looks up the stored identity by Slack user ID to avoid a Slack API call.
+   * Falls back to the Slack API path (getUserInfo → email → user → member) when no
+   * identity exists or the DB lookup fails. The fallback also creates the identity as
+   * a side effect so future lookups are served from the database.
+   *
    * Callers that already fetched the integration (e.g. to open a loading modal
    * before the trigger_id expires) can pass it in to avoid a redundant DB query.
    */
@@ -1087,9 +1095,48 @@ export class SlackCanvasService {
       return { status: 'integration_not_found' };
     }
 
+    // --- DB-first path: resolve via stored identity ---
+    try {
+      const identity = await this.deps.memberIdentityRepo.findByProviderUserId(
+        integration.workspaceId,
+        'slack',
+        slackUserId
+      );
+
+      if (identity) {
+        const member = await this.deps.workspaceMemberRepo.findByIdWithUser(
+          identity.workspaceMemberId
+        );
+
+        if (member) {
+          return {
+            status: 'granted',
+            context: {
+              workspaceId: integration.workspaceId,
+              workspaceMemberId: member.workspaceMemberId,
+              userName: member.userName || 'Your team',
+              integration,
+            },
+          };
+        }
+        // Identity exists but member was removed — fall through to Slack API path
+      }
+    } catch (error) {
+      // DB lookup failed — fall through to Slack API path
+      logger.warn(
+        { err: error, teamId, slackUserId },
+        'DB-first identity lookup failed, falling back to Slack API'
+      );
+      captureException(error, undefined, {
+        operation: 'verify_slack_access_db_first',
+        team_id: teamId,
+        slack_user_id: slackUserId,
+      });
+    }
+
+    // --- Fallback: Slack API path (identical to original behavior) ---
     const accessToken = IntegrationHelper.getAccessToken(integration);
 
-    // Get Slack user email
     const slackUser = await getUserInfo(accessToken, slackUserId);
     if (!slackUser?.profile.email) {
       logger.debug({ teamId, slackUserId }, 'Could not retrieve Slack user email');
@@ -1098,14 +1145,12 @@ export class SlackCanvasService {
 
     const email = slackUser.profile.email;
 
-    // Find Userplane user by email
     const user = await this.deps.userRepo.findByEmail(email);
     if (!user) {
       logger.debug({ email }, 'Userplane user not found');
       return { status: 'user_not_found', email };
     }
 
-    // Find workspace member
     const member = await this.deps.workspaceMemberRepo.findByUserAndWorkspace(
       user.id,
       integration.workspaceId
@@ -1119,7 +1164,34 @@ export class SlackCanvasService {
       return { status: 'not_workspace_member', integration, email };
     }
 
-    // Resolve display name for personalization
+    // Side effect: create identity so future lookups are served from DB
+    try {
+      const existingIdentity = await this.deps.memberIdentityRepo.findByMemberAndProvider(
+        member.workspaceMemberId,
+        'slack'
+      );
+
+      if (!existingIdentity) {
+        await this.deps.memberIdentityRepo.create({
+          id: generateMemberIdentityId(),
+          workspaceMemberId: member.workspaceMemberId,
+          workspaceId: integration.workspaceId,
+          provider: 'slack',
+          providerMeta: createMemberIdentityMeta('slack', {
+            userId: slackUserId,
+            teamId: integration.providerMeta.teamId,
+            email,
+          }),
+        });
+      }
+    } catch (error) {
+      // Identity creation is best-effort — don't block the response
+      logger.warn(
+        { err: error, workspaceMemberId: member.workspaceMemberId, slackUserId },
+        'Failed to create Slack identity during fallback verification'
+      );
+    }
+
     const userName =
       slackUser.profile.real_name ||
       slackUser.profile.display_name ||
