@@ -1153,7 +1153,7 @@ export const FREE_PLAN_FEATURE_GATES: PlanFeatureGates = {
   captureNetworkActivity: true,
   captureUserActions: true,
   captureServerLogs: false,
-  customizeRecordingLink: false,
+  customizeRecordingLink: true,
   customizeRetentionPolicy: false,
   sendOutboundEmails: true,
   samlSso: false,
