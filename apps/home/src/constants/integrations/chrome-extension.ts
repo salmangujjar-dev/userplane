@@ -47,11 +47,14 @@ export const chromeExtensionConfig = defineIntegration({
       'Create and share recording links right within Chrome.',
       'Give your support team the context they need to close tickets faster.',
     ],
-    primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
-    secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
       src: getHeroUrl('microsites/chrome-extension/hero.png'),
       alt: 'Userplane Chrome Extension recording a browser session',
+    },
+    marketplace: {
+      label: 'Chrome Web Store',
+      href: 'https://chromewebstore.google.com/detail/request-screen-recording/bgmbeifpcfepegcjhjdbocjbecpfmakm',
+      icon: { src: getIconUrl('integrations/chrome.webp'), alt: 'Chrome' },
     },
   },
   features: [

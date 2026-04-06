@@ -46,11 +46,14 @@ export const intercomConfig = defineIntegration({
       'Userplane embeds screen recording into Intercom.',
       'So your team can understand and resolve support issues faster.',
     ],
-    primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
-    secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
       src: getHeroUrl('microsites/intercom/hero.png'),
       alt: 'Userplane screen recording inside an Intercom conversation',
+    },
+    marketplace: {
+      label: 'Intercom App Store',
+      href: 'https://www.intercom.com/app-store/?app_package_code=userplane-5jk4&category=for-support-agents',
+      icon: { src: getIconUrl('integrations/intercom.webp'), alt: 'Intercom' },
     },
   },
   features: [

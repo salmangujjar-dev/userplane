@@ -1,5 +1,6 @@
 import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
+import { getDashUrl } from '../urls';
 import { defineIntegration } from './defaults';
 import {
   DOCS_HELPDESK_SETUP,
@@ -46,11 +47,14 @@ export const slackConfig = defineIntegration({
       'Userplane brings screen recordings into Slack.',
       'Request recordings and capture logs right where your team works.',
     ],
-    primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
-    secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
       src: getHeroUrl('microsites/slack/hero.png'),
       alt: 'Userplane screen recording posted in a Slack thread',
+    },
+    marketplace: {
+      label: 'Slack App Store',
+      href: getDashUrl('/_/settings?tab=integrations'),
+      icon: { src: getIconUrl('integrations/slack.webp'), alt: 'Slack' },
     },
   },
   features: [
