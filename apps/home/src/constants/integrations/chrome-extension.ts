@@ -1,14 +1,20 @@
-import { mergeTransformOptions } from '@userplane/storage/media';
-
-import { mediaClient } from '../../lib/media';
+import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
 import { defineIntegration } from './defaults';
+import {
+  DOCS_CHROME_EXTENSION,
+  DOCS_HELPDESK_SETUP,
+  DOCS_RECORDING_REQUESTING,
+  DOCS_SENSITIVE_DATA_REDACTION,
+} from './links';
+import { getFeatureUrl, getHeroUrl, getIconUrl } from './media';
 
 export const chromeExtensionConfig = defineIntegration({
   slug: 'chrome-extension',
   name: 'Chrome Extension',
   shortName: 'Chrome',
   url: 'https://chrome.google.com/webstore',
+  icon: { src: getIconUrl('integrations/chrome.webp'), alt: 'Chrome' },
   gradient: {
     stops: [
       'rgba(66, 133, 244, 0.2)',
@@ -18,77 +24,103 @@ export const chromeExtensionConfig = defineIntegration({
     ],
   },
   seo: {
-    title: 'Chrome Extension Screen Recording | Userplane',
+    title: 'Chrome Extension for Requesting Screen Recordings | Userplane',
     description:
-      'Capture screen recordings with technical context straight from Chrome. One click to record, automatic console logs and network data, and an instant shareable link for your support team.',
+      'Send recording links to customers right from Chrome. Get back replays with console logs, network traces, and session data for your support team to resolve issues faster.',
     keywords:
       'chrome extension screen recording, browser screen recording, chrome screen capture, screen recording extension, userplane, chrome devtools recording, browser capture tool',
     ogImage: '/images/preview/og-chrome-extension.webp',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings from', 'your'],
-      accent: 'Chrome',
+      lines: ['Screen Recording Links', 'for Support Teams'],
+      highlights: [{ wordIndex: 4, color: 'yellow' }],
+      icons: [
+        {
+          wordIndex: 4,
+          src: getIconUrl('integrations/chrome.webp'),
+          alt: 'Chrome',
+        },
+      ],
     },
-    description:
-      'Click the Userplane icon in Chrome to start recording. Console logs, network requests, and browser metadata are captured automatically in the background -- no setup for your customers, no installs, no friction. Share the recording with your support team in one click.',
+    description: [
+      'Create and share recording links right within Chrome.',
+      'Give your support team the context they need to close tickets faster.',
+    ],
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
-      src: mediaClient.getMicrositeMediaUrl('microsites/chrome-extension/hero.png', {
-        transform: mergeTransformOptions('feature', { width: 1440 }),
-      }),
+      src: getHeroUrl('microsites/chrome-extension/hero.png'),
       alt: 'Userplane Chrome Extension recording a browser session',
     },
   },
   features: [
     {
       number: '01',
-      title: 'One-click browser capture',
+      title: 'Send a link. Get a recording.',
       description:
-        'The Userplane extension sits in your Chrome toolbar, ready to record on any web page. There is no setup, no project configuration, and no SDK to install -- click the icon and start capturing. It works everywhere the browser works.',
+        'The Userplane extension lives in your Chrome toolbar, letting you create and share recording links from any page. Click to generate a link and send it to your customer. No integration or setup required.',
       tagline: 'Zero-friction recording',
       capabilities: [
-        'Single-click recording from toolbar',
-        'Works on any web page',
-        'No SDK or code changes required',
-        'Lightweight browser extension',
+        'One-click recording links for your customers',
+        'Works across any help desk, CRM, or internal tool',
+        'No integration, setup or admin needed',
+        'A browser extension that just works out of the box',
       ],
-      image: mediaClient.getMicrositeMediaUrl('microsites/chrome-extension/feat-01.png', {
-        transform: mergeTransformOptions('feature', { width: 864 }),
-      }),
+      image: getFeatureUrl('microsites/chrome-extension/chrome-extension-integration.png'),
+      learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
       number: '02',
       title: 'Automatic technical context',
       description:
-        'While you record, Userplane captures console logs, network requests, and browser metadata in the background. Your engineering team gets a complete technical snapshot without anyone opening DevTools.',
-      tagline: 'Full-stack visibility',
+        'Every recording link captures console logs, network activity, and session details for your support team to resolve issues faster. Your team gets a complete technical snapshot — without asking customers for details.',
+      tagline: 'Built for debugging',
       capabilities: [
-        'Console logs & errors',
-        'Network request capture',
-        'Browser & OS metadata',
-        'Automatic background collection',
+        'Capture console output and error traces',
+        'Analyze network requests and session activity',
+        'Access application state and environment details',
+        "Follow the customer's journey step by step",
       ],
-      image: mediaClient.getMicrositeMediaUrl('microsites/chrome-extension/feat-02.png', {
-        transform: mergeTransformOptions('feature', { width: 864 }),
-      }),
+      image: getFeatureUrl('microsites/chrome-extension/chrome-extension-context.png'),
+      learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
       number: '03',
-      title: 'Instant sharing',
+      title: 'Secure and private',
       description:
-        'Every recording generates a shareable link the moment you stop capturing. Link recordings to support conversations, paste them into tickets, or send them directly to engineering -- context travels with the recording.',
-      tagline: 'Share in seconds',
+        'Userplane protects your customers by default. Sensitive data never leaves the browser. Control what gets recorded, and stay compliant while building trust with your customers.',
+      tagline: 'Built for compliance',
       capabilities: [
-        'Shareable link on every recording',
-        'Link to support conversations',
-        'No file uploads or downloads',
-        'Instant availability after capture',
+        'Blur and mask confidential fields automatically',
+        'Define element-level redaction and masking rules',
+        'Give users control with built-in consent flows',
+        'Meet GDPR and CCPA without any extra work',
       ],
-      image: mediaClient.getMicrositeMediaUrl('microsites/chrome-extension/feat-03.png', {
-        transform: mergeTransformOptions('feature', { width: 864 }),
-      }),
+      image: getFeatureUrl('microsites/chrome-extension/chrome-extension-privacy.png'),
+      learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],
+  resources: { seeAllHref: DOCS_CHROME_EXTENSION },
+  cta: {
+    headline: {
+      lines: ['Request screen recordings', 'right within Chrome'],
+      highlights: [
+        // { wordIndex: 1, color: 'blue' },
+        // { wordIndex: 2, color: 'blue' },
+        { wordIndex: 5, color: 'yellow' },
+      ],
+      icons: [
+        {
+          wordIndex: 5,
+          position: 'before',
+          src: getIconUrl('integrations/chrome.webp'),
+          alt: 'Chrome',
+        },
+      ],
+    },
+    description: "Send a recording link and get back a complete replay of the customer's issue.",
+    primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
+    secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
+  },
 });

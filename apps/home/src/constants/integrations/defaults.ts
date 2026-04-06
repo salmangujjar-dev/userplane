@@ -2,23 +2,62 @@ import type { IntegrationConfig } from '@/types/integrations';
 
 import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
-import { getDocsUrl, getMarketingUrl } from '../urls';
+import { getMarketingUrl } from '../urls';
+import {
+  DOCS_DEVELOPER_INSTALLATION,
+  DOCS_HELPDESK_SETUP,
+  DOCS_HOME,
+  DOCS_RECORDING_REQUESTING,
+  DOCS_SENSITIVE_DATA_REDACTION,
+} from './links';
 
-type RequiredOverrides = Pick<IntegrationConfig, 'slug' | 'name' | 'url' | 'gradient'>;
+type RequiredOverrides = Pick<IntegrationConfig, 'slug' | 'name' | 'url' | 'gradient' | 'icon'>;
 type OptionalOverrides = Partial<
-  Pick<
-    IntegrationConfig,
-    'shortName' | 'seo' | 'jsonLd' | 'hero' | 'features' | 'resources' | 'cta'
-  >
->;
+  Pick<IntegrationConfig, 'shortName' | 'seo' | 'jsonLd' | 'hero' | 'features' | 'browser' | 'cta'>
+> & {
+  resources?: Partial<IntegrationConfig['resources']>;
+};
 
 export function defineIntegration(
   overrides: RequiredOverrides & OptionalOverrides
 ): IntegrationConfig {
-  const { name, slug, url } = overrides;
-  const shortName = overrides.shortName ?? name;
+  const { name, slug, url, resources: resourcesOverrides, ...rest } = overrides;
+  const shortName = rest.shortName ?? name;
+
+  const integrationLink = {
+    label: 'Integration' as const,
+    title: `Userplane for ${shortName}`,
+    description: `See how Userplane works inside ${shortName} — features, setup, and what your team gets out of the box.`,
+    href: getMarketingUrl(`/integrations/${slug}`),
+  };
+
+  const quickstartLink = {
+    label: 'Quickstart' as const,
+    title: `Getting Started with ${name}`,
+    description: `Set up Userplane in your ${name} workspace and send your first recording request in minutes.`,
+    href: DOCS_HELPDESK_SETUP,
+  };
+
+  const recordingLink = {
+    label: 'Recording' as const,
+    title: 'How Screen Recording Works',
+    description:
+      'Learn how recordings capture console logs, network requests, and session metadata automatically.',
+    href: DOCS_RECORDING_REQUESTING,
+  };
+
+  const developerLink = {
+    label: 'Developer' as const,
+    title: 'Developer Installation Guide',
+    description:
+      'Technical guide for installing the Userplane SDK and configuring it for your application.',
+    href: DOCS_DEVELOPER_INSTALLATION,
+  };
 
   return {
+    name,
+    slug,
+    url,
     shortName,
     seo: {
       title: `${name} Integration | Userplane - Screen Recordings for ${name}`,
@@ -44,10 +83,12 @@ export function defineIntegration(
     },
     hero: {
       headline: {
-        lines: ['Screen recordings that', 'live inside'],
-        accent: shortName,
+        lines: ['Screen recordings that', `live inside ${shortName}`],
+        highlights: [{ wordIndex: 5, color: 'yellow' as const }],
       },
-      description: `Userplane is the screen recording layer for support teams using ${shortName}. Request, capture, and replay customer issues with full technical context.`,
+      description: [
+        `Userplane is the screen recording layer for support teams using ${shortName}. Request, capture, and replay customer issues with full technical context.`,
+      ],
       primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
       secondaryCTA: { text: 'See Demo', href: '/demo' },
       preview: {
@@ -68,6 +109,7 @@ export function defineIntegration(
           'No context switching',
         ],
         image: '',
+        learnMoreHref: DOCS_HELPDESK_SETUP,
       },
       {
         number: '02',
@@ -82,6 +124,7 @@ export function defineIntegration(
           'Step-by-step user actions',
         ],
         image: '',
+        learnMoreHref: DOCS_RECORDING_REQUESTING,
       },
       {
         number: '03',
@@ -96,43 +139,29 @@ export function defineIntegration(
           'Customer consent controls',
         ],
         image: '',
+        learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
       },
     ],
+    browser: {
+      links: [integrationLink, quickstartLink, recordingLink],
+    },
     resources: {
       label: 'Resources',
       headline: 'The Latest',
-      links: [
-        {
-          label: 'Integration',
-          title: `Userplane for ${shortName}`,
-          description: `See how Userplane works inside ${shortName} — features, setup, and what your team gets out of the box.`,
-          href: getMarketingUrl(`/integrations/${slug}`),
-        },
-        {
-          label: 'Quickstart',
-          title: `Getting Started with ${name}`,
-          description: `Set up Userplane in your ${name} workspace and send your first recording request in minutes.`,
-          href: getDocsUrl('/getting-started/helpdesk-setup'),
-        },
-        {
-          label: 'Recording',
-          title: 'How Screen Recording Works',
-          description:
-            'Learn how recordings capture console logs, network requests, and session metadata automatically.',
-          href: getDocsUrl('/recording/requesting'),
-        },
-      ],
-      seeAllHref: getDocsUrl(''),
+      links: [quickstartLink, recordingLink, developerLink],
+      seeAllHref: DOCS_HOME,
+      ...resourcesOverrides,
     },
     cta: {
       headline: {
-        lines: ['Screen recordings that', 'live inside'],
-        accent: shortName,
+        lines: ['Request screen recordings', `right within ${shortName}`],
+        highlights: [{ wordIndex: 5, color: 'yellow' as const }],
       },
+      description: `Request, capture, and replay customer issues with full technical context — without leaving ${shortName}.`,
       primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
       secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
     },
-    // Apply overrides last so they win
-    ...overrides,
+    // Apply overrides last so they win (resources is deep-merged above)
+    ...rest,
   };
 }
