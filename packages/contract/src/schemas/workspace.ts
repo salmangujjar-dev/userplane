@@ -1329,6 +1329,70 @@ export const DeleteZendeskIntegrationDataSchema = z.object({
   disconnected: z.literal(true),
 });
 
+// ZENDESK AGENT FETCHING
+// ============================================================================
+
+/**
+ * Zendesk agent item — matches the Teammate interface consumed by the invite UI
+ */
+export const ZendeskAgentItemSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  name: z.string().nullable(),
+});
+
+/**
+ * Get Zendesk agents request
+ * Query param exclude_members filters out agents who are already workspace members
+ */
+export const GetZendeskAgentsSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    exclude_members: z.coerce.boolean().default(false),
+  }),
+});
+
+/**
+ * Get Zendesk agents response
+ * Includes invite policy to show allowed domains in the UI
+ */
+export const ZendeskAgentsDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  agents: z.array(ZendeskAgentItemSchema),
+  invitePolicy: WorkspaceInvitePolicySchema,
+  allowedDomains: z.array(z.string()).nullable(),
+});
+
+// Zendesk suggestions pagination
+export const ZENDESK_SUGGESTIONS = {
+  DEFAULT_LIMIT: 5,
+  MAX_LIMIT: 10,
+} as const;
+
+/**
+ * Get Zendesk suggestions request
+ */
+export const GetZendeskSuggestionsSchema = z.object({
+  params: z.object({
+    workspaceId: WorkspaceIdSchema,
+  }),
+  query: z.object({
+    limit: z.coerce.number().int().min(1).max(10).optional().default(5),
+  }),
+});
+
+/**
+ * Zendesk suggestions response
+ */
+export const ZendeskSuggestionsDataSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  connected: z.boolean(),
+  suggestions: z.array(ZendeskAgentItemSchema),
+  hasMore: z.boolean(),
+});
+
 // ============================================================================
 // SLACK INTEGRATION SCHEMAS
 // ============================================================================
@@ -1524,3 +1588,6 @@ export type IntercomSuggestionsData = z.infer<typeof IntercomSuggestionsDataSche
 export type SlackMemberItem = z.infer<typeof SlackMemberItemSchema>;
 export type SlackMembersData = z.infer<typeof SlackMembersDataSchema>;
 export type SlackSuggestionsData = z.infer<typeof SlackSuggestionsDataSchema>;
+export type ZendeskAgentItem = z.infer<typeof ZendeskAgentItemSchema>;
+export type ZendeskAgentsData = z.infer<typeof ZendeskAgentsDataSchema>;
+export type ZendeskSuggestionsData = z.infer<typeof ZendeskSuggestionsDataSchema>;

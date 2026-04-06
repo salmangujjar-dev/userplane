@@ -28,6 +28,7 @@ import { InvitePolicyTab } from './invite-policy-tab';
 import { SlackInviteHeader } from './slack-invite-header';
 import type { Teammate } from './types';
 import { WorkspaceDomainsSection } from './workspace-domains-section';
+import { ZendeskInviteHeader } from './zendesk-invite-header';
 
 const ITEMS_PER_PAGE = 6;
 const AUTO_SELECT_LIMIT = 5;
@@ -195,7 +196,7 @@ interface InviteTeammatesViewProps {
   allowedDomains: string[] | null;
   initialDomainId: string | null;
   initialDomainUrl: string;
-  variant?: 'direct' | 'intercom' | 'slack';
+  variant?: 'direct' | 'intercom' | 'slack' | 'zendesk';
   completionLabel?: string;
   onComplete: () => void;
   onSkip: () => void;
@@ -549,6 +550,8 @@ export function InviteTeammatesView({
             <Logo />
           ) : variant === 'slack' ? (
             <SlackInviteHeader />
+          ) : variant === 'zendesk' ? (
+            <ZendeskInviteHeader />
           ) : (
             <IntercomInviteHeader />
           )}

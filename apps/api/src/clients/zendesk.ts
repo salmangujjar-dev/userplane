@@ -309,6 +309,90 @@ export async function refreshAccessToken(
 }
 
 /**
+ * Zendesk user from /api/v2/users.json
+ */
+const ZendeskUserSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  email: z.string().nullable(),
+  role: z.string(),
+  active: z.boolean(),
+});
+
+export type ZendeskUser = z.infer<typeof ZendeskUserSchema>;
+
+/**
+ * Zendesk users list response with cursor pagination
+ */
+const ZendeskUsersResponseSchema = z.object({
+  users: z.array(ZendeskUserSchema),
+  meta: z.object({
+    has_more: z.boolean(),
+    after_cursor: z.string().optional(),
+  }),
+  links: z.object({
+    next: z.string().nullable(),
+  }),
+});
+
+/** Max pages to fetch when listing agents (safety cap) */
+const MAX_AGENT_PAGES = 5;
+
+/**
+ * List agents and admins from a Zendesk account.
+ * Uses cursor pagination, capped at MAX_AGENT_PAGES pages (~500 agents).
+ * Returns empty array on any error (graceful degradation).
+ */
+export async function listAgents(subdomain: string, accessToken: string): Promise<ZendeskUser[]> {
+  const validatedSubdomain = validateSubdomain(subdomain);
+  const agents: ZendeskUser[] = [];
+
+  try {
+    let url: string | null =
+      `https://${validatedSubdomain}.zendesk.com/api/v2/users.json?role[]=admin&role[]=agent&page[size]=100`;
+    let page = 0;
+
+    while (url && page < MAX_AGENT_PAGES) {
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.warn({ status: response.status, error: errorText, subdomain }, 'List agents failed');
+        captureException(new Error('failed to list agents from Zendesk'), undefined, {
+          operation: 'zendesk_list_agents',
+          status: response.status,
+          error_text: errorText,
+          subdomain,
+        });
+        return agents; // Return whatever we've collected so far
+      }
+
+      const data = ZendeskUsersResponseSchema.parse(await response.json());
+
+      for (const user of data.users) {
+        if (user.active && user.email) {
+          agents.push(user);
+        }
+      }
+
+      url = data.meta.has_more ? data.links.next : null;
+      page++;
+    }
+
+    return agents;
+  } catch (error) {
+    logger.error({ error, subdomain }, 'List agents error');
+    captureException(error, undefined, { operation: 'zendesk_list_agents', subdomain });
+    return [];
+  }
+}
+
+/**
  * Get current user info from Zendesk /api/v2/users/me.json
  */
 export async function getMe(

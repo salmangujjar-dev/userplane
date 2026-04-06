@@ -10,3 +10,4 @@ export { OAuthErrorState, OAuthLoadingState } from './oauth-states';
 export { SlackInviteHeader } from './slack-invite-header';
 export type { InvitePolicyInfo, Teammate } from './types';
 export { WorkspaceDomainsSection } from './workspace-domains-section';
+export { ZendeskInviteHeader } from './zendesk-invite-header';

@@ -1797,6 +1797,88 @@ export const deleteZendeskIntegrationImpl = (
     });
 };
 
+/**
+ * GET /workspace/:workspaceId/integrations/zendesk/agents - Get Zendesk agents
+ * Requires admin or owner role
+ * Returns agents and invite policy for the invite page
+ */
+export const getZendeskAgentsImpl = (
+  zendeskService: ZendeskService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireAdminOrOwner = createWorkspaceRoleMiddleware(
+    workspaceMemberService,
+    workspaceService,
+    ['admin', 'owner']
+  );
+
+  return authorizedRateLimited.workspace.integrations.zendesk.agents
+    .use(requireAdminOrOwner, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const [agents, invitePolicyData] = await Promise.all([
+        zendeskService.getAgents(input.params.workspaceId, input.query.exclude_members),
+        workspaceService.getInvitePolicy(input.params.workspaceId),
+      ]);
+
+      return {
+        message: 'Zendesk agents retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          agents,
+          invitePolicy: invitePolicyData.workspaceInvitePolicy,
+          allowedDomains: invitePolicyData.workspaceInviteDomains,
+        },
+      };
+    });
+};
+
+/**
+ * GET /workspace/:workspaceId/integrations/zendesk/suggestions - Get Zendesk agent suggestions
+ * Requires workspace membership
+ * Returns suggested agents for invite modal, gracefully degrades if not connected
+ */
+export const getZendeskSuggestionsImpl = (
+  zendeskService: ZendeskService,
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
+
+  return authorizedRateLimited.workspace.integrations.zendesk.suggestions
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const status = await zendeskService.getIntegrationStatus(input.params.workspaceId);
+
+      if (!status.connected) {
+        return {
+          message: 'No Zendesk integration',
+          data: {
+            workspaceId: input.params.workspaceId,
+            connected: false,
+            suggestions: [],
+            hasMore: false,
+          },
+        };
+      }
+
+      const { suggestions, hasMore } = await zendeskService.suggestAgents(
+        input.params.workspaceId,
+        { limit: input.query.limit }
+      );
+
+      return {
+        message: 'Suggestions retrieved',
+        data: {
+          workspaceId: input.params.workspaceId,
+          connected: true,
+          suggestions,
+          hasMore,
+        },
+      };
+    });
+};
+
 // ============================================================================
 // SLACK INTEGRATION HANDLERS
 // ============================================================================
@@ -2193,6 +2275,12 @@ export const createWorkspaceProcedures = (
       zendesk: {
         get: getZendeskIntegrationImpl(zendeskService, workspaceMemberService, workspaceService),
         delete: deleteZendeskIntegrationImpl(
+          zendeskService,
+          workspaceMemberService,
+          workspaceService
+        ),
+        agents: getZendeskAgentsImpl(zendeskService, workspaceMemberService, workspaceService),
+        suggestions: getZendeskSuggestionsImpl(
           zendeskService,
           workspaceMemberService,
           workspaceService

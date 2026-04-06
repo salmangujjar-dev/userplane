@@ -4,12 +4,16 @@ import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 
-import { InviteLoadingState, InviteTeammatesView } from '@/components/integrations/intercom';
+import {
+  InviteErrorState,
+  InviteLoadingState,
+  InviteTeammatesView,
+} from '@/components/integrations/intercom';
 import { DinoError } from '@/components/shared/dino-error';
 import { env } from '@/env';
 import { useSession } from '@/features/auth';
 import { useFirstWorkspaceDomain } from '@/features/domains';
-import { useInvitePolicy } from '@/features/workspace';
+import { useZendeskAgents } from '@/features/integrations';
 
 /**
  * Nested Zendesk OAuth Callback Page
@@ -111,30 +115,48 @@ function OAuthZendeskCallbackContent() {
 
 /**
  * Post-connection invite view shown in the popup after Zendesk OAuth completes.
- * Reuses the InviteTeammatesView with empty teammates (manual email entry only).
+ * Fetches Zendesk agents and displays them as invite suggestions.
  */
 function PostConnectionInviteView({ workspaceId }: { workspaceId: string }) {
+  const {
+    data: agentsData,
+    isLoading: agentsLoading,
+    error: agentsError,
+    refetch: refetchAgents,
+  } = useZendeskAgents(workspaceId, true);
   const { data: domainsData, isLoading: domainsLoading } = useFirstWorkspaceDomain(workspaceId);
-  const { data: policyData, isLoading: policyLoading } = useInvitePolicy(workspaceId);
 
-  const isLoading = domainsLoading || policyLoading;
+  const isLoading = agentsLoading || domainsLoading;
 
   if (isLoading) {
-    return <InviteLoadingState />;
+    return <InviteLoadingState variant="zendesk" />;
   }
 
+  if (agentsError || !agentsData?.success) {
+    return (
+      <InviteErrorState
+        workspaceId={workspaceId}
+        variant="zendesk"
+        message={
+          agentsData?.success === false ? agentsData.error.message : 'Failed to load teammates'
+        }
+        onRetry={() => refetchAgents()}
+      />
+    );
+  }
+
+  const teammates = agentsData.data.agents;
   const firstDomain = domainsData?.success ? domainsData.data.domains[0] : null;
-  const invitePolicy = policyData?.success ? policyData.data.workspaceInvitePolicy : 'private';
-  const allowedDomains = policyData?.success ? policyData.data.workspaceInviteDomains : null;
 
   return (
     <InviteTeammatesView
       workspaceId={workspaceId}
-      teammates={[]}
-      invitePolicy={invitePolicy}
-      allowedDomains={allowedDomains}
+      teammates={teammates}
+      invitePolicy={agentsData.data.invitePolicy}
+      allowedDomains={agentsData.data.allowedDomains}
       initialDomainId={firstDomain?.domainId ?? null}
       initialDomainUrl={firstDomain?.domainUrl ?? ''}
+      variant="zendesk"
       completionLabel="Go to dashboard"
       onComplete={() => {
         window.open(`/workspace/${workspaceId}`, '_blank');

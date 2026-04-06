@@ -13,6 +13,10 @@ export const integrationKeys = {
 
   // Zendesk
   zendesk: (workspaceId: string) => [...integrationKeys.all, 'zendesk', workspaceId] as const,
+  zendeskAgents: (workspaceId: string, excludeMembers: boolean) =>
+    [...integrationKeys.zendesk(workspaceId), 'agents', { excludeMembers }] as const,
+  zendeskSuggestions: (workspaceId: string, limit?: number) =>
+    [...integrationKeys.zendesk(workspaceId), 'suggestions', { limit }] as const,
 
   // Slack
   slack: (workspaceId: string) => [...integrationKeys.all, 'slack', workspaceId] as const,
