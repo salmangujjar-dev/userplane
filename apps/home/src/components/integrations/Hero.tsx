@@ -109,11 +109,11 @@ export default function Hero({
 
   return (
     <section className="w-full overflow-x-clip">
-      <div className="mx-auto max-w-7xl p-4">
-        {/* Headline row — top-aligned, 2 columns on desktop */}
-        <div className="relative flex flex-col items-start justify-between gap-6 pt-8 pb-10 sm:pt-12 sm:pb-12 lg:flex-row lg:items-start lg:gap-0 lg:pt-28 lg:pb-14">
-          <div className="flex flex-col">
-            <h1 className="-mt-2 font-dm-sans text-[clamp(36px,5vw,56px)] font-medium leading-[1.15] tracking-[-0.02em] text-foreground">
+      <div className="mx-auto max-w-7xl p-4 lg:mx-0 lg:max-w-none lg:flex lg:flex-row lg:min-h-[calc(100dvh-60px)] lg:p-0">
+        {/* Text block */}
+        <div className="pt-8 pb-10 sm:pt-12 sm:pb-12 lg:flex lg:w-[48%] lg:flex-col lg:justify-center lg:pt-0 lg:pb-0 lg:pl-[max(2rem,calc((100vw-80rem)/2+1rem))] lg:pr-12">
+          <div className="flex max-w-[520px] flex-col items-start gap-6">
+            <h1 className="font-dm-sans text-[clamp(30px,4.5vw,44px)] font-medium leading-[1.15] tracking-[-0.02em] text-foreground">
               {nodes.map((node, i) => {
                 if (node.kind === 'br') return <br key={i} />;
 
@@ -143,10 +143,8 @@ export default function Hero({
                 return <span key={i}>{content} </span>;
               })}
             </h1>
-          </div>
 
-          <div className="flex flex-col items-start gap-4 sm:gap-6 lg:items-end">
-            <p className="text-[15px] leading-[1.6] text-muted-foreground lg:text-right">
+            <p className="text-[15px] leading-[1.6] text-muted-foreground">
               {description.map((line, i) => (
                 <span key={i}>
                   {i > 0 && <br />}
@@ -154,6 +152,7 @@ export default function Hero({
                 </span>
               ))}
             </p>
+
             <div className="flex items-center gap-3 sm:gap-4">
               <Button asChild variant="secondary" size="lg">
                 <a className="font-medium" href={secondaryCTA.href}>
@@ -171,7 +170,7 @@ export default function Hero({
 
         {/* Preview area with frosted glass */}
         {preview && (
-          <div className="relative flex shrink-0 mb-8 lg:mb-16">
+          <div className="relative flex mb-8 lg:mb-0 lg:w-[52%] lg:min-w-0 lg:items-center lg:py-12 lg:pr-0">
             <GradientBlur
               className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[300px] h-[500px] w-[600px] sm:h-[700px] sm:w-[1000px] lg:h-[856px] lg:w-[1496px]"
               blur={50}
@@ -181,7 +180,7 @@ export default function Hero({
               <img
                 src={preview.src}
                 alt={preview.alt}
-                className="h-full w-full object-cover object-top"
+                className="h-full w-full object-cover object-top-left"
               />
             </GlassCard>
           </div>

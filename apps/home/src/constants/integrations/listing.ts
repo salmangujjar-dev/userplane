@@ -19,10 +19,10 @@ export const LISTING_SEO = {
 
 export const LISTING_GRADIENT: GradientConfig = {
   stops: [
-    'rgba(16, 185, 129, 0.2)',
-    'rgba(45, 160, 170, 0.2)',
-    'rgba(60, 130, 220, 0.2)',
-    'rgba(59, 130, 246, 0.2)',
+    'rgba(16, 185, 129, 0.1)',
+    'rgba(45, 160, 170, 0.1)',
+    'rgba(60, 130, 220, 0.1)',
+    'rgba(59, 130, 246, 0.1)',
   ],
 };
 
@@ -45,7 +45,7 @@ export const LISTING_HERO: {
     ],
   },
   description: [
-    'Send a link, get back a full replay with logs, network data, and session context.',
+    'Send a link and get full session replay — logs, network requests, and more.',
     'Works seamlessly with any help desk, ticketing system or internal tool.',
   ],
   primaryCTA: { text: 'Get started', href: SIGNUP_URL },

@@ -16,10 +16,10 @@ export const zendeskConfig = defineIntegration({
   icon: { src: getIconUrl('integrations/zendesk.webp'), alt: 'Zendesk' },
   gradient: {
     stops: [
-      'rgba(3, 54, 61, 0.2)',
-      'rgba(23, 73, 77, 0.2)',
-      'rgba(120, 163, 0, 0.2)',
-      'rgba(3, 54, 61, 0.2)',
+      'rgba(3, 54, 61, 0.1)',
+      'rgba(23, 73, 77, 0.1)',
+      'rgba(120, 163, 0, 0.1)',
+      'rgba(3, 54, 61, 0.1)',
     ],
   },
   seo: {
