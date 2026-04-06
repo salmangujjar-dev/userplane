@@ -1,3 +1,5 @@
+import { ChevronRight } from 'lucide-react';
+
 import type { FeatureData } from '@/types/integrations';
 
 import FadeEdge from './FadeEdge';
@@ -34,6 +36,15 @@ export default function FeatureShowcase({ features }: FeatureShowcaseProps) {
                     </span>
                   ))}
                 </div>
+
+                {feature.learnMoreHref && (
+                  <a
+                    href={feature.learnMoreHref}
+                    className="mt-6 inline-flex items-center gap-1 text-[13px] font-medium text-foreground hover:underline"
+                  >
+                    Learn more <ChevronRight className="size-3.5" />
+                  </a>
+                )}
               </div>
             </div>
 
