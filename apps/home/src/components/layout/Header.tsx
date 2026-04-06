@@ -6,6 +6,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { LOGO_LINK, NAV_LINKS } from '@/constants/navigation';
 import { SIGNUP_URL } from '@/constants/onboarding';
 
+import IntegrationsDropdown, { type DropdownEntry } from './IntegrationsDropdown';
+
+export interface HeaderProps {
+  integrations?: DropdownEntry[];
+  integrationsHref?: string;
+  docsHref?: string;
+}
+
 function MobileNavLink({
   href,
   children,
@@ -49,7 +57,7 @@ function MobileNavLink({
   );
 }
 
-export default function Header() {
+export default function Header({ integrations, integrationsHref, docsHref }: HeaderProps = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
@@ -93,16 +101,20 @@ export default function Header() {
         </a>
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href="/#pricing"
+          href="/pricing"
         >
           Pricing
         </a>
-        <a
-          className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
-          href={NAV_LINKS.integrations}
-        >
-          Integrations
-        </a>
+        {integrations && integrationsHref && docsHref ? (
+          <IntegrationsDropdown entries={integrations} integrationsHref={integrationsHref} />
+        ) : (
+          <a
+            className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
+            href={NAV_LINKS.integrations}
+          >
+            Integrations
+          </a>
+        )}
         <a
           className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
           href={NAV_LINKS.help}
@@ -165,7 +177,7 @@ export default function Header() {
                   <MobileNavLink href="/#features" onClick={closeMenu}>
                     Features
                   </MobileNavLink>
-                  <MobileNavLink href="/#pricing" onClick={closeMenu}>
+                  <MobileNavLink href="/pricing" onClick={closeMenu}>
                     Pricing
                   </MobileNavLink>
                   <MobileNavLink href={NAV_LINKS.integrations} onClick={closeMenu}>

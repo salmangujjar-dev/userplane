@@ -6,6 +6,7 @@ export type {
   ButtonConfig,
   FeatureData,
   GradientConfig,
+  HeadlineIcon,
   IntegrationConfig,
   IntegrationHeadline,
   IntegrationLogo,

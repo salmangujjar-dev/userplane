@@ -39,7 +39,6 @@ export default defineConfig({
         item.lastmod = new Date().toISOString();
         if (item.url.includes('/integrations/')) {
           item.priority = 0.8;
-          item.changefreq = 'weekly';
         }
         return item;
       },
