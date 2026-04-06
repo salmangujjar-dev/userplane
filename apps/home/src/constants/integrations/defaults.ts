@@ -147,7 +147,7 @@ export function defineIntegration(
     },
     resources: {
       label: 'Resources',
-      headline: 'The Latest',
+      headline: shortName,
       links: [quickstartLink, recordingLink, developerLink],
       seeAllHref: DOCS_HOME,
       ...resourcesOverrides,

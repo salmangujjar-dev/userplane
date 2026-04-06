@@ -17,10 +17,10 @@ export const chromeExtensionConfig = defineIntegration({
   icon: { src: getIconUrl('integrations/chrome.webp'), alt: 'Chrome' },
   gradient: {
     stops: [
-      'rgba(66, 133, 244, 0.2)',
-      'rgba(52, 168, 83, 0.2)',
-      'rgba(251, 188, 5, 0.2)',
-      'rgba(234, 67, 53, 0.2)',
+      'rgba(66, 133, 244, 0.1)',
+      'rgba(52, 168, 83, 0.1)',
+      'rgba(251, 188, 5, 0.1)',
+      'rgba(234, 67, 53, 0.1)',
     ],
   },
   seo: {

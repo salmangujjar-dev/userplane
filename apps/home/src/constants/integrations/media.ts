@@ -1,4 +1,8 @@
-import type { IntegrationAssetKey, MicrositeAssetKey } from '@userplane/storage/media';
+import type {
+  IntegrationAssetKey,
+  LaunchAssetKey,
+  MicrositeAssetKey,
+} from '@userplane/storage/media';
 import { mergeTransformOptions } from '@userplane/storage/media';
 
 import { mediaClient } from '../../lib/media';
@@ -24,4 +28,14 @@ export function getHeroUrl(asset: MicrositeAssetKey) {
 /** Feature card image */
 export function getFeatureUrl(asset: MicrositeAssetKey) {
   return mediaClient.getMicrositeMediaUrl(asset, { transform: FEATURE_TRANSFORM });
+}
+
+/** Full-width hero image for the launch page */
+export function getLaunchHeroUrl(asset: LaunchAssetKey) {
+  return mediaClient.getLaunchMediaUrl(asset, { transform: HERO_TRANSFORM });
+}
+
+/** Feature card image for the launch page */
+export function getLaunchFeatureUrl(asset: LaunchAssetKey) {
+  return mediaClient.getLaunchMediaUrl(asset, { transform: FEATURE_TRANSFORM });
 }

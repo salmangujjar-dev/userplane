@@ -16,10 +16,10 @@ export const slackConfig = defineIntegration({
   icon: { src: getIconUrl('integrations/slack.webp'), alt: 'Slack' },
   gradient: {
     stops: [
-      'rgba(97, 31, 105, 0.2)',
-      'rgba(224, 30, 90, 0.2)',
-      'rgba(44, 169, 131, 0.2)',
-      'rgba(54, 197, 240, 0.2)',
+      'rgba(97, 31, 105, 0.1)',
+      'rgba(224, 30, 90, 0.1)',
+      'rgba(44, 169, 131, 0.1)',
+      'rgba(54, 197, 240, 0.1)',
     ],
   },
   seo: {

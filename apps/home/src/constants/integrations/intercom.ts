@@ -16,10 +16,10 @@ export const intercomConfig = defineIntegration({
   icon: { src: getIconUrl('integrations/intercom.webp'), alt: 'Intercom' },
   gradient: {
     stops: [
-      'rgba(0, 122, 255, 0.2)',
-      'rgba(40, 110, 250, 0.2)',
-      'rgba(59, 80, 246, 0.2)',
-      'rgba(0, 142, 255, 0.2)',
+      'rgba(0, 122, 255, 0.1)',
+      'rgba(40, 110, 250, 0.1)',
+      'rgba(59, 80, 246, 0.1)',
+      'rgba(0, 142, 255, 0.1)',
     ],
   },
   seo: {
