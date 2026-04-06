@@ -16,6 +16,7 @@ export type {
   IconAssetKey,
   IntegrationAssetKey,
   IntercomCanvasAssetKey,
+  LaunchAssetKey,
   MicrositeAssetKey,
   SpotlightAssetKey,
   TileAssetKey,

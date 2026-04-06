@@ -20,6 +20,7 @@ import type {
   IconAssetKey,
   IntegrationAssetKey,
   IntercomCanvasAssetKey,
+  LaunchAssetKey,
   MicrositeAssetKey,
   SlackAssetKey,
   SpotlightAssetKey,
@@ -47,6 +48,7 @@ const CATEGORY_PROFILES: Record<string, TransformProfile> = {
   'intercom-canvas': 'general',
   slack: 'general',
   features: 'feature',
+  launch: 'feature',
   spotlight: 'general',
   microsites: 'feature',
 };
@@ -206,6 +208,11 @@ export class MediaClient {
 
   /** Get CDN URL for a feature asset */
   getFeatureMediaUrl(key: FeatureAssetKey, options?: GetMediaUrlOptions): string {
+    return this.getMediaUrl(key, options);
+  }
+
+  /** Get CDN URL for a launch asset */
+  getLaunchMediaUrl(key: LaunchAssetKey, options?: GetMediaUrlOptions): string {
     return this.getMediaUrl(key, options);
   }
 

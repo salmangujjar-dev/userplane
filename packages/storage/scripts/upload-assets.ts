@@ -43,6 +43,7 @@ type AssetCategory =
   | 'icons'
   | 'features'
   | 'hero'
+  | 'launch'
   | 'preview'
   | 'spotlight'
   | 'microsites';
@@ -102,6 +103,7 @@ const CATEGORIES: AssetCategory[] = [
   'icons',
   'features',
   'hero',
+  'launch',
   'preview',
   'spotlight',
   'microsites',
