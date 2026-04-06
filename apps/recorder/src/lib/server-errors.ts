@@ -6,15 +6,17 @@
 import { isDefinedError } from '@userplane/client';
 
 import { createLogger } from '@/lib/logger';
-import { SessionErrors } from '@/types';
+import { BillingErrors, SessionErrors } from '@/types';
 import type { RecordingError } from '@/types/errors';
 
 const logger = createLogger('server-errors');
 
 /**
- * Type-safe session error codes from contract
+ * Type-safe error codes from session and billing contracts
+ * Session endpoints can throw both SessionErrors and select BillingErrors
  */
 type SessionErrorCode = keyof typeof SessionErrors;
+type SessionBillingErrorCode = Extract<keyof typeof BillingErrors, 'PLAN_LIMIT_EXCEEDED'>;
 
 /**
  * Result type for server operations
@@ -27,7 +29,7 @@ export type ServerResult<T> =
  * Session error config - type-locked to contract.
  * Each error specifies exactly what to show and do.
  */
-const SESSION_ERROR_CONFIG: Record<SessionErrorCode, RecordingError> = {
+const SESSION_ERROR_CONFIG: Record<SessionErrorCode | SessionBillingErrorCode, RecordingError> = {
   // Link token errors
   LINK_TOKEN_MISSING_ID: {
     title: 'Invalid link',

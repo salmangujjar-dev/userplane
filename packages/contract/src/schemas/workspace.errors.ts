@@ -64,10 +64,6 @@ export const WorkspaceErrors = {
   },
 
   // Restoration errors
-  WORKSPACE_NOT_DELETED: {
-    status: 400,
-    message: 'Workspace is not deleted and cannot be restored',
-  },
   WORKSPACE_RESTORE_TIME_EXPIRED: {
     status: 410,
     message: 'Workspace restoration window has expired',
@@ -119,11 +115,6 @@ export const WorkspaceErrors = {
   WORKSPACE_MEMBER_LAST_OWNER_REMOVE: {
     status: 403,
     message: 'Cannot remove the last owner from workspace',
-  },
-  WORKSPACE_MEMBER_LAST_OWNER_LEAVE: {
-    status: 403,
-    message:
-      'Cannot leave workspace as the last owner. Transfer ownership or delete the workspace first.',
   },
   WORKSPACE_MEMBER_SOLE_OWNER_WITH_MEMBERS: {
     status: 403,

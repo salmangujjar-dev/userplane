@@ -22,20 +22,6 @@ export const ProvisionerErrors = {
     message: 'Transaction failed',
   },
 
-  // Invite token errors
-  PROVISIONER_INVITE_TOKEN_INVALID: {
-    status: 400,
-    message: 'Invite token is invalid or expired',
-  },
-  PROVISIONER_WORKSPACE_EXISTS: {
-    status: 409,
-    message: 'Workspace with this ID already exists',
-  },
-  PROVISIONER_URL_REQUIRED: {
-    status: 400,
-    message: 'Workspace URL is required',
-  },
-
   // Rate limiting errors
   WORKSPACE_CREATION_LIMIT_EXCEEDED: {
     status: 429,
@@ -46,10 +32,6 @@ export const ProvisionerErrors = {
   INTERCOM_OAUTH_STATE_INVALID: {
     status: 400,
     message: 'Invalid or expired OAuth state. Please try connecting again.',
-  },
-  INTERCOM_OAUTH_CODE_MISSING: {
-    status: 400,
-    message: 'Authorization code missing from callback',
   },
   INTERCOM_TOKEN_EXCHANGE_FAILED: {
     status: 502,
@@ -81,11 +63,6 @@ export const ProvisionerErrors = {
     status: 502,
     message: 'Failed to retrieve user information from Zendesk. Please try again.',
   },
-  ZENDESK_WORKSPACE_ALREADY_CONNECTED: {
-    status: 409,
-    message: 'This Zendesk account is already connected to another workspace',
-  },
-
   // Slack OAuth errors
   SLACK_OAUTH_STATE_INVALID: {
     status: 400,
@@ -98,10 +75,6 @@ export const ProvisionerErrors = {
   SLACK_AUTH_VALIDATION_FAILED: {
     status: 502,
     message: 'Failed to validate Slack bot token. Please try again.',
-  },
-  SLACK_USER_INFO_FAILED: {
-    status: 502,
-    message: 'Failed to retrieve user information from Slack. Please try again.',
   },
   SLACK_WORKSPACE_ALREADY_CONNECTED: {
     status: 409,

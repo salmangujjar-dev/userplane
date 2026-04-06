@@ -121,7 +121,6 @@ export const banUser = oc
     USER_NOT_FOUND: AdminErrors.USER_NOT_FOUND,
     CANNOT_BAN_SELF: AdminErrors.CANNOT_BAN_SELF,
     CANNOT_BAN_ADMIN: AdminErrors.CANNOT_BAN_ADMIN,
-    INVALID_BAN_DURATION: AdminErrors.INVALID_BAN_DURATION,
   })
   .input(AdminBanUserInputSchema)
   .output(ApiResponseSchema(AdminUserDetailSchema));

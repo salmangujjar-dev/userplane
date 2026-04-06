@@ -125,10 +125,4 @@ export const SessionErrors = {
     status: 500,
     message: 'Database operation failed, try again',
   },
-
-  // Entitlement errors
-  PLAN_LIMIT_EXCEEDED: {
-    status: 403,
-    message: 'Plan recording limit exceeded',
-  },
 } as const;

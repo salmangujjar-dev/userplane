@@ -2,6 +2,7 @@ import { oc } from '@orpc/contract';
 
 import {
   ApiResponseSchema,
+  BillingErrors,
   CreateProjectSchema,
   DeleteProjectSchema,
   GetProjectRestoreInfoSchema,
@@ -64,6 +65,7 @@ export const createProject = oc
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_WORKSPACE_ID_REQUIRED: ProjectErrors.PROJECT_WORKSPACE_ID_REQUIRED,
     PROJECT_CREATE_FAILED: ProjectErrors.PROJECT_CREATE_FAILED,
+    PLAN_FEATURE_UNAVAILABLE: BillingErrors.PLAN_FEATURE_UNAVAILABLE,
   })
   .input(CreateProjectSchema)
   .output(ApiResponseSchema(ProjectDataSchema));
@@ -110,6 +112,7 @@ export const updateProject = oc
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
     PROJECT_UPDATE_FAILED: ProjectErrors.PROJECT_UPDATE_FAILED,
+    PLAN_FEATURE_UNAVAILABLE: BillingErrors.PLAN_FEATURE_UNAVAILABLE,
   })
   .input(UpdateProjectSchema)
   .output(ApiResponseSchema(ProjectUpdateDataSchema));
@@ -202,7 +205,6 @@ export const restoreProject = oc
     UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
-    PROJECT_NOT_DELETED: ProjectErrors.PROJECT_NOT_DELETED,
     PROJECT_RESTORE_TIME_EXPIRED: ProjectErrors.PROJECT_RESTORE_TIME_EXPIRED,
     PROJECT_RESTORE_FAILED: ProjectErrors.PROJECT_RESTORE_FAILED,
   })

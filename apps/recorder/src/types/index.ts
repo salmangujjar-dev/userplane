@@ -15,6 +15,6 @@ export type {
 } from './session-preferences';
 export { DEFAULT_RECORDING_PREFERENCES, toRecordingPreferences } from './session-preferences';
 
-// Session error codes (from contract)
+// Session and billing error codes (from contract)
 export type { SessionErrorsType } from './session';
-export { SessionErrors } from './session';
+export { BillingErrors, SessionErrors } from './session';
