@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 
 import { IntercomInviteLayout } from './intercom-invite-layout';
 import { SlackInviteHeader } from './slack-invite-header';
+import { ZendeskInviteHeader } from './zendesk-invite-header';
 
 /** Provider variants supported by the invite states */
-type InviteVariant = 'intercom' | 'slack';
+type InviteVariant = 'intercom' | 'slack' | 'zendesk';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -17,7 +18,12 @@ const ITEMS_PER_PAGE = 6;
  * Skeleton matches the actual InviteTeammatesView structure to prevent layout shifts.
  */
 export function InviteLoadingState({ variant = 'intercom' }: { variant?: InviteVariant }) {
-  const header = variant === 'slack' ? <SlackInviteHeader /> : undefined;
+  const header =
+    variant === 'slack' ? (
+      <SlackInviteHeader />
+    ) : variant === 'zendesk' ? (
+      <ZendeskInviteHeader />
+    ) : undefined;
 
   return (
     <IntercomInviteLayout
@@ -79,6 +85,7 @@ export function InviteLoadingState({ variant = 'intercom' }: { variant?: InviteV
 const EMPTY_STATE_DESCRIPTIONS: Record<InviteVariant, string> = {
   intercom: 'All your Intercom team members are already part of this workspace.',
   slack: 'All your Slack workspace members are already part of this workspace.',
+  zendesk: 'All your Zendesk agents are already part of this workspace.',
 };
 
 interface InviteEmptyStateProps {
@@ -91,7 +98,12 @@ interface InviteEmptyStateProps {
  */
 export function InviteEmptyState({ workspaceId, variant = 'intercom' }: InviteEmptyStateProps) {
   const router = useRouter();
-  const header = variant === 'slack' ? <SlackInviteHeader /> : undefined;
+  const header =
+    variant === 'slack' ? (
+      <SlackInviteHeader />
+    ) : variant === 'zendesk' ? (
+      <ZendeskInviteHeader />
+    ) : undefined;
 
   return (
     <IntercomInviteLayout
@@ -129,7 +141,12 @@ export function InviteErrorState({
   variant = 'intercom',
 }: InviteErrorStateProps) {
   const router = useRouter();
-  const header = variant === 'slack' ? <SlackInviteHeader /> : undefined;
+  const header =
+    variant === 'slack' ? (
+      <SlackInviteHeader />
+    ) : variant === 'zendesk' ? (
+      <ZendeskInviteHeader />
+    ) : undefined;
 
   return (
     <IntercomInviteLayout title="Failed to load teammates" description={message} header={header}>

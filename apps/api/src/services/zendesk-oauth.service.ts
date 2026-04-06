@@ -3,10 +3,16 @@
  */
 
 import type { CacheService } from '@userplane/cache';
-import { createProviderMeta, createProviderToken, workspaceError } from '@userplane/contract';
+import {
+  createProviderMeta,
+  createProviderToken,
+  FormEmailSchema,
+  workspaceError,
+  type ZendeskAgentItem,
+} from '@userplane/contract';
 
-import type { ZendeskTokenResponse } from '@/api/clients/zendesk';
-import { setInstallationSettings } from '@/api/clients/zendesk';
+import type { ZendeskTokenResponse, ZendeskUser } from '@/api/clients/zendesk';
+import { listAgents, setInstallationSettings } from '@/api/clients/zendesk';
 import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';
@@ -14,6 +20,8 @@ import type { IntegrationRepository } from '@/api/repositories/integrations.repo
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
 
 const logger = createLogger('zendesk-oauth');
+
+const MAX_AGENT_SUGGESTIONS = 10;
 
 // =============================================================================
 // Shared helpers — used by ZendeskConnectService and ZendeskAppOAuthService
@@ -186,5 +194,110 @@ export class ZendeskService {
     await this.deps.cacheService.invalidateIntegration('zendesk', integration.providerWorkspaceId);
 
     return true;
+  }
+
+  // ===========================================================================
+  // Agent fetching — mirrors IntercomService.getAdmins / SlackService.getMembers
+  // ===========================================================================
+
+  /**
+   * Fetch agents from Zendesk and normalize their emails.
+   * @returns Map of normalized email to ZendeskUser
+   */
+  private async _fetchAndNormalizeAgents(workspaceId: string): Promise<Map<string, ZendeskUser>> {
+    const integration = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
+      workspaceId,
+      'zendesk'
+    );
+
+    if (!integration) {
+      throw workspaceError.INTEGRATION_NOT_FOUND();
+    }
+
+    const providerToken = integration.providerToken as { accessToken: string };
+    const providerMeta = integration.providerMeta as { subdomain: string };
+
+    const agents = await listAgents(providerMeta.subdomain, providerToken.accessToken);
+
+    const agentEmailMap = new Map<string, ZendeskUser>();
+    for (const agent of agents) {
+      if (!agent.email) continue;
+      const emailResult = FormEmailSchema.safeParse(agent.email);
+      if (emailResult.success) {
+        agentEmailMap.set(emailResult.data, agent);
+      }
+    }
+
+    return agentEmailMap;
+  }
+
+  /**
+   * Build list of agent items, optionally excluding existing workspace members.
+   * Shared logic for getAgents and suggestAgents.
+   */
+  private async _buildAgentItemList(
+    workspaceId: string,
+    options: { excludeMembers: boolean }
+  ): Promise<ZendeskAgentItem[]> {
+    const agentEmailMap = await this._fetchAndNormalizeAgents(workspaceId);
+
+    if (agentEmailMap.size === 0) {
+      return [];
+    }
+
+    let memberEmails: Set<string> = new Set();
+    if (options.excludeMembers) {
+      memberEmails = await this.deps.memberRepo.findMatchingMemberEmails(workspaceId, [
+        ...agentEmailMap.keys(),
+      ]);
+    }
+
+    const result: ZendeskAgentItem[] = [];
+    for (const [normalizedEmail, agent] of agentEmailMap) {
+      if (options.excludeMembers && memberEmails.has(normalizedEmail)) {
+        continue;
+      }
+
+      result.push({
+        id: String(agent.id),
+        email: normalizedEmail,
+        name: agent.name ?? null,
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Get all agents from the connected Zendesk account.
+   * Optionally filters out agents who are already workspace members.
+   */
+  async getAgents(
+    workspaceId: string,
+    excludeMembers: boolean = false
+  ): Promise<ZendeskAgentItem[]> {
+    return this._buildAgentItemList(workspaceId, { excludeMembers });
+  }
+
+  /**
+   * Get suggested agents for the invite modal.
+   * Always excludes existing members and returns empty on any error (graceful degradation).
+   */
+  async suggestAgents(
+    workspaceId: string,
+    options?: { limit?: number }
+  ): Promise<{ suggestions: ZendeskAgentItem[]; hasMore: boolean }> {
+    try {
+      const limit = Math.min(options?.limit ?? 5, MAX_AGENT_SUGGESTIONS);
+
+      const agents = await this._buildAgentItemList(workspaceId, { excludeMembers: true });
+
+      const hasMore = agents.length > limit;
+      const suggestions = hasMore ? agents.slice(0, limit) : agents;
+
+      return { suggestions, hasMore };
+    } catch {
+      return { suggestions: [], hasMore: false };
+    }
   }
 }

@@ -205,6 +205,8 @@ export const workspaceContract = {
     zendesk: {
       get: workspace.getZendeskIntegration,
       delete: workspace.deleteZendeskIntegration,
+      agents: workspace.getZendeskAgents,
+      suggestions: workspace.getZendeskSuggestions,
     },
     slack: {
       get: workspace.getSlackIntegration,

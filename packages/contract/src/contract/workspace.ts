@@ -41,7 +41,9 @@ import {
   GetWorkspaceMembershipSchema,
   GetWorkspaceRestoreInfoSchema,
   GetWorkspaceStatusSchema,
+  GetZendeskAgentsSchema,
   GetZendeskIntegrationSchema,
+  GetZendeskSuggestionsSchema,
   IntercomAdminsDataSchema,
   IntercomIntegrationAuthorizeDataSchema,
   IntercomIntegrationAuthorizeSchema,
@@ -116,7 +118,9 @@ import {
   WorkspaceStatusDataSchema,
   WorkspaceTeamDataSchema,
   WorkspaceTeamQuerySchema,
+  ZendeskAgentsDataSchema,
   ZendeskIntegrationStatusDataSchema,
+  ZendeskSuggestionsDataSchema,
 } from '../schemas';
 
 /**
@@ -1336,6 +1340,56 @@ export const deleteZendeskIntegration = oc
   })
   .input(DeleteZendeskIntegrationSchema)
   .output(ApiResponseSchema(DeleteZendeskIntegrationDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/zendesk/agents
+ * Get agents from the connected Zendesk account
+ * Requires admin or owner role
+ */
+export const getZendeskAgents = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/zendesk/agents',
+    inputStructure: 'detailed',
+    summary: 'Get Zendesk agents',
+    description:
+      'Fetch agents from the connected Zendesk account. Use exclude_members=true to filter out agents who are already workspace members.',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    INTEGRATION_NOT_FOUND: WorkspaceErrors.INTEGRATION_NOT_FOUND,
+  })
+  .input(GetZendeskAgentsSchema)
+  .output(ApiResponseSchema(ZendeskAgentsDataSchema));
+
+/**
+ * GET /workspace/{workspaceId}/integrations/zendesk/suggestions
+ * Get Zendesk agent suggestions for invite modal
+ * Returns empty array if not connected or on any error (graceful degradation)
+ * Requires workspace membership
+ */
+export const getZendeskSuggestions = oc
+  .route({
+    method: 'GET',
+    path: '/workspace/{workspaceId}/integrations/zendesk/suggestions',
+    inputStructure: 'detailed',
+    summary: 'Get Zendesk agent suggestions',
+    description:
+      'Fetch suggested agents from Zendesk for invite modal. Returns empty if not connected.',
+    tags: ['Workspaces', 'Integrations'],
+  })
+  .errors({
+    UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
+    FORBIDDEN: WorkspaceErrors.FORBIDDEN,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+  })
+  .input(GetZendeskSuggestionsSchema)
+  .output(ApiResponseSchema(ZendeskSuggestionsDataSchema));
 
 // ============================================================================
 // SLACK INTEGRATION ENDPOINTS

@@ -314,3 +314,52 @@ export function useSlackSuggestions(limit: number = 5, enabled: boolean = true) 
     retry: false,
   });
 }
+
+/**
+ * Hook to fetch Zendesk agents for a workspace
+ * @param workspaceId - The workspace ID to fetch agents for
+ * @param excludeMembers - If true, excludes agents who are already workspace members (default: true)
+ */
+export function useZendeskAgents(workspaceId: string | null, excludeMembers: boolean = true) {
+  return useQuery({
+    queryKey: integrationKeys.zendeskAgents(workspaceId ?? '', excludeMembers),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID available');
+      }
+      const [error, response] = await apiClient.workspace.integrations.zendesk.agents({
+        params: { workspaceId },
+        query: { exclude_members: excludeMembers },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: !!workspaceId,
+    staleTime: 1 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+/**
+ * Hook to fetch Zendesk agent suggestions for the invite modal.
+ * Gracefully degrades — returns empty suggestions on any error.
+ */
+export function useZendeskSuggestions(limit: number = 5, enabled: boolean = true) {
+  const workspaceId = useWorkspaceId();
+
+  return useQuery({
+    queryKey: integrationKeys.zendeskSuggestions(workspaceId ?? '', limit),
+    queryFn: async () => {
+      if (!workspaceId) {
+        throw new Error('No workspace ID');
+      }
+      const [error, response] = await apiClient.workspace.integrations.zendesk.suggestions({
+        params: { workspaceId },
+        query: { limit },
+      });
+      return handleSafeResult(error, response?.data ?? null);
+    },
+    enabled: enabled && !!workspaceId,
+    staleTime: 60 * 1000,
+    retry: false,
+  });
+}

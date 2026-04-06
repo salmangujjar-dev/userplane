@@ -26,7 +26,7 @@ import type {
   WorkspaceSuggestionsData,
 } from '@/types';
 
-import { useSlackSuggestions } from '../integrations/queries';
+import { useSlackSuggestions, useZendeskSuggestions } from '../integrations/queries';
 import { integrationKeys } from '../integrations/query-keys';
 import { workspaceKeys } from './query-keys';
 
@@ -810,7 +810,7 @@ export function useIntercomSuggestions(limit: number = 5, enabled: boolean = tru
 }
 
 /** Supported suggestion providers */
-type SuggestionProvider = 'intercom' | 'slack';
+type SuggestionProvider = 'intercom' | 'slack' | 'zendesk';
 
 /** Unified suggestion shape returned by useIntegrationSuggestions */
 export interface WorkspaceSuggestion {
@@ -832,6 +832,7 @@ export interface IntegrationSuggestionsResult {
 const PROVIDER_INVITE_PATHS: Record<SuggestionProvider, string> = {
   intercom: 'settings/integrations/intercom/invite',
   slack: 'settings/integrations/slack/invite',
+  zendesk: 'settings/integrations/zendesk/invite',
 };
 
 /**
@@ -845,6 +846,7 @@ export function useIntegrationSuggestions(limit: number = 5): IntegrationSuggest
   const workspaceId = useWorkspaceId();
   const intercom = useIntercomSuggestions(limit);
   const slack = useSlackSuggestions(limit);
+  const zendesk = useZendeskSuggestions(limit);
 
   // Intercom takes priority if connected with suggestions
   if (intercom.data?.success && intercom.data.data.connected) {
@@ -858,13 +860,23 @@ export function useIntegrationSuggestions(limit: number = 5): IntegrationSuggest
     };
   }
 
-  // Slack as fallback
+  // Slack as second priority
   if (slack.data?.success && slack.data.data.connected) {
     return {
       provider: 'slack',
       suggestions: slack.data.data.suggestions,
       hasMore: slack.data.data.hasMore,
       invitePath: workspaceId ? `/workspace/${workspaceId}/${PROVIDER_INVITE_PATHS.slack}` : null,
+    };
+  }
+
+  // Zendesk as third priority
+  if (zendesk.data?.success && zendesk.data.data.connected) {
+    return {
+      provider: 'zendesk',
+      suggestions: zendesk.data.data.suggestions,
+      hasMore: zendesk.data.data.hasMore,
+      invitePath: workspaceId ? `/workspace/${workspaceId}/${PROVIDER_INVITE_PATHS.zendesk}` : null,
     };
   }
 
