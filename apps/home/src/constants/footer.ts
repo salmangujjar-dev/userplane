@@ -40,7 +40,7 @@ export const FOOTER_AI_LINKS = [
     icon: '/icons/grok.svg',
     href: `https://grok.com/?q=${ASK_QUERY}`,
   },
-] as const;
+];
 
 /**
  * Footer navigation links organized by section
@@ -49,7 +49,7 @@ export const FOOTER_LINKS = {
   product: [
     { label: 'Features', href: '/#features' },
     { label: 'Pricing', href: '/pricing' },
-    { label: 'FAQ', href: '/#faq' },
+    { label: 'Integrations', href: '/integrations' },
   ],
   company: [
     { label: 'Blog', href: NAV_LINKS.blog },

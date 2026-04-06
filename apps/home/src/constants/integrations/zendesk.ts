@@ -1,13 +1,19 @@
-import { mergeTransformOptions } from '@userplane/storage/media';
-
-import { mediaClient } from '../../lib/media';
+import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
 import { defineIntegration } from './defaults';
+import {
+  DOCS_HELPDESK_SETUP,
+  DOCS_RECORDING_REQUESTING,
+  DOCS_SENSITIVE_DATA_REDACTION,
+  DOCS_ZENDESK,
+} from './links';
+import { getFeatureUrl, getHeroUrl, getIconUrl } from './media';
 
 export const zendeskConfig = defineIntegration({
   slug: 'zendesk',
   name: 'Zendesk',
   url: 'https://zendesk.com',
+  icon: { src: getIconUrl('integrations/zendesk.webp'), alt: 'Zendesk' },
   gradient: {
     stops: [
       'rgba(3, 54, 61, 0.2)',
@@ -19,59 +25,64 @@ export const zendeskConfig = defineIntegration({
   seo: {
     title: 'Zendesk Screen Recording Integration | Userplane',
     description:
-      'Add screen recordings to Zendesk tickets. Agents request a recording from the ticket sidebar, and it comes back with console logs, network data, and browser metadata attached.',
+      'Collect screen recordings from Zendesk. Agents can request a recording and instantly receive a replay with logs, network activity, and user context. No follow-ups needed.',
     keywords:
       'zendesk screen recording, zendesk integration, zendesk ticket recording, zendesk support tool, userplane, screen recording for zendesk, zendesk marketplace app',
     ogImage: '/images/preview/og-zendesk.webp',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings that', 'live inside'],
-      accent: 'Zendesk',
+      lines: ['Screen Recordings that', 'live inside Zendesk'],
+      highlights: [{ wordIndex: 5, color: 'green' }],
+      icons: [
+        {
+          wordIndex: 5,
+          src: getIconUrl('integrations/zendesk.webp'),
+          alt: 'Zendesk',
+        },
+      ],
     },
-    description:
-      'Userplane adds a recording sidebar to every Zendesk ticket. Agents request a screen recording with one click, and the customer records without installing anything. The recording lands back on the ticket with console logs, network data, and browser metadata attached.',
+    description: [
+      'Userplane brings screen recordings into Zendesk.',
+      'Close tickets faster with full technical context upfront.',
+    ],
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
-      src: mediaClient.getMicrositeMediaUrl('microsites/zendesk/hero.png', {
-        transform: mergeTransformOptions('feature', { width: 1440 }),
-      }),
+      src: getHeroUrl('microsites/zendesk/hero.png'),
       alt: 'Zendesk ticket sidebar with Userplane recording request',
     },
   },
   features: [
     {
       number: '01',
-      title: 'Zendesk Marketplace app',
+      title: 'Designed for Zendesk',
       description:
-        'Userplane installs from the Zendesk Marketplace and adds a sidebar widget to every ticket. Agents request recordings with one click, and each recording is automatically linked back to the originating ticket -- no manual bookkeeping.',
-      tagline: 'Built for the ticket workflow',
+        'Userplane installs as a native Zendesk app, enabling screen recording for your entire team. Agents request screen recordings, which capture console logs, network activity, and user context helping your team resolve issues faster.',
+      tagline: 'Built for Zendesk tickets',
       capabilities: [
-        'Sidebar widget in every ticket',
-        'One-click recording requests',
-        'Ticket-linked recordings',
-        'Works with Zendesk Support & Suite',
+        'Request recordings without leaving Zendesk',
+        'Keep all context linked to the Zendesk ticket',
+        'Works with Zendesk Support & Suite out of the box',
+        'Available in Zendesk sidebar, editor, top-bar and macros',
       ],
-      image: mediaClient.getMicrositeMediaUrl('microsites/zendesk/feat-01.png', {
-        transform: mergeTransformOptions('feature', { width: 864 }),
-      }),
+      image: getFeatureUrl('microsites/zendesk/zendesk-integration.png'),
+      learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
       number: '02',
-      title: 'Automatic technical context',
+      title: 'Everything you need to debug',
       description:
-        'Every recording silently captures console logs, network requests, browser metadata, and a user action trail. Engineers get the full picture without asking customers to open DevTools or describe their setup.',
+        'Each recording comes with full technical context behind what the customer sees — console errors, network activity, and user steps — so your team can skip the guesswork and jump straight to the root cause.',
       tagline: 'Full-stack visibility',
       capabilities: [
-        'Console logs & errors',
-        'Network request waterfall',
-        'Browser & OS metadata',
-        'Step-by-step user action trail',
+        'Capture console logs and error traces',
+        'Inspect and analyze network requests',
+        'Access environment and application context',
+        'Reconstruct user sessions step by step',
       ],
-      image: mediaClient.getMicrositeMediaUrl('microsites/zendesk/feat-02.png', {
-        transform: mergeTransformOptions('feature', { width: 864 }),
-      }),
+      image: getFeatureUrl('microsites/zendesk/zendesk-context.png'),
+      learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
       number: '03',
@@ -80,14 +91,36 @@ export const zendeskConfig = defineIntegration({
         'PII is masked and redacted before recordings reach your team. Configurable redaction rules, consent controls, and full GDPR/CCPA compliance mean you can capture everything you need without compromising customer trust.',
       tagline: 'Compliant by default',
       capabilities: [
-        'Automatic PII masking',
-        'Configurable redaction rules',
-        'GDPR & CCPA compliant',
-        'Customer consent controls',
+        'Protect sensitive data with masking and redaction',
+        'Set redaction rules for each domain and customer',
+        'Ensure compliance with GDPR and CCPA out of the box',
+        'Manage customer consent with built-in controls',
       ],
-      image: mediaClient.getMicrositeMediaUrl('microsites/zendesk/feat-03.png', {
-        transform: mergeTransformOptions('feature', { width: 864 }),
-      }),
+      image: getFeatureUrl('microsites/zendesk/zendesk-privacy.png'),
+      learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],
+  resources: { seeAllHref: DOCS_ZENDESK },
+  cta: {
+    headline: {
+      lines: ['Request screen recordings', 'right within Zendesk'],
+      highlights: [
+        // { wordIndex: 1, color: 'blue' },
+        // { wordIndex: 2, color: 'blue' },
+        { wordIndex: 5, color: 'green' },
+      ],
+      icons: [
+        {
+          wordIndex: 5,
+          position: 'before',
+          src: getIconUrl('integrations/zendesk.webp'),
+          alt: 'Zendesk',
+        },
+      ],
+    },
+    description:
+      "Share recording links from Zendesk and get back a complete replay of the customer's issue.",
+    primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
+    secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
+  },
 });

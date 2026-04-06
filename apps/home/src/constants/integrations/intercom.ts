@@ -1,13 +1,19 @@
-import { mergeTransformOptions } from '@userplane/storage/media';
-
-import { mediaClient } from '../../lib/media';
+import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
 import { defineIntegration } from './defaults';
+import {
+  DOCS_HELPDESK_SETUP,
+  DOCS_INTERCOM,
+  DOCS_RECORDING_REQUESTING,
+  DOCS_SENSITIVE_DATA_REDACTION,
+} from './links';
+import { getFeatureUrl, getHeroUrl, getIconUrl } from './media';
 
 export const intercomConfig = defineIntegration({
   slug: 'intercom',
   name: 'Intercom',
   url: 'https://intercom.com',
+  icon: { src: getIconUrl('integrations/intercom.webp'), alt: 'Intercom' },
   gradient: {
     stops: [
       'rgba(0, 122, 255, 0.2)',
@@ -19,75 +25,101 @@ export const intercomConfig = defineIntegration({
   seo: {
     title: 'Intercom Screen Recording Integration | Userplane',
     description:
-      'Add screen recordings to Intercom conversations. Capture console logs, network requests, and session replays without leaving the Intercom Messenger.',
+      'Request screen recordings without leaving Intercom. Capture console logs, network requests, and session replays to understand and resolve support issues faster.',
     keywords:
       'intercom screen recording, intercom integration, intercom messenger app, intercom support tool, intercom bug reporting, screen recording intercom, userplane intercom, customer support screen recording',
     ogImage: '/images/preview/og-intercom.webp',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings that', 'live inside'],
-      accent: 'Intercom',
+      lines: ['Request screen recordings', 'without leaving Intercom'],
+      highlights: [{ wordIndex: 5, color: 'blue' }],
+      icons: [
+        {
+          wordIndex: 5,
+          src: getIconUrl('integrations/intercom.webp'),
+          alt: 'Intercom',
+        },
+      ],
     },
-    description:
-      'Userplane is the screen recording layer for Intercom. Request recordings from the Messenger, capture console logs and network data automatically, and replay issues without leaving your conversation.',
+    description: [
+      'Userplane embeds screen recording into Intercom.',
+      'So your team can understand and resolve support issues faster.',
+    ],
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
-      src: mediaClient.getMicrositeMediaUrl('microsites/intercom/hero.png', {
-        transform: mergeTransformOptions('feature', { width: 1440 }),
-      }),
+      src: getHeroUrl('microsites/intercom/hero.png'),
       alt: 'Userplane screen recording inside an Intercom conversation',
     },
   },
   features: [
     {
       number: '01',
-      title: 'Native Intercom Messenger app',
+      title: 'Built for Intercom',
       description:
-        'Userplane installs as a native app inside the Intercom Messenger. Request recordings, view playbacks, and share replays without switching tabs. The entire workflow stays in your conversation.',
-      tagline: 'Built for Intercom',
+        'Userplane brings screen recordings into Intercom Messenger, so your team can see exactly what went wrong and resolve issues faster. Send one-click recording links that work anywhere. No apps, installs, or extensions required.',
+      tagline: 'Native Intercom integration',
       capabilities: [
-        'One-click recording requests from conversations',
-        'Inline playback in Intercom sidebar',
-        'Recordings linked to conversation threads',
-        'Works with Intercom Inbox and Help Desk',
+        'Request recordings without leaving Messenger',
+        'No apps, installs, or extensions required',
+        'Recordings stay linked to the conversation',
+        'Works across Inbox, Messenger, and Macros',
       ],
-      image: mediaClient.getMicrositeMediaUrl('microsites/intercom/feat-01.png', {
-        transform: mergeTransformOptions('feature', { width: 864 }),
-      }),
+      image: getFeatureUrl('microsites/intercom/intercom-integration.png'),
+      learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
       number: '02',
-      title: 'Console logs, network data, and session metadata',
+      title: 'Console logs, network data, and session details',
       description:
-        'Every recording captures the full technical stack behind what the customer sees. Console errors, failed API calls, slow network requests, and browser details are attached automatically — so your engineering team stops asking "can you send me a screenshot?"',
+        'Each recording includes the full technical context behind what the customer sees — console errors, network activity, and user steps — so your team can get to the root cause faster.',
       tagline: 'Full technical context',
       capabilities: [
-        'Console logs and JavaScript errors',
-        'Network request waterfall with timing',
-        'Browser, OS, and viewport metadata',
-        'Timestamped user action trail',
+        'Capture console logs and error traces',
+        'Get network activity and request waterfall',
+        'Follow complete session and action trail',
+        'Access application state and user context',
       ],
-      image: mediaClient.getMicrositeMediaUrl('microsites/intercom/feat-02.png', {
-        transform: mergeTransformOptions('feature', { width: 864 }),
-      }),
+      image: getFeatureUrl('microsites/intercom/intercom-context.png'),
+      learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
       number: '03',
       title: 'Privacy controls built in',
       description:
-        "Sensitive fields are automatically masked before recordings leave the customer's browser. Configure element-level redaction rules, enforce consent flows, and stay compliant with GDPR and CCPA out of the box.",
+        "Sensitive data is masked before recordings ever leave the customer's browser. Configure exactly what gets captured, enforce consent, and meet compliance requirements with ease.",
       tagline: 'Private by default',
       capabilities: [
-        'Automatic PII masking and field blurring',
+        'PII masking and confidential field blurring',
         'Configurable redaction rules per domain',
-        'GDPR and CCPA compliant by design',
-        'Customer-controlled consent flow',
+        'GDPR and CCPA compliance by design',
+        'Flexible customer-driven consent flow',
       ],
-      image: mediaClient.getMicrositeMediaUrl('microsites/intercom/feat-03.png', {
-        transform: mergeTransformOptions('feature', { width: 864 }),
-      }),
+      image: getFeatureUrl('microsites/intercom/intercom-privacy.png'),
+      learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],
+  resources: { seeAllHref: DOCS_INTERCOM },
+  cta: {
+    headline: {
+      lines: ['Resolve support issues faster', 'right inside Intercom'],
+      highlights: [
+        // { wordIndex: 1, color: 'yellow' },
+        // { wordIndex: 2, color: 'yellow' },
+        { wordIndex: 6, color: 'blue' },
+      ],
+      icons: [
+        {
+          wordIndex: 6,
+          src: getIconUrl('integrations/intercom.webp'),
+          alt: 'Intercom',
+        },
+      ],
+    },
+    description:
+      "Request screen recordings and get back a complete replay of the customer's experience.",
+    primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
+    secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
+  },
 });
