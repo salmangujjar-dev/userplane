@@ -7,7 +7,6 @@ import Image from 'next/image';
 import { type ReactNode, useEffect, useRef } from 'react';
 
 import { DEFAULT_COMPANY_NAME, DEFAULT_PRIMARY_COLOR } from '@/constants';
-import { mediaClient } from '@/lib/media';
 import type { RecordingPreferences } from '@/types/session-preferences';
 import { lightenColor } from '@/utils';
 
@@ -94,7 +93,7 @@ export default function PreRecordingCountdownScreen({
               {countdownSeconds}
             </div>
             <Image
-              src={mediaClient.getIconMediaUrl('icons/video.svg')}
+              src="/icons/video.svg"
               alt="Recording"
               width={64}
               height={64}

@@ -15,7 +15,6 @@ import { AVATAR_SIZES, BoringAvatar } from '@/components/shared/boring-avatar';
 import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
 import { useProjectRestoreInfo, useRestoreProject } from '@/features/projects';
 import { useRestoreWorkspace, useWorkspaceRestoreInfo } from '@/features/workspace';
-import { mediaClient } from '@/lib/media';
 import { useWorkspaceStore } from '@/stores/workspace';
 import type { RestorationStatus } from '@/types';
 
@@ -37,7 +36,7 @@ function InvalidParamsState({ onGoToDashboard }: { onGoToDashboard: () => void }
 
         <div className="flex flex-col items-center gap-6">
           <Image
-            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+            src="/icons/dino.svg"
             alt="Error"
             width={120}
             height={120}
@@ -207,7 +206,7 @@ function ErrorState({
 
         <div className="flex flex-col items-center gap-6">
           <Image
-            src={mediaClient.getIconMediaUrl('icons/dino.svg')}
+            src="/icons/dino.svg"
             alt="Error"
             width={120}
             height={120}

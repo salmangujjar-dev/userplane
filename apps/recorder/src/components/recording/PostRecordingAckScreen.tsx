@@ -13,7 +13,6 @@ import {
   SUCCESS_AUTO_CLOSE_DELAY_MS,
 } from '@/constants';
 import { useAppMode, useBridge } from '@/contexts/AppModeContext';
-import { mediaClient } from '@/lib/media';
 import type { RecordingPreferences } from '@/types/session-preferences';
 
 import RecordingScreenLayout from './RecordingScreenLayout';
@@ -61,7 +60,7 @@ export default function PostRecordingAckScreen({
       <div className="flex flex-col items-center justify-center text-center w-full">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
           <Image
-            src={mediaClient.getIconMediaUrl('icons/checkmark.svg')}
+            src="/icons/checkmark.svg"
             alt="Success"
             width={32}
             height={32}

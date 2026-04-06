@@ -14,6 +14,11 @@ const imageZone = process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_ZONE || 'userplane.io
 const skipTransform = process.env.NEXT_PUBLIC_SKIP_IMAGE_TRANSFORM === 'true';
 
 export default function cloudflareLoader({ src, width }: ImageLoaderProps): string {
+  // Local paths (from public/) don't need CDN transforms
+  if (src.startsWith('/')) {
+    return src;
+  }
+
   if (skipTransform) {
     // Include width in URL so Next.js sees the loader implements it
     const separator = src.includes('?') ? '&' : '?';

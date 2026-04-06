@@ -7,7 +7,6 @@ import Image from 'next/image';
 import type { ReactNode } from 'react';
 
 import { DEFAULT_COMPANY_NAME } from '@/constants';
-import { mediaClient } from '@/lib/media';
 
 interface RecordingScreenLayoutProps {
   children: ReactNode;
@@ -37,7 +36,7 @@ export default function RecordingScreenLayout({
       <footer className="flex flex-col items-center gap-2 sm:gap-4 px-4 py-6 sm:py-8 relative z-10">
         <div className="flex items-center gap-2">
           <Image
-            src={workspaceLogoUrl ?? mediaClient.getBrandMediaUrl('brand/logo-dark.svg')}
+            src={workspaceLogoUrl ?? '/logo-dark.svg'}
             alt={workspaceName ?? DEFAULT_COMPANY_NAME}
             width={80}
             height={16}
