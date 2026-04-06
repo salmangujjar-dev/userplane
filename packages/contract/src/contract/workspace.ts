@@ -74,7 +74,6 @@ import {
   SendDomainInstructionsSchema,
   SendInvitesResultSchema,
   SendWorkspaceInvitesSchema,
-  SlackErrors,
   SlackIntegrationAuthorizeDataSchema,
   SlackIntegrationAuthorizeSchema,
   SlackIntegrationCallbackDataSchema,
@@ -748,6 +747,7 @@ export const updateDomainRecordingPreferences = oc
     DOMAIN_PREFERENCES_UPDATE_FAILED: DomainErrors.DOMAIN_PREFERENCES_UPDATE_FAILED,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_FEATURE_NOT_AVAILABLE: WorkspaceErrors.WORKSPACE_FEATURE_NOT_AVAILABLE,
   })
   .input(UpdateDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesUpdateDataSchema));
@@ -775,6 +775,7 @@ export const replaceDomainRecordingPreferences = oc
     DOMAIN_PREFERENCES_UPDATE_FAILED: DomainErrors.DOMAIN_PREFERENCES_UPDATE_FAILED,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_FEATURE_NOT_AVAILABLE: WorkspaceErrors.WORKSPACE_FEATURE_NOT_AVAILABLE,
   })
   .input(ReplaceDomainRecordingPreferencesSchema)
   .output(ApiResponseSchema(DomainRecordingPreferencesUpdateDataSchema));
@@ -914,7 +915,6 @@ export const restoreWorkspace = oc
     UNAUTHORIZED: WorkspaceErrors.UNAUTHORIZED,
     FORBIDDEN: WorkspaceErrors.FORBIDDEN,
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_NOT_DELETED: WorkspaceErrors.WORKSPACE_NOT_DELETED,
     WORKSPACE_RESTORE_TIME_EXPIRED: WorkspaceErrors.WORKSPACE_RESTORE_TIME_EXPIRED,
     WORKSPACE_RESTORE_FAILED: WorkspaceErrors.WORKSPACE_RESTORE_FAILED,
   })
@@ -1039,6 +1039,8 @@ export const joinWorkspace = oc
     WORKSPACE_INVITE_POLICY_PRIVATE: WorkspaceErrors.WORKSPACE_INVITE_POLICY_PRIVATE,
     WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH:
       WorkspaceErrors.WORKSPACE_INVITE_POLICY_DOMAIN_MISMATCH,
+    INTERNAL_SERVER_ERROR: DomainErrors.INTERNAL_SERVER_ERROR,
+    PLAN_LIMIT_EXCEEDED: BillingErrors.PLAN_LIMIT_EXCEEDED,
   })
   .input(JoinWorkspaceSchema)
   .output(ApiResponseSchema(JoinWorkspaceDataSchema));
@@ -1085,6 +1087,7 @@ export const approveAccessRequest = oc
     WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
     WORKSPACE_ACCESS_REQUEST_INVALID: WorkspaceErrors.WORKSPACE_ACCESS_REQUEST_INVALID,
     WORKSPACE_ACCESS_REQUEST_NOT_OWNER: WorkspaceErrors.WORKSPACE_ACCESS_REQUEST_NOT_OWNER,
+    PLAN_LIMIT_EXCEEDED: BillingErrors.PLAN_LIMIT_EXCEEDED,
   })
   .input(ApproveAccessRequestSchema)
   .output(ApiResponseSchema(ApproveAccessRequestDataSchema));
@@ -1464,7 +1467,8 @@ export const slackIntegrationCallback = oc
     WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     INTEGRATION_PROVIDER_WORKSPACE_CONFLICT:
       WorkspaceErrors.INTEGRATION_PROVIDER_WORKSPACE_CONFLICT,
-    SLACK_TOKEN_EXCHANGE_FAILED: SlackErrors.SLACK_API_ERROR,
+    SLACK_TOKEN_EXCHANGE_FAILED: ProvisionerErrors.SLACK_TOKEN_EXCHANGE_FAILED,
+    SLACK_AUTH_VALIDATION_FAILED: ProvisionerErrors.SLACK_AUTH_VALIDATION_FAILED,
   })
   .input(SlackIntegrationCallbackSchema)
   .output(ApiResponseSchema(SlackIntegrationCallbackDataSchema));

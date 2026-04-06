@@ -53,10 +53,6 @@ export const ProjectErrors = {
   },
 
   // Restoration errors
-  PROJECT_NOT_DELETED: {
-    status: 400,
-    message: 'Project is not deleted and cannot be restored',
-  },
   PROJECT_RESTORE_WORKSPACE_DELETED: {
     status: 410,
     message: 'Cannot restore project because its workspace is deleted',

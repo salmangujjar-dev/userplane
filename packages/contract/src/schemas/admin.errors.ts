@@ -32,11 +32,6 @@ export const AdminErrors = {
   },
 
   // Validation errors
-  INVALID_BAN_DURATION: {
-    status: 400,
-    message: 'Ban duration must be a positive number',
-  },
-
   CANNOT_BAN_SELF: {
     status: 400,
     message: 'You cannot ban yourself',

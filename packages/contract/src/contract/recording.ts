@@ -110,6 +110,7 @@ export const updateRecording = oc
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
     RECORDING_WORKSPACE_MISMATCH: RecordingErrors.RECORDING_WORKSPACE_MISMATCH,
     RECORDING_UPDATE_FAILED: RecordingErrors.RECORDING_UPDATE_FAILED,
+    PLAN_FEATURE_UNAVAILABLE: BillingErrors.PLAN_FEATURE_UNAVAILABLE,
   })
   .input(UpdateRecordingSchema)
   .output(ApiResponseSchema(RecordingUpdateDataSchema));
@@ -241,7 +242,6 @@ export const shareRecording = oc
     FORBIDDEN: RecordingErrors.FORBIDDEN,
     RECORDING_NOT_FOUND: RecordingErrors.RECORDING_NOT_FOUND,
     RECORDING_GONE: RecordingErrors.RECORDING_GONE,
-    RECORDING_SHARE_FAILED: RecordingErrors.RECORDING_SHARE_FAILED,
     PLAN_FEATURE_UNAVAILABLE: BillingErrors.PLAN_FEATURE_UNAVAILABLE,
   })
   .input(ShareRecordingSchema)

@@ -109,6 +109,7 @@ export const completeUpload = oc
     SESSION_UPLOAD_FAILED: SessionErrors.SESSION_UPLOAD_FAILED,
     SESSION_FILE_VERIFICATION_FAILED: SessionErrors.SESSION_FILE_VERIFICATION_FAILED,
     SESSION_STORAGE_ERROR: SessionErrors.SESSION_STORAGE_ERROR,
+    PLAN_LIMIT_EXCEEDED: BillingErrors.PLAN_LIMIT_EXCEEDED,
   })
   .input(CompleteUploadSchema)
   .output(ApiResponseSchema(UploadCompleteDataSchema));
