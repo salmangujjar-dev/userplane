@@ -1,5 +1,6 @@
 import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
+import { getDashUrl } from '../urls';
 import { defineIntegration } from './defaults';
 import {
   DOCS_HELPDESK_SETUP,
@@ -46,11 +47,14 @@ export const zendeskConfig = defineIntegration({
       'Userplane brings screen recordings into Zendesk.',
       'Close tickets faster with full technical context upfront.',
     ],
-    primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
-    secondaryCTA: { text: 'See Demo', href: '/demo' },
     preview: {
       src: getHeroUrl('microsites/zendesk/hero.png'),
       alt: 'Zendesk ticket sidebar with Userplane recording request',
+    },
+    marketplace: {
+      label: 'Zendesk App Store',
+      href: getDashUrl('/_/settings?tab=integrations'),
+      icon: { src: getIconUrl('integrations/zendesk.webp'), alt: 'Zendesk' },
     },
   },
   features: [

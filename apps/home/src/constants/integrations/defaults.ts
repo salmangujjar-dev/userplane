@@ -89,8 +89,6 @@ export function defineIntegration(
       description: [
         `Userplane is the screen recording layer for support teams using ${shortName}. Request, capture, and replay customer issues with full technical context.`,
       ],
-      primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
-      secondaryCTA: { text: 'See Demo', href: '/demo' },
       preview: {
         src: '',
         alt: `${name} integration preview`,

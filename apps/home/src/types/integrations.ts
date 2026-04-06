@@ -71,9 +71,12 @@ export interface IntegrationConfig {
   hero: {
     headline: IntegrationHeadline;
     description: string[];
-    primaryCTA: ButtonConfig;
-    secondaryCTA: ButtonConfig;
     preview: { src: string; alt: string };
+    marketplace?: {
+      label: string;
+      href: string;
+      icon: { src: string; alt: string };
+    };
   };
   features: FeatureData[];
   browser: {

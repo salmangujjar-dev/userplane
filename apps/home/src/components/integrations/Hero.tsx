@@ -4,6 +4,12 @@ import { ChevronRight } from 'lucide-react';
 import type { HighlightColor } from '@/types/highlight';
 import type { ButtonConfig, IntegrationHeadline } from '@/types/integrations';
 
+interface MarketplaceConfig {
+  label: string;
+  href: string;
+  icon: { src: string; alt: string };
+}
+
 import Highlight from '../shared/Highlight';
 import GlassCard from './GlassCard';
 import GradientBlur from './GradientBlur';
@@ -11,9 +17,10 @@ import GradientBlur from './GradientBlur';
 interface HeroProps {
   headline: IntegrationHeadline;
   description: string[];
-  primaryCTA: ButtonConfig;
-  secondaryCTA: ButtonConfig;
+  primaryCTA?: ButtonConfig;
+  secondaryCTA?: ButtonConfig;
   preview?: { src: string; alt: string };
+  marketplace?: MarketplaceConfig;
 }
 
 interface IconData {
@@ -104,6 +111,7 @@ export default function Hero({
   primaryCTA,
   secondaryCTA,
   preview,
+  marketplace,
 }: HeroProps) {
   const nodes = buildNodes(headline);
 
@@ -153,18 +161,45 @@ export default function Hero({
               ))}
             </p>
 
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Button asChild variant="secondary" size="lg">
-                <a className="font-medium" href={secondaryCTA.href}>
-                  {secondaryCTA.text}
-                </a>
-              </Button>
-              <Button asChild size="lg">
-                <a className="flex items-center gap-2 font-medium" href={primaryCTA.href}>
-                  {primaryCTA.text} <ChevronRight className="h-4 w-4" />
-                </a>
-              </Button>
-            </div>
+            {(primaryCTA || secondaryCTA) && (
+              <div className="flex items-center gap-3 sm:gap-4">
+                {secondaryCTA && (
+                  <Button asChild variant="secondary" size="lg">
+                    <a className="font-medium" href={secondaryCTA.href}>
+                      {secondaryCTA.text}
+                    </a>
+                  </Button>
+                )}
+                {primaryCTA && (
+                  <Button asChild size="lg">
+                    <a className="flex items-center gap-2 font-medium" href={primaryCTA.href}>
+                      {primaryCTA.text} <ChevronRight className="h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {marketplace && (
+              <a
+                href={marketplace.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex w-fit items-center gap-3 rounded-lg border border-border/60 bg-muted/40 px-4 py-2.5 transition-colors hover:border-border hover:bg-muted/70"
+              >
+                <img
+                  src={marketplace.icon.src}
+                  alt={marketplace.icon.alt}
+                  className="size-8 object-contain"
+                />
+                <span className="text-[13px] leading-tight text-muted-foreground">
+                  Available in the
+                  <br />
+                  <span className="font-medium text-foreground">{marketplace.label}</span>
+                </span>
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
+              </a>
+            )}
           </div>
         </div>
 

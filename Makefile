@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:extras dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build extension\:dev extension\:build extension\:build\:prod extension\:zip extension\:zip\:prod extension\:storybook extension\:storybook\:build i d b l f t c
+.PHONY: help install dev dev\:extras dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build extension\:dev extension\:build extension\:build\:prod extension\:zip extension\:zip\:prod extension\:storybook extension\:storybook\:build assets\:optimize assets\:optimize\:dry-run assets\:optimize\:dir i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -145,6 +145,12 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)assets:validate$(WHITE)               ║$(RESET) Validate manifest assets exist (local + remote dev)               $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)assets:validate:local$(WHITE)         ║$(RESET) Validate local asset files exist                                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)assets:validate:production$(WHITE)    ║$(RESET) Validate assets exist on production CDN                           $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)MEDIA OPTIMIZATION$(WHITE)                                                                                ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)assets:optimize$(WHITE)               ║$(RESET) Lossless optimize all images (requires ImageMagick)              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)assets:optimize:dry-run$(WHITE)       ║$(RESET) Preview optimization savings (no changes)                        $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)assets:optimize:dir$(WHITE)           ║$(RESET) Optimize a specific dir (DIR=path/to/dir)                        $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)TUNNELS (Cloudflare Tunnel)$(WHITE)                                                                      ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -547,6 +553,51 @@ assets\:validate\:production: ## Validate assets exist on production CDN
 	@echo "$(BLUE)Validating production CDN assets...$(RESET)"
 	@cd packages/storage && bun run assets:validate:production
 	@echo "$(GREEN)Production validation complete!$(RESET)"
+
+# Media optimization commands (uses optimo - https://optimo.microlink.io)
+ASSET_DIRS := packages/storage/assets/microsites \
+	packages/storage/assets/launch \
+	packages/storage/assets/features \
+	packages/storage/assets/integrations \
+	packages/storage/assets/spotlight \
+	packages/storage/assets/icons \
+	packages/storage/assets/tiles \
+	packages/storage/assets/brand
+
+assets\:optimize: ## Lossless optimize all images (requires ImageMagick)
+	@command -v magick >/dev/null 2>&1 || { echo "$(RED)Error: ImageMagick not found. Install with: brew install imagemagick$(RESET)"; exit 1; }
+	@echo "$(BLUE)Optimizing all asset images (lossless)...$(RESET)"
+	@for dir in $(ASSET_DIRS); do \
+		if [ -d "$$dir" ]; then \
+			echo "$(CYAN)→ $$dir$(RESET)"; \
+			npx optimo $$dir; \
+		fi; \
+	done
+	@echo "$(GREEN)All assets optimized!$(RESET)"
+
+assets\:optimize\:dry-run: ## Preview optimization savings (no changes)
+	@command -v magick >/dev/null 2>&1 || { echo "$(RED)Error: ImageMagick not found. Install with: brew install imagemagick$(RESET)"; exit 1; }
+	@echo "$(BLUE)Previewing optimization savings...$(RESET)"
+	@for dir in $(ASSET_DIRS); do \
+		if [ -d "$$dir" ]; then \
+			echo "$(CYAN)→ $$dir$(RESET)"; \
+			npx optimo $$dir --dry-run; \
+		fi; \
+	done
+
+assets\:optimize\:dir: ## Optimize a specific directory (DIR=path/to/dir)
+	@command -v magick >/dev/null 2>&1 || { echo "$(RED)Error: ImageMagick not found. Install with: brew install imagemagick$(RESET)"; exit 1; }
+	@if [ -z "$(DIR)" ]; then \
+		echo "$(RED)Error: DIR is required. Usage: make assets:optimize:dir DIR=packages/storage/assets/features$(RESET)"; \
+		exit 1; \
+	fi
+	@if [ ! -d "$(DIR)" ]; then \
+		echo "$(RED)Error: Directory not found: $(DIR)$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)Optimizing $(DIR) (lossless)...$(RESET)"
+	@npx optimo $(DIR)
+	@echo "$(GREEN)Done!$(RESET)"
 
 update: ## Update dependencies
 	@echo "$(BLUE)Updating dependencies...$(RESET)"
