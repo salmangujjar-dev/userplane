@@ -71,11 +71,11 @@ export const astroConfig = defineFramework({
       number: '02',
       title: 'Errors and network captured',
       description:
-        'Console errors, network waterfalls, browser metadata, and user actions — captured regardless of which framework island generated them.',
+        'Console errors, network activity, browser metadata, and user actions — captured regardless of which framework island generated them.',
       tagline: 'Cross-island diagnostics',
       capabilities: [
         'Console logs and error traces',
-        'Network request waterfall',
+        'Network activity capture',
         'Browser & OS metadata',
         'Island-agnostic capture',
       ],
@@ -101,13 +101,13 @@ export const astroConfig = defineFramework({
       number: '04',
       title: 'Routes to your support stack',
       description:
-        'Recordings attach to Intercom, Zendesk, and Slack conversations. API and webhook access for routing to Jira, Linear, or internal dashboards.',
+        'Recordings attach to Intercom, Zendesk, and Slack conversations. Link session data to support tickets. API and webhook access for custom routing.',
       tagline: 'Where your team triages',
       capabilities: [
         'Intercom, Zendesk, Slack',
+        'Ticket-linked recordings',
         'API and webhook access',
-        'Jira & Linear routing',
-        'Internal dashboard support',
+        'Browser extension support',
       ],
       image: getFrameworkFeatureUrl('microsites/astro-fw/astro-integration.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
@@ -141,14 +141,14 @@ export const astroConfig = defineFramework({
   },
   cta: {
     headline: {
-      lines: ['Start capturing sessions', 'in your Astro site'],
+      lines: ['Troubleshoot Astro issues across every island'],
       highlights: [
         { wordIndex: 1, color: 'purple' },
         { wordIndex: 2, color: 'purple' },
       ],
     },
     description:
-      'Console logs, network requests, and session metadata — captured from every Astro session.',
+      'Island rendering issues, hydration bugs, and runtime errors — diagnosed with full technical context from every recording.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_ASTRO },
   },

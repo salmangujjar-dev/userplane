@@ -70,11 +70,11 @@ export const nuxtConfig = defineFramework({
       number: '02',
       title: 'Full diagnostic context',
       description:
-        'Console errors, network request waterfalls, browser metadata, and user steps — shipped with every recording. Works across server and client boundaries.',
+        'Console errors, network request snapshots, browser metadata, and user steps — shipped with every recording. Works across server and client boundaries.',
       tagline: 'Diagnose across boundaries',
       capabilities: [
         'Console logs and error traces',
-        'Network request waterfall',
+        'Network activity log',
         'Browser & OS metadata',
         'Server and client coverage',
       ],
@@ -100,13 +100,13 @@ export const nuxtConfig = defineFramework({
       number: '04',
       title: 'Pipes to your help desk',
       description:
-        'Session recordings route to Intercom, Zendesk, and Slack. API and webhook endpoints for Jira, Linear, or custom integrations.',
+        'Session recordings route to Intercom, Zendesk, and Slack. Link recordings to support tickets. API and webhook endpoints for custom integrations.',
       tagline: 'Context lands where you work',
       capabilities: [
         'Intercom, Zendesk, Slack',
+        'Recordings attached to tickets',
         'API and webhook endpoints',
-        'Jira & Linear routing',
-        'Custom integrations',
+        'Custom pipeline routing',
       ],
       image: getFrameworkFeatureUrl('microsites/nuxt/nuxt-integration.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
@@ -140,14 +140,14 @@ export const nuxtConfig = defineFramework({
   },
   cta: {
     headline: {
-      lines: ['Start capturing sessions', 'in your Nuxt app'],
+      lines: ['Stop guessing what broke in your Nuxt app'],
       highlights: [
         { wordIndex: 1, color: 'green' },
         { wordIndex: 2, color: 'green' },
       ],
     },
     description:
-      'Console logs, network requests, and session metadata — captured from every Nuxt session.',
+      'SSR and client-side issues diagnosed with console errors, network activity, and complete browser context from every recording.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_NUXT },
   },

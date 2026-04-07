@@ -100,13 +100,13 @@ export const angularConfig = defineFramework({
       number: '04',
       title: 'Delivers to your help desk',
       description:
-        'Session recordings attach to Intercom, Zendesk, and Slack conversations. API and webhook endpoints for routing to Jira, Linear, or your internal tools.',
+        'Session recordings attach to Intercom, Zendesk, and Slack conversations. Session data links to tickets. API and webhook endpoints for custom routing.',
       tagline: 'Recordings where tickets live',
       capabilities: [
         'Intercom, Zendesk, Slack',
+        'Ticket attachment support',
         'API and webhook endpoints',
-        'Jira & Linear routing',
-        'Internal tool integration',
+        'Custom integration support',
       ],
       image: getFrameworkFeatureUrl('microsites/angular/angular-integration.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
@@ -140,14 +140,14 @@ export const angularConfig = defineFramework({
   },
   cta: {
     headline: {
-      lines: ['Start capturing sessions', 'in your Angular app'],
+      lines: ['Pinpoint Angular issues with full technical context'],
       highlights: [
         { wordIndex: 1, color: 'red' },
         { wordIndex: 2, color: 'red' },
       ],
     },
     description:
-      'Console logs, network requests, and session metadata — captured from every Angular session.',
+      'Dependency injection errors, routing issues, and change detection bugs — resolved with full technical context from every recording.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_ANGULAR },
   },

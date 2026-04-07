@@ -70,11 +70,11 @@ export const vueConfig = defineFramework({
       number: '02',
       title: 'Technical context included',
       description:
-        'Console errors, network waterfalls, browser metadata, and step-by-step user actions — attached to every recording from your Vue application automatically.',
+        'Console errors, network snapshots, browser metadata, and step-by-step user actions — attached to every recording from your Vue application automatically.',
       tagline: 'Everything to triage',
       capabilities: [
         'Console logs and error traces',
-        'Network request waterfall',
+        'Network request timeline',
         'Browser & OS metadata',
         'Step-by-step user actions',
       ],
@@ -100,13 +100,13 @@ export const vueConfig = defineFramework({
       number: '04',
       title: 'Integrates with your stack',
       description:
-        'Recordings route to Intercom, Zendesk, or Slack. Session data links to tickets. API and webhook support for Jira, Linear, or internal dashboards.',
+        'Recordings route to Intercom, Zendesk, or Slack. Session data links to tickets. API and webhook support for custom pipelines.',
       tagline: 'Fits your support workflow',
       capabilities: [
         'Intercom, Zendesk, Slack',
         'Session data linked to tickets',
         'API and webhook support',
-        'Jira & Linear routing',
+        'Record from any browser',
       ],
       image: getFrameworkFeatureUrl('microsites/vue/vue-integration.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
@@ -140,14 +140,14 @@ export const vueConfig = defineFramework({
   },
   cta: {
     headline: {
-      lines: ['Start capturing sessions', 'in your Vue app'],
+      lines: ['See exactly what went wrong in your Vue app'],
       highlights: [
         { wordIndex: 1, color: 'green' },
         { wordIndex: 2, color: 'green' },
       ],
     },
     description:
-      'Console logs, network requests, and session metadata — captured from every Vue session.',
+      'Reactive state issues, routing bugs, and runtime errors — every recording has the technical context to find the root cause.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_VUE },
   },
