@@ -20,6 +20,7 @@ export const LLMS_LINKS: LlmsLink[] = [
   { label: 'Help Center', url: 'https://userplane.io/help' },
   { label: 'Roadmap', url: 'https://userplane.io/roadmap' },
   { label: 'Solutions', url: 'https://userplane.io/for' },
+  { label: 'Frameworks', url: 'https://userplane.io/frameworks' },
   { label: 'Demo', url: 'https://userplane.io/demo' },
   { label: 'Contact Us', url: 'https://docs.userplane.io/support/contact.md' },
 ];

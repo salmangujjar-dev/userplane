@@ -1,0 +1,108 @@
+---
+import HomepageLayout from '../../layouts/HomepageLayout.astro';
+import JsonLd from '../../components/seo/JsonLd.astro';
+import Hero from '../../components/frameworks/Hero';
+import LogoMarquee from '../../components/frameworks/LogoMarquee';
+import FrameworkBrowser from '../../components/frameworks/FrameworkBrowser';
+import CallToAction from '../../components/frameworks/CallToAction';
+
+import { FRAMEWORK_REGISTRY } from '../../constants/frameworks/registry';
+import { FRAMEWORK_LOGOS, FRAMEWORK_LOGOS_LABEL } from '../../constants/frameworks/logos';
+import {
+  LISTING_SEO,
+  LISTING_GRADIENT,
+  LISTING_HERO,
+  LISTING_CTA,
+} from '../../constants/frameworks/listing';
+
+const frameworks = Object.values(FRAMEWORK_REGISTRY);
+
+const browserEntries = frameworks.map((config) => ({
+  slug: config.slug,
+  name: config.name,
+  description: config.seo.description,
+  pageHref: `/frameworks/${config.slug}`,
+  docsHref: config.resources.seeAllHref,
+  icon: config.icon,
+  image: config.hero.preview
+    ? { src: config.hero.preview.src, alt: config.hero.preview.alt }
+    : undefined,
+  gradientStops: config.gradient.stops,
+  resources: config.resources.links.slice(0, 3).map((l) => ({
+    label: l.label,
+    title: l.title,
+    description: l.description,
+    href: l.href,
+  })),
+}));
+
+const gradientVars = LISTING_GRADIENT.stops
+  .map((stop, i) => `--gradient-${i + 1}: ${stop}`)
+  .join('; ');
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: new URL('/', Astro.site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Frameworks',
+      item: new URL('/frameworks', Astro.site).href,
+    },
+  ],
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Userplane for Your Framework',
+  description: LISTING_SEO.description,
+  url: new URL('/frameworks', Astro.site).href,
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: frameworks.map((config, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: new URL(`/frameworks/${config.slug}`, Astro.site).href,
+      name: `Userplane for ${config.name}`,
+    })),
+  },
+};
+---
+
+<HomepageLayout
+  title={LISTING_SEO.title}
+  description={LISTING_SEO.description}
+  keywords={LISTING_SEO.keywords}
+>
+  <JsonLd data={breadcrumb} />
+  <JsonLd data={jsonLd} />
+  <main class="flex flex-col" style={gradientVars}>
+    <Hero
+      headline={LISTING_HERO.headline}
+      description={LISTING_HERO.description}
+      primaryCTA={LISTING_HERO.primaryCTA}
+      secondaryCTA={LISTING_HERO.secondaryCTA}
+      preview={LISTING_HERO.preview}
+      client:load
+    />
+    <LogoMarquee label={FRAMEWORK_LOGOS_LABEL} logos={FRAMEWORK_LOGOS} client:load />
+
+    <FrameworkBrowser frameworks={browserEntries} client:load />
+
+    <CallToAction
+      headline={LISTING_CTA.headline}
+      description={LISTING_CTA.description}
+      primaryCTA={LISTING_CTA.primaryCTA}
+      secondaryCTA={LISTING_CTA.secondaryCTA}
+      client:load
+    />
+  </main>
+</HomepageLayout>

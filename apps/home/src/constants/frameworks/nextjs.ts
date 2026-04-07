@@ -1,0 +1,154 @@
+import { SIGNUP_URL } from '../onboarding';
+import { defineFramework } from './defaults';
+import {
+  DOCS_FRAMEWORK_NEXTJS,
+  DOCS_RECORDING_REQUESTING,
+  DOCS_SDK_OVERVIEW,
+  DOCS_SENSITIVE_DATA_REDACTION,
+} from './links';
+import { getFrameworkFeatureUrl, getFrameworkHeroUrl, getFrameworkIconUrl } from './media';
+
+export const nextjsConfig = defineFramework({
+  slug: 'nextjs',
+  name: 'Next.js',
+  icon: { src: getFrameworkIconUrl('frameworks/nextjs.svg'), alt: 'Next.js' },
+  gradient: {
+    stops: [
+      'rgba(0, 0, 0, 0.08)',
+      'rgba(17, 17, 17, 0.08)',
+      'rgba(34, 34, 34, 0.08)',
+      'rgba(51, 51, 51, 0.08)',
+    ],
+  },
+  seo: {
+    title: 'Userplane for Next.js | Screen Recordings with Console Logs',
+    description:
+      'Capture console logs, network requests, and session metadata from your Next.js app. Works with App Router and Server Components.',
+    keywords:
+      'next.js screen recording, nextjs session replay, nextjs console logs, next.js debugging, app router screen recording, userplane nextjs',
+  },
+  hero: {
+    headline: {
+      lines: ['Screen recordings for', 'Next.js applications'],
+      highlights: [{ wordIndex: 3, color: 'blue' }],
+      icons: [
+        {
+          wordIndex: 3,
+          src: getFrameworkIconUrl('frameworks/nextjs.svg'),
+          alt: 'Next.js',
+        },
+      ],
+    },
+    description: [
+      'Capture console logs, network requests, and session metadata from your Next.js app.',
+      'Works with App Router and Server Components.',
+    ],
+    preview: {
+      src: getFrameworkHeroUrl('microsites/nextjs/hero.png'),
+      alt: 'Userplane screen recording from a Next.js application',
+    },
+    primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
+    secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_NEXTJS },
+  },
+  features: [
+    {
+      number: '01',
+      title: 'Record customer sessions',
+      description:
+        "Send a recording link. Get back a full session replay from the customer's Next.js app — every click, navigation, and error captured. No browser extension needed.",
+      tagline: 'One link, full replay',
+      capabilities: [
+        'One-click recording links',
+        'Full session replay',
+        'No browser extensions',
+        'Works with App Router',
+      ],
+      image: getFrameworkFeatureUrl('microsites/nextjs/nextjs-sdk.png'),
+      learnMoreHref: DOCS_FRAMEWORK_NEXTJS,
+    },
+    {
+      number: '02',
+      title: 'Logs, network, and metadata',
+      description:
+        'Console errors, network request waterfalls, and browser fingerprints ship with every recording. Debug client-side hydration issues and API failures without asking for steps to reproduce.',
+      tagline: 'Debug without the back-and-forth',
+      capabilities: [
+        'Console logs and error traces',
+        'Network request waterfall',
+        'Browser & OS metadata',
+        'Step-by-step user actions',
+      ],
+      image: getFrameworkFeatureUrl('microsites/nextjs/nextjs-context.png'),
+      learnMoreHref: DOCS_RECORDING_REQUESTING,
+    },
+    {
+      number: '03',
+      title: 'Redaction before capture',
+      description:
+        'PII is masked before recordings leave the browser. GDPR and CCPA compliant. Middleware-compatible token handling for App Router redirects.',
+      tagline: 'Private by default',
+      capabilities: [
+        'Client-side PII masking',
+        'GDPR & CCPA compliant',
+        'Middleware token handling',
+        'Configurable redaction rules',
+      ],
+      image: getFrameworkFeatureUrl('microsites/nextjs/nextjs-privacy.png'),
+      learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
+    },
+    {
+      number: '04',
+      title: 'Plugs into your help desk',
+      description:
+        'Recordings attach to Intercom, Zendesk, and Slack conversations. API and webhook access for custom routing to Jira, Linear, or internal tools.',
+      tagline: 'Deliver context where tickets live',
+      capabilities: [
+        'Intercom, Zendesk, Slack',
+        'API and webhook access',
+        'Jira & Linear routing',
+        'Custom integrations',
+      ],
+      image: getFrameworkFeatureUrl('microsites/nextjs/nextjs-integration.png'),
+      learnMoreHref: DOCS_SDK_OVERVIEW,
+    },
+  ],
+  resources: {
+    links: [
+      {
+        label: 'Guide',
+        title: 'Next.js Setup Guide',
+        description:
+          'Install Userplane in your Next.js App Router application. Dynamic import, provider component, and middleware setup.',
+        href: DOCS_FRAMEWORK_NEXTJS,
+      },
+      {
+        label: 'SDK',
+        title: 'SDK Overview',
+        description:
+          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+        href: DOCS_SDK_OVERVIEW,
+      },
+      {
+        label: 'Recording',
+        title: 'How Screen Recording Works',
+        description:
+          'How recordings capture console logs, network requests, and session metadata automatically.',
+        href: DOCS_RECORDING_REQUESTING,
+      },
+    ],
+    seeAllHref: DOCS_FRAMEWORK_NEXTJS,
+  },
+  cta: {
+    headline: {
+      lines: ['Start capturing sessions', 'in your Next.js app'],
+      highlights: [
+        { wordIndex: 1, color: 'blue' },
+        { wordIndex: 2, color: 'blue' },
+      ],
+    },
+    description:
+      'Console logs, network data, and session metadata — captured from every Next.js session.',
+    primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
+    secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_NEXTJS },
+  },
+});
