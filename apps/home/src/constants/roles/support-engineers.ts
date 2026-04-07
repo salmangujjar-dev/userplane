@@ -22,20 +22,21 @@ export const supportEngineersConfig = defineRole({
     ],
   },
   seo: {
-    title: 'Userplane for Support Engineers | Engineer-Ready Artifacts from Every Ticket',
+    title:
+      'Userplane for Support Engineers | Console Logs, Network Data, and Repro Steps with Every Ticket',
     description:
-      'Console logs, network data, repro steps, and full session recordings. Complete context from first contact — no chasing details.',
+      'Console logs, network data, repro steps, and full session recordings. Complete context from first contact — no chasing customers for details.',
     keywords:
       'support engineer tools, bug report context, repro steps, console logs support, engineer-ready tickets, clean handoffs, userplane',
   },
   hero: {
     headline: {
-      lines: ['Engineer-ready artifacts', 'from every support ticket'],
-      highlights: [{ wordIndex: 0, color: 'blue' }],
+      lines: ['Get to the root cause', 'on the first look'],
+      highlights: [{ wordIndex: 3, color: 'blue' }],
     },
     description: [
       'Console logs, network data, repro steps, and a full session recording.',
-      'Complete context from first contact — no chasing details.',
+      'Get everything you need to diagnose the issue.',
     ],
     preview: {
       src: getRoleHeroUrl('microsites/support-engineers/hero.png'),
@@ -49,11 +50,11 @@ export const supportEngineersConfig = defineRole({
       number: '01',
       title: 'Trace issues to the source',
       description:
-        'Console errors, network waterfalls, and user action trails — attached to every recording. Triage with real data instead of descriptions.',
+        'Console errors, request snapshots, and session data — attached to every recording. Get to root cause without reconstructing the issue manually.',
       tagline: 'Root cause, not guesswork',
       capabilities: [
         'Console logs and error traces',
-        'Network request waterfall',
+        'Network request snapshot',
         'Application state and user context',
         'Step-by-step action trail',
       ],
@@ -64,13 +65,13 @@ export const supportEngineersConfig = defineRole({
       number: '02',
       title: 'Repro-ready on first contact',
       description:
-        'Every ticket arrives with the steps to reproduce. No follow-ups, no screenshots requested after the fact, no incomplete bug reports.',
-      tagline: 'No more back-and-forth',
+        'With Userplane, every ticket arrives with exact steps to reproduce along with session data and environment details. No additional follow-ups needed.',
+      tagline: 'Skip the back-and-forth',
       capabilities: [
-        'Automatic repro step capture',
-        'Session metadata included',
-        'Browser & OS fingerprint',
-        'Complete action timeline',
+        'Reproduce any issue instantly',
+        'Get full session and network context',
+        'Diagnose problems on the first pass',
+        'Step-by-step timeline of user actions',
       ],
       image: getRoleFeatureUrl('microsites/support-engineers/engineer-repro.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
@@ -79,8 +80,8 @@ export const supportEngineersConfig = defineRole({
       number: '03',
       title: 'Clean handoffs to engineering',
       description:
-        'One link. Recording, console logs, network data, and session metadata. Pass it to engineering with nothing missing.',
-      tagline: 'Nothing lost between teams',
+        'Pass the full context to engineering in one link. Screen recording, console logs, network data, and session details — all attached.',
+      tagline: 'Engineering-ready artifacts',
       capabilities: [
         'Shareable recording links',
         'Logs and metadata attached',
@@ -94,13 +95,13 @@ export const supportEngineersConfig = defineRole({
       number: '04',
       title: 'Enterprise-grade compliance',
       description:
-        'GDPR and CCPA. Role-based access, custom retention policies, and SAML SSO. Configure once, apply across the team.',
-      tagline: 'Set it up once',
+        'Built for teams with strict compliance requirements. GDPR, CCPA, sensitive data redaction, custom retention policies, consent management and more.',
+      tagline: 'Compliant out of the box',
       capabilities: [
+        'Blur and mask confidential fields',
+        'Built for sensitive environments',
+        'Custom data retention policies',
         'GDPR & CCPA compliance',
-        'Role-based access control',
-        'Custom data retention',
-        'SAML SSO',
       ],
       image: getRoleFeatureUrl('microsites/support-engineers/engineer-compliance.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
@@ -134,11 +135,16 @@ export const supportEngineersConfig = defineRole({
   },
   cta: {
     headline: {
-      lines: ['Stop chasing', 'missing context'],
-      highlights: [{ wordIndex: 2, color: 'blue' }],
+      lines: ['Complete visibility into every customer issue'],
+      highlights: [
+        { wordIndex: 0, color: 'blue' },
+        { wordIndex: 1, color: 'blue' },
+        { wordIndex: 4, color: 'blue' },
+        { wordIndex: 5, color: 'blue' },
+      ],
     },
     description:
-      'Every ticket ships with console logs, network data, repro steps, and a full session recording.',
+      'Stop guessing what went wrong. See exactly what happened and trace it to the root cause.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
   },

@@ -9,10 +9,10 @@ import {
 import { ROLE_LOGOS_FRAMEWORK, ROLE_LOGOS_FRAMEWORK_LABEL } from './logos';
 import { getRoleFeatureUrl, getRoleHeroUrl } from './media';
 
-export const developersConfig = defineRole({
-  slug: 'developers',
-  name: 'Developers',
-  shortName: 'Developers',
+export const engineeringConfig = defineRole({
+  slug: 'engineering',
+  name: 'Engineering Teams',
+  shortName: 'Engineering Teams',
   gradient: {
     stops: [
       'rgba(139, 92, 246, 0.1)',
@@ -22,20 +22,23 @@ export const developersConfig = defineRole({
     ],
   },
   seo: {
-    title: 'Userplane for Developers | Session Data Captured Automatically',
+    title: 'Userplane for Engineering Teams | Debug Customer Issues with Full Session Context',
     description:
-      'Console logs, network waterfalls, and session metadata — captured with every recording. Drop-in SDK for React, Next.js, Vue, Angular, and more.',
+      'Screen recordings with console logs, network data, and session metadata. Engineering teams get full reproduction context without the back and forth with support. Drop-in SDK for React, Next.js, Vue, Angular, and more.',
     keywords:
-      'developer screen recording, session replay sdk, console logs sdk, react screen recording, next.js screen recording, vue screen recording, angular screen recording, userplane sdk',
+      'engineering screen recording, session replay sdk, console logs sdk, react screen recording, next.js screen recording, vue screen recording, angular screen recording, userplane sdk',
   },
   hero: {
     headline: {
-      lines: ['Session data captured', 'automatically'],
-      highlights: [{ wordIndex: 0, color: 'purple' }],
+      lines: ['Debug customer issues', 'with full session context'],
+      highlights: [
+        { wordIndex: 1, color: 'purple' },
+        { wordIndex: 2, color: 'purple' },
+      ],
     },
     description: [
       'Console logs, network waterfalls, and session metadata — captured with every recording.',
-      'Drop-in SDK. Works with React, Next.js, Vue, Angular, and more.',
+      'Works with React, Next.js, Vue, Angular, and more.',
     ],
     preview: {
       src: getRoleHeroUrl('microsites/developers/hero.png'),
@@ -53,12 +56,12 @@ export const developersConfig = defineRole({
       number: '01',
       title: 'Console logs and network data',
       description:
-        "Every recording captures errors, network waterfalls, browser metadata, and user steps. The data you'd normally ask support to collect — attached automatically.",
+        'Debug customer-reported issues with full context — without chasing support for more detail. Every recording captures errors, network waterfalls, browser metadata, and user steps.',
       tagline: 'Zero-config session data',
       capabilities: [
-        'Console logs and error traces',
-        'Network request waterfall',
-        'Browser & OS metadata',
+        'Capture console logs and errors',
+        'Get network request snapshots',
+        'Complete session replay',
         'Step-by-step user actions',
       ],
       image: getRoleFeatureUrl('microsites/developers/dev-console.png'),
@@ -66,9 +69,9 @@ export const developersConfig = defineRole({
     },
     {
       number: '02',
-      title: 'Drop-in SDK, every framework',
+      title: 'Drop-in SDK',
       description:
-        'React, Next.js, Vue, Angular, Svelte. npm install or script tag. Capturing sessions in minutes.',
+        'First-class support for React, Next.js, Vue, Angular and more. Install the SDK and get complete session context for every customer-reported bug.',
       tagline: 'Works with your stack',
       capabilities: ['React & Next.js', 'Vue & Nuxt', 'Angular', 'Svelte & vanilla JS'],
       image: getRoleFeatureUrl('microsites/developers/dev-frameworks.png'),
@@ -76,15 +79,15 @@ export const developersConfig = defineRole({
     },
     {
       number: '03',
-      title: 'Context in your existing tools',
+      title: 'Native to your support stack',
       description:
-        'Recordings link to support conversations. Session data routes to Slack, Jira, and Linear. API and webhook access included.',
+        'Every recording lives alongside the support conversation — deep-linked to the ticket in Intercom or Zendesk, routed to your issue tracker, and accessible from Slack. Full context, right where your team expects it.',
       tagline: 'Fits where you already work',
       capabilities: [
-        'Slack, Jira, Linear integrations',
-        'Deep-link to support conversations',
-        'API access',
-        'Webhook support',
+        'Embedded into Intercom',
+        'Available inside Zendesk tickets',
+        'Request recordings from Slack',
+        'Chrome extension included',
       ],
       image: getRoleFeatureUrl('microsites/developers/dev-workflow.png'),
       learnMoreHref: DOCS_DEVELOPER_INSTALLATION,
@@ -93,7 +96,7 @@ export const developersConfig = defineRole({
       number: '04',
       title: 'Privacy controls in code',
       description:
-        'Define redaction rules, consent flows, and capture scope in your codebase. GDPR and CCPA compliance built into the SDK.',
+        'Define redaction rules, consent flows, and capture scope in your codebase. Control exactly what gets captured, what gets redacted, and how consent is handled.',
       tagline: 'Compliance as code',
       capabilities: [
         'SDK-level redaction rules',
@@ -133,14 +136,14 @@ export const developersConfig = defineRole({
   },
   cta: {
     headline: {
-      lines: ['Start capturing sessions', 'in under 5 minutes'],
+      lines: ['Fix customer issues without back-and-forth'],
       highlights: [
         { wordIndex: 1, color: 'purple' },
         { wordIndex: 2, color: 'purple' },
       ],
     },
     description:
-      'Drop-in SDK. Console logs, network data, and session metadata — captured with every recording.',
+      'Investigate issues with console logs, network data, and session data — captured with every recording.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'View Docs', href: DOCS_FOR_DEVELOPERS },
   },
