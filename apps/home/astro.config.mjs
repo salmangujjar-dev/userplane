@@ -37,7 +37,7 @@ export default defineConfig({
       filter: (page) => !page.includes('/404'),
       serialize: (item) => {
         item.lastmod = new Date().toISOString();
-        if (item.url.includes('/integrations/') || item.url.includes('/for/')) {
+        if (item.url.includes('/integrations/') || item.url.includes('/for/') || item.url.includes('/frameworks/')) {
           item.priority = 0.8;
         }
         return item;

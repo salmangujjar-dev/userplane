@@ -1,0 +1,104 @@
+---
+import HomepageLayout from '../../layouts/HomepageLayout.astro';
+import JsonLd from '../../components/seo/JsonLd.astro';
+import Hero from '../../components/frameworks/Hero';
+import LogoMarquee from '../../components/frameworks/LogoMarquee';
+import FeatureShowcase from '../../components/frameworks/FeatureShowcase';
+import CallToAction from '../../components/frameworks/CallToAction';
+import ResourceLinks from '../../components/frameworks/ResourceLinks';
+
+import { FRAMEWORK_REGISTRY } from '../../constants/frameworks/registry';
+
+import type { FrameworkConfig } from '@/types/frameworks';
+
+export function getStaticPaths() {
+  return Object.values(FRAMEWORK_REGISTRY).map((config) => ({
+    params: { slug: config.slug },
+    props: { config },
+  }));
+}
+
+interface Props {
+  config: FrameworkConfig;
+}
+
+const { config } = Astro.props;
+
+const frameworkLinks = Object.values(FRAMEWORK_REGISTRY)
+  .filter((c) => c.slug !== config.slug)
+  .slice(0, 3)
+  .map(({ slug, name, seo }) => ({
+    label: 'Framework',
+    title: name,
+    description: seo.description,
+    href: `/frameworks/${slug}`,
+  }));
+
+const resourceLinks = [...config.resources.links, ...frameworkLinks];
+
+const gradientVars = `--gradient-1: ${config.gradient.stops[0]}; --gradient-2: ${config.gradient.stops[1]}; --gradient-3: ${config.gradient.stops[2]}; --gradient-4: ${config.gradient.stops[3]};`;
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: new URL('/', Astro.site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Frameworks',
+      item: new URL('/frameworks', Astro.site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: config.name,
+      item: new URL(`/frameworks/${config.slug}`, Astro.site).href,
+    },
+  ],
+};
+---
+
+<HomepageLayout
+  title={config.seo.title}
+  description={config.seo.description}
+  keywords={config.seo.keywords}
+  ogImage={config.seo.ogImage}
+>
+  <JsonLd data={config.jsonLd} />
+  <JsonLd data={breadcrumb} />
+  <main class="flex flex-col" style={gradientVars}>
+    <Hero
+      headline={config.hero.headline}
+      description={config.hero.description}
+      preview={config.hero.preview}
+      primaryCTA={config.hero.primaryCTA}
+      secondaryCTA={config.hero.secondaryCTA}
+      client:load
+    />
+    <LogoMarquee label={config.logos.label} logos={config.logos.items} client:load />
+    <FeatureShowcase features={config.features} client:visible />
+    <ResourceLinks
+      label={config.resources.label}
+      headline={config.resources.headline}
+      links={resourceLinks}
+      footerLinks={[
+        { text: 'View all frameworks', href: '/frameworks' },
+        { text: 'See all docs', href: config.resources.seeAllHref, external: true },
+      ]}
+      client:visible
+    />
+    <CallToAction
+      headline={config.cta.headline}
+      description={config.cta.description}
+      primaryCTA={config.cta.primaryCTA}
+      secondaryCTA={config.cta.secondaryCTA}
+      client:load
+    />
+  </main>
+</HomepageLayout>
