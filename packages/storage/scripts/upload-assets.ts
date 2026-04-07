@@ -46,7 +46,8 @@ type AssetCategory =
   | 'launch'
   | 'preview'
   | 'spotlight'
-  | 'microsites';
+  | 'microsites'
+  | 'frameworks';
 
 /** Valid environment names - matches packages/storage environment config */
 type Environment = 'development' | 'production';
@@ -107,6 +108,7 @@ const CATEGORIES: AssetCategory[] = [
   'preview',
   'spotlight',
   'microsites',
+  'frameworks',
 ];
 
 const CONTENT_TYPE_MAP: Record<string, string> = {

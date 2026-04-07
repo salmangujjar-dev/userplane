@@ -17,6 +17,7 @@ export type FeatureAssetKey = Extract<AssetKey, `features/${string}`>;
 export type LaunchAssetKey = Extract<AssetKey, `launch/${string}`>;
 export type SpotlightAssetKey = Extract<AssetKey, `spotlight/${string}`>;
 export type MicrositeAssetKey = Extract<AssetKey, `microsites/${string}`>;
+export type FrameworkAssetKey = Extract<AssetKey, `frameworks/${string}`>;
 
 // Re-export AssetKey for generic use
 export type { AssetKey } from './manifest.generated';

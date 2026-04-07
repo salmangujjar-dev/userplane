@@ -13,6 +13,7 @@ export type {
   AssetKey,
   BrandAssetKey,
   FeatureAssetKey,
+  FrameworkAssetKey,
   IconAssetKey,
   IntegrationAssetKey,
   IntercomCanvasAssetKey,
