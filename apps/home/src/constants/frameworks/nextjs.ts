@@ -70,11 +70,11 @@ export const nextjsConfig = defineFramework({
       number: '02',
       title: 'Logs, network, and metadata',
       description:
-        'Console errors, network request waterfalls, and browser fingerprints ship with every recording. Debug client-side hydration issues and API failures without asking for steps to reproduce.',
+        'Console errors, network request details, and browser fingerprints ship with every recording. Debug client-side hydration issues and API failures without asking for steps to reproduce.',
       tagline: 'Debug without the back-and-forth',
       capabilities: [
         'Console logs and error traces',
-        'Network request waterfall',
+        'Network request overview',
         'Browser & OS metadata',
         'Step-by-step user actions',
       ],
@@ -100,13 +100,13 @@ export const nextjsConfig = defineFramework({
       number: '04',
       title: 'Plugs into your help desk',
       description:
-        'Recordings attach to Intercom, Zendesk, and Slack conversations. API and webhook access for custom routing to Jira, Linear, or internal tools.',
+        'Recordings attach to Intercom, Zendesk, and Slack conversations. Link session data to tickets. API and webhook access for custom routing.',
       tagline: 'Deliver context where tickets live',
       capabilities: [
         'Intercom, Zendesk, Slack',
+        'Recordings linked to tickets',
         'API and webhook access',
-        'Jira & Linear routing',
-        'Custom integrations',
+        'Chrome extension included',
       ],
       image: getFrameworkFeatureUrl('microsites/nextjs/nextjs-integration.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
@@ -140,14 +140,14 @@ export const nextjsConfig = defineFramework({
   },
   cta: {
     headline: {
-      lines: ['Start capturing sessions', 'in your Next.js app'],
+      lines: ['Debug Next.js issues with full session context'],
       highlights: [
         { wordIndex: 1, color: 'blue' },
         { wordIndex: 2, color: 'blue' },
       ],
     },
     description:
-      'Console logs, network data, and session metadata — captured from every Next.js session.',
+      'Hydration errors, API failures, and client-side bugs — diagnosed with console logs, network data, and full session context.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_NEXTJS },
   },

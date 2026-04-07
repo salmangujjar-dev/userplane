@@ -61,14 +61,14 @@ export const LISTING_CTA: {
   secondaryCTA: ButtonConfig;
 } = {
   headline: {
-    lines: ['Session data captured', 'from any framework'],
+    lines: ['Resolve customer issues from any framework'],
     highlights: [
-      { wordIndex: 0, color: 'blue' },
       { wordIndex: 1, color: 'blue' },
+      { wordIndex: 2, color: 'blue' },
     ],
   },
   description:
-    'Console logs, network waterfalls, and session metadata — captured with every recording. Works with your stack.',
+    'Debug issues across any framework with console logs, network data, and complete session context.',
   primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
   secondaryCTA: { text: 'View Docs', href: 'https://docs.userplane.io/developer/sdk-overview' },
 };

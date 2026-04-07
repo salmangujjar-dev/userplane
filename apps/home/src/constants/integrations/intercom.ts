@@ -80,7 +80,7 @@ export const intercomConfig = defineIntegration({
       tagline: 'Full technical context',
       capabilities: [
         'Capture console logs and error traces',
-        'Get network activity and request waterfall',
+        'Get network activity and request details',
         'Follow complete session and action trail',
         'Access application state and user context',
       ],

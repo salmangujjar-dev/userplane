@@ -31,7 +31,7 @@ export const webConfig = defineFramework({
   hero: {
     headline: {
       lines: ['Screen recordings for', 'any web application'],
-      highlights: [{ wordIndex: 3, color: 'blue' }],
+      highlights: [{ wordIndex: 4, color: 'blue' }],
     },
     description: [
       'Console logs, network requests, and session metadata from any website.',
@@ -64,11 +64,11 @@ export const webConfig = defineFramework({
       number: '02',
       title: 'Logs and network included',
       description:
-        'Console errors, network request waterfalls, browser metadata, and user steps — attached to every recording. Works on any page that runs JavaScript.',
+        'Console errors, network request data, browser metadata, and user steps — attached to every recording. Works on any page that runs JavaScript.',
       tagline: 'Works everywhere',
       capabilities: [
         'Console logs and error traces',
-        'Network request waterfall',
+        'Network request log',
         'Browser & OS metadata',
         'User action trail',
       ],
@@ -133,14 +133,14 @@ export const webConfig = defineFramework({
   },
   cta: {
     headline: {
-      lines: ['Start capturing sessions', 'in under 60 seconds'],
+      lines: ['Fix customer issues without asking what happened'],
       highlights: [
         { wordIndex: 1, color: 'blue' },
         { wordIndex: 2, color: 'blue' },
       ],
     },
     description:
-      'Console logs, network requests, and session metadata — captured from any website.',
+      'Console errors, network data, and user steps — everything your team needs to resolve issues on first contact.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_WEB },
   },

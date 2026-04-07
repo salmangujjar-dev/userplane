@@ -37,7 +37,7 @@ export const engineeringConfig = defineRole({
       ],
     },
     description: [
-      'Console logs, network waterfalls, and session metadata — captured with every recording.',
+      'Console logs, network activity, and session metadata — captured with every recording.',
       'Works with React, Next.js, Vue, Angular, and more.',
     ],
     preview: {
@@ -56,7 +56,7 @@ export const engineeringConfig = defineRole({
       number: '01',
       title: 'Console logs and network data',
       description:
-        'Debug customer-reported issues with full context — without chasing support for more detail. Every recording captures errors, network waterfalls, browser metadata, and user steps.',
+        'Debug customer-reported issues with full context — without chasing support for more detail. Every recording captures errors, network snapshots, browser metadata, and user steps.',
       tagline: 'Zero-config session data',
       capabilities: [
         'Capture console logs and errors',

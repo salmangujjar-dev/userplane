@@ -23,14 +23,14 @@ export const reactConfig = defineFramework({
   seo: {
     title: 'Userplane for React | Session Recordings with Console Logs',
     description:
-      'Console logs, network waterfalls, and session metadata — captured from your React app. Works with Vite, CRA, and custom setups.',
+      'Console logs, network activity, and session metadata — captured from your React app. Works with Vite, CRA, and custom setups.',
     keywords:
       'react screen recording, react session replay, react console logs, react debugging, vite screen recording, userplane react',
   },
   hero: {
     headline: {
       lines: ['Screen recordings for', 'React applications'],
-      highlights: [{ wordIndex: 3, color: 'blue' }],
+      highlights: [{ wordIndex: 3, color: 'green' }],
       icons: [
         {
           wordIndex: 3,
@@ -40,7 +40,7 @@ export const reactConfig = defineFramework({
       ],
     },
     description: [
-      'Console logs, network waterfalls, and session metadata — captured from your React app.',
+      'Console logs, network snapshots, and session metadata — captured from your React app.',
       'Works with Vite, CRA, and custom setups.',
     ],
     preview: {
@@ -70,11 +70,11 @@ export const reactConfig = defineFramework({
       number: '02',
       title: 'Console and network context',
       description:
-        'Errors, request waterfalls, browser metadata, and user action trails — captured automatically with every recording from your React application.',
+        'Errors, request details, browser metadata, and user action trails — captured automatically with every recording from your React application.',
       tagline: 'Full stack visibility',
       capabilities: [
         'Console logs and error traces',
-        'Network request waterfall',
+        'Network request snapshots',
         'Browser & OS metadata',
         'User action trail',
       ],
@@ -140,14 +140,14 @@ export const reactConfig = defineFramework({
   },
   cta: {
     headline: {
-      lines: ['Start capturing sessions', 'in your React app'],
+      lines: ['Resolve React issues without the back-and-forth'],
       highlights: [
         { wordIndex: 1, color: 'blue' },
         { wordIndex: 2, color: 'blue' },
       ],
     },
     description:
-      'Console logs, network waterfalls, and session metadata — captured from every React session.',
+      'Stop chasing customers for repro steps. Every recording includes the console logs, network data, and context your team needs.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_REACT },
   },

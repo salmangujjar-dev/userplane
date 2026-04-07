@@ -30,7 +30,7 @@ export const svelteConfig = defineFramework({
   hero: {
     headline: {
       lines: ['Screen recordings for', 'Svelte applications'],
-      highlights: [{ wordIndex: 3, color: 'yellow' }],
+      highlights: [{ wordIndex: 3, color: 'red' }],
       icons: [
         {
           wordIndex: 3,
@@ -70,11 +70,11 @@ export const svelteConfig = defineFramework({
       number: '02',
       title: 'Logs and network activity',
       description:
-        'Console errors, network waterfalls, and browser metadata captured automatically. Debug server-rendered pages and client-side interactions in one recording.',
+        'Console errors, network details, and browser metadata captured automatically. Debug server-rendered pages and client-side interactions in one recording.',
       tagline: 'SSR and CSR in one view',
       capabilities: [
         'Console logs and error traces',
-        'Network request waterfall',
+        'Network request details',
         'Browser & OS metadata',
         'SSR and CSR debugging',
       ],
@@ -104,7 +104,7 @@ export const svelteConfig = defineFramework({
       tagline: 'Support context, delivered',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Session data linked to tickets',
+        'Attach sessions to tickets',
         'API and webhook support',
         'Custom routing pipelines',
       ],
@@ -140,14 +140,14 @@ export const svelteConfig = defineFramework({
   },
   cta: {
     headline: {
-      lines: ['Start capturing sessions', 'in your Svelte app'],
+      lines: ['Trace Svelte bugs to root cause in minutes'],
       highlights: [
-        { wordIndex: 1, color: 'yellow' },
-        { wordIndex: 2, color: 'yellow' },
+        { wordIndex: 1, color: 'red' },
+        { wordIndex: 2, color: 'red' },
       ],
     },
     description:
-      'Console logs, network requests, and session metadata — captured from every Svelte session.',
+      'Runtime errors, SSR issues, and client-side bugs — resolved with console logs, network data, and full session context.',
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'View Docs', href: DOCS_FRAMEWORK_SVELTE },
   },

@@ -117,7 +117,7 @@ export function defineIntegration(
         tagline: 'Full-stack visibility',
         capabilities: [
           'Console logs & errors',
-          'Network request waterfall',
+          'Network request detail',
           'Browser & OS metadata',
           'Step-by-step user actions',
         ],

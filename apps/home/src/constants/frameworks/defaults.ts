@@ -82,7 +82,7 @@ export function defineFramework(overrides: RequiredOverrides & OptionalOverrides
     },
     cta: {
       headline: {
-        lines: ['Start capturing sessions', `in your ${name} app`],
+        lines: [`Resolve ${name} issues with full session context`],
         highlights: [{ wordIndex: 1, color: 'blue' as const }],
       },
       primaryCTA: { text: 'Get Started', href: SIGNUP_URL },

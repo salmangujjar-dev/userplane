@@ -85,7 +85,7 @@ export const supportEngineersConfig = defineRole({
       capabilities: [
         'Shareable recording links',
         'Logs and metadata attached',
-        'Works with Jira, Linear, Slack',
+        'Works with Intercom, Zendesk, Slack',
         'Engineer-ready from day one',
       ],
       image: getRoleFeatureUrl('microsites/support-engineers/engineer-handoff.png'),
