@@ -7,9 +7,10 @@ import { getRoleHeroUrl } from './media';
 // ── SEO ──
 
 export const LISTING_SEO = {
-  title: 'Userplane for Your Team | Screen Recordings with Full Technical Context',
+  title:
+    'Userplane for Your Team | Screen Recordings with Console Logs, Network Requests, and Session Data',
   description:
-    'Screen recordings with console logs, network data, and session metadata. Built for support agents, support engineers, customer success, and developers.',
+    'Userplane gives every team full visibility into customer issues. Screen recordings with console logs, network data, and session metadata.',
   keywords:
     'userplane, screen recording, session replay, support tools, developer tools, customer success, console logs, network data',
 } as const;
@@ -37,13 +38,13 @@ export const LISTING_HERO: {
   headline: {
     lines: ['Built for every team', 'that touches support'],
     highlights: [
-      { wordIndex: 2, color: 'blue' },
-      { wordIndex: 3, color: 'blue' },
+      { wordIndex: 5, color: 'blue' },
+      { wordIndex: 6, color: 'blue' },
     ],
   },
   description: [
-    'Screen recordings with console logs, network data, and session metadata.',
-    'See how Userplane works for your role.',
+    'Request screen recordings with logs, network requests, and session data.',
+    'Resolve issues on first contact. Skip the back-and-forth.',
   ],
   primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
   secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
@@ -62,14 +63,16 @@ export const LISTING_CTA: {
   secondaryCTA: ButtonConfig;
 } = {
   headline: {
-    lines: ['Screen recordings with', 'full technical context'],
+    lines: ['Complete visibility into every customer issue'],
     highlights: [
       { wordIndex: 0, color: 'blue' },
       { wordIndex: 1, color: 'blue' },
+      { wordIndex: 4, color: 'green' },
+      { wordIndex: 5, color: 'green' },
     ],
   },
   description:
-    'Console logs, network data, and session metadata — captured with every recording. Built for your entire team.',
+    'Screen recordings with console logs, network requests, and session data. Built for the teams behind every customer interaction.',
   primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
   secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
 };

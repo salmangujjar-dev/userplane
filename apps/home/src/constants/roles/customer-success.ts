@@ -21,20 +21,23 @@ export const customerSuccessConfig = defineRole({
     ],
   },
   seo: {
-    title: 'Userplane for Customer Success | Resolve Dense Issues Without Escalating',
+    title: 'Userplane for Customer Success | Resolve Issues Customers Struggle to Describe',
     description:
-      'Screen recordings with console logs, network data, and session metadata. Handle complex customer issues directly — without pulling in engineering.',
+      "Screen recordings with console logs, network data, and session metadata. Capture what customers can't put into words.",
     keywords:
       'customer success tools, screen recording customer success, resolve issues faster, technical context, session replay, csm tools, userplane',
   },
   hero: {
     headline: {
-      lines: ['Resolve dense issues', 'without the escalation'],
-      highlights: [{ wordIndex: 1, color: 'green' }],
+      lines: ['Built for teams', 'customers count on'],
+      highlights: [
+        { wordIndex: 4, color: 'green' },
+        { wordIndex: 5, color: 'green' },
+      ],
     },
     description: [
-      'Screen recordings with console logs, network data, and session metadata.',
-      'Handle complex issues directly — without pulling in engineering.',
+      'Screen recordings with console logs and session details.',
+      "Capture what customers can't put into words.",
     ],
     preview: {
       src: getRoleHeroUrl('microsites/customer-success/hero.png'),
@@ -48,7 +51,7 @@ export const customerSuccessConfig = defineRole({
       number: '01',
       title: 'Full session context, upfront',
       description:
-        'Screen recordings with console errors, network failures, and the exact steps that led to the issue — all in one recording.',
+        'Resolve harder-to-describe customer issues. Request screen recordings which include console errors, network failures, and the exact steps that led to the issue.',
       tagline: 'Complete picture, first contact',
       capabilities: [
         'Full session replay',
@@ -63,13 +66,13 @@ export const customerSuccessConfig = defineRole({
       number: '02',
       title: 'Console logs and network data',
       description:
-        'Automatically collect network requests, browser logs, and device metadata with every recording. Technical depth without the engineering dependency.',
-      tagline: 'Depth without the escalation',
+        'Automatically collect network requests, browser logs, and device details with every recording. Get to the root cause without involving engineering.',
+      tagline: 'Triage without escalating',
       capabilities: [
         'Console logs and error traces',
-        'Network request waterfall',
+        'Network request snapshots',
         'Application state capture',
-        'Device and browser fingerprint',
+        'Device and browser details',
       ],
       image: getRoleFeatureUrl('microsites/customer-success/cs-context.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
@@ -78,23 +81,23 @@ export const customerSuccessConfig = defineRole({
       number: '03',
       title: 'Native help desk integration',
       description:
-        'Request and review recordings directly from Intercom, Zendesk, or Slack. No context switching, no separate tools.',
+        'Request and review recordings from Intercom, Zendesk, or Slack. Recordings live alongside the conversation — accessible to everyone involved. No context switching required.',
       tagline: 'Works where you already work',
       capabilities: [
         'Intercom sidebar integration',
         'Zendesk ticket integration',
         'Slack recording requests',
-        'No context switching',
+        'Chrome extension integration',
       ],
       image: getRoleFeatureUrl('microsites/customer-success/cs-integration.png'),
       learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
       number: '04',
-      title: 'Compliance out of the box',
+      title: 'Enterprise-grade privacy controls',
       description:
-        'Automatic PII redaction. Custom data retention policies. Role-based access controls. GDPR and CCPA compliant.',
-      tagline: 'Built in, not bolted on',
+        'Sensitive fields are redacted before recordings leave the browser. GDPR and CCPA compliant. Turn moments of friction into moments of trust.',
+      tagline: 'Built for Trust',
       capabilities: [
         'Automatic PII redaction',
         'Custom data retention',
@@ -133,10 +136,10 @@ export const customerSuccessConfig = defineRole({
   },
   cta: {
     headline: {
-      lines: ['Get the full technical', 'context upfront'],
+      lines: ['Resolve complex issues without back-and-forth'],
       highlights: [
-        { wordIndex: 3, color: 'green' },
-        { wordIndex: 4, color: 'green' },
+        { wordIndex: 1, color: 'green' },
+        { wordIndex: 2, color: 'green' },
       ],
     },
     description:
