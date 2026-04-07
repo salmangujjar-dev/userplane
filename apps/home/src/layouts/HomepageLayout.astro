@@ -3,6 +3,7 @@ import BaseLayout from './BaseLayout.astro';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import { INTEGRATION_REGISTRY } from '../constants/integrations/registry';
+import { ROLE_REGISTRY } from '../constants/roles/registry';
 import { NAV_LINKS } from '../constants/navigation';
 import { getDocsUrl } from '../constants/urls';
 
@@ -29,6 +30,18 @@ const dropdownEntries = Object.values(INTEGRATION_REGISTRY).map((config) => ({
     : undefined,
   gradientStops: config.gradient.stops,
 }));
+
+const teamDropdownEntries = Object.values(ROLE_REGISTRY).map((config) => ({
+  slug: config.slug,
+  name: config.name,
+  description: config.seo.description,
+  pageHref: `/for/${config.slug}`,
+  docsHref: config.resources.seeAllHref,
+  image: config.hero.preview
+    ? { src: config.hero.preview.src, alt: config.hero.preview.alt }
+    : undefined,
+  gradientStops: config.gradient.stops,
+}));
 ---
 
 <BaseLayout
@@ -42,6 +55,8 @@ const dropdownEntries = Object.values(INTEGRATION_REGISTRY).map((config) => ({
     integrations={dropdownEntries}
     integrationsHref={NAV_LINKS.integrations}
     docsHref={getDocsUrl('')}
+    teams={teamDropdownEntries}
+    teamsHref={NAV_LINKS.solutions}
     client:idle
   />
   <slot />

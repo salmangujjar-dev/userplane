@@ -17,6 +17,7 @@ import {
 import type {
   BrandAssetKey,
   FeatureAssetKey,
+  FrameworkAssetKey,
   IconAssetKey,
   IntegrationAssetKey,
   IntercomCanvasAssetKey,
@@ -51,6 +52,7 @@ const CATEGORY_PROFILES: Record<string, TransformProfile> = {
   launch: 'feature',
   spotlight: 'general',
   microsites: 'feature',
+  frameworks: 'icon',
 };
 
 // =============================================================================
@@ -223,6 +225,11 @@ export class MediaClient {
 
   /** Get CDN URL for a microsite asset */
   getMicrositeMediaUrl(key: MicrositeAssetKey, options?: GetMediaUrlOptions): string {
+    return this.getMediaUrl(key, options);
+  }
+
+  /** Get CDN URL for a framework asset */
+  getFrameworkMediaUrl(key: FrameworkAssetKey, options?: GetMediaUrlOptions): string {
     return this.getMediaUrl(key, options);
   }
 }

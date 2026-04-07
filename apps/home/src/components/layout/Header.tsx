@@ -7,11 +7,14 @@ import { LOGO_LINK, NAV_LINKS } from '@/constants/navigation';
 import { SIGNUP_URL } from '@/constants/onboarding';
 
 import IntegrationsDropdown, { type DropdownEntry } from './IntegrationsDropdown';
+import TeamsDropdown, { type TeamDropdownEntry } from './TeamsDropdown';
 
 export interface HeaderProps {
   integrations?: DropdownEntry[];
   integrationsHref?: string;
   docsHref?: string;
+  teams?: TeamDropdownEntry[];
+  teamsHref?: string;
 }
 
 function MobileNavLink({
@@ -57,7 +60,13 @@ function MobileNavLink({
   );
 }
 
-export default function Header({ integrations, integrationsHref, docsHref }: HeaderProps = {}) {
+export default function Header({
+  integrations,
+  integrationsHref,
+  docsHref,
+  teams,
+  teamsHref,
+}: HeaderProps = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
@@ -105,6 +114,16 @@ export default function Header({ integrations, integrationsHref, docsHref }: Hea
         >
           Pricing
         </a>
+        {teams && teamsHref ? (
+          <TeamsDropdown entries={teams} teamsHref={teamsHref} />
+        ) : (
+          <a
+            className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
+            href={NAV_LINKS.solutions}
+          >
+            Teams
+          </a>
+        )}
         {integrations && integrationsHref && docsHref ? (
           <IntegrationsDropdown entries={integrations} integrationsHref={integrationsHref} />
         ) : (
@@ -179,6 +198,9 @@ export default function Header({ integrations, integrationsHref, docsHref }: Hea
                   </MobileNavLink>
                   <MobileNavLink href="/pricing" onClick={closeMenu}>
                     Pricing
+                  </MobileNavLink>
+                  <MobileNavLink href={NAV_LINKS.solutions} onClick={closeMenu}>
+                    Teams
                   </MobileNavLink>
                   <MobileNavLink href={NAV_LINKS.integrations} onClick={closeMenu}>
                     Integrations

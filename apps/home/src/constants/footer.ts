@@ -49,6 +49,7 @@ export const FOOTER_LINKS = {
   product: [
     { label: 'Features', href: '/#features' },
     { label: 'Pricing', href: '/pricing' },
+    { label: 'Teams', href: '/for' },
     { label: 'Integrations', href: '/integrations' },
   ],
   company: [

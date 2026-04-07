@@ -1,0 +1,104 @@
+---
+import HomepageLayout from '../../layouts/HomepageLayout.astro';
+import JsonLd from '../../components/seo/JsonLd.astro';
+import Hero from '../../components/integrations/Hero';
+import FeatureShowcase from '../../components/integrations/FeatureShowcase';
+import CallToAction from '../../components/integrations/CallToAction';
+import ResourceLinks from '../../components/integrations/ResourceLinks';
+import RoleLogoMarquee from '../../components/roles/LogoMarquee';
+
+import { ROLE_REGISTRY } from '../../constants/roles/registry';
+
+import type { RoleConfig } from '@/types/roles';
+
+export function getStaticPaths() {
+  return Object.values(ROLE_REGISTRY).map((config) => ({
+    params: { slug: config.slug },
+    props: { config },
+  }));
+}
+
+interface Props {
+  config: RoleConfig;
+}
+
+const { config } = Astro.props;
+
+const roleLinks = Object.values(ROLE_REGISTRY)
+  .filter((c) => c.slug !== config.slug)
+  .slice(0, 3)
+  .map(({ slug, name, seo }) => ({
+    label: 'Role',
+    title: name,
+    description: seo.description,
+    href: `/for/${slug}`,
+  }));
+
+const resourceLinks = [...config.resources.links, ...roleLinks];
+
+const gradientVars = `--gradient-1: ${config.gradient.stops[0]}; --gradient-2: ${config.gradient.stops[1]}; --gradient-3: ${config.gradient.stops[2]}; --gradient-4: ${config.gradient.stops[3]};`;
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: new URL('/', Astro.site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Solutions',
+      item: new URL('/for', Astro.site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: config.name,
+      item: new URL(`/for/${config.slug}`, Astro.site).href,
+    },
+  ],
+};
+---
+
+<HomepageLayout
+  title={config.seo.title}
+  description={config.seo.description}
+  keywords={config.seo.keywords}
+  ogImage={config.seo.ogImage}
+>
+  <JsonLd data={config.jsonLd} />
+  <JsonLd data={breadcrumb} />
+  <main class="flex flex-col" style={gradientVars}>
+    <Hero
+      headline={config.hero.headline}
+      description={config.hero.description}
+      preview={config.hero.preview}
+      primaryCTA={config.hero.primaryCTA}
+      secondaryCTA={config.hero.secondaryCTA}
+      client:load
+    />
+    <RoleLogoMarquee label={config.logos.label} logos={config.logos.items} client:load />
+    <FeatureShowcase features={config.features} client:visible />
+    <ResourceLinks
+      label={config.resources.label}
+      headline={config.resources.headline}
+      links={resourceLinks}
+      footerLinks={[
+        { text: 'View all roles', href: '/for' },
+        { text: 'See all docs', href: config.resources.seeAllHref, external: true },
+      ]}
+      client:visible
+    />
+    <CallToAction
+      headline={config.cta.headline}
+      description={config.cta.description}
+      primaryCTA={config.cta.primaryCTA}
+      secondaryCTA={config.cta.secondaryCTA}
+      client:load
+    />
+  </main>
+</HomepageLayout>
