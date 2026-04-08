@@ -25,6 +25,7 @@ import {
   adminService,
   adminSubscriptionService,
   adminWorkspaceService,
+  apiKeyService,
   billingService,
   domainRepo,
   domainService,
@@ -48,6 +49,7 @@ import {
   userService,
   workspaceMemberRepo,
   workspaceMemberService,
+  workspaceRepo,
   workspaceService,
   zendeskAppService,
   zendeskService,
@@ -62,6 +64,8 @@ import { createInviteProcedures } from './invite/invite.impl';
 import { createLinkProcedures } from './link/link.impl';
 import { createProjectProcedures } from './project/project.impl';
 import { createProvisionerProcedures } from './provisioner/provisioner.impl';
+import { createApiKeyManagementProcedures } from './public-api/api-key-management.impl';
+import { createPublicApiProcedures } from './public-api/public-api.impl';
 import { createRecordingProcedures } from './recording/recording.impl';
 // Implementations
 import { createSessionProcedures } from './session/session.impl';
@@ -136,7 +140,8 @@ const adminProcedures = createAdminProcedures(
   entitlementService,
   adminPlanService,
   billingService,
-  adminSubscriptionService
+  adminSubscriptionService,
+  apiKeyService
 );
 const projectProcedures = createProjectProcedures(
   projectService,
@@ -175,6 +180,22 @@ const zendeskAppProcedures = createZendeskAppProcedures(
   rateLimiter
 );
 
+const publicApiProcedures = createPublicApiProcedures({
+  apiKeyService,
+  linkService,
+  recordingService,
+  workspaceService,
+  workspaceMemberService,
+  projectService,
+  inviteService,
+  userService,
+  workspaceRepo,
+  recordingRepo,
+  linkRepo,
+});
+
+const apiKeyManagementProcedures = createApiKeyManagementProcedures(apiKeyService);
+
 /**
  * Complete router export
  *
@@ -210,6 +231,8 @@ export const apiRouter = {
   domain: domainProcedures,
   invite: inviteProcedures,
   zendeskApp: zendeskAppProcedures,
+  publicApi: publicApiProcedures,
+  apiKey: apiKeyManagementProcedures,
 };
 
 export type ApiRouter = typeof apiRouter;

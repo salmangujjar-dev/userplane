@@ -37,6 +37,7 @@ import {
   type StorageConfig,
   type SupportConfig,
   type TokenConfig,
+  type UnkeyConfig,
 } from './schema';
 
 // Re-export types for external use
@@ -66,6 +67,7 @@ export type {
   StorageConfig,
   SupportConfig,
   TokenConfig,
+  UnkeyConfig,
 };
 
 // =============================================================================
@@ -266,6 +268,12 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     admin: {
       userIds: raw.ADMIN_USER_IDS,
     },
+    unkey: {
+      rootKey: raw.UNKEY_ROOT_KEY,
+      apiId: raw.UNKEY_API_ID,
+      rateLimitPerMinute: raw.UNKEY_RATE_LIMIT_PER_MINUTE,
+      rateLimitPerDay: raw.UNKEY_RATE_LIMIT_PER_DAY,
+    },
   };
 }
 
@@ -443,6 +451,9 @@ function getConfigStatus(): {
 
   if (env.posthog.featureFlagsKey) configured.push('PostHog Feature Flags');
   else notConfigured.push('PostHog Feature Flags');
+
+  if (env.unkey.rootKey && env.unkey.apiId) configured.push('Unkey');
+  else notConfigured.push('Unkey');
 
   if (env.email.provider !== 'localhost') configured.push('Email (Resend)');
   else usingDefaults.push('Email (localhost)');
