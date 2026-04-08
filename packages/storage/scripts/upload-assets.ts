@@ -36,15 +36,11 @@ type AssetCategory =
   | 'brand'
   | 'tiles'
   | 'integrations'
-  | 'auth'
-  | 'intercom-canvas'
-  | 'zendesk'
+  | 'intercom'
   | 'slack'
   | 'icons'
   | 'features'
-  | 'hero'
   | 'launch'
-  | 'preview'
   | 'spotlight'
   | 'microsites'
   | 'frameworks';
@@ -97,15 +93,11 @@ const CATEGORIES: AssetCategory[] = [
   'brand',
   'tiles',
   'integrations',
-  'auth',
-  'intercom-canvas',
-  'zendesk',
+  'intercom',
   'slack',
   'icons',
   'features',
-  'hero',
   'launch',
-  'preview',
   'spotlight',
   'microsites',
   'frameworks',
@@ -340,29 +332,25 @@ function discoverAssets(): AssetEntry[] {
       continue;
     }
 
-    const files = readdirSync(categoryDir);
+    // Recursively walk the category directory
+    function walk(dir: string): void {
+      const items = readdirSync(dir);
 
-    for (const file of files) {
-      const filePath = join(categoryDir, file);
-      const stat = statSync(filePath);
+      for (const item of items) {
+        const itemPath = join(dir, item);
+        const stat = statSync(itemPath);
 
-      if (stat.isDirectory()) {
-        // Handle nested directories (e.g., intercom-canvas/intercom/)
-        const nestedFiles = readdirSync(filePath);
-        for (const nestedFile of nestedFiles) {
-          const nestedPath = join(filePath, nestedFile);
-          const nestedStat = statSync(nestedPath);
-
-          if (nestedStat.isFile()) {
-            const entry = createAssetEntry(nestedPath, category, `${file}/${nestedFile}`);
-            if (entry) entries.push(entry);
-          }
+        if (stat.isDirectory()) {
+          walk(itemPath);
+        } else if (stat.isFile()) {
+          const relativePath = relative(categoryDir, itemPath);
+          const entry = createAssetEntry(itemPath, category, relativePath);
+          if (entry) entries.push(entry);
         }
-      } else if (stat.isFile()) {
-        const entry = createAssetEntry(filePath, category, file);
-        if (entry) entries.push(entry);
       }
     }
+
+    walk(categoryDir);
   }
 
   return entries;

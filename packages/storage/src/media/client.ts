@@ -20,7 +20,7 @@ import type {
   FrameworkAssetKey,
   IconAssetKey,
   IntegrationAssetKey,
-  IntercomCanvasAssetKey,
+  IntercomAssetKey,
   LaunchAssetKey,
   MicrositeAssetKey,
   SlackAssetKey,
@@ -46,7 +46,7 @@ const CATEGORY_PROFILES: Record<string, TransformProfile> = {
   brand: 'brand',
   tiles: 'general',
   icons: 'icon',
-  'intercom-canvas': 'general',
+  intercom: 'general',
   slack: 'general',
   features: 'feature',
   launch: 'feature',
@@ -199,7 +199,7 @@ export class MediaClient {
   }
 
   /** Get CDN URL for an intercom canvas asset */
-  getIntercomCanvasMediaUrl(key: IntercomCanvasAssetKey, options?: GetMediaUrlOptions): string {
+  getIntercomMediaUrl(key: IntercomAssetKey, options?: GetMediaUrlOptions): string {
     return this.getMediaUrl(key, options);
   }
 

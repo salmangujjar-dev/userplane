@@ -25,6 +25,7 @@ export interface IntegrationAsset {
 
 const INTEGRATION_NAMES = [
   'asana',
+  'chrome',
   'clickup',
   'crisp',
   'discord',
@@ -47,7 +48,6 @@ const INTEGRATION_NAMES = [
   'salesforce',
   'sentry',
   'slack',
-  'talkdesk',
   'zapier',
   'zendesk',
   'zoho',
@@ -82,7 +82,7 @@ const INTEGRATION_LABELS: Record<IntegrationName, string> = {
   salesforce: 'Salesforce',
   sentry: 'Sentry',
   slack: 'Slack',
-  talkdesk: 'Talkdesk',
+
   zapier: 'Zapier',
   zendesk: 'Zendesk',
   zoho: 'Zoho',

@@ -16,9 +16,10 @@ export type {
   FrameworkAssetKey,
   IconAssetKey,
   IntegrationAssetKey,
-  IntercomCanvasAssetKey,
+  IntercomAssetKey,
   LaunchAssetKey,
   MicrositeAssetKey,
+  SlackAssetKey,
   SpotlightAssetKey,
   TileAssetKey,
 } from './types';
