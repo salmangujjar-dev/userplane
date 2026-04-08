@@ -1077,4 +1077,24 @@ export class RecordingRepository {
 
     return result ?? null;
   }
+
+  /**
+   * Count all recordings created by a user across all workspaces.
+   * Joins through workspace_members to map userId → createdBy.
+   */
+  async countByUserId(userId: string): Promise<number> {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(recordings)
+      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.workspaceMemberId))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(recordings.isDeleted, false),
+          eq(workspaceMembers.isDeleted, false)
+        )
+      );
+
+    return result?.count ?? 0;
+  }
 }

@@ -49,6 +49,16 @@ export const auth = createAuth({
       authLogger.error({ err: error, userId: user.id }, 'Failed to create DodoPayments customer');
       captureException(error);
     }
+
+    // Create Unkey identity for API key rate limiting (non-blocking)
+    try {
+      const { apiKeyService } = await import('@/api/services');
+      await apiKeyService.createIdentity(user.id);
+    } catch (error) {
+      // Identity will be created lazily when user first generates an API key
+      authLogger.error({ err: error, userId: user.id }, 'Failed to create Unkey identity');
+      captureException(error, undefined, { operation: 'auth_create_unkey_identity' });
+    }
   },
   email: {
     sendVerificationEmail: async ({ user, url }) => {
@@ -96,6 +106,15 @@ export const auth = createAuth({
         // Log error but don't block deletion email
         authLogger.error({ err: error }, 'Failed to revoke sessions');
         captureException(error, undefined, { operation: 'auth_delete_user_revoke_sessions' });
+      }
+
+      // Revoke all Unkey API keys and delete identity (non-blocking)
+      try {
+        const { apiKeyService } = await import('@/api/services');
+        await apiKeyService.deleteIdentityAndKeys(user.id);
+      } catch (error) {
+        authLogger.error({ err: error, userId: user.id }, 'Failed to cleanup Unkey keys/identity');
+        captureException(error, undefined, { operation: 'auth_delete_user_unkey_cleanup' });
       }
 
       // Send account deletion confirmation email

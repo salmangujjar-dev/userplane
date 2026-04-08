@@ -133,6 +133,16 @@ app.use(
   })
 );
 
+// Public API endpoints - called from external services, no cookies needed
+app.use(
+  '/api/v1/public/*',
+  cors({
+    origin: '*',
+    credentials: false,
+    maxAge: env.cors.maxAge,
+  })
+);
+
 // Default CORS for authenticated endpoints
 app.use(
   '*',

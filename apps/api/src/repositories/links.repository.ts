@@ -676,4 +676,24 @@ export class LinkRepository {
 
     return results.map((r) => r.linkId);
   }
+
+  /**
+   * Count all links created by a user across all workspaces.
+   * Joins through workspace_members to map userId → createdBy.
+   */
+  async countByUserId(userId: string): Promise<number> {
+    const [result] = await this.db
+      .select({ count: count() })
+      .from(links)
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.workspaceMemberId))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(links.isDeleted, false),
+          eq(workspaceMembers.isDeleted, false)
+        )
+      );
+
+    return result?.count ?? 0;
+  }
 }

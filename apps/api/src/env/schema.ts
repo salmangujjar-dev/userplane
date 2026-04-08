@@ -258,6 +258,14 @@ export const posthogEnvSchema = z.object({
   POSTHOG_FEATURE_FLAGS_KEY: z.string().optional(),
 });
 
+/** Unkey env vars schema */
+export const unkeyEnvSchema = z.object({
+  UNKEY_ROOT_KEY: z.string().optional().default(''),
+  UNKEY_API_ID: z.string().optional().default(''),
+  UNKEY_RATE_LIMIT_PER_MINUTE: integerWithDefault(120),
+  UNKEY_RATE_LIMIT_PER_DAY: integerWithDefault(10000),
+});
+
 /** Admin env vars schema */
 export const adminEnvSchema = z.object({
   ADMIN_USER_IDS: commaSeparatedArray([]),
@@ -287,7 +295,8 @@ export const rawEnvSchema = serverEnvSchema
   .merge(restorationEnvSchema)
   .merge(storageEnvSchema)
   .merge(posthogEnvSchema)
-  .merge(adminEnvSchema);
+  .merge(adminEnvSchema)
+  .merge(unkeyEnvSchema);
 
 /** Raw parsed environment type */
 export type RawEnvConfig = z.infer<typeof rawEnvSchema>;
@@ -478,6 +487,14 @@ export const posthogConfigSchema = z.object({
   featureFlagsKey: z.string().optional(),
 });
 
+/** Unkey configuration schema */
+export const unkeyConfigSchema = z.object({
+  rootKey: z.string(),
+  apiId: z.string(),
+  rateLimitPerMinute: z.number(),
+  rateLimitPerDay: z.number(),
+});
+
 /** Admin configuration schema */
 export const adminConfigSchema = z.object({
   userIds: z.array(z.string()),
@@ -514,6 +531,7 @@ export const envConfigSchema = z.object({
   storage: storageConfigSchema,
   posthog: posthogConfigSchema,
   admin: adminConfigSchema,
+  unkey: unkeyConfigSchema,
 });
 
 // =============================================================================
@@ -543,5 +561,6 @@ export type RestorationConfig = z.infer<typeof restorationConfigSchema>;
 export type BucketCredentials = z.infer<typeof bucketCredentialsSchema>;
 export type StorageConfig = z.infer<typeof storageConfigSchema>;
 export type PostHogConfig = z.infer<typeof posthogConfigSchema>;
+export type UnkeyConfig = z.infer<typeof unkeyConfigSchema>;
 export type AdminConfig = z.infer<typeof adminConfigSchema>;
 export type EnvConfig = z.infer<typeof envConfigSchema>;

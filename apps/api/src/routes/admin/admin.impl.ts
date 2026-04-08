@@ -8,15 +8,18 @@ import type { WorkspaceRole } from '@userplane/contract';
 import type { ResourceLimits, ResourceType } from '@userplane/pricing';
 
 import { generateWorkspaceId } from '@/api/lib/id';
+import { createLogger } from '@/api/lib/logger';
 import { createAdminMiddleware } from '@/api/middleware/admin.orpc';
 import { authorized } from '@/api/middleware/auth.orpc';
 import { authWithAdminRateLimit } from '@/api/middleware/rate-limit.orpc';
+import { captureException } from '@/api/posthog';
 import type { AdminService } from '@/api/services/admin.service';
 import type { AdminPlanService } from '@/api/services/admin-plan.service';
 import type { AdminProjectService } from '@/api/services/admin-project.service';
 import type { AdminRecordingService } from '@/api/services/admin-recording.service';
 import type { AdminSubscriptionService } from '@/api/services/admin-subscription.service';
 import type { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
+import type { ApiKeyService } from '@/api/services/api-key.service';
 import type { BillingService } from '@/api/services/billing.service';
 import type { EmailService } from '@/api/services/email.service';
 import type { EntitlementService } from '@/api/services/entitlement.service';
@@ -26,6 +29,8 @@ import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 import { calculateScheduledTime, getRestorationMaxWindowDays } from '@/api/utils/date';
 import { formatDeletionDate } from '@/api/utils/format';
+
+const adminImplLogger = createLogger('admin-impl');
 
 /**
  * Format date to Date object (or null)
@@ -175,7 +180,11 @@ const getUserImpl = (adminService: AdminService) => {
 /**
  * Ban user implementation
  */
-const banUserImpl = (adminService: AdminService, emailService: EmailService) => {
+const banUserImpl = (
+  adminService: AdminService,
+  emailService: EmailService,
+  apiKeyService: ApiKeyService
+) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authWithAdminRateLimit
@@ -186,6 +195,17 @@ const banUserImpl = (adminService: AdminService, emailService: EmailService) => 
         expiresInSeconds: input.body.expiresInSeconds,
         deleteWorkspacesForRoles: input.body.deleteWorkspacesForRoles,
       });
+
+      // Disable Unkey API keys (non-blocking)
+      try {
+        await apiKeyService.disableKeysByExternalId(input.params.userId);
+      } catch (error) {
+        adminImplLogger.error(
+          { err: error, userId: input.params.userId },
+          'Failed to disable Unkey API keys on ban'
+        );
+        captureException(error, undefined, { operation: 'admin_ban_disable_api_keys' });
+      }
 
       // Send email to suspended account
       await emailService.sendSafeTosViolation({ to: userDetail.email });
@@ -200,13 +220,28 @@ const banUserImpl = (adminService: AdminService, emailService: EmailService) => 
 /**
  * Unban user implementation
  */
-const unbanUserImpl = (adminService: AdminService, emailService: EmailService) => {
+const unbanUserImpl = (
+  adminService: AdminService,
+  emailService: EmailService,
+  apiKeyService: ApiKeyService
+) => {
   const adminMiddleware = createAdminMiddleware(adminService);
 
   return authWithAdminRateLimit
     .use(adminMiddleware)
     .admin.users.unban.handler(async ({ input }) => {
       const userDetail = await adminService.unbanUser(input.params.userId);
+
+      // Re-enable Unkey API keys (non-blocking)
+      try {
+        await apiKeyService.enableKeysByExternalId(input.params.userId);
+      } catch (error) {
+        adminImplLogger.error(
+          { err: error, userId: input.params.userId },
+          'Failed to re-enable Unkey API keys on unban'
+        );
+        captureException(error, undefined, { operation: 'admin_unban_enable_api_keys' });
+      }
 
       // Send account restored email
       await emailService.sendSafeAccountRestored({ to: userDetail.email });
@@ -1218,14 +1253,15 @@ export const createAdminProcedures = (
   entitlementService: EntitlementService,
   adminPlanService: AdminPlanService,
   billingService: BillingService,
-  adminSubscriptionService: AdminSubscriptionService
+  adminSubscriptionService: AdminSubscriptionService,
+  apiKeyService: ApiKeyService
 ) => {
   return {
     users: {
       search: searchUsersImpl(adminService),
       get: getUserImpl(adminService),
-      ban: banUserImpl(adminService, emailService),
-      unban: unbanUserImpl(adminService, emailService),
+      ban: banUserImpl(adminService, emailService, apiKeyService),
+      unban: unbanUserImpl(adminService, emailService, apiKeyService),
       sessions: {
         list: listUserSessionsImpl(adminService),
         revokeAll: revokeAllSessionsImpl(adminService),
