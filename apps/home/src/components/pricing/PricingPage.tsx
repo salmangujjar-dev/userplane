@@ -30,6 +30,7 @@ import {
   PRICING_PAGE_HIGHLIGHTS,
   type PricingFAQItem,
 } from '@/constants/pricing/pricing-page';
+import { buildUTM, withUTM } from '@/constants/utm';
 import type { HighlightConfig } from '@/types/highlight';
 
 import Highlight from '../shared/Highlight';
@@ -124,7 +125,9 @@ function PlanCard({ plan, highlights, isAnnual }: PlanCardProps) {
   const isCustom = details.planRate === null;
 
   const ctaText = isEnterprise ? 'Talk to sales' : 'Get started';
-  const ctaUrl = isEnterprise ? SALES_FORM_URL : SIGNUP_URL;
+  const ctaUrl = isEnterprise
+    ? withUTM(SALES_FORM_URL, buildUTM('pricing', 'pricing', 'plan-enterprise'))
+    : withUTM(SIGNUP_URL, buildUTM('pricing', 'pricing', 'plan-card'));
   const isExternal = isEnterprise;
 
   return (
@@ -362,7 +365,11 @@ function MobileFeatureComparison({ cycle, onCycleChange }: FeatureComparisonTabl
         variant={selectedPlan.isPopular ? 'default' : 'outline'}
       >
         <a
-          href={selectedPlan.isEnterprise ? SALES_FORM_URL : SIGNUP_URL}
+          href={
+            selectedPlan.isEnterprise
+              ? withUTM(SALES_FORM_URL, buildUTM('pricing', 'pricing', 'compare-enterprise'))
+              : withUTM(SIGNUP_URL, buildUTM('pricing', 'pricing', 'compare-card'))
+          }
           target={selectedPlan.isEnterprise ? '_blank' : undefined}
           rel={selectedPlan.isEnterprise ? 'noopener noreferrer' : undefined}
         >
@@ -473,7 +480,14 @@ function DesktopFeatureComparisonTable({ cycle, onCycleChange }: FeatureComparis
                     variant={plan.isPopular ? 'default' : 'outline'}
                   >
                     <a
-                      href={plan.isEnterprise ? SALES_FORM_URL : SIGNUP_URL}
+                      href={
+                        plan.isEnterprise
+                          ? withUTM(
+                              SALES_FORM_URL,
+                              buildUTM('pricing', 'pricing', 'compare-enterprise')
+                            )
+                          : withUTM(SIGNUP_URL, buildUTM('pricing', 'pricing', 'compare-card'))
+                      }
                       target={plan.isEnterprise ? '_blank' : undefined}
                       rel={plan.isEnterprise ? 'noopener noreferrer' : undefined}
                     >

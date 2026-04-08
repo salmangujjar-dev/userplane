@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { LOGO_LINK, NAV_LINKS } from '@/constants/navigation';
 import { SIGNUP_URL } from '@/constants/onboarding';
+import { buildUTM, withUTM } from '@/constants/utm';
 
 import IntegrationsDropdown, { type DropdownEntry } from './IntegrationsDropdown';
 import TeamsDropdown, { type TeamDropdownEntry } from './TeamsDropdown';
@@ -160,7 +161,10 @@ export default function Header({
 
       <div className="hidden flex-1 justify-end gap-1 md:flex">
         <Button asChild className="border-[0.5px] hover:brightness-99" variant="secondary">
-          <a className="flex items-center gap-2 px-5 py-5 font-medium" href={SIGNUP_URL}>
+          <a
+            className="flex items-center gap-2 px-5 py-5 font-medium"
+            href={withUTM(SIGNUP_URL, buildUTM('homepage', 'header', 'header-cta'))}
+          >
             Get Started
           </a>
         </Button>
@@ -227,7 +231,7 @@ export default function Header({
                 </nav>
                 <div className="flex w-full flex-col">
                   <MobileNavLink
-                    href={SIGNUP_URL}
+                    href={withUTM(SIGNUP_URL, buildUTM('homepage', 'header', 'header-cta'))}
                     icon={<LogIn className="h-4 w-4" />}
                     isButton
                     onClick={closeMenu}

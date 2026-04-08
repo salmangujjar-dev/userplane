@@ -15,6 +15,7 @@ export const DOCS_FRAMEWORK_DJANGO = getDocsUrl('/frameworks/django');
 export const DOCS_FRAMEWORK_EMERGENT = getDocsUrl('/platforms/emergent');
 export const DOCS_FRAMEWORK_LOVABLE = getDocsUrl('/platforms/lovable');
 export const DOCS_FRAMEWORK_RAILS = getDocsUrl('/frameworks/ruby-on-rails');
+export const DOCS_FRAMEWORK_REMIX = getDocsUrl('/frameworks/remix');
 export const DOCS_FRAMEWORK_SOLIDJS = getDocsUrl('/frameworks/solidjs');
 
 // ── Shared doc links ──

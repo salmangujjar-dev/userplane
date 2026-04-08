@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 
 import { SIGNUP_URL } from '@/constants/onboarding';
 import { PRICING_HEADING, PRICING_HIGHLIGHTS } from '@/constants/pricing/pricing';
+import { buildUTM, withUTM } from '@/constants/utm';
 
 import Highlight from '../shared/Highlight';
 
@@ -157,7 +158,10 @@ export default function Pricing() {
             </div>
 
             <Button asChild className="px-7 py-6" size="lg" variant="secondary">
-              <a className="flex items-center gap-2 font-medium" href={SIGNUP_URL}>
+              <a
+                className="flex items-center gap-2 font-medium"
+                href={withUTM(SIGNUP_URL, buildUTM('homepage', 'home', 'pricing-card'))}
+              >
                 Get Started <ChevronRight />
               </a>
             </Button>

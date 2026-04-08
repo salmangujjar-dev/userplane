@@ -1,6 +1,7 @@
 import type { HighlightConfig } from '@/types/highlight';
 
 import { SIGNUP_URL } from '../onboarding';
+import { buildUTM, withUTM } from '../utm';
 
 export const HERO_HEADING = 'Resolve support issues without the back and forth';
 
@@ -20,7 +21,7 @@ export const HERO_DESCRIPTION =
 
 export const HERO_PRIMARY_BUTTON = {
   text: 'Get Started',
-  href: SIGNUP_URL,
+  href: withUTM(SIGNUP_URL, buildUTM('homepage', 'home', 'hero-primary')),
 };
 
 export const HERO_SECONDARY_BUTTON = {
