@@ -31,6 +31,18 @@
     {
       "source": "/getting-started/intercom-setup",
       "destination": "/getting-started/helpdesk-setup"
+    },
+    {
+      "source": "/frameworks/bolt",
+      "destination": "/platforms/bolt"
+    },
+    {
+      "source": "/frameworks/emergent",
+      "destination": "/platforms/emergent"
+    },
+    {
+      "source": "/frameworks/lovable",
+      "destination": "/platforms/lovable"
     }
   ],
   "navigation": {
@@ -176,8 +188,15 @@
               "frameworks/sveltekit",
               "frameworks/astro",
               "frameworks/tanstack-start",
-              "frameworks/static-html"
+              "frameworks/static-html",
+              "frameworks/solidjs",
+              "frameworks/django",
+              "frameworks/ruby-on-rails"
             ]
+          },
+          {
+            "group": "Platform Guides",
+            "pages": ["platforms/bolt", "platforms/emergent", "platforms/lovable"]
           },
           {
             "group": "Privacy & Data",

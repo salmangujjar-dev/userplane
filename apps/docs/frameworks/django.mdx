@@ -1,0 +1,120 @@
+---
+title: 'Django Integration'
+description: 'Install Userplane in a Django application by adding the CDN embed script to your base template'
+---
+
+This guide covers how to install Userplane in a Django application using the template system.
+
+## Adding the script
+
+Add these two tags to the `<head>` of your base template. Every child template that extends it will automatically include the script.
+
+```html
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Sets workspace ID for screen recording -->
+    <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+
+    <!-- Loads Userplane screen recording script -->
+    <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
+
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    {% block content %}{% endblock %}
+  </body>
+</html>
+```
+
+Replace `YOUR_WORKSPACE_ID` with your workspace ID. You can copy the exact snippet with your ID pre-filled from **Workspace Settings > Domains** in the Userplane dashboard.
+
+Place the tags as early as possible in `<head>`. The Userplane script can only capture console logs and network requests that occur after it initializes — placing it early gives you the most complete recording context.
+
+<Note>
+Django's `{% static %}` tag and `STATICFILES_DIRS` are for locally hosted assets. For external CDN URLs, use a plain `<script>` tag — no Django template tags are needed.
+</Note>
+
+## Template inheritance
+
+If you only want Userplane on specific pages (e.g. your customer-facing app but not your admin panel), use Django's `{% block %}` system:
+
+```html
+<!-- templates/base.html -->
+<head>
+  {% block userplane %}{% endblock %} {% block extra_head %}{% endblock %}
+</head>
+```
+
+```html
+<!-- templates/app/base_app.html -->
+{% extends "base.html" %} {% block userplane %}
+<meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+<script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
+{% endblock %}
+```
+
+## URL parameters
+
+When a customer opens a recording link, Userplane appends `userplane-token`, `userplane-action`, and `userplane-workspace` to the URL. If your Django app uses `@login_required` or a middleware that redirects unauthenticated users, carry the `userplane-` prefixed parameters through the redirect:
+
+```python
+# views.py
+from django.shortcuts import redirect
+from urllib.parse import urlencode
+
+def login_view(request):
+    if request.user.is_authenticated:
+        next_url = request.GET.get("next", "/")
+        # Preserve userplane params
+        params = {
+            k: v for k, v in request.GET.items()
+            if k.startswith("userplane-")
+        }
+        if params:
+            next_url += ("&" if "?" in next_url else "?") + urlencode(params)
+        return redirect(next_url)
+
+    # ... render login form
+```
+
+See [Installation](/developer/installation) for the full list of parameters.
+
+## Sensitive data
+
+Add `data-userplane-blur` to any element you want blurred in recordings:
+
+```html
+<div data-userplane-blur>
+  <input type="text" placeholder="Credit card number" />
+</div>
+```
+
+To blur all inputs across the page, add a meta tag to your base template:
+
+```html
+<meta name="userplane:blur" content="inputs" />
+```
+
+See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for the full reference.
+
+## Content Security Policy
+
+If your Django app sets a `Content-Security-Policy` header (e.g. via `django-csp`), add the Userplane CDN domain to your `script-src` directive:
+
+```python
+# settings.py (django-csp)
+CSP_SCRIPT_SRC = ("'self'", "https://cdn.userplane.io")
+```
+
+See [Installation](/developer/installation) for additional CSP guidance.
+
+## Related articles
+
+- [Installation](/developer/installation) — CDN script placement, CSP, iframes, and browser support.
+- [Domain Verification Guide](/developer/domain-verification) — verify domain ownership after installing the script.
+- [Sensitive Data Redaction](/developer/sensitive-data-redaction) — blur sensitive content in recordings.
+- [Web SDK](/developer/web-sdk) — programmatic SDK for apps with a build step.

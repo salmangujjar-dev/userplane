@@ -1,0 +1,188 @@
+---
+title: 'SolidJS Integration'
+description: 'Install Userplane in a SolidJS application using the CDN embed or programmatic script injection'
+---
+
+This guide covers how to install Userplane in a SolidJS application built with Vite.
+
+## Adding the script
+
+The fastest way to add Userplane is the CDN embed. Add these two tags to the `<head>` of your `index.html` at the project root:
+
+```html
+<head>
+  <!-- Sets workspace ID for screen recording -->
+  <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+
+  <!-- Loads Userplane screen recording script -->
+  <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
+</head>
+```
+
+Replace `YOUR_WORKSPACE_ID` with your workspace ID. You can copy the exact snippet with your ID pre-filled from **Workspace Settings > Domains** in the Userplane dashboard.
+
+Vite serves `index.html` as the entry point for SolidJS SPAs, so any tags placed in `<head>` load before the application mounts. Place the tags as early as possible — the Userplane script can only capture console logs and network requests that occur after it initializes.
+
+## npm SDK
+
+Use the npm SDK when you need programmatic control — triggering recordings from a button, attaching user metadata, or reading recording state.
+
+### Installation
+
+<CodeGroup>
+```bash npm
+npm install @userplane/sdk
+```
+
+```bash yarn
+yarn add @userplane/sdk
+```
+
+```bash pnpm
+pnpm add @userplane/sdk
+```
+
+```bash bun
+bun add @userplane/sdk
+```
+
+</CodeGroup>
+
+### Initialization
+
+Create a `UserplaneProvider` component and wrap your app with it in `index.tsx`.
+
+```tsx
+// src/providers/UserplaneProvider.tsx
+import { onMount, ParentComponent } from 'solid-js';
+import { initialize } from '@userplane/sdk';
+
+const UserplaneProvider: ParentComponent = (props) => {
+  onMount(() => {
+    initialize({
+      workspaceId: import.meta.env.VITE_USERPLANE_WORKSPACE_ID,
+    });
+  });
+
+  return <>{props.children}</>;
+};
+
+export default UserplaneProvider;
+```
+
+```tsx
+// src/index.tsx
+import { render } from 'solid-js/web';
+import UserplaneProvider from './providers/UserplaneProvider';
+import App from './App';
+
+render(
+  () => (
+    <UserplaneProvider>
+      <App />
+    </UserplaneProvider>
+  ),
+  document.getElementById('root')!
+);
+```
+
+SolidJS's `onMount` runs once after the component mounts in the browser, making it the equivalent of React's `useEffect(() => {}, [])`. Because Vite SolidJS apps are client-side rendered, a static import at the top of the file works — no dynamic `import()` or SSR guards are needed.
+
+## SolidStart (SSR)
+
+If you are using **SolidStart** (the SSR meta-framework), there is no raw `index.html`. Use a dynamic `import()` inside `onMount` to ensure the SDK only initializes in the browser:
+
+```tsx
+// src/providers/UserplaneProvider.tsx
+import { onMount, ParentComponent } from 'solid-js';
+
+const UserplaneProvider: ParentComponent = (props) => {
+  onMount(async () => {
+    const { initialize } = await import('@userplane/sdk');
+    initialize({
+      workspaceId: import.meta.env.VITE_USERPLANE_WORKSPACE_ID,
+    });
+  });
+
+  return <>{props.children}</>;
+};
+
+export default UserplaneProvider;
+```
+
+Mount the provider in your root layout at `src/app.tsx`.
+
+| Concern                                         | Safe? | Notes                     |
+| ----------------------------------------------- | ----- | ------------------------- |
+| Static `import` in a client-only SPA            | Yes   | No SSR involved           |
+| Dynamic `import()` in `onMount` with SolidStart | Yes   | Runs browser-only         |
+| Calling `initialize()` during server render     | No    | `window` is not available |
+
+<Note>
+SolidJS does not yet provide a built-in `<Script>` component for head management. The `@solidjs/meta` package supports `<Title>`, `<Meta>`, and `<Link>` but not `<Script>`. Use `onMount` with `document.createElement` or the CDN embed in `index.html` instead.
+</Note>
+
+### URL parameters
+
+When a customer opens a recording link, Userplane appends `userplane-token` and `userplane-action` to the URL. If your SolidStart app uses a middleware or route guard that redirects users, carry the `userplane-` prefixed parameters through the redirect:
+
+```ts
+// src/middleware.ts
+import { createMiddleware } from '@solidjs/start/middleware';
+
+export default createMiddleware({
+  onRequest: [
+    (event) => {
+      const url = new URL(event.request.url);
+      const isAuthenticated = checkAuth(event);
+
+      if (!isAuthenticated) {
+        const loginUrl = new URL('/login', url.origin);
+
+        for (const [key, value] of url.searchParams) {
+          if (key.startsWith('userplane-')) {
+            loginUrl.searchParams.set(key, value);
+          }
+        }
+
+        return Response.redirect(loginUrl.toString());
+      }
+    },
+  ],
+});
+```
+
+See [Installation](/developer/installation) for the full list of parameters.
+
+## Sensitive data
+
+Add `data-userplane-blur` to any element you want blurred in recordings. See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for the full reference.
+
+## Metadata
+
+Call `set()` after `initialize()` to attach user context to recordings:
+
+```tsx
+import { onMount, ParentComponent } from 'solid-js';
+import { initialize, set } from '@userplane/sdk';
+
+const UserplaneProvider: ParentComponent = (props) => {
+  onMount(() => {
+    initialize({ workspaceId: import.meta.env.VITE_USERPLANE_WORKSPACE_ID });
+    set('environment', 'production');
+  });
+
+  return <>{props.children}</>;
+};
+
+export default UserplaneProvider;
+```
+
+See [Metadata SDK](/developer/metadata-sdk) for the full API.
+
+## Related articles
+
+- [Installation](/developer/installation) — CDN script placement, CSP, and redirect handling.
+- [Web SDK](/developer/web-sdk) — full SDK API reference.
+- [Metadata SDK](/developer/metadata-sdk) — attach user context to recordings.
+- [Sensitive Data Redaction](/developer/sensitive-data-redaction) — blur sensitive content in recordings.
