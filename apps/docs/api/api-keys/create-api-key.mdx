@@ -1,0 +1,87 @@
+---
+title: Create API Key
+description: Create a new API key from the Userplane dashboard
+---
+
+Create an API key to start accessing the Userplane API programmatically. Each user can have up to 3 API keys.
+
+<Steps>
+  <Step title="Open the Developers tab">
+    Navigate to [Account Settings](https://dash.userplane.io/_/account?tab=developers) and select the **Developers** tab.
+
+    If you don't have any keys yet, you'll see the empty state:
+
+    <Frame>
+      <img src="/media/api/list-api-key-empty-view.png" alt="API Keys empty state" />
+    </Frame>
+
+  </Step>
+
+  <Step title="Click Create API Key">
+    Click the **+ Create API Key** button. You'll be prompted to configure your key:
+
+    - **Name** (optional) — A label to identify the key (e.g., "CI Pipeline", "Production API")
+    - **Expiration** — Choose from: No expiration, 7 days, 30 days, 60 days, or 90 days
+
+  </Step>
+
+  <Step title="Copy your key">
+    After creation, the full API key is displayed. Copy it and store it securely.
+
+    <Warning>
+      The full API key is only shown once. If you lose it, you'll need to create a new key or [rotate](/api/api-keys/rotate-api-key) the existing one.
+    </Warning>
+
+    Your new key will appear in the keys list:
+
+    <Frame>
+      <img src="/media/api/list-api-keys.png" alt="API Keys list with keys" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+## Key limits
+
+| Limit                 | Value   |
+| --------------------- | ------- |
+| Maximum keys per user | 3       |
+| Maximum expiration    | 90 days |
+
+## Expiration options
+
+| Option        | Duration            |
+| ------------- | ------------------- |
+| No expiration | Key does not expire |
+| 7 days        | 604,800 seconds     |
+| 30 days       | 2,592,000 seconds   |
+| 60 days       | 5,184,000 seconds   |
+| 90 days       | 7,776,000 seconds   |
+
+## Next steps
+
+Once you have your key, authenticate API requests by including it as a Bearer token:
+
+```bash
+curl https://api.userplane.com/api/v1/public/me \
+  -H "Authorization: Bearer up_your_api_key"
+```
+
+See the [Quickstart](/api/quickstart) to make your first API call.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Manage API Keys" icon="list" href="/api/api-keys/list-api-keys">
+    View and manage your existing keys
+  </Card>
+  <Card title="Rotate API Key" icon="rotate" href="/api/api-keys/rotate-api-key">
+    Replace a key without losing your slot
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/api/quickstart">
+    Make your first API call with your new key
+  </Card>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    How to use your key in API requests
+  </Card>
+</CardGroup>

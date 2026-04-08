@@ -1,0 +1,118 @@
+---
+title: Error Handling
+description: API error codes, HTTP status codes, and error response format
+---
+
+The API uses standard HTTP status codes and returns structured error responses to help you handle failures programmatically.
+
+## Error response format
+
+Error responses include an `error` code for programmatic handling and a human-readable `message`:
+
+```json
+{
+  "error": "API_KEY_REQUIRED",
+  "message": "API key required. Use Authorization: Bearer <key>"
+}
+```
+
+## Authentication errors
+
+Returned when the API key is missing, invalid, or expired.
+
+| Error code         | Status | Message                                                 |
+| ------------------ | ------ | ------------------------------------------------------- |
+| `API_KEY_REQUIRED` | 401    | API key required. Use Authorization: Bearer &lt;key&gt; |
+| `API_KEY_INVALID`  | 401    | Invalid API key.                                        |
+| `API_KEY_EXPIRED`  | 401    | API key has expired.                                    |
+
+## Authorization errors
+
+Returned when the authenticated user lacks access to the requested resource.
+
+| Error code                     | Status | Message                                              |
+| ------------------------------ | ------ | ---------------------------------------------------- |
+| `API_KEY_DISABLED`             | 403    | API key is disabled.                                 |
+| `NOT_A_MEMBER`                 | 403    | Not a member of this workspace.                      |
+| `LINK_DELETE_FORBIDDEN`        | 403    | You do not have permission to delete this link.      |
+| `RECORDING_DELETE_FORBIDDEN`   | 403    | You do not have permission to delete this recording. |
+| `RECORDING_WORKSPACE_MISMATCH` | 403    | Recording does not belong to this workspace.         |
+
+## Rate limiting
+
+| Error code     | Status | Message                                      |
+| -------------- | ------ | -------------------------------------------- |
+| `RATE_LIMITED` | 429    | Rate limit exceeded. Please try again later. |
+
+See [Rate Limits](/api/rate-limits) for details on limits and retry strategies.
+
+## Resource errors
+
+Returned when the requested resource does not exist or has been deleted.
+
+| Error code             | Status | Message                            |
+| ---------------------- | ------ | ---------------------------------- |
+| `LINK_NOT_FOUND`       | 404    | Link not found                     |
+| `RECORDING_NOT_FOUND`  | 404    | Recording not found                |
+| `PROJECT_NOT_FOUND`    | 404    | Project not found                  |
+| `WORKSPACE_NOT_FOUND`  | 404    | Workspace not found                |
+| `LINK_GONE`            | 410    | Link has been deleted              |
+| `RECORDING_GONE`       | 410    | Recording has already been deleted |
+| `PROJECT_GONE`         | 410    | Project has been deleted           |
+| `LINK_PROJECT_DELETED` | 410    | Project has been deleted           |
+
+<Note>
+  A `410 Gone` response indicates the resource was soft-deleted. Unlike `404 Not Found`, this
+  confirms the resource previously existed.
+</Note>
+
+## Mutation errors
+
+Returned when a create, update, or delete operation fails.
+
+| Error code                       | Status | Message                                |
+| -------------------------------- | ------ | -------------------------------------- |
+| `LINK_CREATE_FAILED`             | 500    | Failed to create link                  |
+| `LINK_UPDATE_FAILED`             | 500    | Failed to update link                  |
+| `LINK_DELETE_FAILED`             | 500    | Failed to delete link                  |
+| `RECORDING_DELETE_FAILED`        | 500    | Failed to delete recording             |
+| `LINK_DEFAULT_PROJECT_NOT_FOUND` | 404    | No default project found for workspace |
+| `PLAN_LIMIT_EXCEEDED`            | 403    | Plan limit exceeded                    |
+
+## API key management errors
+
+These errors apply to the [API Key Management](/api/api-keys/create-api-key) endpoints, which use session authentication.
+
+| Error code               | Status | Message                                                   |
+| ------------------------ | ------ | --------------------------------------------------------- |
+| `UNAUTHORIZED`           | 401    | You must be logged in to manage API keys.                 |
+| `API_KEY_ALREADY_EXISTS` | 409    | You already have an API key. Revoke or rotate it instead. |
+| `API_KEY_NOT_FOUND`      | 404    | No API key found.                                         |
+| `API_KEY_CREATE_FAILED`  | 500    | Failed to create API key.                                 |
+| `API_KEY_REVOKE_FAILED`  | 500    | Failed to revoke API key.                                 |
+| `API_KEY_ROTATE_FAILED`  | 500    | Failed to rotate API key.                                 |
+
+## Best practices
+
+- **Check HTTP status first** — use the status code to determine the error category (4xx = client error, 5xx = server error).
+- **Use the `error` field for programmatic handling** — match on error codes like `API_KEY_EXPIRED` or `RATE_LIMITED` in your code.
+- **Use the `message` field for logging** — the message provides human-readable context for debugging.
+- **Retry on 429 and 5xx** — these are transient and may succeed on retry with backoff.
+- **Do not retry on 4xx (except 429)** — these indicate a client-side issue that needs to be fixed.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Rate Limits" icon="gauge" href="/api/rate-limits">
+    Rate limit thresholds and retry strategies
+  </Card>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    API key authentication and authorization scopes
+  </Card>
+  <Card title="Pagination" icon="list" href="/api/pagination">
+    Page-based pagination for list endpoints
+  </Card>
+  <Card title="Best Practices" icon="star" href="/api/best-practices">
+    Build reliable integrations that handle errors gracefully
+  </Card>
+</CardGroup>

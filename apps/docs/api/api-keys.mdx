@@ -1,0 +1,48 @@
+---
+title: API Keys
+description: Create, manage, and rotate Userplane API keys
+---
+
+API keys provide programmatic access to the Userplane API. Each key is scoped to the user who created it and shares that user's workspace permissions.
+
+You can manage API keys from the [Developers tab](https://dash.userplane.io/_/account?tab=developers) of your account settings.
+
+<Frame>
+  <img src="/media/api/list-api-keys.png" alt="API Keys in the Developers tab" />
+</Frame>
+
+## Key limits
+
+| Limit                  | Value   |
+| ---------------------- | ------- |
+| Maximum keys per user  | 3       |
+| Maximum key expiration | 90 days |
+| Key prefix             | `up_`   |
+
+## Rate limits
+
+Rate limits are applied per-user, shared across all API keys for that user:
+
+| Window     | Limit           |
+| ---------- | --------------- |
+| Per minute | 120 requests    |
+| Per day    | 10,000 requests |
+
+See [Rate Limits](/api/rate-limits) for more details.
+
+## Managing your keys
+
+<CardGroup cols={2}>
+  <Card title="Create API Key" icon="plus" href="/api/api-keys/create-api-key">
+    Generate a new API key with optional name and expiration
+  </Card>
+  <Card title="Manage API Keys" icon="list" href="/api/api-keys/list-api-keys">
+    View your keys, check status, and access key actions
+  </Card>
+  <Card title="Rotate API Key" icon="rotate" href="/api/api-keys/rotate-api-key">
+    Invalidate a key and generate a replacement
+  </Card>
+  <Card title="Revoke API Key" icon="trash" href="/api/api-keys/revoke-api-key">
+    Permanently delete a key
+  </Card>
+</CardGroup>

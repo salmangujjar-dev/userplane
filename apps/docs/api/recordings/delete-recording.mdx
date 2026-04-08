@@ -1,0 +1,98 @@
+---
+title: Delete Recording
+description: Soft-delete a recording
+---
+
+`DELETE /public/workspace/{workspaceId}/recordings/{recordingId}`
+
+Soft-deletes a recording. Only the recording's link creator or a workspace admin/owner can delete a recording.
+
+## Path parameters
+
+<ParamField path="workspaceId" type="string" required>
+  The workspace ID
+</ParamField>
+<ParamField path="recordingId" type="string" required>
+  The recording ID
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Status message
+</ResponseField>
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="workspaceId" type="string">
+      Workspace ID
+    </ResponseField>
+    <ResponseField name="recordingId" type="string">
+      The deleted recording ID
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example
+
+<CodeGroup>
+```bash curl
+curl -X DELETE https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings/rec_abc123 \
+  -H "Authorization: Bearer up_your_api_key"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings/rec_abc123',
+  {
+    method: 'DELETE',
+    headers: { Authorization: 'Bearer up_your_api_key' },
+  }
+);
+const { data } = await response.json();
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "message": "Recording deleted successfully",
+  "data": {
+    "workspaceId": "ws_abc123",
+    "recordingId": "rec_abc123"
+  }
+}
+```
+
+## Errors
+
+| Error code                     | Status | Description                                         |
+| ------------------------------ | ------ | --------------------------------------------------- |
+| `RECORDING_NOT_FOUND`          | 404    | Recording does not exist                            |
+| `RECORDING_GONE`               | 410    | Recording has already been deleted                  |
+| `RECORDING_WORKSPACE_MISMATCH` | 403    | Recording does not belong to this workspace         |
+| `RECORDING_DELETE_FORBIDDEN`   | 403    | You do not have permission to delete this recording |
+| `RECORDING_DELETE_FAILED`      | 500    | Failed to delete the recording                      |
+
+Also returns [common authentication errors](/api/error-handling#authentication-errors).
+
+<Note>
+  This is a soft delete. The recording data is preserved but becomes inaccessible. Subsequent
+  requests for this recording return `410 Gone`.
+</Note>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="List Recordings" icon="list" href="/api/recordings/list-recordings">
+    View all active recordings in the workspace
+  </Card>
+  <Card title="Get Recording" icon="video" href="/api/recordings/get-recording">
+    Retrieve recording details before deletion
+  </Card>
+  <Card title="Delete Link" icon="trash" href="/api/links/delete-link">
+    Soft-delete the associated recording link
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/api/error-handling">
+    Understand 410 Gone and other error codes
+  </Card>
+</CardGroup>

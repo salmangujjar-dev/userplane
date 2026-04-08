@@ -1,0 +1,96 @@
+---
+title: Get Workspace
+description: Retrieve workspace details by ID
+---
+
+`GET /public/workspace/{workspaceId}`
+
+Returns details for a specific workspace. Requires the authenticated user to be an active member of the workspace.
+
+## Path parameters
+
+<ParamField path="workspaceId" type="string" required>
+  The workspace ID
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Status message
+</ResponseField>
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="workspace" type="object">
+      <Expandable title="workspace">
+        <ResponseField name="workspaceId" type="string">
+          Workspace ID
+        </ResponseField>
+        <ResponseField name="workspaceName" type="string">
+          Workspace name
+        </ResponseField>
+        <ResponseField name="createdAt" type="string">
+          ISO 8601 timestamp
+        </ResponseField>
+        <ResponseField name="updatedAt" type="string">
+          ISO 8601 timestamp
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example
+
+<CodeGroup>
+```bash curl
+curl https://api.userplane.com/api/v1/public/workspace/ws_abc123 \
+  -H "Authorization: Bearer up_your_api_key"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.userplane.com/api/v1/public/workspace/ws_abc123', {
+  headers: { Authorization: 'Bearer up_your_api_key' },
+});
+const { data } = await response.json();
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "message": "Workspace retrieved successfully",
+  "data": {
+    "workspace": {
+      "workspaceId": "ws_abc123",
+      "workspaceName": "Acme Corp",
+      "createdAt": "2025-01-10T08:00:00.000Z",
+      "updatedAt": "2025-03-20T14:30:00.000Z"
+    }
+  }
+}
+```
+
+## Errors
+
+| Error code            | Status | Description              |
+| --------------------- | ------ | ------------------------ |
+| `WORKSPACE_NOT_FOUND` | 404    | Workspace does not exist |
+
+Also returns [common authentication errors](/api/error-handling#authentication-errors).
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Get Invite URL" icon="envelope" href="/api/workspaces/get-invite-url">
+    Retrieve the workspace invite URL
+  </Card>
+  <Card title="List Projects" icon="folder" href="/api/projects/list-projects">
+    Projects within this workspace
+  </Card>
+  <Card title="List Links" icon="link" href="/api/links/list-links">
+    Recording links in this workspace
+  </Card>
+  <Card title="List Recordings" icon="video" href="/api/recordings/list-recordings">
+    Recordings in this workspace
+  </Card>
+</CardGroup>

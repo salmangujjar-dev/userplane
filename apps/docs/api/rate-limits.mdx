@@ -1,0 +1,92 @@
+---
+title: Rate Limits
+description: Understand API rate limits — 120 requests per minute and 10,000 per day
+---
+
+The Userplane API enforces rate limits to ensure fair usage and platform stability.
+
+## Default limits
+
+| Window     | Limit           |
+| ---------- | --------------- |
+| Per minute | 120 requests    |
+| Per day    | 10,000 requests |
+
+## How limits are applied
+
+Rate limits are applied **per-user**, shared across all API keys belonging to that user. If you have multiple API keys, they all count toward the same limits.
+
+Rate limits are **not** per-workspace. A single request to any endpoint consumes from the same quota regardless of which workspace is being accessed.
+
+## Handling rate limit errors
+
+When you exceed the rate limit, the API returns a `429` status code:
+
+```json
+{
+  "error": "RATE_LIMITED",
+  "message": "Rate limit exceeded. Please try again later."
+}
+```
+
+## Retry with backoff
+
+Implement exponential backoff when you receive a `429` response:
+
+<CodeGroup>
+```javascript JavaScript
+async function fetchWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options);
+
+    if (response.status !== 429) return response;
+
+    const delay = Math.pow(2, attempt) * 1000;
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
+}
+
+throw new Error("Rate limit exceeded after retries");
+}
+
+````
+
+```python Python
+import time
+import requests
+
+def fetch_with_retry(url, headers, max_retries=3):
+    for attempt in range(max_retries + 1):
+        response = requests.get(url, headers=headers)
+
+        if response.status_code != 429:
+            return response
+
+        delay = (2 ** attempt)
+        time.sleep(delay)
+
+    raise Exception("Rate limit exceeded after retries")
+````
+
+</CodeGroup>
+
+<Note>
+  Rate limits are subject to change. Design your integration with retry logic from the start.
+</Note>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/api/error-handling">
+    Full error code reference including rate limit errors
+  </Card>
+  <Card title="Best Practices" icon="star" href="/api/best-practices">
+    Build reliable integrations with retry logic
+  </Card>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    API key authentication and scoping
+  </Card>
+  <Card title="Pagination" icon="list" href="/api/pagination">
+    Efficiently paginate through large result sets
+  </Card>
+</CardGroup>

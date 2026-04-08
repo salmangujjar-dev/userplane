@@ -1,0 +1,74 @@
+---
+title: Rotate API Key
+description: Invalidate an existing API key and generate a new replacement
+---
+
+Rotating a key invalidates the current key immediately and generates a new one. Use this when a key has been compromised or when you need to refresh credentials.
+
+<Steps>
+  <Step title="Open key options">
+    Navigate to [Account Settings](https://dash.userplane.io/_/account?tab=developers), find the key you want to rotate, and click the three-dot menu. Select **Rotate Key**.
+
+    <Frame>
+      <img src="/media/api/revoke-api-key.png" alt="Key options with Rotate Key selected" />
+    </Frame>
+
+  </Step>
+
+  <Step title="Configure the new key">
+    In the rotation dialog, configure your replacement key:
+
+    - **Name** (optional) — A label to identify the new key
+    - **Expiration** — Choose from: No expiration, 7 days, 30 days, 60 days, or 90 days
+
+    <Frame>
+      <img src="/media/api/rotate-api-key.png" alt="Rotate API Key dialog" />
+    </Frame>
+
+    Click **Rotate Key** to proceed.
+
+  </Step>
+
+  <Step title="Copy the new key">
+    The old key is immediately invalidated. Your new key is displayed in the success dialog.
+
+    <Frame>
+      <img src="/media/api/rotate-api-key-complete.png" alt="API Key Rotated success dialog" />
+    </Frame>
+
+    <Warning>
+      Copy the new key now. It will not be shown again after you close this dialog.
+    </Warning>
+
+    Click **Done** to return to the keys list.
+
+  </Step>
+</Steps>
+
+## What happens during rotation
+
+- The old key is **permanently invalidated** — any requests using it will immediately return `401 API_KEY_INVALID`
+- A new key is generated with the prefix `up_` and the configuration you specified
+- The new key counts toward your 3-key limit (the old key no longer counts)
+
+<Note>
+  To avoid downtime, update your integration with the new key before the rotation takes effect.
+  Consider using environment variables or a secret manager so key updates require only one change.
+</Note>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Revoke API Key" icon="trash" href="/api/api-keys/revoke-api-key">
+    Permanently delete a key without replacement
+  </Card>
+  <Card title="Manage API Keys" icon="list" href="/api/api-keys/list-api-keys">
+    View all your keys and their status
+  </Card>
+  <Card title="Create API Key" icon="plus" href="/api/api-keys/create-api-key">
+    Create a new key from scratch
+  </Card>
+  <Card title="Best Practices" icon="star" href="/api/best-practices">
+    Plan for key rotation with zero downtime
+  </Card>
+</CardGroup>

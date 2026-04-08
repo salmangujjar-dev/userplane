@@ -1,0 +1,155 @@
+---
+title: List Recordings
+description: Retrieve a paginated list of recordings with optional filters
+---
+
+`GET /public/workspace/{workspaceId}/recordings`
+
+Returns a paginated list of recordings in the specified workspace with optional filtering and sorting.
+
+## Path parameters
+
+<ParamField path="workspaceId" type="string" required>
+  The workspace ID
+</ParamField>
+
+## Query parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number (1-indexed)
+</ParamField>
+<ParamField query="per_page" type="integer" default="10">
+  Items per page (min: 1, max: 20)
+</ParamField>
+<ParamField query="created_by" type="string[]">
+  Filter by workspace member IDs who created the recordings
+</ParamField>
+<ParamField query="project_id" type="string[]">
+  Filter by project IDs
+</ParamField>
+<ParamField query="link_id" type="string[]">
+  Filter by link IDs
+</ParamField>
+<ParamField query="sort_by" type="string" default="created_at">
+  Sort field. One of: `created_at`, `recording_duration`
+</ParamField>
+<ParamField query="sort_direction" type="string" default="desc">
+  Sort direction. One of: `asc`, `desc`
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Status message
+</ResponseField>
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="workspaceId" type="string">
+      Workspace ID
+    </ResponseField>
+    <ResponseField name="recordings" type="array">
+      <Expandable title="recording item">
+        <ResponseField name="recordingId" type="string">
+          Recording ID
+        </ResponseField>
+        <ResponseField name="recordingThumbnail" type="string | null">
+          Thumbnail URL
+        </ResponseField>
+        <ResponseField name="recordingDurationMs" type="integer | null">
+          Recording duration in milliseconds
+        </ResponseField>
+        <ResponseField name="expiresAt" type="string | null">
+          ISO 8601 expiry timestamp
+        </ResponseField>
+        <ResponseField name="createdAt" type="string">
+          ISO 8601 timestamp
+        </ResponseField>
+        <ResponseField name="creator" type="object">
+          <Expandable title="creator">
+            <ResponseField name="workspaceMemberId" type="string">
+              Workspace member ID
+            </ResponseField>
+            <ResponseField name="name" type="string">
+              Creator name
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+        <ResponseField name="linkTitle" type="string | null">
+          Title of the link this recording was captured from
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="pagination" type="object">
+      [Pagination metadata](/api/pagination#pagination-metadata)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example
+
+<CodeGroup>
+```bash curl
+curl "https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings?page=1&per_page=10&sort_by=created_at&sort_direction=desc" \
+  -H "Authorization: Bearer up_your_api_key"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings?page=1&per_page=10',
+  { headers: { Authorization: 'Bearer up_your_api_key' } }
+);
+const { data } = await response.json();
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "message": "Recordings retrieved successfully",
+  "data": {
+    "workspaceId": "ws_abc123",
+    "recordings": [
+      {
+        "recordingId": "rec_abc123",
+        "recordingThumbnail": "https://cdn.userplane.io/thumb/rec_abc123.jpg",
+        "recordingDurationMs": 45200,
+        "expiresAt": "2025-04-15T09:00:00.000Z",
+        "createdAt": "2025-03-15T09:00:00.000Z",
+        "creator": {
+          "workspaceMemberId": "wm_abc123",
+          "name": "Jane Doe"
+        },
+        "linkTitle": "Bug Report #142"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "perPage": 10,
+      "total": 48,
+      "totalPages": 5,
+      "hasMore": true
+    }
+  }
+}
+```
+
+## Errors
+
+This endpoint returns [common authentication errors](/api/error-handling#authentication-errors).
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Get Recording" icon="video" href="/api/recordings/get-recording">
+    Full recording details with metadata
+  </Card>
+  <Card title="Recording Resources" icon="download" href="/api/recordings/get-recording-resources">
+    Download video, thumbnail, and log files
+  </Card>
+  <Card title="List Links" icon="link" href="/api/links/list-links">
+    Links that generated these recordings
+  </Card>
+  <Card title="Pagination" icon="list" href="/api/pagination">
+    Page-based pagination for list endpoints
+  </Card>
+</CardGroup>

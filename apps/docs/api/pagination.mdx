@@ -1,0 +1,126 @@
+---
+title: Pagination
+description: Page-based pagination for list endpoints
+---
+
+All list endpoints in the Userplane API use page-based pagination.
+
+## Query parameters
+
+| Parameter  | Type    | Default | Description             |
+| ---------- | ------- | ------- | ----------------------- |
+| `page`     | integer | `1`     | Page number (1-indexed) |
+| `per_page` | integer | Varies  | Items per page          |
+
+## Default limits by resource
+
+| Resource   | Default `per_page` | Max `per_page` |
+| ---------- | ------------------ | -------------- |
+| Workspaces | 10                 | 20             |
+| Links      | 10                 | 20             |
+| Recordings | 10                 | 20             |
+| Projects   | 5                  | 10             |
+
+## Pagination metadata
+
+Every list endpoint returns a `pagination` object alongside the results:
+
+```json
+{
+  "message": "Links retrieved successfully",
+  "data": {
+    "workspaceId": "ws_abc123",
+    "links": [...],
+    "pagination": {
+      "page": 1,
+      "perPage": 10,
+      "total": 47,
+      "totalPages": 5,
+      "hasMore": true
+    }
+  }
+}
+```
+
+| Field        | Type    | Description                  |
+| ------------ | ------- | ---------------------------- |
+| `page`       | integer | Current page number          |
+| `perPage`    | integer | Items per page               |
+| `total`      | integer | Total items across all pages |
+| `totalPages` | integer | Total number of pages        |
+| `hasMore`    | boolean | Whether more pages exist     |
+
+## Iterating through pages
+
+Use the `hasMore` field to iterate through all pages:
+
+<CodeGroup>
+```javascript JavaScript
+const API_BASE = "https://api.userplane.com/api/v1";
+
+async function fetchAllRecordings(workspaceId, apiKey) {
+const recordings = [];
+let page = 1;
+let hasMore = true;
+
+while (hasMore) {
+const response = await fetch(
+`${API_BASE}/public/workspace/${workspaceId}/recordings?page=${page}&per_page=20`,
+{ headers: { Authorization: `Bearer ${apiKey}` } }
+);
+const { data } = await response.json();
+
+    recordings.push(...data.recordings);
+    hasMore = data.pagination.hasMore;
+    page++;
+
+}
+
+return recordings;
+}
+
+````
+
+```python Python
+import requests
+
+API_BASE = "https://api.userplane.com/api/v1"
+
+def fetch_all_recordings(workspace_id, api_key):
+    recordings = []
+    page = 1
+    has_more = True
+
+    while has_more:
+        response = requests.get(
+            f"{API_BASE}/public/workspace/{workspace_id}/recordings",
+            headers={"Authorization": f"Bearer {api_key}"},
+            params={"page": page, "per_page": 20},
+        )
+        data = response.json()["data"]
+
+        recordings.extend(data["recordings"])
+        has_more = data["pagination"]["hasMore"]
+        page += 1
+
+    return recordings
+````
+
+</CodeGroup>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="List Links" icon="link" href="/api/links/list-links">
+    Paginated list of recording links with filters
+  </Card>
+  <Card title="List Recordings" icon="video" href="/api/recordings/list-recordings">
+    Paginated list of recordings with filters
+  </Card>
+  <Card title="List Workspaces" icon="building" href="/api/workspaces/list-workspaces">
+    Paginated list of your workspaces
+  </Card>
+  <Card title="List Projects" icon="folder" href="/api/projects/list-projects">
+    Paginated list of projects in a workspace
+  </Card>
+</CardGroup>

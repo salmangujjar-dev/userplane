@@ -1,0 +1,56 @@
+---
+title: Manage API Keys
+description: View and manage your API keys from the Userplane dashboard
+---
+
+View all your API keys, check their status, and access key management actions from the Developers tab.
+
+## Viewing your keys
+
+Navigate to [Account Settings](https://dash.userplane.io/_/account?tab=developers) and select the **Developers** tab. Your keys are listed in a table showing:
+
+| Column      | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| **Name**    | The label you assigned when creating the key                |
+| **API Key** | Masked key showing the `up_` prefix and last few characters |
+| **Expires** | Expiration date, or "Never" for keys with no expiration     |
+| **Status**  | Current status (Active or Disabled)                         |
+
+<Frame>
+  <img src="/media/api/list-api-keys.png" alt="API Keys list" />
+</Frame>
+
+## Key actions
+
+Click the three-dot menu next to any key to access management actions:
+
+<Frame>
+  <img src="/media/api/api-key-options.png" alt="API Key options menu" />
+</Frame>
+
+| Action         | Description                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| **Rotate Key** | Invalidate the current key and generate a new one. See [Rotate API Key](/api/api-keys/rotate-api-key). |
+| **Revoke Key** | Permanently delete the key. See [Revoke API Key](/api/api-keys/revoke-api-key).                        |
+
+<Note>
+  API keys are masked for security. You cannot view the full key after creation. If you've lost a
+  key, [rotate](/api/api-keys/rotate-api-key) it to generate a new one.
+</Note>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Create API Key" icon="plus" href="/api/api-keys/create-api-key">
+    Generate a new API key
+  </Card>
+  <Card title="Rotate API Key" icon="rotate" href="/api/api-keys/rotate-api-key">
+    Invalidate a key and generate a replacement
+  </Card>
+  <Card title="Revoke API Key" icon="trash" href="/api/api-keys/revoke-api-key">
+    Permanently delete a key
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/api/rate-limits">
+    Rate limits shared across all your keys
+  </Card>
+</CardGroup>

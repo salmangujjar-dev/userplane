@@ -1,0 +1,86 @@
+---
+title: API Overview
+description: Programmatic access to Userplane workspaces, recordings, and links
+---
+
+The Userplane API provides programmatic access to your workspaces, recording links, and recordings. Use it to build integrations, automate workflows, or access data from your Userplane account.
+
+## Base URL
+
+All API requests are made to:
+
+```
+https://api.userplane.com/api/v1
+```
+
+## What you can do
+
+<CardGroup cols={2}>
+  <Card title="User" icon="user" href="/api/user/get-me">
+    Retrieve your profile and aggregate stats
+  </Card>
+  <Card title="Workspaces" icon="building" href="/api/workspaces/list-workspaces">
+    List and retrieve workspace details
+  </Card>
+  <Card title="Links" icon="link" href="/api/links/list-links">
+    Create, update, list, and delete recording links
+  </Card>
+  <Card title="Recordings" icon="video" href="/api/recordings/list-recordings">
+    List, retrieve, and manage recordings and their resources
+  </Card>
+</CardGroup>
+
+## Authentication
+
+All requests require a Bearer token in the `Authorization` header. API keys start with the `up_` prefix.
+
+```bash
+curl https://api.userplane.com/api/v1/public/me \
+  -H "Authorization: Bearer up_your_api_key"
+```
+
+See [Authentication](/api/authentication) for details.
+
+## Response format
+
+All endpoints return a consistent response envelope:
+
+<CodeGroup>
+```json Success response
+{
+  "message": "User profile retrieved successfully",
+  "data": {
+    "user": {
+      "id": "user_abc123",
+      "name": "Jane Doe",
+      "email": "jane@example.com"
+    }
+  }
+}
+```
+
+```json Error response
+{
+  "error": "API_KEY_REQUIRED",
+  "message": "API key required. Use Authorization: Bearer <key>"
+}
+```
+
+</CodeGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    Learn how to authenticate API requests
+  </Card>
+  <Card title="API Keys" icon="lock" href="/api/api-keys">
+    Create and manage your API keys
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/api/quickstart">
+    Make your first API call in under two minutes
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/api/error-handling">
+    Understand error codes and response format
+  </Card>
+</CardGroup>

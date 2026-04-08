@@ -1,0 +1,64 @@
+---
+title: Best Practices
+description: Recommendations for building reliable integrations with the Userplane API
+---
+
+Follow these guidelines to build robust and maintainable integrations with the Userplane API.
+
+## Store keys securely
+
+Keep API keys in environment variables or a secret manager. Never commit keys to version control or embed them in client-side code.
+
+<Warning>
+  If a key is accidentally exposed, [revoke it
+  immediately](https://dash.userplane.io/_/account?tab=developers) and create a new one.
+</Warning>
+
+## Handle errors gracefully
+
+- **Retry on `429` and `5xx`** — these are transient errors. Use exponential backoff.
+- **Do not retry on `4xx` (except `429`)** — these indicate issues that require a code change.
+- **Check `error` codes programmatically** — match on codes like `NOT_A_MEMBER` or `LINK_NOT_FOUND` rather than parsing message strings.
+
+See [Error Handling](/api/error-handling) for the full error reference.
+
+## Use pagination
+
+Do not assume all results fit in a single page. Always check the `hasMore` field and iterate through pages when processing large datasets.
+
+See [Pagination](/api/pagination) for details.
+
+## Plan for key rotation
+
+Design your integration so that API key rotation causes no downtime. Store the key in a single, easily updatable location (environment variable, secret manager) so rotating it requires only one change.
+
+## Handle presigned URLs correctly
+
+Recording resource endpoints (video, thumbnail, console log, network log, action) return presigned URLs that expire after a limited time. Always fetch these URLs on demand and do not cache or persist them.
+
+See [Recording Resources](/api/recordings/get-recording-resources) for details.
+
+## Understand soft deletes
+
+Deleted recordings and links return `410 Gone` rather than `404 Not Found`. This confirms the resource previously existed but has been removed. Handle both status codes appropriately in your integration.
+
+## CORS considerations
+
+The public API endpoints allow requests from any origin (`Access-Control-Allow-Origin: *`) with credentials disabled. The API is designed for server-to-server usage. Avoid making API calls directly from customer-facing browser applications.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Rate Limits" icon="gauge" href="/api/rate-limits">
+    Rate limit thresholds and retry strategies
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/api/error-handling">
+    Error codes and response format reference
+  </Card>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    Secure your API requests with Bearer tokens
+  </Card>
+  <Card title="Recording Resources" icon="download" href="/api/recordings/get-recording-resources">
+    Handle presigned URLs for recording assets
+  </Card>
+</CardGroup>
