@@ -4,6 +4,7 @@ export * from './common';
 // Domain-specific types
 export * from './account';
 export * from './admin';
+export * from './api-key';
 export * from './auth';
 export * from './billing';
 export * from './diagnostics';

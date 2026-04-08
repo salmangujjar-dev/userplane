@@ -25,4 +25,5 @@ export const SUPPORT_LINKS = {
   domainVerification: docsUrl('/workspace/domain-verification'),
   domainPreferences: docsUrl('/recording-links/domain-preferences'),
   integrations: docsUrl('/integrations/intercom'),
+  apiKeys: docsUrl('/api/authentication'),
 } as const;
