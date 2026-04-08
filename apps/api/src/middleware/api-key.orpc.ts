@@ -6,8 +6,8 @@
  * workspace context from membership lookup, delegates to existing service layer.
  */
 
-import { ORPCError } from '@orpc/server';
 import type { WorkspaceRole } from '@userplane/contract';
+import { publicApiError } from '@userplane/contract';
 
 import { createLogger } from '@/api/lib/logger';
 import type { ApiKeyService } from '@/api/services/api-key.service';
@@ -52,18 +52,12 @@ export function createApiKeyAuthMiddleware(deps: {
     // 1. Extract Bearer token
     const authHeader = context.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      throw new ORPCError('UNAUTHORIZED', {
-        status: 401,
-        message: 'API key required. Use Authorization: Bearer <key>',
-      });
+      throw publicApiError.API_KEY_REQUIRED();
     }
 
     const apiKey = authHeader.slice(7);
     if (!apiKey) {
-      throw new ORPCError('UNAUTHORIZED', {
-        status: 401,
-        message: 'API key required. Use Authorization: Bearer <key>',
-      });
+      throw publicApiError.API_KEY_REQUIRED();
     }
 
     // 2. Verify with Unkey (includes rate limit + expiry check)
@@ -72,58 +66,34 @@ export function createApiKeyAuthMiddleware(deps: {
     if (!result.valid) {
       switch (result.code) {
         case 'RATE_LIMITED':
-          throw new ORPCError('TOO_MANY_REQUESTS', {
-            status: 429,
-            message: 'Rate limit exceeded. Please try again later.',
-          });
+          throw publicApiError.RATE_LIMITED();
         case 'EXPIRED':
-          throw new ORPCError('UNAUTHORIZED', {
-            status: 401,
-            message: 'API key has expired.',
-          });
+          throw publicApiError.API_KEY_EXPIRED();
         case 'DISABLED':
-          throw new ORPCError('FORBIDDEN', {
-            status: 403,
-            message: 'API key is disabled.',
-          });
+          throw publicApiError.API_KEY_DISABLED();
         case 'SERVICE_ERROR':
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            status: 503,
-            message: 'API key verification service unavailable. Please try again later.',
-          });
+          throw publicApiError.SERVICE_UNAVAILABLE();
         default:
-          throw new ORPCError('UNAUTHORIZED', {
-            status: 401,
-            message: 'Invalid API key.',
-          });
+          throw publicApiError.API_KEY_INVALID();
       }
     }
 
     if (!result.keyId) {
       logger.error({ code: result.code }, 'Verified key has no keyId');
-      throw new ORPCError('UNAUTHORIZED', {
-        status: 401,
-        message: 'Invalid API key.',
-      });
+      throw publicApiError.API_KEY_INVALID();
     }
 
     // 3. Extract userId from externalId
     const userId = result.externalId;
     if (!userId) {
       logger.error({ keyId: result.keyId }, 'API key has no externalId');
-      throw new ORPCError('UNAUTHORIZED', {
-        status: 401,
-        message: 'Invalid API key.',
-      });
+      throw publicApiError.API_KEY_INVALID();
     }
 
     // 4. Validate workspaceId and check membership
     const workspaceId = input.workspaceId;
     if (!workspaceId) {
-      throw new ORPCError('BAD_REQUEST', {
-        status: 400,
-        message: 'Workspace ID is required.',
-      });
+      throw publicApiError.API_KEY_INVALID();
     }
 
     // Verify workspace exists
@@ -136,10 +106,7 @@ export function createApiKeyAuthMiddleware(deps: {
     );
 
     if (!member) {
-      throw new ORPCError('FORBIDDEN', {
-        status: 403,
-        message: 'Not a member of this workspace.',
-      });
+      throw publicApiError.NOT_A_MEMBER();
     }
 
     // 5. Set context
@@ -163,18 +130,12 @@ export function createApiKeyUserAuthMiddleware(deps: { apiKeyService: ApiKeyServ
   return base.middleware(async ({ context, next }) => {
     const authHeader = context.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      throw new ORPCError('UNAUTHORIZED', {
-        status: 401,
-        message: 'API key required. Use Authorization: Bearer <key>',
-      });
+      throw publicApiError.API_KEY_REQUIRED();
     }
 
     const apiKey = authHeader.slice(7);
     if (!apiKey) {
-      throw new ORPCError('UNAUTHORIZED', {
-        status: 401,
-        message: 'API key required. Use Authorization: Bearer <key>',
-      });
+      throw publicApiError.API_KEY_REQUIRED();
     }
 
     const result = await deps.apiKeyService.verifyKey(apiKey);
@@ -182,31 +143,25 @@ export function createApiKeyUserAuthMiddleware(deps: { apiKeyService: ApiKeyServ
     if (!result.valid) {
       switch (result.code) {
         case 'RATE_LIMITED':
-          throw new ORPCError('TOO_MANY_REQUESTS', {
-            status: 429,
-            message: 'Rate limit exceeded. Please try again later.',
-          });
+          throw publicApiError.RATE_LIMITED();
         case 'EXPIRED':
-          throw new ORPCError('UNAUTHORIZED', { status: 401, message: 'API key has expired.' });
+          throw publicApiError.API_KEY_EXPIRED();
         case 'DISABLED':
-          throw new ORPCError('FORBIDDEN', { status: 403, message: 'API key is disabled.' });
+          throw publicApiError.API_KEY_DISABLED();
         case 'SERVICE_ERROR':
-          throw new ORPCError('INTERNAL_SERVER_ERROR', {
-            status: 503,
-            message: 'API key verification service unavailable. Please try again later.',
-          });
+          throw publicApiError.SERVICE_UNAVAILABLE();
         default:
-          throw new ORPCError('UNAUTHORIZED', { status: 401, message: 'Invalid API key.' });
+          throw publicApiError.API_KEY_INVALID();
       }
     }
 
     if (!result.keyId) {
-      throw new ORPCError('UNAUTHORIZED', { status: 401, message: 'Invalid API key.' });
+      throw publicApiError.API_KEY_INVALID();
     }
 
     const userId = result.externalId;
     if (!userId) {
-      throw new ORPCError('UNAUTHORIZED', { status: 401, message: 'Invalid API key.' });
+      throw publicApiError.API_KEY_INVALID();
     }
 
     return next({

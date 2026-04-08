@@ -24,7 +24,8 @@ import { authMiddleware, authorized, base } from './auth.orpc';
 function createRateLimitError(retryAfter?: number): never {
   throw new ORPCError('RATE_LIMIT_EXCEEDED', {
     status: 429,
-    message: 'Rate limit exceeded. Please try again later.',
+    message:
+      'Rate limit exceeded. Wait and retry with exponential backoff. See https://docs.userplane.io/api/rate-limits',
     data: { retryAfter },
   });
 }

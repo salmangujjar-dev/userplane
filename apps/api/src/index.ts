@@ -500,9 +500,13 @@ if (env.server.nodeEnv === 'development') {
 
 // 404 handler
 app.notFound((c) => {
+  const isPublicApi = c.req.path.startsWith('/api/v1/public/');
   return c.json(
     {
-      error: 'Not Found',
+      error: 'NOT_FOUND',
+      message: isPublicApi
+        ? `No endpoint found for ${c.req.method} ${c.req.path}. See https://docs.userplane.io/api/introduction`
+        : 'Not Found',
       path: c.req.path,
     },
     404
@@ -519,10 +523,13 @@ app.onError((err, c) => {
     });
   }
 
+  const isPublicApi = c.req.path.startsWith('/api/v1/public/');
   return c.json(
     {
-      error: 'Internal Server Error',
-      message: err.message,
+      error: 'INTERNAL_SERVER_ERROR',
+      message: isPublicApi
+        ? 'An unexpected error occurred. Please try again or contact support. See https://docs.userplane.io/api/error-handling'
+        : err.message,
     },
     500
   );
