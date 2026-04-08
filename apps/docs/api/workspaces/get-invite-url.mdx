@@ -1,61 +1,10 @@
 ---
 title: Get Invite URL
 description: Retrieve the invite URL for a workspace
+openapi: GET /public/workspace/{workspaceId}/invite-url
 ---
 
-`GET /public/workspace/{workspaceId}/invite-url`
-
 Returns the invite URL for a workspace. Requires the authenticated user to be an active member of the workspace.
-
-## Path parameters
-
-<ParamField path="workspaceId" type="string" required>
-  The workspace ID
-</ParamField>
-
-## Response
-
-<ResponseField name="message" type="string">
-  Status message
-</ResponseField>
-<ResponseField name="data" type="object">
-  <Expandable title="data">
-    <ResponseField name="inviteUrl" type="string">
-      The workspace invite URL
-    </ResponseField>
-    <ResponseField name="workspaceId" type="string">
-      Workspace ID
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-## Example
-
-<CodeGroup>
-```bash curl
-curl https://api.userplane.com/api/v1/public/workspace/ws_abc123/invite-url \
-  -H "Authorization: Bearer up_your_api_key"
-```
-
-```javascript JavaScript
-const response = await fetch(
-  'https://api.userplane.com/api/v1/public/workspace/ws_abc123/invite-url',
-  { headers: { Authorization: 'Bearer up_your_api_key' } }
-);
-const { data } = await response.json();
-```
-
-</CodeGroup>
-
-```json Response
-{
-  "message": "Invite URL retrieved successfully",
-  "data": {
-    "inviteUrl": "https://dash.userplane.io/invite/abc123xyz",
-    "workspaceId": "ws_abc123"
-  }
-}
-```
 
 ## Errors
 

@@ -12,13 +12,13 @@ Include your API key in the `Authorization` header with every request:
 <CodeGroup>
 ```bash curl
 curl https://api.userplane.com/api/v1/public/me \
-  -H "Authorization: Bearer up_your_api_key"
+  -H "Authorization: Bearer uspl_your_api_key"
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.userplane.com/api/v1/public/me', {
   headers: {
-    Authorization: 'Bearer up_your_api_key',
+    Authorization: 'Bearer uspl_your_api_key',
   },
 });
 
@@ -30,7 +30,7 @@ import requests
 
 response = requests.get(
     "https://api.userplane.com/api/v1/public/me",
-    headers={"Authorization": "Bearer up_your_api_key"},
+    headers={"Authorization": "Bearer uspl_your_api_key"},
 )
 
 data = response.json()
@@ -40,7 +40,7 @@ data = response.json()
 
 ## API key format
 
-All Userplane API keys use the `up_` prefix. Keys are bound to the user who created them and carry the same permissions as that user across all their workspaces.
+All Userplane API keys use the `uspl_` prefix. Keys are bound to the user who created them and carry the same permissions as that user across all their workspaces.
 
 <Warning>
   API keys carry the same permissions as the user who created them. Never expose keys in client-side

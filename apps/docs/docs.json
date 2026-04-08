@@ -6,6 +6,17 @@
     "light": "/static/logo-light.svg"
   },
   "favicon": "/static/favicon.svg",
+  "api": {
+    "playground": {
+      "display": "interactive"
+    },
+    "baseUrl": "https://api.userplane.com/api/v1",
+    "auth": {
+      "method": "bearer",
+      "name": "Authorization",
+      "inputPrefix": "Bearer "
+    }
+  },
   "theme": "almond",
   "appearance": {
     "default": "light",
@@ -59,10 +70,12 @@
         "groups": [
           {
             "group": "Getting Started",
+            "icon": "rocket",
             "pages": ["introduction", "quickstart"]
           },
           {
             "group": "Setup & Onboarding",
+            "icon": "wrench",
             "pages": [
               "getting-started/workspace-setup",
               "getting-started/helpdesk-setup",
@@ -73,6 +86,7 @@
           },
           {
             "group": "Recordings",
+            "icon": "video",
             "pages": [
               {
                 "group": "Capture",
@@ -110,6 +124,7 @@
           },
           {
             "group": "Workspace",
+            "icon": "building",
             "pages": [
               {
                 "group": "Team & Access",
@@ -137,10 +152,12 @@
           },
           {
             "group": "Account",
+            "icon": "circle-user",
             "pages": ["account/profile", "account/notifications", "account/leaving-workspace"]
           },
           {
             "group": "Billing",
+            "icon": "credit-card",
             "pages": [
               "billing/overview",
               "billing/trial",
@@ -158,6 +175,7 @@
           },
           {
             "group": "Support",
+            "icon": "life-ring",
             "pages": ["support/contact", "support/data-governance"]
           }
         ]
@@ -167,18 +185,22 @@
         "groups": [
           {
             "group": "Getting Started",
+            "icon": "rocket",
             "pages": ["developer/installation", "developer/domain-verification"]
           },
           {
             "group": "AI Agents",
+            "icon": "robot",
             "pages": ["integrations/agent-skills", "integrations/mcp"]
           },
           {
             "group": "SDK Reference",
+            "icon": "cube",
             "pages": ["developer/sdk-overview", "developer/web-sdk", "developer/metadata-sdk"]
           },
           {
             "group": "Framework Guides",
+            "icon": "code",
             "pages": [
               "frameworks/react",
               "frameworks/nextjs",
@@ -196,10 +218,12 @@
           },
           {
             "group": "Platform Guides",
+            "icon": "grid-2",
             "pages": ["platforms/bolt", "platforms/emergent", "platforms/lovable"]
           },
           {
             "group": "Privacy & Data",
+            "icon": "shield-halved",
             "pages": ["developer/sensitive-data-redaction", "developer/recording-data-reference"]
           }
         ]
@@ -209,6 +233,7 @@
         "groups": [
           {
             "group": "Getting Started",
+            "icon": "rocket",
             "pages": [
               "api/introduction",
               "api/authentication",
@@ -227,6 +252,7 @@
           },
           {
             "group": "Concepts",
+            "icon": "book",
             "pages": [
               "api/rate-limits",
               "api/error-handling",
@@ -236,10 +262,12 @@
           },
           {
             "group": "User",
+            "icon": "user",
             "pages": ["api/user/get-me"]
           },
           {
             "group": "Workspaces",
+            "icon": "building",
             "pages": [
               "api/workspaces/list-workspaces",
               "api/workspaces/get-workspace",
@@ -248,10 +276,12 @@
           },
           {
             "group": "Projects",
+            "icon": "folder",
             "pages": ["api/projects/list-projects", "api/projects/get-project"]
           },
           {
             "group": "Links",
+            "icon": "link",
             "pages": [
               "api/links/list-links",
               "api/links/create-link",
@@ -262,6 +292,7 @@
           },
           {
             "group": "Recordings",
+            "icon": "video",
             "pages": [
               "api/recordings/list-recordings",
               "api/recordings/get-recording",
@@ -276,6 +307,7 @@
         "groups": [
           {
             "group": "Help Desk",
+            "icon": "headset",
             "pages": [
               {
                 "group": "Intercom",
@@ -324,6 +356,7 @@
           },
           {
             "group": "AI Agents",
+            "icon": "robot",
             "pages": ["integrations/mcp", "integrations/agent-skills"]
           }
         ]

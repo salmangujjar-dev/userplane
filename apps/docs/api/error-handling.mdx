@@ -7,12 +7,12 @@ The API uses standard HTTP status codes and returns structured error responses t
 
 ## Error response format
 
-Error responses include an `error` code for programmatic handling and a human-readable `message`:
+Error responses include an `error` code for programmatic handling, a human-readable `message`, and a link to the relevant documentation:
 
 ```json
 {
   "error": "API_KEY_REQUIRED",
-  "message": "API key required. Use Authorization: Bearer <key>"
+  "message": "API key is required. Include it as Authorization: Bearer <your-api-key>. See https://docs.userplane.io/api/authentication"
 }
 ```
 
@@ -20,29 +20,35 @@ Error responses include an `error` code for programmatic handling and a human-re
 
 Returned when the API key is missing, invalid, or expired.
 
-| Error code         | Status | Message                                                 |
-| ------------------ | ------ | ------------------------------------------------------- |
-| `API_KEY_REQUIRED` | 401    | API key required. Use Authorization: Bearer &lt;key&gt; |
-| `API_KEY_INVALID`  | 401    | Invalid API key.                                        |
-| `API_KEY_EXPIRED`  | 401    | API key has expired.                                    |
+| Error code         | Status | Message                                                                        |
+| ------------------ | ------ | ------------------------------------------------------------------------------ |
+| `API_KEY_REQUIRED` | 401    | API key is required. Include it as Authorization: Bearer &lt;your-api-key&gt;. |
+| `API_KEY_INVALID`  | 401    | The provided API key is not valid. Verify the key and try again.               |
+| `API_KEY_EXPIRED`  | 401    | The API key has expired. Rotate or create a new key.                           |
 
 ## Authorization errors
 
 Returned when the authenticated user lacks access to the requested resource.
 
-| Error code                     | Status | Message                                              |
-| ------------------------------ | ------ | ---------------------------------------------------- |
-| `API_KEY_DISABLED`             | 403    | API key is disabled.                                 |
-| `NOT_A_MEMBER`                 | 403    | Not a member of this workspace.                      |
-| `LINK_DELETE_FORBIDDEN`        | 403    | You do not have permission to delete this link.      |
-| `RECORDING_DELETE_FORBIDDEN`   | 403    | You do not have permission to delete this recording. |
-| `RECORDING_WORKSPACE_MISMATCH` | 403    | Recording does not belong to this workspace.         |
+| Error code                     | Status | Message                                                 |
+| ------------------------------ | ------ | ------------------------------------------------------- |
+| `API_KEY_DISABLED`             | 403    | The API key is disabled. Enable it or create a new key. |
+| `NOT_A_MEMBER`                 | 403    | The API key owner is not a member of this workspace.    |
+| `LINK_DELETE_FORBIDDEN`        | 403    | You do not have permission to delete this link.         |
+| `RECORDING_DELETE_FORBIDDEN`   | 403    | You do not have permission to delete this recording.    |
+| `RECORDING_WORKSPACE_MISMATCH` | 403    | Recording does not belong to this workspace.            |
 
 ## Rate limiting
 
-| Error code     | Status | Message                                      |
-| -------------- | ------ | -------------------------------------------- |
-| `RATE_LIMITED` | 429    | Rate limit exceeded. Please try again later. |
+| Error code     | Status | Message                                                       |
+| -------------- | ------ | ------------------------------------------------------------- |
+| `RATE_LIMITED` | 429    | Rate limit exceeded. Wait and retry with exponential backoff. |
+
+## Service errors
+
+| Error code            | Status | Message                                                                          |
+| --------------------- | ------ | -------------------------------------------------------------------------------- |
+| `SERVICE_UNAVAILABLE` | 503    | API key verification service is temporarily unavailable. Please try again later. |
 
 See [Rate Limits](/api/rate-limits) for details on limits and retry strategies.
 

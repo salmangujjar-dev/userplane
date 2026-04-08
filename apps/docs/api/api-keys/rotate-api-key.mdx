@@ -48,7 +48,7 @@ Rotating a key invalidates the current key immediately and generates a new one. 
 ## What happens during rotation
 
 - The old key is **permanently invalidated** — any requests using it will immediately return `401 API_KEY_INVALID`
-- A new key is generated with the prefix `up_` and the configuration you specified
+- A new key is generated with the prefix `uspl_` and the configuration you specified
 - The new key counts toward your 3-key limit (the old key no longer counts)
 
 <Note>
