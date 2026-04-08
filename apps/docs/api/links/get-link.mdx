@@ -1,88 +1,10 @@
 ---
 title: Get Link
 description: Retrieve recording link details by ID
+openapi: GET /public/workspace/{workspaceId}/links/{linkId}
 ---
 
-`GET /public/workspace/{workspaceId}/links/{linkId}`
-
 Returns details for a specific recording link.
-
-## Path parameters
-
-<ParamField path="workspaceId" type="string" required>
-  The workspace ID
-</ParamField>
-<ParamField path="linkId" type="string" required>
-  The link ID
-</ParamField>
-
-## Response
-
-<ResponseField name="message" type="string">
-  Status message
-</ResponseField>
-<ResponseField name="data" type="object">
-  <Expandable title="data">
-    <ResponseField name="workspaceId" type="string">
-      Workspace ID
-    </ResponseField>
-    <ResponseField name="link" type="object">
-      The link object. See [List Links](/api/links/list-links) for the full link item shape.
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-## Example
-
-<CodeGroup>
-```bash curl
-curl https://api.userplane.com/api/v1/public/workspace/ws_abc123/links/link_xyz789 \
-  -H "Authorization: Bearer up_your_api_key"
-```
-
-```javascript JavaScript
-const response = await fetch(
-  'https://api.userplane.com/api/v1/public/workspace/ws_abc123/links/link_xyz789',
-  { headers: { Authorization: 'Bearer up_your_api_key' } }
-);
-const { data } = await response.json();
-```
-
-</CodeGroup>
-
-```json Response
-{
-  "message": "Link retrieved successfully",
-  "data": {
-    "workspaceId": "ws_abc123",
-    "link": {
-      "linkId": "link_xyz789",
-      "linkTitle": "Bug Report #142",
-      "linkType": "recording",
-      "linkReusable": false,
-      "linkProviderType": "intercom",
-      "linkProviderId": "conv_12345",
-      "linkProviderReference": null,
-      "linkURL": "https://record.userplane.io/link_xyz789",
-      "meta": null,
-      "createdAt": "2025-03-15T09:00:00.000Z",
-      "project": {
-        "projectId": "proj_def456",
-        "title": "Main App"
-      },
-      "creator": {
-        "workspaceMemberId": "wm_abc123",
-        "name": "Jane Doe"
-      },
-      "domain": {
-        "domainId": "dom_ghi789",
-        "url": "https://example.com",
-        "status": "verified"
-      }
-    }
-  }
-}
-```
 
 ## Errors
 

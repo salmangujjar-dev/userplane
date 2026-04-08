@@ -1,67 +1,15 @@
 ---
 title: Delete Link
 description: Delete a recording link
+openapi: DELETE /public/workspace/{workspaceId}/links/{linkId}
 ---
-
-`DELETE /public/workspace/{workspaceId}/links/{linkId}`
 
 Soft-deletes a recording link. Only the link creator or a workspace admin/owner can delete a link.
 
-## Path parameters
-
-<ParamField path="workspaceId" type="string" required>
-  The workspace ID
-</ParamField>
-<ParamField path="linkId" type="string" required>
-  The link ID
-</ParamField>
-
-## Response
-
-<ResponseField name="message" type="string">
-  Status message
-</ResponseField>
-<ResponseField name="data" type="object">
-  <Expandable title="data">
-    <ResponseField name="workspaceId" type="string">
-      Workspace ID
-    </ResponseField>
-    <ResponseField name="linkId" type="string">
-      The deleted link ID
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-## Example
-
-<CodeGroup>
-```bash curl
-curl -X DELETE https://api.userplane.com/api/v1/public/workspace/ws_abc123/links/link_xyz789 \
-  -H "Authorization: Bearer up_your_api_key"
-```
-
-```javascript JavaScript
-const response = await fetch(
-  'https://api.userplane.com/api/v1/public/workspace/ws_abc123/links/link_xyz789',
-  {
-    method: 'DELETE',
-    headers: { Authorization: 'Bearer up_your_api_key' },
-  }
-);
-const { data } = await response.json();
-```
-
-</CodeGroup>
-
-```json Response
-{
-  "message": "Link deleted successfully",
-  "data": {
-    "workspaceId": "ws_abc123",
-    "linkId": "link_xyz789"
-  }
-}
-```
+<Note>
+  This is a soft delete. The link data is preserved but becomes inaccessible. Subsequent requests
+  for this link return `410 Gone`.
+</Note>
 
 ## Errors
 
@@ -73,11 +21,6 @@ const { data } = await response.json();
 | `LINK_DELETE_FAILED`    | 500    | Failed to delete the link                      |
 
 Also returns [common authentication errors](/api/error-handling#authentication-errors).
-
-<Note>
-  This is a soft delete. The link data is preserved but becomes inaccessible. Subsequent requests
-  for this link return `410 Gone`.
-</Note>
 
 ## Related
 

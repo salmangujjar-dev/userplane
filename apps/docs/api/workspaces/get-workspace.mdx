@@ -1,74 +1,10 @@
 ---
 title: Get Workspace
 description: Retrieve workspace details by ID
+openapi: GET /public/workspace/{workspaceId}
 ---
 
-`GET /public/workspace/{workspaceId}`
-
 Returns details for a specific workspace. Requires the authenticated user to be an active member of the workspace.
-
-## Path parameters
-
-<ParamField path="workspaceId" type="string" required>
-  The workspace ID
-</ParamField>
-
-## Response
-
-<ResponseField name="message" type="string">
-  Status message
-</ResponseField>
-<ResponseField name="data" type="object">
-  <Expandable title="data">
-    <ResponseField name="workspace" type="object">
-      <Expandable title="workspace">
-        <ResponseField name="workspaceId" type="string">
-          Workspace ID
-        </ResponseField>
-        <ResponseField name="workspaceName" type="string">
-          Workspace name
-        </ResponseField>
-        <ResponseField name="createdAt" type="string">
-          ISO 8601 timestamp
-        </ResponseField>
-        <ResponseField name="updatedAt" type="string">
-          ISO 8601 timestamp
-        </ResponseField>
-      </Expandable>
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-## Example
-
-<CodeGroup>
-```bash curl
-curl https://api.userplane.com/api/v1/public/workspace/ws_abc123 \
-  -H "Authorization: Bearer up_your_api_key"
-```
-
-```javascript JavaScript
-const response = await fetch('https://api.userplane.com/api/v1/public/workspace/ws_abc123', {
-  headers: { Authorization: 'Bearer up_your_api_key' },
-});
-const { data } = await response.json();
-```
-
-</CodeGroup>
-
-```json Response
-{
-  "message": "Workspace retrieved successfully",
-  "data": {
-    "workspace": {
-      "workspaceId": "ws_abc123",
-      "workspaceName": "Acme Corp",
-      "createdAt": "2025-01-10T08:00:00.000Z",
-      "updatedAt": "2025-03-20T14:30:00.000Z"
-    }
-  }
-}
-```
 
 ## Errors
 
