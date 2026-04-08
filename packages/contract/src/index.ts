@@ -8,6 +8,7 @@
 // Export individual domain contracts
 export {
   accountContract,
+  apiKeyContract,
   contract,
   diagnosticsContract,
   domainContract,
@@ -15,6 +16,7 @@ export {
   linkContract,
   projectContract,
   provisionerContract,
+  publicApiContract,
   recordingContract,
   sessionContract,
   shareContract,
@@ -26,6 +28,7 @@ export {
 // Export contract types
 export type {
   AccountContract,
+  ApiKeyContract,
   Contract,
   DiagnosticsContract,
   DomainContract,
@@ -33,6 +36,7 @@ export type {
   LinkContract,
   ProjectContract,
   ProvisionerContract,
+  PublicApiContract,
   RecordingContract,
   SessionContract,
   ShareContract,
@@ -49,6 +53,9 @@ export * from './constants';
 
 // Export UI options
 export * from './ui-options';
+
+// Export public API schemas and errors
+export * from './public';
 
 // Export utility functions
 export * from './utils/errors';

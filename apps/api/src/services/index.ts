@@ -45,6 +45,7 @@ import { AdminProjectService } from '@/api/services/admin-project.service';
 import { AdminRecordingService } from '@/api/services/admin-recording.service';
 import { AdminSubscriptionService } from '@/api/services/admin-subscription.service';
 import { AdminWorkspaceService } from '@/api/services/admin-workspace.service';
+import { ApiKeyService } from '@/api/services/api-key.service';
 import { BillingService } from '@/api/services/billing.service';
 import { BillingMutationService } from '@/api/services/billing-mutation.service';
 import { BillingQueryService } from '@/api/services/billing-query.service';
@@ -408,6 +409,14 @@ export const slackCanvasService = new SlackCanvasService({
   cacheService,
 });
 
+// API Key service (Unkey integration)
+export const apiKeyService = new ApiKeyService({
+  rootKey: env.unkey.rootKey,
+  apiId: env.unkey.apiId,
+  rateLimitPerMinute: env.unkey.rateLimitPerMinute,
+  rateLimitPerDay: env.unkey.rateLimitPerDay,
+});
+
 // Export tokenService, emailService, and repositories for use in routes
 export { emailService, tokenService };
 export {
@@ -419,4 +428,5 @@ export {
   recordingRepo,
   subscriptionRepo,
   workspaceMemberRepo,
+  workspaceRepo,
 };
