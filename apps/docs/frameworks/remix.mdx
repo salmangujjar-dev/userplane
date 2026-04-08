@@ -1,0 +1,219 @@
+---
+title: 'Remix Integration'
+description: 'Install Userplane in a Remix application using a root route provider component'
+---
+
+This guide covers how to install Userplane in a Remix application.
+
+## Adding the script
+
+The fastest way to add Userplane is the CDN embed. Remix controls the full HTML document through the root route, so add these two tags to the `<head>` in `app/root.tsx`:
+
+```tsx
+// app/root.tsx
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
+
+export default function App() {
+  return (
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+        <script type="module" src="https://cdn.userplane.io/embed/script.js" />
+        <Links />
+      </head>
+      <body>
+        <Outlet />
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+```
+
+Replace `YOUR_WORKSPACE_ID` with your workspace ID. You can copy the snippet with your ID pre-filled from **Workspace Settings > Domains** in the Userplane dashboard.
+
+## npm SDK
+
+Use the npm SDK when you need programmatic control — triggering recordings from a button, attaching user metadata, or reading recording state.
+
+### Installation
+
+<CodeGroup>
+
+```bash npm
+npm install @userplane/sdk
+```
+
+```bash yarn
+yarn add @userplane/sdk
+```
+
+```bash pnpm
+pnpm add @userplane/sdk
+```
+
+```bash bun
+bun add @userplane/sdk
+```
+
+</CodeGroup>
+
+### Initialization
+
+Create a provider component that initializes the SDK and mount it in your root route.
+
+```tsx
+// app/components/UserplaneProvider.tsx
+import { useEffect } from 'react';
+
+export function UserplaneProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    import('@userplane/sdk').then(({ initialize }) => {
+      initialize({
+        workspaceId: window.ENV.USERPLANE_WORKSPACE_ID,
+      });
+    });
+  }, []);
+
+  return <>{children}</>;
+}
+```
+
+```tsx
+// app/root.tsx
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from '@remix-run/react';
+import { json, type LoaderFunctionArgs } from '@remix-run/node';
+import { UserplaneProvider } from './components/UserplaneProvider';
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  return json({
+    ENV: {
+      USERPLANE_WORKSPACE_ID: process.env.USERPLANE_WORKSPACE_ID,
+    },
+  });
+}
+
+export default function App() {
+  const data = useLoaderData<typeof loader>();
+
+  return (
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <UserplaneProvider>
+          <Outlet />
+        </UserplaneProvider>
+        <ScrollRestoration />
+        <Scripts />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.ENV = ${JSON.stringify(data.ENV)}`,
+          }}
+        />
+      </body>
+    </html>
+  );
+}
+```
+
+<Note>
+  Remix does not use `NEXT_PUBLIC_` or `VITE_` prefixes for client-side environment variables.
+  Instead, server-side env vars are passed to the client through a root loader that serializes them
+  to `window.ENV`. The `dangerouslySetInnerHTML` script block above is the standard Remix pattern
+  for this.
+</Note>
+
+### URL parameters
+
+Remix loaders may redirect users before the SDK reads the `userplane-token` and `userplane-action` query parameters. If your app redirects unauthenticated users to a login page, preserve `userplane-` prefixed parameters through the redirect:
+
+```typescript
+// app/routes/dashboard.tsx
+import { redirect, type LoaderFunctionArgs } from '@remix-run/node';
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await getUser(request);
+
+  if (!user) {
+    const url = new URL(request.url);
+    const loginUrl = new URL('/login', url.origin);
+
+    for (const [key, value] of url.searchParams) {
+      if (key.startsWith('userplane-')) {
+        loginUrl.searchParams.set(key, value);
+      }
+    }
+
+    return redirect(loginUrl.toString());
+  }
+
+  // ...
+}
+```
+
+See [Installation](/developer/installation) for the full list of parameters to preserve.
+
+## Sensitive data
+
+Add `data-userplane-blur` to any element you want blurred in recordings. See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for the full reference.
+
+## Metadata
+
+Call `set()` after `initialize()` to attach user context to recordings:
+
+```tsx
+// app/components/UserplaneProvider.tsx
+import { useEffect } from 'react';
+
+export function UserplaneProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    import('@userplane/sdk').then(({ initialize, set }) => {
+      initialize({ workspaceId: window.ENV.USERPLANE_WORKSPACE_ID });
+      set('environment', 'production');
+    });
+  }, []);
+
+  return <>{children}</>;
+}
+```
+
+See [Metadata SDK](/developer/metadata-sdk) for the full API.
+
+## SSR
+
+`@userplane/sdk` is SSR-safe to import — it does not reference `window` or `document` at module evaluation time. The `initialize()` call must run client-side. Calling it inside `useEffect` guarantees it runs only in the browser.
+
+| Concern                                         | Safe? | Notes                         |
+| ----------------------------------------------- | ----- | ----------------------------- |
+| Static `import` at top of a component file      | Yes   | Module is SSR-safe            |
+| Calling `initialize()` in `useEffect`           | Yes   | Runs browser-only             |
+| Dynamic `import('@userplane/sdk')` in useEffect | Yes   | Bundle-size optimization only |
+| Calling `initialize()` in a `loader`            | No    | Loaders run on the server     |
+
+## Example app
+
+A complete Remix example is available at [github.com/wizenheimer/userplane-sdk-examples/tree/main/examples/remix](https://github.com/wizenheimer/userplane-sdk-examples/tree/main/examples/remix).
+
+| Variable                 | Description                 |
+| ------------------------ | --------------------------- |
+| `USERPLANE_WORKSPACE_ID` | Your Userplane workspace ID |
+
+```bash
+cd examples/remix && npm install && npm run dev
+```
+
+## Related articles
+
+- [Installation](/developer/installation) — CDN script placement, CSP, and redirect handling.
+- [Web SDK](/developer/web-sdk) — full SDK API reference.
+- [Metadata SDK](/developer/metadata-sdk) — attach user context to recordings.
+- [Sensitive Data Redaction](/developer/sensitive-data-redaction) — blur sensitive content in recordings.
