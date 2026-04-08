@@ -23,13 +23,13 @@ export const angularConfig = defineFramework({
   seo: {
     title: 'Userplane for Angular | Session Recordings with Console Logs',
     description:
-      'Console logs, network requests, and session metadata from your Angular app. Works with standalone components and NgModules.',
+      'Console logs, network requests, and session activity from your Angular app. Works with standalone components and NgModules.',
     keywords:
       'angular screen recording, angular session replay, angular console logs, angular debugging, standalone components screen recording, ngmodule session replay, userplane angular',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings for', 'Angular applications'],
+      lines: ['Identify and fix Angular issues', 'with session recordings'],
       highlights: [{ wordIndex: 3, color: 'red' }],
       icons: [
         {
@@ -40,11 +40,11 @@ export const angularConfig = defineFramework({
       ],
     },
     description: [
-      'Console logs, network requests, and session metadata from your Angular app.',
+      'See every user interaction with logs, requests, and errors.',
       'Works with standalone components and NgModules.',
     ],
     preview: {
-      src: getFrameworkHeroUrl('microsites/angular/hero.png'),
+      src: getFrameworkHeroUrl('microsites/frameworks/angular/hero.png'),
       alt: 'Userplane screen recording from an Angular application',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -63,7 +63,7 @@ export const angularConfig = defineFramework({
         'No downloads required',
         'Works with standalone & NgModules',
       ],
-      image: getFrameworkFeatureUrl('microsites/angular/angular-sdk.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/angular/angular-recording-link.png'),
       learnMoreHref: DOCS_FRAMEWORK_ANGULAR,
     },
     {
@@ -78,7 +78,7 @@ export const angularConfig = defineFramework({
         'Browser fingerprints',
         'Complete action sequences',
       ],
-      image: getFrameworkFeatureUrl('microsites/angular/angular-context.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/angular/angular-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -93,7 +93,7 @@ export const angularConfig = defineFramework({
         'GDPR & CCPA compliant',
         'Dev, staging & production support',
       ],
-      image: getFrameworkFeatureUrl('microsites/angular/angular-privacy.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/angular/angular-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
     {
@@ -108,7 +108,7 @@ export const angularConfig = defineFramework({
         'API and webhook endpoints',
         'Custom integration support',
       ],
-      image: getFrameworkFeatureUrl('microsites/angular/angular-integration.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/angular/angular-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
     },
   ],
@@ -132,7 +132,7 @@ export const angularConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session metadata automatically.',
+          'How recordings capture console logs, network requests, and session activity automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

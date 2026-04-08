@@ -23,28 +23,28 @@ export const svelteConfig = defineFramework({
   seo: {
     title: 'Userplane for Svelte | Session Recordings with Console Logs',
     description:
-      'Capture console logs, network requests, and session metadata from your Svelte app. Compatible with SvelteKit routing and server hooks.',
+      'Capture console logs, network requests, and session data from your Svelte app. Compatible with SvelteKit routing and server hooks.',
     keywords:
       'svelte screen recording, sveltekit session replay, svelte console logs, svelte debugging, sveltekit screen recording, server hooks session replay, userplane svelte',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings for', 'Svelte applications'],
-      highlights: [{ wordIndex: 3, color: 'red' }],
+      lines: ['Resolve Svelte issues', 'with session recordings'],
+      highlights: [{ wordIndex: 1, color: 'red' }],
       icons: [
         {
-          wordIndex: 3,
+          wordIndex: 1,
           src: getFrameworkIconUrl('frameworks/svelte.svg'),
           alt: 'Svelte',
         },
       ],
     },
     description: [
-      'Capture console logs, network requests, and session metadata from your Svelte app.',
+      'Full session context with console logs and network requests.',
       'Compatible with SvelteKit routing and server hooks.',
     ],
     preview: {
-      src: getFrameworkHeroUrl('microsites/svelte/hero.png'),
+      src: getFrameworkHeroUrl('microsites/frameworks/svelte/hero.png'),
       alt: 'Userplane screen recording from a Svelte application',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -63,7 +63,7 @@ export const svelteConfig = defineFramework({
         'No browser extensions',
         'Works with SvelteKit routing',
       ],
-      image: getFrameworkFeatureUrl('microsites/svelte/svelte-sdk.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/svelte/svelte-recording-link.png'),
       learnMoreHref: DOCS_FRAMEWORK_SVELTE,
     },
     {
@@ -78,7 +78,7 @@ export const svelteConfig = defineFramework({
         'Browser & OS metadata',
         'SSR and CSR debugging',
       ],
-      image: getFrameworkFeatureUrl('microsites/svelte/svelte-context.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/svelte/svelte-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -93,7 +93,7 @@ export const svelteConfig = defineFramework({
         'GDPR & CCPA ready',
         'SvelteKit redirect support',
       ],
-      image: getFrameworkFeatureUrl('microsites/svelte/svelte-privacy.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/svelte/svelte-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
     {
@@ -108,7 +108,7 @@ export const svelteConfig = defineFramework({
         'API and webhook support',
         'Custom routing pipelines',
       ],
-      image: getFrameworkFeatureUrl('microsites/svelte/svelte-integration.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/svelte/svelte-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
     },
   ],
@@ -132,7 +132,7 @@ export const svelteConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session metadata automatically.',
+          'How recordings capture console logs, network requests, and session data automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

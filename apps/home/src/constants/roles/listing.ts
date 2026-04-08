@@ -49,7 +49,7 @@ export const LISTING_HERO: {
   primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
   secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
   preview: {
-    src: getRoleHeroUrl('microsites/support-agents/hero.png'),
+    src: getRoleHeroUrl('microsites/roles/support-agents/hero.png'),
     alt: 'Userplane screen recording with full technical context',
   },
 };

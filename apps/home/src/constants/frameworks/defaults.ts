@@ -35,7 +35,7 @@ export function defineFramework(overrides: RequiredOverrides & OptionalOverrides
     label: 'Recording',
     title: 'How Screen Recording Works',
     description:
-      'How recordings capture console logs, network requests, and session metadata automatically.',
+      'How recordings capture console logs, network requests, and session info automatically.',
     href: DOCS_RECORDING_REQUESTING,
   };
 
@@ -46,15 +46,15 @@ export function defineFramework(overrides: RequiredOverrides & OptionalOverrides
     icon,
     gradient,
     seo: {
-      title: `Userplane for ${name} | Screen Recordings with Console Logs and Session Data`,
-      description: `Capture console logs, network requests, and session metadata from your ${name} application. One-click screen recordings for debugging and support.`,
+      title: `Userplane for ${name} | Screen Recordings with Console Logs and Session Info`,
+      description: `Capture console logs, network requests, and session info from your ${name} application. One-click screen recordings for debugging and support.`,
       keywords: `${name.toLowerCase()} screen recording, ${name.toLowerCase()} session replay, ${name.toLowerCase()} console logs, ${name.toLowerCase()} debugging, userplane ${name.toLowerCase()}, screen recording sdk`,
     },
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
       name: `Userplane for ${name}`,
-      description: `Screen recordings with console logs and session data for ${name} applications.`,
+      description: `Screen recordings with console logs and session info for ${name} applications.`,
       url: getMarketingUrl(`/frameworks/${slug}`),
     },
     hero: {
@@ -62,9 +62,7 @@ export function defineFramework(overrides: RequiredOverrides & OptionalOverrides
         lines: ['Screen recordings for', `${name} applications`],
         highlights: [{ wordIndex: 3, color: 'blue' as const }],
       },
-      description: [
-        `Capture console logs, network requests, and session metadata from your ${name} application.`,
-      ],
+      description: [`Logs, network data, and session info from your ${name} app.`],
       primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
       secondaryCTA: { text: 'View Docs', href: DOCS_HOME },
     },

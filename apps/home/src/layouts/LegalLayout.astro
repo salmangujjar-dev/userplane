@@ -2,6 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import { FRAMEWORK_REGISTRY } from '../constants/frameworks/registry';
 import { INTEGRATION_REGISTRY } from '../constants/integrations/registry';
 import { NAV_LINKS } from '../constants/navigation';
 import { getDocsUrl } from '../constants/urls';
@@ -28,6 +29,20 @@ const dropdownEntries = Object.values(INTEGRATION_REGISTRY).map((config) => ({
     : undefined,
   gradientStops: config.gradient.stops,
 }));
+
+const frameworkDropdownEntries = Object.values(FRAMEWORK_REGISTRY).map((config) => ({
+  slug: config.slug,
+  name: config.name,
+  shortName: config.shortName,
+  description: config.seo.description,
+  pageHref: `/frameworks/${config.slug}`,
+  docsHref: config.resources.seeAllHref,
+  icon: config.icon,
+  image: config.hero.preview?.src
+    ? { src: config.hero.preview.src, alt: config.hero.preview.alt }
+    : undefined,
+  gradientStops: config.gradient.stops,
+}));
 ---
 
 <BaseLayout
@@ -40,6 +55,8 @@ const dropdownEntries = Object.values(INTEGRATION_REGISTRY).map((config) => ({
     integrations={dropdownEntries}
     integrationsHref={NAV_LINKS.integrations}
     docsHref={getDocsUrl('')}
+    frameworks={frameworkDropdownEntries}
+    frameworksHref={NAV_LINKS.frameworks}
     client:idle
   />
   <main class="mx-auto flex max-w-4xl flex-col gap-12 px-4 py-10">

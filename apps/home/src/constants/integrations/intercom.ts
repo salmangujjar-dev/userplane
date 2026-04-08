@@ -47,7 +47,7 @@ export const intercomConfig = defineIntegration({
       'So your team can understand and resolve support issues faster.',
     ],
     preview: {
-      src: getHeroUrl('microsites/intercom/hero.png'),
+      src: getHeroUrl('microsites/integrations/intercom/hero.png'),
       alt: 'Userplane screen recording inside an Intercom conversation',
     },
     marketplace: {
@@ -69,7 +69,7 @@ export const intercomConfig = defineIntegration({
         'Recordings stay linked to the conversation',
         'Works across Inbox, Messenger, and Macros',
       ],
-      image: getFeatureUrl('microsites/intercom/intercom-integration.png'),
+      image: getFeatureUrl('microsites/integrations/intercom/intercom-helpdesk-recording.png'),
       learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
@@ -84,7 +84,7 @@ export const intercomConfig = defineIntegration({
         'Follow complete session and action trail',
         'Access application state and user context',
       ],
-      image: getFeatureUrl('microsites/intercom/intercom-context.png'),
+      image: getFeatureUrl('microsites/integrations/intercom/intercom-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -99,7 +99,7 @@ export const intercomConfig = defineIntegration({
         'GDPR and CCPA compliance by design',
         'Flexible customer-driven consent flow',
       ],
-      image: getFeatureUrl('microsites/intercom/intercom-privacy.png'),
+      image: getFeatureUrl('microsites/integrations/intercom/intercom-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],

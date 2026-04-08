@@ -23,28 +23,28 @@ export const nuxtConfig = defineFramework({
   seo: {
     title: 'Userplane for Nuxt | Session Recordings with Console Logs',
     description:
-      'Console logs, network requests, and session metadata from your Nuxt app. SSR-safe. Works with Nuxt 3 runtime config.',
+      'Console logs, network requests, and session info from your Nuxt app. SSR-safe. Works with Nuxt 3 runtime config.',
     keywords:
       'nuxt screen recording, nuxt session replay, nuxt console logs, nuxt debugging, nuxt 3 screen recording, userplane nuxt',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings for', 'Nuxt applications'],
-      highlights: [{ wordIndex: 3, color: 'green' }],
+      lines: ['Debug Nuxt issues', 'with session recordings'],
+      highlights: [{ wordIndex: 1, color: 'green' }],
       icons: [
         {
-          wordIndex: 3,
+          wordIndex: 1,
           src: getFrameworkIconUrl('frameworks/nuxt.svg'),
           alt: 'Nuxt',
         },
       ],
     },
     description: [
-      'Console logs, network requests, and session metadata from your Nuxt app.',
-      'SSR-safe. Works with Nuxt 3 runtime config.',
+      'SSR and client-side sessions captured with full context.',
+      'Works with Nuxt 3 runtime config.',
     ],
     preview: {
-      src: getFrameworkHeroUrl('microsites/nuxt/hero.png'),
+      src: getFrameworkHeroUrl('microsites/frameworks/nuxt/hero.png'),
       alt: 'Userplane screen recording from a Nuxt application',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -63,7 +63,7 @@ export const nuxtConfig = defineFramework({
         'SSR page capture',
         'Client navigation tracking',
       ],
-      image: getFrameworkFeatureUrl('microsites/nuxt/nuxt-sdk.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/nuxt/nuxt-recording-link.png'),
       learnMoreHref: DOCS_FRAMEWORK_NUXT,
     },
     {
@@ -78,7 +78,7 @@ export const nuxtConfig = defineFramework({
         'Browser & OS metadata',
         'Server and client coverage',
       ],
-      image: getFrameworkFeatureUrl('microsites/nuxt/nuxt-context.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/nuxt/nuxt-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -93,7 +93,7 @@ export const nuxtConfig = defineFramework({
         'Server bundle safe',
         'GDPR & CCPA compliant',
       ],
-      image: getFrameworkFeatureUrl('microsites/nuxt/nuxt-privacy.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/nuxt/nuxt-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
     {
@@ -108,7 +108,7 @@ export const nuxtConfig = defineFramework({
         'API and webhook endpoints',
         'Custom pipeline routing',
       ],
-      image: getFrameworkFeatureUrl('microsites/nuxt/nuxt-integration.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/nuxt/nuxt-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
     },
   ],
@@ -132,7 +132,7 @@ export const nuxtConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session metadata automatically.',
+          'How recordings capture console logs, network requests, and session info automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

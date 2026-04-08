@@ -40,7 +40,7 @@ export const customerSuccessConfig = defineRole({
       "Capture what customers can't put into words.",
     ],
     preview: {
-      src: getRoleHeroUrl('microsites/customer-success/hero.png'),
+      src: getRoleHeroUrl('microsites/roles/customer-success/hero.png'),
       alt: 'Userplane session recording with full technical context for CS teams',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -52,14 +52,16 @@ export const customerSuccessConfig = defineRole({
       title: 'Full session context, upfront',
       description:
         'Resolve harder-to-describe customer issues. Request screen recordings which include console errors, network failures, and the exact steps that led to the issue.',
-      tagline: 'Complete picture, first contact',
+      tagline: 'Complete picture on first contact',
       capabilities: [
         'Full session replay',
         'Step-by-step action trail',
         'Console and network data',
         'Browser and device metadata',
       ],
-      image: getRoleFeatureUrl('microsites/customer-success/cs-recording.png'),
+      image: getRoleFeatureUrl(
+        'microsites/roles/customer-success/customer-success-helpdesk-recording.png'
+      ),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -74,7 +76,9 @@ export const customerSuccessConfig = defineRole({
         'Application state capture',
         'Device and browser details',
       ],
-      image: getRoleFeatureUrl('microsites/customer-success/cs-context.png'),
+      image: getRoleFeatureUrl(
+        'microsites/roles/customer-success/customer-success-console-logs.png'
+      ),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -89,7 +93,9 @@ export const customerSuccessConfig = defineRole({
         'Slack recording requests',
         'Chrome extension integration',
       ],
-      image: getRoleFeatureUrl('microsites/customer-success/cs-integration.png'),
+      image: getRoleFeatureUrl(
+        'microsites/roles/customer-success/customer-success-helpdesk-setup.png'
+      ),
       learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
@@ -104,7 +110,9 @@ export const customerSuccessConfig = defineRole({
         'Role-based access control',
         'GDPR & CCPA compliant',
       ],
-      image: getRoleFeatureUrl('microsites/customer-success/cs-compliance.png'),
+      image: getRoleFeatureUrl(
+        'microsites/roles/customer-success/customer-success-consent-screen.png'
+      ),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],

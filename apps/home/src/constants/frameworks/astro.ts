@@ -24,28 +24,28 @@ export const astroConfig = defineFramework({
   seo: {
     title: 'Userplane for Astro | Session Recordings with Console Logs',
     description:
-      'Console logs, network requests, and session metadata from your Astro site. Captures across React, Vue, and Svelte islands.',
+      'Console logs, network requests, and session details from your Astro site. Captures across React, Vue, and Svelte islands.',
     keywords:
       'astro screen recording, astro session replay, astro console logs, astro debugging, astro islands screen recording, userplane astro',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings for', 'Astro applications'],
-      highlights: [{ wordIndex: 3, color: 'purple' }],
+      lines: ['Fix Astro support issues', 'with screen recordings'],
+      highlights: [{ wordIndex: 1, color: 'purple' }],
       icons: [
         {
-          wordIndex: 3,
+          wordIndex: 1,
           src: getFrameworkIconUrl('frameworks/astro.svg'),
           alt: 'Astro',
         },
       ],
     },
     description: [
-      'Console logs, network requests, and session metadata from your Astro site.',
+      'Logs, errors, and network data from every framework island.',
       'Captures across React, Vue, and Svelte islands.',
     ],
     preview: {
-      src: getFrameworkHeroUrl('microsites/astro-fw/hero.png'),
+      src: getFrameworkHeroUrl('microsites/frameworks/astro/hero.png'),
       alt: 'Userplane screen recording from an Astro application',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -64,7 +64,7 @@ export const astroConfig = defineFramework({
         'React, Vue, Svelte support',
         'No browser extensions',
       ],
-      image: getFrameworkFeatureUrl('microsites/astro-fw/astro-sdk.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/astro/astro-recording-link.png'),
       learnMoreHref: DOCS_FRAMEWORK_ASTRO,
     },
     {
@@ -79,7 +79,7 @@ export const astroConfig = defineFramework({
         'Browser & OS metadata',
         'Island-agnostic capture',
       ],
-      image: getFrameworkFeatureUrl('microsites/astro-fw/astro-context.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/astro/astro-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -94,14 +94,14 @@ export const astroConfig = defineFramework({
         'Token preservation',
         'GDPR & CCPA compliant',
       ],
-      image: getFrameworkFeatureUrl('microsites/astro-fw/astro-privacy.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/astro/astro-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
     {
       number: '04',
       title: 'Routes to your support stack',
       description:
-        'Recordings attach to Intercom, Zendesk, and Slack conversations. Link session data to support tickets. API and webhook access for custom routing.',
+        'Recordings attach to Intercom, Zendesk, and Slack conversations. Link session details to support tickets. API and webhook access for custom routing.',
       tagline: 'Where your team triages',
       capabilities: [
         'Intercom, Zendesk, Slack',
@@ -109,7 +109,7 @@ export const astroConfig = defineFramework({
         'API and webhook access',
         'Browser extension support',
       ],
-      image: getFrameworkFeatureUrl('microsites/astro-fw/astro-integration.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/astro/astro-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
     },
   ],
@@ -133,7 +133,7 @@ export const astroConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session metadata automatically.',
+          'How recordings capture console logs, network requests, and session details automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],
