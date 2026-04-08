@@ -22,6 +22,7 @@ export const NAV_LINKS = {
   pricing: getMarketingUrl('/pricing'),
   solutions: getMarketingUrl('/for'),
   integrations: getMarketingUrl('/integrations'),
+  frameworks: getMarketingUrl('/frameworks'),
   roadmap: getMarketingUrl('/roadmap'),
   blog: getMarketingUrl('/blog'),
   help: getMarketingUrl('/help'),

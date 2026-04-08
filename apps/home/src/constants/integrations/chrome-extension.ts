@@ -48,7 +48,7 @@ export const chromeExtensionConfig = defineIntegration({
       'Give your support team the context they need to close tickets faster.',
     ],
     preview: {
-      src: getHeroUrl('microsites/chrome-extension/hero.png'),
+      src: getHeroUrl('microsites/integrations/chrome-extension/hero.png'),
       alt: 'Userplane Chrome Extension recording a browser session',
     },
     marketplace: {
@@ -70,7 +70,9 @@ export const chromeExtensionConfig = defineIntegration({
         'No integration, setup or admin needed',
         'A browser extension that just works out of the box',
       ],
-      image: getFeatureUrl('microsites/chrome-extension/chrome-extension-integration.png'),
+      image: getFeatureUrl(
+        'microsites/integrations/chrome-extension/chrome-extension-recording-link.png'
+      ),
       learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
@@ -85,7 +87,9 @@ export const chromeExtensionConfig = defineIntegration({
         'Access application state and environment details',
         "Follow the customer's journey step by step",
       ],
-      image: getFeatureUrl('microsites/chrome-extension/chrome-extension-context.png'),
+      image: getFeatureUrl(
+        'microsites/integrations/chrome-extension/chrome-extension-console-logs.png'
+      ),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -100,7 +104,9 @@ export const chromeExtensionConfig = defineIntegration({
         'Give users control with built-in consent flows',
         'Meet GDPR and CCPA without any extra work',
       ],
-      image: getFeatureUrl('microsites/chrome-extension/chrome-extension-privacy.png'),
+      image: getFeatureUrl(
+        'microsites/integrations/chrome-extension/chrome-extension-data-redaction.png'
+      ),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],

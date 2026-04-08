@@ -48,7 +48,7 @@ export const zendeskConfig = defineIntegration({
       'Close tickets faster with full technical context upfront.',
     ],
     preview: {
-      src: getHeroUrl('microsites/zendesk/hero.png'),
+      src: getHeroUrl('microsites/integrations/zendesk/hero.png'),
       alt: 'Zendesk ticket sidebar with Userplane recording request',
     },
     marketplace: {
@@ -70,7 +70,7 @@ export const zendeskConfig = defineIntegration({
         'Works with Zendesk Support & Suite out of the box',
         'Available in Zendesk sidebar, editor, top-bar and macros',
       ],
-      image: getFeatureUrl('microsites/zendesk/zendesk-integration.png'),
+      image: getFeatureUrl('microsites/integrations/zendesk/zendesk-helpdesk-recording.png'),
       learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
@@ -85,7 +85,7 @@ export const zendeskConfig = defineIntegration({
         'Access environment and application context',
         'Reconstruct user sessions step by step',
       ],
-      image: getFeatureUrl('microsites/zendesk/zendesk-context.png'),
+      image: getFeatureUrl('microsites/integrations/zendesk/zendesk-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -100,7 +100,7 @@ export const zendeskConfig = defineIntegration({
         'Ensure compliance with GDPR and CCPA out of the box',
         'Manage customer consent with built-in controls',
       ],
-      image: getFeatureUrl('microsites/zendesk/zendesk-privacy.png'),
+      image: getFeatureUrl('microsites/integrations/zendesk/zendesk-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],

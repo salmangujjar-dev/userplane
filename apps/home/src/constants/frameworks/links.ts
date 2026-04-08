@@ -10,6 +10,12 @@ export const DOCS_FRAMEWORK_NUXT = getDocsUrl('/frameworks/nuxt');
 export const DOCS_FRAMEWORK_SVELTE = getDocsUrl('/frameworks/sveltekit');
 export const DOCS_FRAMEWORK_ASTRO = getDocsUrl('/frameworks/astro');
 export const DOCS_FRAMEWORK_WEB = getDocsUrl('/frameworks/static-html');
+export const DOCS_FRAMEWORK_BOLT = getDocsUrl('/platforms/bolt');
+export const DOCS_FRAMEWORK_DJANGO = getDocsUrl('/frameworks/django');
+export const DOCS_FRAMEWORK_EMERGENT = getDocsUrl('/platforms/emergent');
+export const DOCS_FRAMEWORK_LOVABLE = getDocsUrl('/platforms/lovable');
+export const DOCS_FRAMEWORK_RAILS = getDocsUrl('/frameworks/ruby-on-rails');
+export const DOCS_FRAMEWORK_SOLIDJS = getDocsUrl('/frameworks/solidjs');
 
 // ── Shared doc links ──
 

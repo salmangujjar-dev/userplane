@@ -23,28 +23,28 @@ export const reactConfig = defineFramework({
   seo: {
     title: 'Userplane for React | Session Recordings with Console Logs',
     description:
-      'Console logs, network activity, and session metadata — captured from your React app. Works with Vite, CRA, and custom setups.',
+      'Console logs, network activity, and session info — captured from your React app. Works with Vite, CRA, and custom setups.',
     keywords:
       'react screen recording, react session replay, react console logs, react debugging, vite screen recording, userplane react',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings for', 'React applications'],
-      highlights: [{ wordIndex: 3, color: 'green' }],
+      lines: ['Debug React issues', 'with session recordings'],
+      highlights: [{ wordIndex: 1, color: 'green' }],
       icons: [
         {
-          wordIndex: 3,
+          wordIndex: 1,
           src: getFrameworkIconUrl('frameworks/react.svg'),
           alt: 'React',
         },
       ],
     },
     description: [
-      'Console logs, network snapshots, and session metadata — captured from your React app.',
+      'Replay the full user session with logs, errors, and network data.',
       'Works with Vite, CRA, and custom setups.',
     ],
     preview: {
-      src: getFrameworkHeroUrl('microsites/react/hero.png'),
+      src: getFrameworkHeroUrl('microsites/frameworks/react/hero.png'),
       alt: 'Userplane screen recording from a React application',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -63,7 +63,7 @@ export const reactConfig = defineFramework({
         'No browser extensions',
         'Works with any React setup',
       ],
-      image: getFrameworkFeatureUrl('microsites/react/react-sdk.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/react/react-recording-link.png'),
       learnMoreHref: DOCS_FRAMEWORK_REACT,
     },
     {
@@ -78,7 +78,7 @@ export const reactConfig = defineFramework({
         'Browser & OS metadata',
         'User action trail',
       ],
-      image: getFrameworkFeatureUrl('microsites/react/react-context.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/react/react-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -93,7 +93,7 @@ export const reactConfig = defineFramework({
         'Consent flow controls',
         'GDPR & CCPA compliant',
       ],
-      image: getFrameworkFeatureUrl('microsites/react/react-privacy.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/react/react-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
     {
@@ -108,7 +108,7 @@ export const reactConfig = defineFramework({
         'API and webhook access',
         'Custom pipeline support',
       ],
-      image: getFrameworkFeatureUrl('microsites/react/react-integration.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/react/react-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
     },
   ],
@@ -132,7 +132,7 @@ export const reactConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session metadata automatically.',
+          'How recordings capture console logs, network requests, and session info automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

@@ -39,7 +39,7 @@ export const supportEngineersConfig = defineRole({
       'Get everything you need to diagnose the issue.',
     ],
     preview: {
-      src: getRoleHeroUrl('microsites/support-engineers/hero.png'),
+      src: getRoleHeroUrl('microsites/roles/support-engineers/hero.png'),
       alt: 'Userplane session recording with console logs and network data',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -58,7 +58,9 @@ export const supportEngineersConfig = defineRole({
         'Application state and user context',
         'Step-by-step action trail',
       ],
-      image: getRoleFeatureUrl('microsites/support-engineers/engineer-context.png'),
+      image: getRoleFeatureUrl(
+        'microsites/roles/support-engineers/support-engineers-console-logs.png'
+      ),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -73,7 +75,9 @@ export const supportEngineersConfig = defineRole({
         'Diagnose problems on the first pass',
         'Step-by-step timeline of user actions',
       ],
-      image: getRoleFeatureUrl('microsites/support-engineers/engineer-repro.png'),
+      image: getRoleFeatureUrl(
+        'microsites/roles/support-engineers/support-engineers-repro-session.png'
+      ),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -88,7 +92,9 @@ export const supportEngineersConfig = defineRole({
         'Works with Intercom, Zendesk, Slack',
         'Engineer-ready from day one',
       ],
-      image: getRoleFeatureUrl('microsites/support-engineers/engineer-handoff.png'),
+      image: getRoleFeatureUrl(
+        'microsites/roles/support-engineers/support-engineers-share-recording.png'
+      ),
       learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
@@ -103,7 +109,9 @@ export const supportEngineersConfig = defineRole({
         'Custom data retention policies',
         'GDPR & CCPA compliance',
       ],
-      image: getRoleFeatureUrl('microsites/support-engineers/engineer-compliance.png'),
+      image: getRoleFeatureUrl(
+        'microsites/roles/support-engineers/support-engineers-consent-screen.png'
+      ),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],

@@ -24,21 +24,21 @@ export const webConfig = defineFramework({
   seo: {
     title: 'Userplane for Web | Session Recordings with Console Logs',
     description:
-      'Console logs, network requests, and session metadata from any website. One script tag. No framework, no build step, no dependencies.',
+      'Console logs, network requests, and session activity from any website. One script tag. No framework, no build step, no dependencies.',
     keywords:
       'web screen recording, website session replay, html screen recording, javascript session replay, static site screen recording, userplane web',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings for', 'any web application'],
-      highlights: [{ wordIndex: 4, color: 'blue' }],
+      lines: ['Fix user-reported issues', 'with session recordings'],
+      highlights: [{ wordIndex: 1, color: 'blue' }],
     },
     description: [
-      'Console logs, network requests, and session metadata from any website.',
+      'Console logs, network requests, and session activity from any website.',
       'One script tag. No framework, no build step, no dependencies.',
     ],
     preview: {
-      src: getFrameworkHeroUrl('microsites/web/hero.png'),
+      src: getFrameworkHeroUrl('microsites/frameworks/web/hero.png'),
       alt: 'Userplane screen recording from a web application',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -57,7 +57,7 @@ export const webConfig = defineFramework({
         'No framework dependency',
         'Full session replay',
       ],
-      image: getFrameworkFeatureUrl('microsites/web/web-sdk.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/web/web-recording-link.png'),
       learnMoreHref: DOCS_FRAMEWORK_WEB,
     },
     {
@@ -72,7 +72,7 @@ export const webConfig = defineFramework({
         'Browser & OS metadata',
         'User action trail',
       ],
-      image: getFrameworkFeatureUrl('microsites/web/web-context.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/web/web-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -87,7 +87,7 @@ export const webConfig = defineFramework({
         'No code changes needed',
         'GDPR & CCPA compliant',
       ],
-      image: getFrameworkFeatureUrl('microsites/web/web-privacy.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/web/web-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
     {
@@ -102,7 +102,7 @@ export const webConfig = defineFramework({
         'API and webhook support',
         'Custom integrations',
       ],
-      image: getFrameworkFeatureUrl('microsites/web/web-integration.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/web/web-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
     },
   ],
@@ -125,7 +125,7 @@ export const webConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session metadata automatically.',
+          'How recordings capture console logs, network requests, and session activity automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

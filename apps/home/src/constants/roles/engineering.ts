@@ -41,7 +41,7 @@ export const engineeringConfig = defineRole({
       'Works with React, Next.js, Vue, Angular, and more.',
     ],
     preview: {
-      src: getRoleHeroUrl('microsites/developers/hero.png'),
+      src: getRoleHeroUrl('microsites/roles/engineering/hero.png'),
       alt: 'Userplane SDK capturing session data with console logs and network requests',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -64,7 +64,7 @@ export const engineeringConfig = defineRole({
         'Complete session replay',
         'Step-by-step user actions',
       ],
-      image: getRoleFeatureUrl('microsites/developers/dev-console.png'),
+      image: getRoleFeatureUrl('microsites/roles/engineering/engineering-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -74,7 +74,7 @@ export const engineeringConfig = defineRole({
         'First-class support for React, Next.js, Vue, Angular and more. Install the SDK and get complete session context for every customer-reported bug.',
       tagline: 'Works with your stack',
       capabilities: ['React & Next.js', 'Vue & Nuxt', 'Angular', 'Svelte & vanilla JS'],
-      image: getRoleFeatureUrl('microsites/developers/dev-frameworks.png'),
+      image: getRoleFeatureUrl('microsites/roles/engineering/engineering-sdk.png'),
       learnMoreHref: DOCS_DEVELOPER_INSTALLATION,
     },
     {
@@ -89,7 +89,7 @@ export const engineeringConfig = defineRole({
         'Request recordings from Slack',
         'Chrome extension included',
       ],
-      image: getRoleFeatureUrl('microsites/developers/dev-workflow.png'),
+      image: getRoleFeatureUrl('microsites/roles/engineering/engineering-helpdesk-setup.png'),
       learnMoreHref: DOCS_DEVELOPER_INSTALLATION,
     },
     {
@@ -104,7 +104,7 @@ export const engineeringConfig = defineRole({
         'Field-level capture control',
         'GDPR & CCPA built in',
       ],
-      image: getRoleFeatureUrl('microsites/developers/dev-privacy.png'),
+      image: getRoleFeatureUrl('microsites/roles/engineering/engineering-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],

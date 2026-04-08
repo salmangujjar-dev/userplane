@@ -48,7 +48,7 @@ export const slackConfig = defineIntegration({
       'Request recordings and capture logs right where your team works.',
     ],
     preview: {
-      src: getHeroUrl('microsites/slack/hero.png'),
+      src: getHeroUrl('microsites/integrations/slack/hero.png'),
       alt: 'Userplane screen recording posted in a Slack thread',
     },
     marketplace: {
@@ -70,7 +70,7 @@ export const slackConfig = defineIntegration({
         'Works in DMs, public, private, and external channels',
         'Capture issues without scheduling a meeting',
       ],
-      image: getFeatureUrl('microsites/slack/slack-integration.png'),
+      image: getFeatureUrl('microsites/integrations/slack/slack-thread-recording.png'),
       learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
@@ -85,7 +85,7 @@ export const slackConfig = defineIntegration({
         'Replay exactly what the user did step-by-step',
         'Review everything on a single timeline',
       ],
-      image: getFeatureUrl('microsites/slack/slack-context.png'),
+      image: getFeatureUrl('microsites/integrations/slack/slack-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -100,7 +100,7 @@ export const slackConfig = defineIntegration({
         'Customize exactly what gets recorded per domain',
         'Stay compliant with GDPR and CCPA out of the box',
       ],
-      image: getFeatureUrl('microsites/slack/slack-privacy.png'),
+      image: getFeatureUrl('microsites/integrations/slack/slack-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],

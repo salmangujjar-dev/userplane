@@ -23,28 +23,28 @@ export const vueConfig = defineFramework({
   seo: {
     title: 'Userplane for Vue | Session Recordings with Console Logs',
     description:
-      'Capture console logs, network requests, and session metadata from your Vue app. Compatible with Vue 3 and Vue Router.',
+      'Capture console logs, network requests, and session data from your Vue app. Compatible with Vue 3 and Vue Router.',
     keywords:
       'vue screen recording, vue session replay, vue console logs, vue debugging, vue 3 screen recording, vue router session replay, userplane vue',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings for', 'Vue applications'],
-      highlights: [{ wordIndex: 3, color: 'green' }],
+      lines: ['Resolve Vue issues', 'with session recordings'],
+      highlights: [{ wordIndex: 1, color: 'green' }],
       icons: [
         {
-          wordIndex: 3,
+          wordIndex: 1,
           src: getFrameworkIconUrl('frameworks/vue.svg'),
           alt: 'Vue',
         },
       ],
     },
     description: [
-      'Capture console logs, network requests, and session metadata from your Vue app.',
+      'Console logs, user actions, and network data in every recording.',
       'Compatible with Vue 3 and Vue Router.',
     ],
     preview: {
-      src: getFrameworkHeroUrl('microsites/vue/hero.png'),
+      src: getFrameworkHeroUrl('microsites/frameworks/vue/hero.png'),
       alt: 'Userplane screen recording from a Vue application',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -63,7 +63,7 @@ export const vueConfig = defineFramework({
         'No browser extensions',
         'Works with Vue Router',
       ],
-      image: getFrameworkFeatureUrl('microsites/vue/vue-sdk.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/vue/vue-recording-link.png'),
       learnMoreHref: DOCS_FRAMEWORK_VUE,
     },
     {
@@ -78,7 +78,7 @@ export const vueConfig = defineFramework({
         'Browser & OS metadata',
         'Step-by-step user actions',
       ],
-      image: getFrameworkFeatureUrl('microsites/vue/vue-context.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/vue/vue-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -93,7 +93,7 @@ export const vueConfig = defineFramework({
         'GDPR & CCPA compliant',
         'Configurable privacy rules',
       ],
-      image: getFrameworkFeatureUrl('microsites/vue/vue-privacy.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/vue/vue-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
     {
@@ -108,7 +108,7 @@ export const vueConfig = defineFramework({
         'API and webhook support',
         'Record from any browser',
       ],
-      image: getFrameworkFeatureUrl('microsites/vue/vue-integration.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/vue/vue-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
     },
   ],
@@ -132,7 +132,7 @@ export const vueConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session metadata automatically.',
+          'How recordings capture console logs, network requests, and session data automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

@@ -41,7 +41,7 @@ export const supportAgentsConfig = defineRole({
       'See exactly what went wrong and resolve it on the first contact.',
     ],
     preview: {
-      src: getRoleHeroUrl('microsites/support-agents/hero.png'),
+      src: getRoleHeroUrl('microsites/roles/support-agents/hero.png'),
       alt: 'Userplane screen recording with full technical context',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -60,7 +60,7 @@ export const supportAgentsConfig = defineRole({
         'Get full sequence, not a snapshot',
         'Understand hard-to-describe issues',
       ],
-      image: getRoleFeatureUrl('microsites/support-agents/agent-recording.png'),
+      image: getRoleFeatureUrl('microsites/roles/support-agents/support-agents-user-actions.png'),
       learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
@@ -75,7 +75,7 @@ export const supportAgentsConfig = defineRole({
         'Step-by-step user actions',
         'Browser and device metadata',
       ],
-      image: getRoleFeatureUrl('microsites/support-agents/agent-context.png'),
+      image: getRoleFeatureUrl('microsites/roles/support-agents/support-agents-root-cause.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -90,7 +90,9 @@ export const supportAgentsConfig = defineRole({
         'No context switching required',
         'No new tools to learn',
       ],
-      image: getRoleFeatureUrl('microsites/support-agents/agent-recording.png'),
+      image: getRoleFeatureUrl(
+        'microsites/roles/support-agents/support-agents-helpdesk-recording.png'
+      ),
       learnMoreHref: DOCS_HELPDESK_SETUP,
     },
     {
@@ -105,7 +107,7 @@ export const supportAgentsConfig = defineRole({
         'GDPR & CCPA compliant',
         'Customer consent controls',
       ],
-      image: getRoleFeatureUrl('microsites/support-agents/agent-privacy.png'),
+      image: getRoleFeatureUrl('microsites/roles/support-agents/support-agents-consent-screen.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
   ],

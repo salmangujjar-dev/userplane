@@ -8,9 +8,9 @@ import { getFrameworkHeroUrl } from './media';
 export const LISTING_SEO = {
   title: 'Userplane for Your Framework | Screen Recordings with Console Logs',
   description:
-    'Capture console logs, network requests, and session metadata from Next.js, React, Vue, Angular, Svelte, Nuxt, Astro, and any web application.',
+    'Capture console logs, network requests, and session details from Next.js, React, Vue, Angular, Svelte, Nuxt, Astro, SolidJS, Django, Ruby on Rails, and more.',
   keywords:
-    'screen recording sdk, session replay frameworks, nextjs screen recording, react session replay, vue screen recording, angular debugging, svelte session capture, userplane',
+    'screen recording sdk, session replay frameworks, nextjs screen recording, react session replay, vue screen recording, angular debugging, svelte session capture, solidjs screen recording, django session replay, rails screen recording, userplane',
 } as const;
 
 // ── Gradient ──
@@ -36,18 +36,18 @@ export const LISTING_HERO: {
   headline: {
     lines: ['Screen recordings that', 'work with your stack'],
     highlights: [
-      { wordIndex: 4, color: 'blue' },
       { wordIndex: 5, color: 'blue' },
+      { wordIndex: 6, color: 'blue' },
     ],
   },
   description: [
-    'Console logs, network requests, and session metadata — captured from any framework.',
-    'Drop-in SDK for Next.js, React, Vue, Angular, Svelte, Nuxt, Astro, and more.',
+    'Console logs, network data, and session details from any stack.',
+    'Drop-in SDK for Next.js, React, Vue, Svelte, and more.',
   ],
   primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
   secondaryCTA: { text: 'View Docs', href: 'https://docs.userplane.io/developer/sdk-overview' },
   preview: {
-    src: getFrameworkHeroUrl('microsites/nextjs/hero.png'),
+    src: getFrameworkHeroUrl('microsites/frameworks/nextjs/hero.png'),
     alt: 'Userplane SDK working across frameworks',
   },
 };

@@ -23,28 +23,28 @@ export const nextjsConfig = defineFramework({
   seo: {
     title: 'Userplane for Next.js | Screen Recordings with Console Logs',
     description:
-      'Capture console logs, network requests, and session metadata from your Next.js app. Works with App Router and Server Components.',
+      'Capture console logs, network requests, and session details from your Next.js app. Works with App Router and Server Components.',
     keywords:
       'next.js screen recording, nextjs session replay, nextjs console logs, next.js debugging, app router screen recording, userplane nextjs',
   },
   hero: {
     headline: {
-      lines: ['Screen recordings for', 'Next.js applications'],
-      highlights: [{ wordIndex: 3, color: 'blue' }],
+      lines: ['Fix Next.js support issues', 'with session recordings'],
+      highlights: [{ wordIndex: 1, color: 'blue' }],
       icons: [
         {
-          wordIndex: 3,
+          wordIndex: 1,
           src: getFrameworkIconUrl('frameworks/nextjs.svg'),
           alt: 'Next.js',
         },
       ],
     },
     description: [
-      'Capture console logs, network requests, and session metadata from your Next.js app.',
+      'Every recording ships with console logs, errors, and network data.',
       'Works with App Router and Server Components.',
     ],
     preview: {
-      src: getFrameworkHeroUrl('microsites/nextjs/hero.png'),
+      src: getFrameworkHeroUrl('microsites/frameworks/nextjs/hero.png'),
       alt: 'Userplane screen recording from a Next.js application',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
@@ -63,7 +63,7 @@ export const nextjsConfig = defineFramework({
         'No browser extensions',
         'Works with App Router',
       ],
-      image: getFrameworkFeatureUrl('microsites/nextjs/nextjs-sdk.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/nextjs/nextjs-recording-link.png'),
       learnMoreHref: DOCS_FRAMEWORK_NEXTJS,
     },
     {
@@ -78,7 +78,7 @@ export const nextjsConfig = defineFramework({
         'Browser & OS metadata',
         'Step-by-step user actions',
       ],
-      image: getFrameworkFeatureUrl('microsites/nextjs/nextjs-context.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/nextjs/nextjs-console-logs.png'),
       learnMoreHref: DOCS_RECORDING_REQUESTING,
     },
     {
@@ -93,14 +93,14 @@ export const nextjsConfig = defineFramework({
         'Middleware token handling',
         'Configurable redaction rules',
       ],
-      image: getFrameworkFeatureUrl('microsites/nextjs/nextjs-privacy.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/nextjs/nextjs-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
     },
     {
       number: '04',
       title: 'Plugs into your help desk',
       description:
-        'Recordings attach to Intercom, Zendesk, and Slack conversations. Link session data to tickets. API and webhook access for custom routing.',
+        'Recordings attach to Intercom, Zendesk, and Slack conversations. Link session details to tickets. API and webhook access for custom routing.',
       tagline: 'Deliver context where tickets live',
       capabilities: [
         'Intercom, Zendesk, Slack',
@@ -108,7 +108,7 @@ export const nextjsConfig = defineFramework({
         'API and webhook access',
         'Chrome extension included',
       ],
-      image: getFrameworkFeatureUrl('microsites/nextjs/nextjs-integration.png'),
+      image: getFrameworkFeatureUrl('microsites/frameworks/nextjs/nextjs-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
     },
   ],
@@ -132,7 +132,7 @@ export const nextjsConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session metadata automatically.',
+          'How recordings capture console logs, network requests, and session details automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],
