@@ -38,23 +38,15 @@ export interface CanvasImages {
 export function getCanvasImages(): CanvasImages {
   const client = getMediaClient();
   return {
-    logo: client.getIntercomCanvasMediaUrl('intercom-canvas/userplane-icon.svg'),
-    openerRequestRecording: client.getIntercomCanvasMediaUrl(
-      'intercom-canvas/intercom/request-recording.svg'
-    ),
-    openerRequestScreenshot: client.getIntercomCanvasMediaUrl(
-      'intercom-canvas/intercom/request-screenshot.svg'
-    ),
-    openerViewRecordings: client.getIntercomCanvasMediaUrl(
-      'intercom-canvas/intercom/view-recordings.svg'
-    ),
-    openerRequestAccess: client.getIntercomCanvasMediaUrl(
-      'intercom-canvas/intercom/request-access.svg'
-    ),
-    successLinkCreated: client.getIntercomCanvasMediaUrl('intercom-canvas/intercom/success.svg'),
-    errorGeneric: client.getIntercomCanvasMediaUrl('intercom-canvas/intercom/error.svg'),
-    accessRequestedLock: client.getIntercomCanvasMediaUrl('intercom-canvas/intercom/lock.svg'),
-    limitExceededUpgrade: client.getIntercomCanvasMediaUrl('intercom-canvas/intercom/upgrade.svg'),
+    logo: client.getIntercomMediaUrl('intercom/userplane-icon.svg'),
+    openerRequestRecording: client.getIntercomMediaUrl('intercom/request-recording.svg'),
+    openerRequestScreenshot: client.getIntercomMediaUrl('intercom/request-screenshot.svg'),
+    openerViewRecordings: client.getIntercomMediaUrl('intercom/view-recordings.svg'),
+    openerRequestAccess: client.getIntercomMediaUrl('intercom/request-access.svg'),
+    successLinkCreated: client.getIntercomMediaUrl('intercom/success.svg'),
+    errorGeneric: client.getIntercomMediaUrl('intercom/error.svg'),
+    accessRequestedLock: client.getIntercomMediaUrl('intercom/lock.svg'),
+    limitExceededUpgrade: client.getIntercomMediaUrl('intercom/upgrade.svg'),
   };
 }
 
