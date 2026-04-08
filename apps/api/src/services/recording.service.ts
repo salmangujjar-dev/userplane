@@ -383,6 +383,7 @@ export class RecordingService {
         url: null,
         message: 'Video not available for this recording',
         type: null,
+        format: null,
         sources: [],
         durationMs: null,
       };
@@ -395,11 +396,13 @@ export class RecordingService {
       );
 
       const videoType = this.getVideoType(url);
+      const format = this.getVideoFormat(videoType);
 
       return {
         url,
         message: 'Video URL generated successfully',
         type: videoType,
+        format,
         sources: [{ url, type: videoType }],
         durationMs: recording.recordingDurationMs,
       };
@@ -408,6 +411,7 @@ export class RecordingService {
         url: null,
         message: 'Failed to generate video URL',
         type: null,
+        format: null,
         sources: [],
         durationMs: recording.recordingDurationMs,
       };
@@ -443,9 +447,27 @@ export class RecordingService {
     }
   }
 
+  /**
+   * Map MIME type to short format label for AI agent consumption
+   */
+  private getVideoFormat(mimeType: string): string {
+    switch (mimeType) {
+      case 'video/webm':
+        return 'webm';
+      case 'video/mp4':
+        return 'mp4';
+      case 'video/ogg':
+        return 'ogg';
+      case 'application/x-mpegURL':
+        return 'hls';
+      default:
+        return 'webm';
+    }
+  }
+
   private async generateThumbnailResource(recording: RecordingWithRefs): Promise<ResourceResponse> {
     if (!recording.recordingThumbnailRef) {
-      return { url: null, message: 'Thumbnail not available for this recording' };
+      return { url: null, message: 'Thumbnail not available for this recording', format: null };
     }
 
     try {
@@ -453,9 +475,9 @@ export class RecordingService {
         recording.recordingThumbnailRef,
         { expiresIn: PRESIGNED_URL_EXPIRY }
       );
-      return { url, message: 'Thumbnail URL generated successfully' };
+      return { url, message: 'Thumbnail URL generated successfully', format: 'png' };
     } catch {
-      return { url: null, message: 'Failed to generate thumbnail URL' };
+      return { url: null, message: 'Failed to generate thumbnail URL', format: null };
     }
   }
 
@@ -469,6 +491,7 @@ export class RecordingService {
       return {
         url: null,
         message: 'Console logs not available for this recording',
+        format: null,
         captureEnabled,
       };
     }
@@ -483,12 +506,14 @@ export class RecordingService {
       return {
         url,
         message: 'Console log URL generated successfully',
+        format: 'json',
         captureEnabled,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate console log URL',
+        format: null,
         captureEnabled,
       };
     }
@@ -504,6 +529,7 @@ export class RecordingService {
       return {
         url: null,
         message: 'Network logs not available for this recording',
+        format: null,
         captureEnabled,
       };
     }
@@ -516,12 +542,14 @@ export class RecordingService {
       return {
         url,
         message: 'Network log URL generated successfully',
+        format: 'json',
         captureEnabled,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate network log URL',
+        format: null,
         captureEnabled,
       };
     }
@@ -537,6 +565,7 @@ export class RecordingService {
       return {
         url: null,
         message: 'Client actions not available for this recording',
+        format: null,
         captureEnabled,
       };
     }
@@ -549,12 +578,14 @@ export class RecordingService {
       return {
         url,
         message: 'Client action URL generated successfully',
+        format: 'json',
         captureEnabled,
       };
     } catch {
       return {
         url: null,
         message: 'Failed to generate client action URL',
+        format: null,
         captureEnabled,
       };
     }

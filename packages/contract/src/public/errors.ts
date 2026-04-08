@@ -7,31 +7,44 @@ export const PublicApiErrors = {
   // Authentication errors
   API_KEY_REQUIRED: {
     status: 401,
-    message: 'API key required. Use Authorization: Bearer <key>',
+    message:
+      'API key is required. Include it as Authorization: Bearer <your-api-key>. See https://docs.userplane.io/api/authentication',
   },
   API_KEY_INVALID: {
     status: 401,
-    message: 'Invalid API key.',
+    message:
+      'The provided API key is not valid. Verify the key and try again. See https://docs.userplane.io/api/authentication',
   },
   API_KEY_EXPIRED: {
     status: 401,
-    message: 'API key has expired.',
+    message:
+      'The API key has expired. Rotate or create a new key. See https://docs.userplane.io/api/authentication',
   },
 
   // Authorization errors
   API_KEY_DISABLED: {
     status: 403,
-    message: 'API key is disabled.',
+    message:
+      'The API key is disabled. Enable it or create a new key. See https://docs.userplane.io/api/authentication',
   },
   NOT_A_MEMBER: {
     status: 403,
-    message: 'Not a member of this workspace.',
+    message:
+      'The API key owner is not a member of this workspace. See https://docs.userplane.io/api/error-handling',
   },
 
   // Rate limiting
   RATE_LIMITED: {
     status: 429,
-    message: 'Rate limit exceeded. Please try again later.',
+    message:
+      'Rate limit exceeded. Wait and retry with exponential backoff. See https://docs.userplane.io/api/rate-limits',
+  },
+
+  // Service errors
+  SERVICE_UNAVAILABLE: {
+    status: 503,
+    message:
+      'API key verification service is temporarily unavailable. Please try again later. See https://docs.userplane.io/api/error-handling',
   },
 } as const;
 

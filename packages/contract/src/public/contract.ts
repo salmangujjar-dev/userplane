@@ -54,6 +54,7 @@ const publicErrors = {
   API_KEY_DISABLED: PublicApiErrors.API_KEY_DISABLED,
   NOT_A_MEMBER: PublicApiErrors.NOT_A_MEMBER,
   RATE_LIMITED: PublicApiErrors.RATE_LIMITED,
+  SERVICE_UNAVAILABLE: PublicApiErrors.SERVICE_UNAVAILABLE,
 };
 
 // =============================================================================

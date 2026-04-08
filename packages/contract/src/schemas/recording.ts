@@ -109,6 +109,7 @@ export const RecordingResourceSchema = z.object({
   url: z.string().nullable(),
   message: z.string(),
   type: z.string().nullable().optional(),
+  format: z.string().nullable().optional(),
   sources: z.array(VideoSourceSchema).optional(),
   size: z.number().int().nullable().optional(),
   durationMs: z.number().int().nullable().optional(),
