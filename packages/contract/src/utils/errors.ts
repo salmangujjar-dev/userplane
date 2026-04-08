@@ -5,6 +5,7 @@
 
 import { ORPCError } from '@orpc/server';
 
+import { ApiKeyErrors, PublicApiErrors } from '../public/errors';
 import { AccountErrors } from '../schemas/account.errors';
 import { AdminErrors } from '../schemas/admin.errors';
 import { BillingErrors } from '../schemas/billing.errors';
@@ -95,3 +96,5 @@ export const sessionError = createErrors(SessionErrors);
 export const shareError = createErrors(ShareErrors);
 export const workspaceError = createErrors(WorkspaceErrors);
 export const zendeskAppError = createErrors(ZendeskAppErrors);
+export const publicApiError = createErrors(PublicApiErrors);
+export const apiKeyError = createErrors(ApiKeyErrors);

@@ -5,6 +5,8 @@
  * Each contract can be implemented independently.
  */
 
+// Public API (separate module)
+import { apiKeyContract, publicApiContract } from '../public';
 import * as account from './account';
 import * as admin from './admin';
 import * as billing from './billing';
@@ -20,6 +22,8 @@ import * as share from './share';
 import * as status from './status';
 import * as workspace from './workspace';
 import * as zendeskApp from './zendesk-app';
+export type { ApiKeyContract, PublicApiContract } from '../public';
+export { apiKeyContract, publicApiContract } from '../public';
 
 /**
  * Status contract
@@ -349,6 +353,8 @@ export const contract = {
   share: shareContract,
   session: sessionContract,
   zendeskApp: zendeskAppContract,
+  publicApi: publicApiContract,
+  apiKey: apiKeyContract,
 };
 
 /**
