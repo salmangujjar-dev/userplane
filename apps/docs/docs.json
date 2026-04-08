@@ -17,7 +17,7 @@
       "inputPrefix": "Bearer "
     }
   },
-  "theme": "almond",
+  "theme": "luma",
   "appearance": {
     "default": "light",
     "strict": true
