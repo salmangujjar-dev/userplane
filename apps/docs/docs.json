@@ -17,7 +17,7 @@
       "inputPrefix": "Bearer "
     }
   },
-  "theme": "luma",
+  "theme": "aspen",
   "appearance": {
     "default": "light",
     "strict": true
@@ -204,6 +204,7 @@
             "pages": [
               "frameworks/react",
               "frameworks/nextjs",
+              "frameworks/remix",
               "frameworks/vue",
               "frameworks/angular",
               "frameworks/nuxt",
