@@ -1,0 +1,59 @@
+---
+title: Revoke API Key
+description: Permanently delete an API key
+---
+
+Revoking a key permanently deletes it. Any integrations or scripts using the key will stop working immediately. This action cannot be undone.
+
+<Steps>
+  <Step title="Open key options">
+    Navigate to [Account Settings](https://dash.userplane.io/_/account?tab=developers), find the key you want to revoke, and click the three-dot menu. Select **Revoke Key**.
+
+    <Frame>
+      <img src="/media/api/revoke-api-key.png" alt="Key options with Revoke Key selected" />
+    </Frame>
+
+  </Step>
+
+  <Step title="Confirm revocation">
+    A confirmation dialog appears. Type **REVOKE** to confirm, then click **Revoke Key**.
+
+    <Frame>
+      <img src="/media/api/revoke-api-key-complete.png" alt="Revoke API Key confirmation dialog" />
+    </Frame>
+
+    <Warning>
+      This is permanent. Any requests using this key will immediately return `401 API_KEY_INVALID`.
+    </Warning>
+
+  </Step>
+</Steps>
+
+## When to revoke a key
+
+- The key has been **exposed** in a public repository, log, or client-side code
+- The key is **no longer needed** (e.g., decommissioning an integration)
+- You want to **free up a slot** to create a new key (maximum 3 keys per user)
+
+<Note>
+  If you need to replace a key rather than just delete it, use [Rotate API
+  Key](/api/api-keys/rotate-api-key) instead. Rotation revokes the old key and generates a new one
+  in a single step.
+</Note>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Rotate API Key" icon="rotate" href="/api/api-keys/rotate-api-key">
+    Replace a key instead of just deleting it
+  </Card>
+  <Card title="Create API Key" icon="plus" href="/api/api-keys/create-api-key">
+    Generate a new key after revoking
+  </Card>
+  <Card title="Manage API Keys" icon="list" href="/api/api-keys/list-api-keys">
+    View all your keys and their status
+  </Card>
+  <Card title="Best Practices" icon="star" href="/api/best-practices">
+    Secure key storage and rotation strategies
+  </Card>
+</CardGroup>

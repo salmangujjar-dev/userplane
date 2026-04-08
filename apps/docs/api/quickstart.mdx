@@ -1,0 +1,147 @@
+---
+title: Quickstart
+description: Make your first Userplane API call in under two minutes
+---
+
+This guide walks you through making your first API calls to retrieve your profile, list your workspaces, and fetch recordings.
+
+## Prerequisites
+
+- A Userplane account
+- An API key from the [Developers section](https://dash.userplane.io/_/account?tab=developers) of your account settings
+
+## Make your first API call
+
+<Steps>
+  <Step title="Get your profile">
+    Verify your API key works by retrieving your user profile:
+
+    <CodeGroup>
+    ```bash curl
+    curl https://api.userplane.com/api/v1/public/me \
+      -H "Authorization: Bearer up_your_api_key"
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch("https://api.userplane.com/api/v1/public/me", {
+      headers: { Authorization: "Bearer up_your_api_key" },
+    });
+    const { data } = await response.json();
+    console.log(data.user.name);
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.get(
+        "https://api.userplane.com/api/v1/public/me",
+        headers={"Authorization": "Bearer up_your_api_key"},
+    )
+    data = response.json()["data"]
+    print(data["user"]["name"])
+    ```
+    </CodeGroup>
+
+    Example response:
+
+    ```json
+    {
+      "message": "User profile retrieved successfully",
+      "data": {
+        "user": {
+          "id": "user_abc123",
+          "name": "Jane Doe",
+          "email": "jane@example.com",
+          "emailVerified": true,
+          "image": null,
+          "createdAt": "2025-01-15T10:30:00.000Z"
+        },
+        "stats": {
+          "workspaces": 2,
+          "recordings": 48,
+          "links": 15
+        }
+      }
+    }
+    ```
+
+  </Step>
+
+  <Step title="List your workspaces">
+    Retrieve the workspaces you belong to:
+
+    <CodeGroup>
+    ```bash curl
+    curl https://api.userplane.com/api/v1/public/workspaces \
+      -H "Authorization: Bearer up_your_api_key"
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch(
+      "https://api.userplane.com/api/v1/public/workspaces",
+      { headers: { Authorization: "Bearer up_your_api_key" } }
+    );
+    const { data } = await response.json();
+    const workspaceId = data.workspaces[0].workspaceId;
+    ```
+
+    ```python Python
+    response = requests.get(
+        "https://api.userplane.com/api/v1/public/workspaces",
+        headers={"Authorization": "Bearer up_your_api_key"},
+    )
+    workspace_id = response.json()["data"]["workspaces"][0]["workspaceId"]
+    ```
+    </CodeGroup>
+
+    Note the `workspaceId` from the response — you'll need it for workspace-scoped endpoints.
+
+  </Step>
+
+  <Step title="List recordings">
+    Fetch recordings from your workspace using the `workspaceId` from the previous step:
+
+    <CodeGroup>
+    ```bash curl
+    curl https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings \
+      -H "Authorization: Bearer up_your_api_key"
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch(
+      `https://api.userplane.com/api/v1/public/workspace/${workspaceId}/recordings`,
+      { headers: { Authorization: "Bearer up_your_api_key" } }
+    );
+    const { data } = await response.json();
+    console.log(`Found ${data.pagination.total} recordings`);
+    ```
+
+    ```python Python
+    response = requests.get(
+        f"https://api.userplane.com/api/v1/public/workspace/{workspace_id}/recordings",
+        headers={"Authorization": "Bearer up_your_api_key"},
+    )
+    data = response.json()["data"]
+    print(f"Found {data['pagination']['total']} recordings")
+    ```
+    </CodeGroup>
+
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Links" icon="link" href="/api/links/list-links">
+    Manage recording links
+  </Card>
+  <Card title="Recording Resources" icon="download" href="/api/recordings/get-recording-resources">
+    Download videos, thumbnails, and logs
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/api/rate-limits">
+    Understand API rate limits
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/api/error-handling">
+    Handle errors gracefully
+  </Card>
+</CardGroup>

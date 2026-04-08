@@ -1,0 +1,82 @@
+---
+title: Authentication
+description: Authenticate API requests with Bearer tokens using your Userplane API key
+---
+
+All API requests must include a valid API key in the `Authorization` header as a Bearer token.
+
+## Bearer token
+
+Include your API key in the `Authorization` header with every request:
+
+<CodeGroup>
+```bash curl
+curl https://api.userplane.com/api/v1/public/me \
+  -H "Authorization: Bearer up_your_api_key"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.userplane.com/api/v1/public/me', {
+  headers: {
+    Authorization: 'Bearer up_your_api_key',
+  },
+});
+
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.userplane.com/api/v1/public/me",
+    headers={"Authorization": "Bearer up_your_api_key"},
+)
+
+data = response.json()
+```
+
+</CodeGroup>
+
+## API key format
+
+All Userplane API keys use the `up_` prefix. Keys are bound to the user who created them and carry the same permissions as that user across all their workspaces.
+
+<Warning>
+  API keys carry the same permissions as the user who created them. Never expose keys in client-side
+  code, public repositories, or browser requests.
+</Warning>
+
+## User-scoped vs workspace-scoped endpoints
+
+The API has two types of endpoints based on how authorization is handled:
+
+| Type             | Path pattern                        | Authorization                                      |
+| ---------------- | ----------------------------------- | -------------------------------------------------- |
+| User-scoped      | `/public/me`, `/public/workspaces`  | Verifies API key validity only                     |
+| Workspace-scoped | `/public/workspace/{workspaceId}/*` | Verifies API key validity and workspace membership |
+
+Workspace-scoped endpoints return a `403 NOT_A_MEMBER` error if the authenticated user is not an active member of the specified workspace.
+
+## Getting an API key
+
+You can create API keys from the [Developers section](https://dash.userplane.io/_/account?tab=developers) of your account settings, or programmatically via the [API Key Management](/api/api-keys/create-api-key) endpoints.
+
+See [API Keys](/api/api-keys) for details on creating, rotating, and managing your keys.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="API Keys" icon="lock" href="/api/api-keys">
+    Create, rotate, and manage your API keys
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/api/quickstart">
+    Make your first authenticated API call
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/api/error-handling">
+    Authentication error codes and troubleshooting
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/api/rate-limits">
+    Per-user rate limits across all API keys
+  </Card>
+</CardGroup>

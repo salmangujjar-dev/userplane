@@ -1,0 +1,244 @@
+---
+title: Recording Resources
+description: Retrieve presigned URLs for recording video, thumbnail, and log files
+---
+
+These endpoints return presigned URLs for a recording's associated resources. All five endpoints share the same path parameters and response shape.
+
+<Warning>
+  Presigned URLs are temporary and expire after a limited time. Always fetch them on demand — do not
+  cache or persist them.
+</Warning>
+
+## Endpoints
+
+| Endpoint                                                                   | Description               |
+| -------------------------------------------------------------------------- | ------------------------- |
+| `GET /public/workspace/{workspaceId}/recordings/{recordingId}/video`       | Recording video           |
+| `GET /public/workspace/{workspaceId}/recordings/{recordingId}/thumbnail`   | Recording thumbnail image |
+| `GET /public/workspace/{workspaceId}/recordings/{recordingId}/console-log` | Browser console logs      |
+| `GET /public/workspace/{workspaceId}/recordings/{recordingId}/network-log` | Network request logs      |
+| `GET /public/workspace/{workspaceId}/recordings/{recordingId}/action`      | Client action replay data |
+
+## Path parameters
+
+<ParamField path="workspaceId" type="string" required>
+  The workspace ID
+</ParamField>
+<ParamField path="recordingId" type="string" required>
+  The recording ID
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Status message
+</ResponseField>
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="recordingId" type="string">
+      Recording ID
+    </ResponseField>
+    <ResponseField name="resource" type="object">
+      <Expandable title="resource">
+        <ResponseField name="url" type="string | null">
+          Presigned URL for the resource. `null` if the resource is not available.
+        </ResponseField>
+        <ResponseField name="message" type="string">
+          Status message describing the resource availability
+        </ResponseField>
+        <ResponseField name="type" type="string | null">
+          MIME type of the resource
+        </ResponseField>
+        <ResponseField name="sources" type="array">
+          Video sources with URL and MIME type (video endpoint only)
+          <Expandable title="source item">
+            <ResponseField name="url" type="string">
+              Source URL
+            </ResponseField>
+            <ResponseField name="type" type="string">
+              MIME type
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+        <ResponseField name="size" type="integer | null">
+          File size in bytes
+        </ResponseField>
+        <ResponseField name="durationMs" type="integer | null">
+          Duration in milliseconds (video only)
+        </ResponseField>
+        <ResponseField name="captureEnabled" type="boolean">
+          Whether this resource type was captured for this recording
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example
+
+<Tabs>
+  <Tab title="Video">
+    <CodeGroup>
+    ```bash curl
+    curl https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings/rec_abc123/video \
+      -H "Authorization: Bearer up_your_api_key"
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch(
+      "https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings/rec_abc123/video",
+      { headers: { Authorization: "Bearer up_your_api_key" } }
+    );
+    const { data } = await response.json();
+    // Use data.resource.url or data.resource.sources for playback
+    ```
+    </CodeGroup>
+
+    ```json Response
+    {
+      "message": "Recording video retrieved successfully",
+      "data": {
+        "recordingId": "rec_abc123",
+        "resource": {
+          "url": "https://s3.amazonaws.com/userplane-recordings/rec_abc123/video.webm?X-Amz-...",
+          "message": "Video available",
+          "type": "video/webm",
+          "sources": [
+            {
+              "url": "https://s3.amazonaws.com/userplane-recordings/rec_abc123/video.webm?X-Amz-...",
+              "type": "video/webm"
+            }
+          ],
+          "size": 2456789,
+          "durationMs": 45200,
+          "captureEnabled": true
+        }
+      }
+    }
+    ```
+
+  </Tab>
+
+  <Tab title="Thumbnail">
+    ```bash
+    curl https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings/rec_abc123/thumbnail \
+      -H "Authorization: Bearer up_your_api_key"
+    ```
+
+    ```json Response
+    {
+      "message": "Recording thumbnail retrieved successfully",
+      "data": {
+        "recordingId": "rec_abc123",
+        "resource": {
+          "url": "https://s3.amazonaws.com/userplane-recordings/rec_abc123/thumb.jpg?X-Amz-...",
+          "message": "Thumbnail available",
+          "type": "image/jpeg",
+          "size": 34567,
+          "captureEnabled": true
+        }
+      }
+    }
+    ```
+
+  </Tab>
+
+  <Tab title="Console Log">
+    ```bash
+    curl https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings/rec_abc123/console-log \
+      -H "Authorization: Bearer up_your_api_key"
+    ```
+
+    ```json Response
+    {
+      "message": "Recording console log retrieved successfully",
+      "data": {
+        "recordingId": "rec_abc123",
+        "resource": {
+          "url": "https://s3.amazonaws.com/userplane-recordings/rec_abc123/console.json?X-Amz-...",
+          "message": "Console log available",
+          "type": "application/json",
+          "size": 12345,
+          "captureEnabled": true
+        }
+      }
+    }
+    ```
+
+  </Tab>
+
+  <Tab title="Network Log">
+    ```bash
+    curl https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings/rec_abc123/network-log \
+      -H "Authorization: Bearer up_your_api_key"
+    ```
+
+    ```json Response
+    {
+      "message": "Recording network log retrieved successfully",
+      "data": {
+        "recordingId": "rec_abc123",
+        "resource": {
+          "url": "https://s3.amazonaws.com/userplane-recordings/rec_abc123/network.json?X-Amz-...",
+          "message": "Network log available",
+          "type": "application/json",
+          "size": 89012,
+          "captureEnabled": true
+        }
+      }
+    }
+    ```
+
+  </Tab>
+
+  <Tab title="Action">
+    ```bash
+    curl https://api.userplane.com/api/v1/public/workspace/ws_abc123/recordings/rec_abc123/action \
+      -H "Authorization: Bearer up_your_api_key"
+    ```
+
+    ```json Response
+    {
+      "message": "Recording action replay retrieved successfully",
+      "data": {
+        "recordingId": "rec_abc123",
+        "resource": {
+          "url": "https://s3.amazonaws.com/userplane-recordings/rec_abc123/action.json?X-Amz-...",
+          "message": "Action data available",
+          "type": "application/json",
+          "size": 5678,
+          "captureEnabled": true
+        }
+      }
+    }
+    ```
+
+  </Tab>
+</Tabs>
+
+## Errors
+
+| Error code            | Status | Description                        |
+| --------------------- | ------ | ---------------------------------- |
+| `RECORDING_NOT_FOUND` | 404    | Recording does not exist           |
+| `RECORDING_GONE`      | 410    | Recording has already been deleted |
+
+Also returns [common authentication errors](/api/error-handling#authentication-errors).
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Get Recording" icon="video" href="/api/recordings/get-recording">
+    Full recording details and metadata
+  </Card>
+  <Card title="List Recordings" icon="list" href="/api/recordings/list-recordings">
+    Find recordings to download resources from
+  </Card>
+  <Card title="Best Practices" icon="star" href="/api/best-practices">
+    Handle presigned URLs and transient resources
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/api/error-handling">
+    Handle 404 and 410 errors for recordings
+  </Card>
+</CardGroup>

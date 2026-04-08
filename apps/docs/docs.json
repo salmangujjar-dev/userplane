@@ -205,6 +205,73 @@
         ]
       },
       {
+        "tab": "API",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "api/introduction",
+              "api/authentication",
+              {
+                "group": "API Keys",
+                "pages": [
+                  "api/api-keys",
+                  "api/api-keys/create-api-key",
+                  "api/api-keys/list-api-keys",
+                  "api/api-keys/rotate-api-key",
+                  "api/api-keys/revoke-api-key"
+                ]
+              },
+              "api/quickstart"
+            ]
+          },
+          {
+            "group": "Concepts",
+            "pages": [
+              "api/rate-limits",
+              "api/error-handling",
+              "api/pagination",
+              "api/best-practices"
+            ]
+          },
+          {
+            "group": "User",
+            "pages": ["api/user/get-me"]
+          },
+          {
+            "group": "Workspaces",
+            "pages": [
+              "api/workspaces/list-workspaces",
+              "api/workspaces/get-workspace",
+              "api/workspaces/get-invite-url"
+            ]
+          },
+          {
+            "group": "Projects",
+            "pages": ["api/projects/list-projects", "api/projects/get-project"]
+          },
+          {
+            "group": "Links",
+            "pages": [
+              "api/links/list-links",
+              "api/links/create-link",
+              "api/links/get-link",
+              "api/links/update-link",
+              "api/links/delete-link"
+            ]
+          },
+          {
+            "group": "Recordings",
+            "pages": [
+              "api/recordings/list-recordings",
+              "api/recordings/get-recording",
+              "api/recordings/delete-recording",
+              "api/recordings/get-recording-resources"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Integrations",
         "groups": [
           {
