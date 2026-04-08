@@ -1,0 +1,90 @@
+---
+title: 'Emergent Integration'
+description: 'Install Userplane in an Emergent app using ready-to-use prompts'
+---
+
+This guide covers how to install Userplane in an Emergent app.
+
+## Adding the script
+
+Copy and send this prompt in Emergent:
+
+<CodeGroup>
+```text Prompt
+Add the following two tags inside the <head> of index.html, as early as possible before any other tags:
+
+<meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+<script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
+
+Do not add async or defer to the script tag.
+Do not lazy-load or dynamically import this script.
+Place it before all other scripts and stylesheets in <head>.
+
+Reference: https://docs.userplane.io/developer/installation
+
+````
+</CodeGroup>
+
+Replace `YOUR_WORKSPACE_ID` with your workspace ID. You can copy the exact snippet with your ID pre-filled from **Workspace Settings > Domains** in the Userplane dashboard.
+
+## Sensitive data
+
+To blur sensitive elements in recordings, send this prompt:
+
+<CodeGroup>
+```text Prompt
+Add the attribute data-userplane-blur to every component or element that displays sensitive user data — for example: payment forms, password fields, personal information, account balances, health data.
+
+Example usage:
+
+<div data-userplane-blur>
+  <input type="text" placeholder="Credit card number" />
+</div>
+
+To exclude a child element from blur, set data-userplane-blur="false" on it.
+
+To blur all inputs globally, add this meta tag to the <head> of index.html:
+
+<meta name="userplane:blur" content="inputs" />
+
+Reference: https://docs.userplane.io/developer/sensitive-data-redaction
+````
+
+</CodeGroup>
+
+See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for all blur methods including CSS classes, meta tag selectors, and third-party tool compatibility.
+
+## URL parameters
+
+If your app has authentication or redirects, send this prompt:
+
+<CodeGroup>
+```text Prompt
+When redirecting users (for example, to a login page), preserve all URL query parameters that start with "userplane-" through the redirect.
+
+Here is an example of how to do this:
+
+const url = new URL(window.location.href);
+const loginUrl = new URL('/login', window.location.origin);
+
+for (const [key, value] of url.searchParams) {
+if (key.startsWith('userplane-')) {
+loginUrl.searchParams.set(key, value);
+}
+}
+
+window.location.href = loginUrl.toString();
+
+Reference: https://docs.userplane.io/developer/installation#handling-redirects
+
+```
+</CodeGroup>
+
+See [Installation](/developer/installation) for the full list of parameters.
+
+## Related articles
+
+- [Installation](/developer/installation) — script placement, CSP, iframes, and browser support.
+- [Domain Verification Guide](/developer/domain-verification) — verify domain ownership after installing the script.
+- [Sensitive Data Redaction](/developer/sensitive-data-redaction) — blur sensitive content in recordings.
+```

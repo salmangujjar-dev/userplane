@@ -1,0 +1,126 @@
+---
+title: 'Ruby on Rails Integration'
+description: 'Install Userplane in a Ruby on Rails application by adding the CDN embed script to your application layout'
+---
+
+This guide covers how to install Userplane in a Ruby on Rails application.
+
+## Adding the script
+
+Add these two tags to the `<head>` of your application layout:
+
+```erb
+<!-- app/views/layouts/application.html.erb -->
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Sets workspace ID for screen recording -->
+  <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+
+  <!-- Loads Userplane screen recording script -->
+  <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
+
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= stylesheet_link_tag "application" %>
+  <%= yield(:head) %>
+</head>
+<body>
+  <%= yield %>
+</body>
+</html>
+```
+
+Replace `YOUR_WORKSPACE_ID` with your workspace ID. You can copy the exact snippet with your ID pre-filled from **Workspace Settings > Domains** in the Userplane dashboard.
+
+Place the tags as early as possible in `<head>`. The Userplane script can only capture console logs and network requests that occur after it initializes — placing it early gives you the most complete recording context.
+
+<Note>
+Rails' `javascript_include_tag` helper accepts full URLs (`<%= javascript_include_tag "https://cdn.userplane.io/embed/script.js" %>`), but a plain `<script>` tag is clearer for external CDN resources and avoids the asset pipeline.
+</Note>
+
+## Page-specific loading
+
+To load Userplane only on certain pages, use the `content_for` / `yield` pattern:
+
+```erb
+<!-- app/views/layouts/application.html.erb -->
+<head>
+  <%= yield(:userplane) %>
+</head>
+```
+
+```erb
+<!-- app/views/dashboard/index.html.erb -->
+<% content_for :userplane do %>
+  <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
+  <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
+<% end %>
+```
+
+## Turbo compatibility
+
+Rails 7+ includes **Turbo** by default, which performs partial page replacements instead of full reloads. The Userplane CDN script placed in `<head>` loads on the initial page visit and persists across Turbo navigations — no special configuration is needed.
+
+If you initialize custom JavaScript alongside Userplane, listen for `turbo:load` rather than `DOMContentLoaded`:
+
+```javascript
+document.addEventListener('turbo:load', () => {
+  // Code that should run on every page navigation
+});
+```
+
+## URL parameters
+
+When a customer opens a recording link, Userplane appends `userplane-token` and `userplane-action` to the URL. If your Rails app redirects unauthenticated users (e.g. via Devise), carry the `userplane-` prefixed parameters through the redirect:
+
+```ruby
+# app/controllers/application_controller.rb
+class ApplicationController < ActionController::Base
+  before_action :authenticate_user!
+
+  private
+
+  def after_sign_in_path_for(resource)
+    stored_location = stored_location_for(resource) || root_path
+    userplane_params = request.query_parameters.select { |k, _| k.start_with?("userplane-") }
+
+    if userplane_params.any?
+      uri = URI.parse(stored_location)
+      existing = URI.decode_www_form(uri.query || "")
+      uri.query = URI.encode_www_form(existing + userplane_params.to_a)
+      uri.to_s
+    else
+      stored_location
+    end
+  end
+end
+```
+
+See [Installation](/developer/installation) for the full list of parameters.
+
+## Sensitive data
+
+Add `data-userplane-blur` to any element you want blurred in recordings. See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for the full reference.
+
+## Content Security Policy
+
+If your Rails app uses the built-in CSP DSL, add the Userplane CDN domain:
+
+```ruby
+# config/initializers/content_security_policy.rb
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.script_src :self, "https://cdn.userplane.io"
+  end
+end
+```
+
+See [Installation](/developer/installation) for additional CSP guidance.
+
+## Related articles
+
+- [Installation](/developer/installation) — CDN script placement, CSP, iframes, and browser support.
+- [Domain Verification Guide](/developer/domain-verification) — verify domain ownership after installing the script.
+- [Sensitive Data Redaction](/developer/sensitive-data-redaction) — blur sensitive content in recordings.
+- [Web SDK](/developer/web-sdk) — programmatic SDK for apps with a build step.
