@@ -17,17 +17,23 @@ export interface DropdownEntry {
 interface IntegrationsDropdownProps {
   entries: DropdownEntry[];
   integrationsHref: string;
+  frameworks?: DropdownEntry[];
+  frameworksHref?: string;
 }
 
 export default function IntegrationsDropdown({
   entries,
   integrationsHref,
+  frameworks,
+  frameworksHref,
 }: IntegrationsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSlug, setActiveSlug] = useState(entries[0]?.slug ?? '');
   const closeTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const active = entries.find((e) => e.slug === activeSlug) ?? entries[0];
+  const allEntries = [...entries, ...(frameworks ?? [])];
+  const active = allEntries.find((e) => e.slug === activeSlug) ?? entries[0];
+  const activeIsFramework = frameworks?.some((f) => f.slug === activeSlug) ?? false;
 
   const open = useCallback(() => {
     clearTimeout(closeTimeout.current);
@@ -77,7 +83,7 @@ export default function IntegrationsDropdown({
             : 'invisible -translate-y-1 opacity-0 pointer-events-none'
         )}
       >
-        <div className="w-[640px] rounded-lg border border-border/40 bg-background shadow-lg">
+        <div className="w-[700px] rounded-lg border border-border/40 bg-background shadow-lg">
           <div className="grid grid-cols-[180px_1fr]">
             {/* Left sidebar */}
             <div className="border-r border-border/20 p-4">
@@ -104,6 +110,8 @@ export default function IntegrationsDropdown({
                           src={item.icon.src}
                           alt={item.icon.alt}
                           className="size-4 shrink-0 object-contain"
+                          width={16}
+                          height={16}
                         />
                       )}
                       {item.shortName}
@@ -147,7 +155,7 @@ export default function IntegrationsDropdown({
 
               <div className="mb-2 flex items-center gap-2">
                 <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Integration
+                  {activeIsFramework ? 'Framework' : 'Integration'}
                 </span>
                 <ChevronRight className="size-3 text-muted-foreground" />
               </div>
@@ -180,6 +188,50 @@ export default function IntegrationsDropdown({
               </div>
             </div>
           </div>
+
+          {/* Frameworks — horizontal strip */}
+          {frameworks && frameworks.length > 0 && (
+            <div className="border-t border-border/20 px-4 py-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Frameworks
+                </span>
+                {frameworksHref && (
+                  <a
+                    href={frameworksHref}
+                    className="inline-flex items-center gap-1 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    View all <ChevronRight className="size-3" />
+                  </a>
+                )}
+              </div>
+              <div className="grid grid-cols-7 gap-x-1 gap-y-0.5">
+                {frameworks.map((item) => (
+                  <a
+                    key={item.slug}
+                    href={item.pageHref}
+                    onMouseEnter={() => setActiveSlug(item.slug)}
+                    onFocus={() => setActiveSlug(item.slug)}
+                    className={cn(
+                      'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] transition-colors',
+                      activeSlug === item.slug
+                        ? 'bg-muted font-medium text-foreground'
+                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                    )}
+                  >
+                    <img
+                      src={item.icon?.src}
+                      alt={item.icon?.alt}
+                      className="size-4 shrink-0 object-contain"
+                      width={16}
+                      height={16}
+                    />
+                    {item.shortName}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

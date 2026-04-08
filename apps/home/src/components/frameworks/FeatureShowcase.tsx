@@ -51,7 +51,7 @@ export default function FeatureShowcase({ features }: FeatureShowcaseProps) {
             {/* Image card — bleeds right past container */}
             <div className="group relative flex h-[320px] items-center justify-start sm:h-[420px] md:h-[640px]">
               <GradientBlur
-                className="top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 rounded-[300px] h-[140%] w-[120%] opacity-0 transition-opacity duration-700 ease-out group-hover:opacity-40"
+                className="top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 rounded-[300px] h-[140%] w-[120%] opacity-30 transition-opacity duration-700 ease-out group-hover:opacity-45"
                 blur={60}
               />
               <GlassCard
