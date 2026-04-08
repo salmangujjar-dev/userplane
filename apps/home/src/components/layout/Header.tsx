@@ -15,6 +15,8 @@ export interface HeaderProps {
   docsHref?: string;
   teams?: TeamDropdownEntry[];
   teamsHref?: string;
+  frameworks?: DropdownEntry[];
+  frameworksHref?: string;
 }
 
 function MobileNavLink({
@@ -66,6 +68,8 @@ export default function Header({
   docsHref,
   teams,
   teamsHref,
+  frameworks,
+  frameworksHref,
 }: HeaderProps = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -115,7 +119,14 @@ export default function Header({
           Pricing
         </a>
         {teams && teamsHref ? (
-          <TeamsDropdown entries={teams} teamsHref={teamsHref} />
+          <TeamsDropdown
+            entries={teams}
+            teamsHref={teamsHref}
+            integrations={integrations}
+            integrationsHref={integrationsHref}
+            frameworks={frameworks}
+            frameworksHref={frameworksHref}
+          />
         ) : (
           <a
             className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"
@@ -125,7 +136,12 @@ export default function Header({
           </a>
         )}
         {integrations && integrationsHref && docsHref ? (
-          <IntegrationsDropdown entries={integrations} integrationsHref={integrationsHref} />
+          <IntegrationsDropdown
+            entries={integrations}
+            integrationsHref={integrationsHref}
+            frameworks={frameworks}
+            frameworksHref={frameworksHref}
+          />
         ) : (
           <a
             className="inline-block min-h-[48px] py-3 text-sm opacity-70 transition-opacity hover:opacity-100"

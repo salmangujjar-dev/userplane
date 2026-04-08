@@ -2,6 +2,8 @@ import { cn } from '@userplane/ui/lib/utils';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { DropdownEntry } from './IntegrationsDropdown';
+
 export interface TeamDropdownEntry {
   slug: string;
   name: string;
@@ -15,14 +17,28 @@ export interface TeamDropdownEntry {
 interface TeamsDropdownProps {
   entries: TeamDropdownEntry[];
   teamsHref: string;
+  integrations?: DropdownEntry[];
+  integrationsHref?: string;
+  frameworks?: DropdownEntry[];
+  frameworksHref?: string;
 }
 
-export default function TeamsDropdown({ entries, teamsHref }: TeamsDropdownProps) {
+export default function TeamsDropdown({
+  entries,
+  teamsHref,
+  integrations,
+  integrationsHref,
+  frameworks,
+}: TeamsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSlug, setActiveSlug] = useState(entries[0]?.slug ?? '');
   const closeTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const active = entries.find((e) => e.slug === activeSlug) ?? entries[0];
+  const stripItems = [...(integrations ?? []), ...(frameworks?.slice(0, 10) ?? [])];
+  const allEntries = [...entries, ...stripItems];
+  const active = allEntries.find((e) => e.slug === activeSlug) ?? entries[0];
+  const activeIsIntegration = integrations?.some((i) => i.slug === activeSlug) ?? false;
+  const activeIsFramework = frameworks?.some((f) => f.slug === activeSlug) ?? false;
 
   const open = useCallback(() => {
     clearTimeout(closeTimeout.current);
@@ -72,7 +88,7 @@ export default function TeamsDropdown({ entries, teamsHref }: TeamsDropdownProps
             : 'invisible -translate-y-1 opacity-0 pointer-events-none'
         )}
       >
-        <div className="w-[640px] rounded-lg border border-border/40 bg-background shadow-lg">
+        <div className="w-[700px] rounded-lg border border-border/40 bg-background shadow-lg">
           <div className="grid grid-cols-[200px_1fr]">
             {/* Left sidebar */}
             <div className="border-r border-border/20 p-4">
@@ -88,7 +104,7 @@ export default function TeamsDropdown({ entries, teamsHref }: TeamsDropdownProps
                       onMouseEnter={() => setActiveSlug(item.slug)}
                       onFocus={() => setActiveSlug(item.slug)}
                       className={cn(
-                        'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
+                        'flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors',
                         activeSlug === item.slug
                           ? 'bg-muted font-medium text-foreground'
                           : 'text-muted-foreground hover:text-foreground'
@@ -135,7 +151,7 @@ export default function TeamsDropdown({ entries, teamsHref }: TeamsDropdownProps
 
               <div className="mb-2 flex items-center gap-2">
                 <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Team
+                  {activeIsFramework ? 'Framework' : activeIsIntegration ? 'Integration' : 'Team'}
                 </span>
                 <ChevronRight className="size-3 text-muted-foreground" />
               </div>
@@ -168,6 +184,52 @@ export default function TeamsDropdown({ entries, teamsHref }: TeamsDropdownProps
               </div>
             </div>
           </div>
+
+          {/* Integrations + Frameworks — mixed 7×2 horizontal strip */}
+          {stripItems.length > 0 && (
+            <div className="border-t border-border/20 px-4 py-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Integrations
+                </span>
+                {integrationsHref && (
+                  <a
+                    href={integrationsHref}
+                    className="inline-flex items-center gap-1 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    View all <ChevronRight className="size-3" />
+                  </a>
+                )}
+              </div>
+              <div className="grid grid-cols-7 gap-x-1 gap-y-0.5">
+                {stripItems.map((item) => (
+                  <a
+                    key={item.slug}
+                    href={item.pageHref}
+                    onMouseEnter={() => setActiveSlug(item.slug)}
+                    onFocus={() => setActiveSlug(item.slug)}
+                    className={cn(
+                      'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] transition-colors',
+                      activeSlug === item.slug
+                        ? 'bg-muted font-medium text-foreground'
+                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                    )}
+                  >
+                    {item.icon && (
+                      <img
+                        src={item.icon.src}
+                        alt={item.icon.alt}
+                        className="size-4 shrink-0 object-contain"
+                        width={16}
+                        height={16}
+                      />
+                    )}
+                    {item.shortName}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
