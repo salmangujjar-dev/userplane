@@ -2,6 +2,7 @@ import type { ButtonConfig, GradientConfig, IntegrationHeadline } from '@/types/
 
 import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
+import { buildUTM, withUTM } from '../utm';
 import { getHeroUrl } from './media';
 
 // ── SEO ──
@@ -48,8 +49,17 @@ export const LISTING_HERO: {
     'Send a link and get full session replay — logs, network requests, and more.',
     'Works seamlessly with any help desk, ticketing system or internal tool.',
   ],
-  primaryCTA: { text: 'Get started', href: SIGNUP_URL },
-  secondaryCTA: { text: 'View docs', href: 'https://docs.userplane.co' },
+  primaryCTA: {
+    text: 'Get started',
+    href: withUTM(SIGNUP_URL, buildUTM('integration', 'integrations-listing', 'hero-primary')),
+  },
+  secondaryCTA: {
+    text: 'View docs',
+    href: withUTM(
+      'https://docs.userplane.co',
+      buildUTM('integration', 'integrations-listing', 'hero-secondary')
+    ),
+  },
   preview: {
     src: getHeroUrl('microsites/integrations/hero.png'),
     alt: 'Userplane integrations overview',
@@ -75,6 +85,15 @@ export const LISTING_CTA: {
   },
   description:
     'Send a link and get back a complete replay with logs, network data, and session details.',
-  primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
-  secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
+  primaryCTA: {
+    text: 'Get Started',
+    href: withUTM(SIGNUP_URL, buildUTM('integration', 'integrations-listing', 'cta-primary')),
+  },
+  secondaryCTA: {
+    text: 'Talk to a Human',
+    href: withUTM(
+      TALLY_SALES_FORM_URL,
+      buildUTM('integration', 'integrations-listing', 'cta-secondary')
+    ),
+  },
 };

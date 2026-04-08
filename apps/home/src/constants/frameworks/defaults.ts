@@ -2,6 +2,7 @@ import type { FrameworkConfig } from '@/types/frameworks';
 
 import { SIGNUP_URL } from '../onboarding';
 import { getMarketingUrl } from '../urls';
+import { buildUTM, withUTM } from '../utm';
 import { DOCS_HOME, DOCS_RECORDING_REQUESTING, DOCS_SDK_OVERVIEW } from './links';
 import { FRAMEWORK_LOGOS, FRAMEWORK_LOGOS_LABEL } from './logos';
 
@@ -39,7 +40,7 @@ export function defineFramework(overrides: RequiredOverrides & OptionalOverrides
     href: DOCS_RECORDING_REQUESTING,
   };
 
-  return {
+  const config: FrameworkConfig = {
     name,
     slug,
     shortName,
@@ -88,4 +89,28 @@ export function defineFramework(overrides: RequiredOverrides & OptionalOverrides
     },
     ...rest,
   };
+
+  // Post-process: inject UTM params on all CTA hrefs
+  config.hero.primaryCTA.href = withUTM(
+    config.hero.primaryCTA.href,
+    buildUTM('framework', slug, 'hero-primary')
+  );
+  if (config.hero.secondaryCTA) {
+    config.hero.secondaryCTA.href = withUTM(
+      config.hero.secondaryCTA.href,
+      buildUTM('framework', slug, 'hero-secondary')
+    );
+  }
+  config.cta.primaryCTA.href = withUTM(
+    config.cta.primaryCTA.href,
+    buildUTM('framework', slug, 'cta-primary')
+  );
+  if (config.cta.secondaryCTA) {
+    config.cta.secondaryCTA.href = withUTM(
+      config.cta.secondaryCTA.href,
+      buildUTM('framework', slug, 'cta-secondary')
+    );
+  }
+
+  return config;
 }

@@ -3,6 +3,7 @@ import type { RoleConfig } from '@/types/roles';
 import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
 import { getMarketingUrl } from '../urls';
+import { buildUTM, withUTM } from '../utm';
 import {
   DOCS_FOR_SUPPORT_AGENTS,
   DOCS_HELPDESK_SETUP,
@@ -45,7 +46,7 @@ export function defineRole(overrides: RequiredOverrides & OptionalOverrides): Ro
     href: DOCS_HELPDESK_SETUP,
   };
 
-  return {
+  const config: RoleConfig = {
     name,
     slug,
     shortName,
@@ -96,4 +97,28 @@ export function defineRole(overrides: RequiredOverrides & OptionalOverrides): Ro
     // Apply overrides last so they win (resources is deep-merged above)
     ...rest,
   };
+
+  // Post-process: inject UTM params on all CTA hrefs
+  config.hero.primaryCTA.href = withUTM(
+    config.hero.primaryCTA.href,
+    buildUTM('role', slug, 'hero-primary')
+  );
+  if (config.hero.secondaryCTA) {
+    config.hero.secondaryCTA.href = withUTM(
+      config.hero.secondaryCTA.href,
+      buildUTM('role', slug, 'hero-secondary')
+    );
+  }
+  config.cta.primaryCTA.href = withUTM(
+    config.cta.primaryCTA.href,
+    buildUTM('role', slug, 'cta-primary')
+  );
+  if (config.cta.secondaryCTA) {
+    config.cta.secondaryCTA.href = withUTM(
+      config.cta.secondaryCTA.href,
+      buildUTM('role', slug, 'cta-secondary')
+    );
+  }
+
+  return config;
 }

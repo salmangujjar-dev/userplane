@@ -10,6 +10,7 @@ import { nextjsConfig } from './nextjs';
 import { nuxtConfig } from './nuxt';
 import { railsConfig } from './rails';
 import { reactConfig } from './react';
+import { remixConfig } from './remix';
 import { solidjsConfig } from './solidjs';
 import { svelteConfig } from './svelte';
 import { vueConfig } from './vue';
@@ -27,6 +28,7 @@ export const FRAMEWORK_REGISTRY: Record<string, FrameworkConfig> = {
   'ruby-on-rails': railsConfig,
   lovable: lovableConfig,
   web: webConfig,
+  remix: remixConfig,
   solidjs: solidjsConfig,
   bolt: boltConfig,
   emergent: emergentConfig,

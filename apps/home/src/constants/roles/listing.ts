@@ -2,6 +2,7 @@ import type { ButtonConfig, GradientConfig, IntegrationHeadline } from '@/types/
 
 import { TALLY_SALES_FORM_URL } from '../contact';
 import { SIGNUP_URL } from '../onboarding';
+import { buildUTM, withUTM } from '../utm';
 import { getRoleHeroUrl } from './media';
 
 // ── SEO ──
@@ -46,8 +47,14 @@ export const LISTING_HERO: {
     'Request screen recordings with logs, network requests, and session data.',
     'Resolve issues on first contact. Skip the back-and-forth.',
   ],
-  primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
-  secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
+  primaryCTA: {
+    text: 'Get Started',
+    href: withUTM(SIGNUP_URL, buildUTM('role', 'roles-listing', 'hero-primary')),
+  },
+  secondaryCTA: {
+    text: 'Talk to a Human',
+    href: withUTM(TALLY_SALES_FORM_URL, buildUTM('role', 'roles-listing', 'hero-secondary')),
+  },
   preview: {
     src: getRoleHeroUrl('microsites/roles/support-agents/hero.png'),
     alt: 'Userplane screen recording with full technical context',
@@ -73,6 +80,12 @@ export const LISTING_CTA: {
   },
   description:
     'Screen recordings with console logs, network requests, and session data. Built for the teams behind every customer interaction.',
-  primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
-  secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
+  primaryCTA: {
+    text: 'Get Started',
+    href: withUTM(SIGNUP_URL, buildUTM('role', 'roles-listing', 'cta-primary')),
+  },
+  secondaryCTA: {
+    text: 'Talk to a Human',
+    href: withUTM(TALLY_SALES_FORM_URL, buildUTM('role', 'roles-listing', 'cta-secondary')),
+  },
 };
