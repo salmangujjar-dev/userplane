@@ -20,10 +20,10 @@ export function useCreateLink(workspaceId: string | null) {
   return useMutation({
     mutationFn: async (data: CreateLinkInput) => {
       if (!workspaceId) throw new Error('No workspace ID');
-      const meta = await buildLinkMeta();
+      const linkMeta = await buildLinkMeta();
       const [error, response] = await apiClient.link.create({
         params: { workspaceId },
-        body: { ...data, meta },
+        body: { ...data, linkMeta },
       });
       return handleSafeResult(error, response?.data ?? null);
     },

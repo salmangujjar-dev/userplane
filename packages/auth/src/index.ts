@@ -1,9 +1,10 @@
+import { oauthProvider } from '@better-auth/oauth-provider';
 import type { DbClient } from '@userplane/db';
 import * as schema from '@userplane/db/schema';
 import { type Environment, isSecureEnvironment } from '@userplane/shared/env';
 import { APIError, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { admin, magicLink, openAPI } from 'better-auth/plugins';
+import { admin, jwt, magicLink, openAPI } from 'better-auth/plugins';
 
 import { setFeatureFlagsConfig } from './flags';
 import { authMiddlewareHook, userCreateHook } from './hooks';
@@ -11,6 +12,13 @@ import { ac, adminRole, csmRole, userRole } from './permissions';
 
 // Export APIError for use in callbacks
 export { APIError };
+
+// Re-export MCP/OAuth utilities from the oauth-provider plugin
+export {
+  mcpHandler,
+  oauthProviderAuthServerMetadata,
+  oauthProviderOpenIdConfigMetadata,
+} from '@better-auth/oauth-provider';
 
 // Export roles for server use only
 export { adminRole, csmRole, userRole } from './permissions';
@@ -65,6 +73,15 @@ export interface FeatureFlagsConfig {
   enableNameNormalization?: boolean;
 }
 
+export interface McpConfig {
+  /** URL to the login page for the OAuth authorization flow */
+  loginPage: string;
+  /** URL to the consent page where users approve MCP client access */
+  consentPage: string;
+  /** URL of the resource server (used for audience validation) */
+  resourceServerUrl: string;
+}
+
 export interface AuthConfig {
   database: DbClient;
   secret: string;
@@ -95,6 +112,8 @@ export interface AuthConfig {
   deleteUser?: DeleteUserConfig;
   /** Feature flags configuration - overrides environment variables */
   featureFlags?: FeatureFlagsConfig;
+  /** MCP OAuth 2.1 Provider — enables AI tools to authenticate via OAuth */
+  mcp?: McpConfig;
   /** Callback after user is created (e.g., create payment customer) */
   onUserCreated?: (user: { id: string; email: string; name: string }) => Promise<void>;
 }
@@ -167,6 +186,20 @@ export function createAuth(config: AuthConfig) {
       }),
       // Only include openAPI plugin in non-production environments
       ...(isProduction ? [] : [openAPI()]),
+      // MCP OAuth 2.1 Provider — requires jwt() for token signing
+      ...(config.mcp
+        ? [
+            jwt(),
+            oauthProvider({
+              loginPage: config.mcp.loginPage,
+              consentPage: config.mcp.consentPage,
+              validAudiences: [config.mcp.resourceServerUrl],
+              scopes: ['openid', 'profile', 'email', 'offline_access', 'mcp:tools'],
+              allowDynamicClientRegistration: true,
+              allowUnauthenticatedClientRegistration: true,
+            }),
+          ]
+        : []),
     ],
     socialProviders: {
       google: {

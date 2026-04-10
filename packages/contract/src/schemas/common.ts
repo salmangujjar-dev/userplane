@@ -69,32 +69,51 @@ export const URLSchema = z.string().refine(
  * Accepts: https://example.com, https://subdomain.example.com, https://localhost, http://127.0.0.1
  * Rejects: single characters, incomplete domains
  */
-export const DomainUrlSchema = URLSchema.refine((value) => {
+export const DomainUrlSchema = z.string().superRefine((value, ctx) => {
+  // First: validate as URL (delegates to URLSchema to stay in sync)
+  const urlResult = URLSchema.safeParse(value);
+  if (!urlResult.success) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Please enter a valid URL' });
+    return;
+  }
+
+  // Then: validate domain part
   try {
     const url = new URL(value);
     const hostname = url.hostname.toLowerCase();
 
     // Allow localhost
-    if (hostname === 'localhost') return true;
+    if (hostname === 'localhost') return;
 
     // Allow valid IP addresses (IPv4 and IPv6)
-    if (validator.isIP(hostname)) return true;
+    if (validator.isIP(hostname)) return;
 
     // Allow local development domains (e.g., localhost:3000, 127.0.0.1:3000)
-    if (hostname.startsWith('127.') || hostname.startsWith('0.0.0.0')) return true;
+    if (hostname.startsWith('127.') || hostname.startsWith('0.0.0.0')) return;
 
     // Validate as FQDN (fully qualified domain name)
     // Require at least one dot for proper domains
-    return validator.isFQDN(hostname, {
-      require_tld: true,
-      allow_underscores: false,
-      allow_trailing_dot: false,
-    });
+    if (
+      !validator.isFQDN(hostname, {
+        require_tld: true,
+        allow_underscores: false,
+        allow_trailing_dot: false,
+      })
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'Please enter a valid domain (e.g., https://example.com, https://localhost, http://127.0.0.1)',
+      });
+    }
   } catch {
-    // If URL parsing fails, return false
-    return false;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        'Please enter a valid domain (e.g., https://example.com, https://localhost, http://127.0.0.1)',
+    });
   }
-}, 'Please enter a valid domain (e.g., https://example.com, https://localhost, http://127.0.0.1)');
+});
 
 /**
  * Zod schema for validating email domains (FQDNs only, no protocol required)

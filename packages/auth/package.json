@@ -26,11 +26,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "better-auth": "^1.4.17",
+    "@better-auth/oauth-provider": "^1.6.2",
     "@userplane/contract": "*",
     "@userplane/db": "*",
     "@userplane/payments": "*",
-    "@userplane/shared": "*"
+    "@userplane/shared": "*",
+    "better-auth": "^1.6.2"
   },
   "devDependencies": {
     "@userplane/eslint-config": "*",

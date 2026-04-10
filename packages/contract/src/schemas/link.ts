@@ -82,7 +82,7 @@ export const LinkItemSchema = z.object({
   linkProviderId: z.string().nullable(),
   linkProviderReference: z.string().nullable(),
   linkURL: z.string(),
-  meta: z.record(z.string(), z.string()).nullable(),
+  linkMeta: z.record(z.string(), z.string()).nullable(),
   createdAt: z.coerce.date(),
   project: LinkProjectSchema,
   creator: z.object({
@@ -119,7 +119,7 @@ export const CreateLinkSchema = z.object({
     domainId: DomainIdSchema,
     linkReference: ReferenceTextSchema.optional(),
     linkReusable: z.boolean().optional().default(false),
-    meta: LinkMetaSchema,
+    linkMeta: LinkMetaSchema,
   }),
 });
 
@@ -145,7 +145,7 @@ export const UpdateLinkSchema = z.object({
     linkProviderType: LinkProviderTypeSchema.optional(),
     linkProviderId: ProviderIdSchema.nullable().optional(),
     linkProviderRef: ReferenceTextSchema.nullable().optional(),
-    meta: LinkMetaSchema,
+    linkMeta: LinkMetaSchema,
   }),
 });
 

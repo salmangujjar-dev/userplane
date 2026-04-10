@@ -134,7 +134,12 @@ export const AdminSearchUsersInputSchema = z.object({
       filterStatus: z.enum(ADMIN_USER_FILTER_STATUS_VALUES).optional(),
     })
     .optional()
-    .default({}),
+    .default({
+      limit: ADMIN_USERS_PAGINATION.DEFAULT_PER_PAGE,
+      offset: 0,
+      sortBy: 'createdAt' as const,
+      sortDirection: 'desc' as const,
+    }),
 });
 
 /**
@@ -193,7 +198,10 @@ export const AdminListUserSessionsInputSchema = z.object({
       offset: z.coerce.number().int().min(0).optional().default(0),
     })
     .optional()
-    .default({}),
+    .default({
+      limit: ADMIN_USER_SESSIONS_PAGINATION.DEFAULT_PER_PAGE,
+      offset: 0,
+    }),
 });
 
 /**
@@ -244,7 +252,10 @@ export const AdminListUserWorkspacesInputSchema = z.object({
       offset: z.coerce.number().int().min(0).optional().default(0),
     })
     .optional()
-    .default({}),
+    .default({
+      limit: ADMIN_USER_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE,
+      offset: 0,
+    }),
 });
 
 /**
@@ -345,7 +356,10 @@ export const AdminListWorkspaceMembersInputSchema = z.object({
       offset: z.coerce.number().int().min(0).optional().default(0),
     })
     .optional()
-    .default({}),
+    .default({
+      limit: ADMIN_WORKSPACE_MEMBERS_PAGINATION.DEFAULT_PER_PAGE,
+      offset: 0,
+    }),
 });
 
 /**
@@ -395,7 +409,13 @@ export const AdminListWorkspaceProjectsInputSchema = z.object({
       filterStatus: z.enum(ADMIN_FILTER_STATUS_VALUES).optional().default('active'),
     })
     .optional()
-    .default({}),
+    .default({
+      limit: ADMIN_WORKSPACE_PROJECTS_PAGINATION.DEFAULT_PER_PAGE,
+      offset: 0,
+      sortBy: 'created_at' as const,
+      sortDirection: 'desc' as const,
+      filterStatus: 'active' as const,
+    }),
 });
 
 /**
@@ -418,7 +438,12 @@ export const AdminSearchWorkspacesInputSchema = z.object({
       filterStatus: z.enum(ADMIN_WORKSPACE_FILTER_STATUS_VALUES).optional(),
     })
     .optional()
-    .default({}),
+    .default({
+      limit: ADMIN_WORKSPACES_PAGINATION.DEFAULT_PER_PAGE,
+      offset: 0,
+      sortBy: 'createdAt' as const,
+      sortDirection: 'desc' as const,
+    }),
 });
 
 /**
@@ -593,7 +618,10 @@ export const AdminGetWorkspaceRecordingStatsInputSchema = z.object({
       weeksToShow: z.enum(ADMIN_RECORDING_WEEKS_VALUES).optional().default('12'),
     })
     .optional()
-    .default({}),
+    .default({
+      filterDeleted: 'all' as const,
+      weeksToShow: '12' as const,
+    }),
 });
 
 /**
@@ -610,7 +638,9 @@ export const AdminGetWorkspaceMemberRecordingStatsInputSchema = z.object({
       filterDeleted: z.enum(ADMIN_FILTER_STATUS_VALUES).optional().default('all'),
     })
     .optional()
-    .default({}),
+    .default({
+      filterDeleted: 'all' as const,
+    }),
 });
 
 /**
@@ -824,7 +854,10 @@ export const AdminListPlansInputSchema = z.object({
       pageSize: z.coerce.number().int().min(1).max(10).optional().default(5),
     })
     .optional()
-    .default({}),
+    .default({
+      pageNumber: 0,
+      pageSize: 5,
+    }),
 });
 
 /** List plans response */

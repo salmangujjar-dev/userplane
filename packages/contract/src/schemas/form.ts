@@ -55,14 +55,15 @@ export type EmailTag = z.infer<typeof EmailTagSchema>;
  * Schema for the emails field array in multi-email forms.
  * Validates that at least one email is present and at least one is valid.
  */
-export const EmailTagsFieldSchema = z
-  .array(EmailTagSchema)
-  .refine((emails) => emails.length > 0, {
-    message: 'At least one email is required',
-  })
-  .refine((emails) => emails.some((e) => e.isValid), {
-    message: 'At least one valid email is required',
-  });
+export const EmailTagsFieldSchema = z.array(EmailTagSchema).superRefine((emails, ctx) => {
+  if (emails.length === 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'At least one email is required' });
+    return;
+  }
+  if (!emails.some((e) => e.isValid)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'At least one valid email is required' });
+  }
+});
 
 /**
  * Checks whether a new email is a duplicate of any existing email tags.

@@ -61,3 +61,6 @@ export * from './public';
 export * from './utils/errors';
 export * from './utils/token';
 export * from './utils/url';
+
+// Export MCP tool definitions
+export * from './mcp';
