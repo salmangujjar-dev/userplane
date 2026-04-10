@@ -48,7 +48,7 @@ export const IntercomCustomerSchema = z.object({
  */
 export const IntercomConversationSchema = z.object({
   id: z.string(),
-  custom_attributes: z.record(z.unknown()).optional(),
+  custom_attributes: z.record(z.string(), z.unknown()).optional(),
 });
 
 // =============================================================================
@@ -123,6 +123,7 @@ export const CardCreationOptionsSchema = z.object({
  * Input values from form submissions
  */
 export const CanvasInputValuesSchema = z.record(
+  z.string(),
   z.union([z.string(), z.array(z.string()), z.undefined()])
 );
 
@@ -132,7 +133,7 @@ export const CanvasInputValuesSchema = z.record(
 export const CurrentCanvasSchema = z.object({
   content_url: z.string().optional(),
   content: z.any().optional(), // Canvas content - complex nested structure
-  stored_data: z.record(z.unknown()).optional(),
+  stored_data: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -338,7 +339,7 @@ export const CanvasContentSchema = z.object({
 
 export const CanvasSchema = z.object({
   content: CanvasContentSchema,
-  stored_data: z.record(z.unknown()).optional(),
+  stored_data: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const CanvasResponseSchema = z.object({

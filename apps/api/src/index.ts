@@ -5,6 +5,10 @@ initPostHogFeatureFlags();
 
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { isDefinedError, onError } from '@orpc/server';
+import {
+  oauthProviderAuthServerMetadata,
+  oauthProviderOpenIdConfigMetadata,
+} from '@userplane/auth';
 import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@userplane/cache';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
@@ -41,6 +45,7 @@ import {
 } from '@/api/handlers/zendesk-connect.handler';
 import { createZendeskSessionHandler } from '@/api/handlers/zendesk-session.handler';
 import { inngestServeHandler } from '@/api/inngest/serve';
+import { createMcpHandler } from '@/api/mcp';
 import { verifyIntercomSignature } from '@/api/middleware/intercom-signature';
 import { type SlackSignatureEnv, verifySlackSignature } from '@/api/middleware/slack-signature';
 import { captureException } from '@/api/posthog';
@@ -50,7 +55,16 @@ import {
   integrationRepo,
   intercomCanvasService,
   intercomHealthCheckService,
+  linkRepo,
+  linkService,
+  projectService,
+  recordingRepo,
+  recordingService,
   slackCanvasService,
+  userService,
+  workspaceMemberService,
+  workspaceRepo,
+  workspaceService,
   zendeskAppOAuthService,
   zendeskConnectService,
 } from '@/api/services';
@@ -143,6 +157,45 @@ app.use(
   })
 );
 
+// OAuth well-known endpoints - called by MCP clients during discovery, any origin
+app.use(
+  '/.well-known/*',
+  cors({
+    origin: '*',
+    credentials: false,
+    maxAge: env.cors.maxAge,
+  })
+);
+
+// MCP endpoint - called from AI tools (Claude, Cursor, VS Code), no cookies
+app.use(
+  '/mcp',
+  cors({
+    origin: '*',
+    credentials: false,
+    maxAge: env.cors.maxAge,
+  })
+);
+
+// OAuth 2.0 protocol endpoints called by MCP clients (DCR, token exchange, revocation).
+// These use client_id/secret or authorization codes, not cookies, so any origin is safe.
+// Note: /api/auth/oauth2/consent and /api/auth/oauth2/public-client are called by the
+// dashboard with credentials — those fall through to the default CORS rule below.
+for (const path of [
+  '/api/auth/oauth2/register',
+  '/api/auth/oauth2/token',
+  '/api/auth/oauth2/revoke',
+]) {
+  app.use(
+    path,
+    cors({
+      origin: '*',
+      credentials: false,
+      maxAge: env.cors.maxAge,
+    })
+  );
+}
+
 // Default CORS for authenticated endpoints
 app.use(
   '*',
@@ -184,6 +237,15 @@ if (rateLimiter.isAvailable()) {
     })
   );
 
+  // MCP endpoint (per-IP rate limiting before auth)
+  app.use(
+    '/mcp',
+    createRateLimitMiddleware(rateLimiter, {
+      tier: 'mcp',
+      getIdentifier: getClientIP,
+    })
+  );
+
   // Note: Intercom Canvas rate limiting is handled inside the routers
   // after signature verification, using workspace_id as identifier
 }
@@ -191,8 +253,61 @@ if (rateLimiter.isAvailable()) {
 // Billing webhook route - direct DodoPayments webhook processing
 app.post('/api/webhooks/billing', billingWebhookRoute);
 
+// OAuth 2.1 Well-Known Endpoints (RFC 9728 + RFC 8414)
+// MCP clients discover these during the authorization handshake.
+// The protected-resource endpoint is static; the auth-server and OIDC endpoints
+// are derived from the OAuth Provider plugin config to avoid drift.
+// PRM response body — shared by the canonical and fallback routes
+const protectedResourceMetadata = {
+  resource: `${env.auth.url}/mcp`,
+  authorization_servers: [`${env.auth.url}/api/auth`],
+  scopes_supported: ['openid', 'profile', 'email', 'mcp:tools'],
+  bearer_methods_supported: ['header'],
+} as const;
+
+// Canonical path per RFC 9728 — appends the resource path suffix
+app.get('/.well-known/oauth-protected-resource/mcp', (c) =>
+  c.json(protectedResourceMetadata, 200, { 'Cache-Control': 'public, max-age=3600' })
+);
+
+// Fallback for clients that omit the resource path
+app.get('/.well-known/oauth-protected-resource', (c) =>
+  c.json(protectedResourceMetadata, 200, { 'Cache-Control': 'public, max-age=3600' })
+);
+
+const authServerMetadataHandler = oauthProviderAuthServerMetadata(auth);
+const openIdConfigHandler = oauthProviderOpenIdConfigMetadata(auth);
+
+app.get('/.well-known/oauth-authorization-server/api/auth', (c) =>
+  authServerMetadataHandler(c.req.raw)
+);
+
+app.get('/.well-known/openid-configuration/api/auth', (c) => openIdConfigHandler(c.req.raw));
+
+// Fallback root discovery for clients that use a path-less authorization_servers URL
+app.get('/.well-known/oauth-authorization-server', (c) => authServerMetadataHandler(c.req.raw));
+
+app.get('/.well-known/openid-configuration', (c) => openIdConfigHandler(c.req.raw));
+
 // Better Auth routes - must come before API routes
 app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw));
+
+// MCP Server — Streamable HTTP transport, authenticated via OAuth 2.1
+const mcpHandler = createMcpHandler({
+  linkService,
+  recordingService,
+  workspaceService,
+  workspaceMemberService,
+  projectService,
+  userService,
+  workspaceRepo,
+  recordingRepo,
+  linkRepo,
+});
+
+// POST = JSON-RPC messages, GET = SSE stream, DELETE = session termination.
+// OPTIONS is handled by the CORS middleware — NOT routed here to avoid 401 on preflight.
+app.on(['POST', 'GET', 'DELETE'], '/mcp', mcpHandler);
 
 // Intercom Canvas Kit Routes
 // ===========================

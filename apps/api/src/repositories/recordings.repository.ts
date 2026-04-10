@@ -134,10 +134,10 @@ export class RecordingRepository {
     if (!raw) return null;
     const result = systemMetaSchema.safeParse(raw);
     if (!result.success) {
-      logger.warn({ errors: result.error.errors, raw }, 'Invalid systemMeta');
+      logger.warn({ errors: result.error.issues, raw }, 'Invalid systemMeta');
       captureException(new Error('invalid systemMeta'), undefined, {
         operation: 'transform_system_meta',
-        errors: result.error.errors,
+        errors: result.error.issues,
         raw,
         recordingId,
       });
@@ -153,10 +153,10 @@ export class RecordingRepository {
     if (!raw) return null;
     const result = customMetaSchema.safeParse(raw);
     if (!result.success) {
-      logger.warn({ errors: result.error.errors, raw }, 'Invalid customMeta');
+      logger.warn({ errors: result.error.issues, raw }, 'Invalid customMeta');
       captureException(new Error('invalid custom metadata'), undefined, {
         operation: 'transform_system_meta',
-        errors: result.error.errors,
+        errors: result.error.issues,
         raw,
         recordingId,
       });
