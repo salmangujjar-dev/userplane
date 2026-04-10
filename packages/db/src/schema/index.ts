@@ -5,6 +5,7 @@ export * from './entitlements';
 export * from './enums';
 export * from './integrations';
 export * from './links';
+export * from './oauth';
 export * from './projects';
 export * from './recordings';
 export * from './refunds';
@@ -23,6 +24,7 @@ import { domains } from './domains';
 import { entitlements } from './entitlements';
 import { integrations } from './integrations';
 import { links } from './links';
+import { oauthAccessToken, oauthClient, oauthConsent, oauthRefreshToken } from './oauth';
 import { projects } from './projects';
 import { recordings } from './recordings';
 import { session } from './session';
@@ -74,3 +76,15 @@ export type NewIntegration = typeof integrations.$inferInsert;
 
 export type WorkspaceMemberIdentity = typeof workspaceMemberIdentities.$inferSelect;
 export type NewWorkspaceMemberIdentity = typeof workspaceMemberIdentities.$inferInsert;
+
+export type OAuthClient = typeof oauthClient.$inferSelect;
+export type NewOAuthClient = typeof oauthClient.$inferInsert;
+
+export type OAuthAccessToken = typeof oauthAccessToken.$inferSelect;
+export type NewOAuthAccessToken = typeof oauthAccessToken.$inferInsert;
+
+export type OAuthRefreshToken = typeof oauthRefreshToken.$inferSelect;
+export type NewOAuthRefreshToken = typeof oauthRefreshToken.$inferInsert;
+
+export type OAuthConsent = typeof oauthConsent.$inferSelect;
+export type NewOAuthConsent = typeof oauthConsent.$inferInsert;
