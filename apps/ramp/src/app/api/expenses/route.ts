@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { withFailureInjection } from '@/lib/api/with-failure-injection';
 import * as repo from '@/lib/db/repository';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 import { log } from '@/lib/logger';
 
 export const GET = withFailureInjection(async (request: NextRequest) => {
@@ -52,8 +52,7 @@ export const GET = withFailureInjection(async (request: NextRequest) => {
 export const POST = withFailureInjection(async (request: NextRequest) => {
   log.debug('POST /api/expenses');
 
-  // Feature flag: reject expense creation when disabled
-  if (!isFeatureEnabled('createExpenseSubmit')) {
+  if (isFailureActive('createExpenseSubmit')) {
     log.debug('POST /api/expenses blocked by feature flag createExpenseSubmit');
     return NextResponse.json(
       { success: false, error: 'Expense creation is temporarily unavailable' },

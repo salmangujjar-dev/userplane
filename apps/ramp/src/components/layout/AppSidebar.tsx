@@ -20,7 +20,7 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu';
 import { toastManager } from '@/components/ui/toast';
 import { useExpenses } from '@/hooks/useExpenses';
 import { authClient } from '@/lib/auth-client';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 import { cn } from '@/lib/utils';
 
 const AVATAR_COLORS = ['#1F1F1F', '#E4F222', '#737373', '#A3A3A3', '#D4D4D4'];
@@ -41,7 +41,7 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
   const userEmail = session?.user?.email ?? '';
 
   const handleSignOut = async () => {
-    if (!isFeatureEnabled('signOut')) {
+    if (isFailureActive('signOut')) {
       console.error('[Auth] Session service is temporarily unavailable — sign out failed');
       toastManager.add({
         title: 'Unable to sign out',

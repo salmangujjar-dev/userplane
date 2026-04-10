@@ -4,11 +4,16 @@ import { Switch as SwitchPrimitive } from '@base-ui/react/switch';
 
 import { cn } from '@/lib/utils';
 
-function Switch({ className, ...props }: SwitchPrimitive.Root.Props) {
+interface SwitchProps extends SwitchPrimitive.Root.Props {
+  variant?: 'default' | 'destructive';
+}
+
+function Switch({ className, variant = 'default', ...props }: SwitchProps) {
   return (
     <SwitchPrimitive.Root
       className={cn(
-        'inline-flex h-[calc(var(--thumb-size)+2px)] w-[calc(var(--thumb-size)*2-2px)] shrink-0 items-center rounded-full p-px outline-none transition-[background-color,box-shadow] duration-200 [--thumb-size:--spacing(5)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background data-checked:bg-primary data-unchecked:bg-input data-disabled:opacity-64 sm:[--thumb-size:--spacing(4)]',
+        'inline-flex h-[calc(var(--thumb-size)+2px)] w-[calc(var(--thumb-size)*2-2px)] shrink-0 items-center rounded-full p-px outline-none transition-[background-color,box-shadow] duration-200 [--thumb-size:--spacing(5)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background data-unchecked:bg-input data-disabled:opacity-64 sm:[--thumb-size:--spacing(4)]',
+        variant === 'destructive' ? 'data-checked:bg-destructive' : 'data-checked:bg-primary',
         className
       )}
       data-slot="switch"

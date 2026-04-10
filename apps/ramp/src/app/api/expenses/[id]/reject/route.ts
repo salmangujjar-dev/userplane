@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { withFailureInjection } from '@/lib/api/with-failure-injection';
 import * as repo from '@/lib/db/repository';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 import { log } from '@/lib/logger';
 
 export const POST = withFailureInjection(
@@ -11,7 +11,7 @@ export const POST = withFailureInjection(
     log.debug({ id }, 'POST /api/expenses/[id]/reject');
 
     // Endpoint-specific flag: transaction deadlock
-    if (!isFeatureEnabled('expenseRejection')) {
+    if (isFailureActive('expenseRejection')) {
       log.error(
         {
           endpoint: 'POST /api/expenses/[id]/reject',

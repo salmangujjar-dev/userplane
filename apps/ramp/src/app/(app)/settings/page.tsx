@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { toastManager } from '@/components/ui/toast';
 import { authClient } from '@/lib/auth-client';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 
 const AVATAR_COLORS = ['#1F1F1F', '#E4F222', '#737373', '#A3A3A3', '#D4D4D4'];
 
@@ -33,7 +33,7 @@ export default function SettingsPage() {
     if (!name.trim()) return;
     setProfileLoading(true);
 
-    if (!isFeatureEnabled('profileUpdate')) {
+    if (isFailureActive('profileUpdate')) {
       console.error('[Settings] Profile service is temporarily unavailable');
       toastManager.add({
         title: 'Failed to update profile',
@@ -87,7 +87,7 @@ export default function SettingsPage() {
       return;
     }
 
-    if (!isFeatureEnabled('passwordChange')) {
+    if (isFailureActive('passwordChange')) {
       console.error('[Settings] Password service is temporarily unavailable');
       toastManager.add({
         title: 'Failed to change password',
@@ -129,7 +129,7 @@ export default function SettingsPage() {
   };
 
   const handleSignOut = async () => {
-    if (!isFeatureEnabled('signOut')) {
+    if (isFailureActive('signOut')) {
       console.error('[Auth] Session service is temporarily unavailable — sign out failed');
       toastManager.add({
         title: 'Unable to sign out',

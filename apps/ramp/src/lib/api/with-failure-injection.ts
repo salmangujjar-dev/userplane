@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 import { log } from '@/lib/logger';
 
 // Module-scoped request timestamps for rate limiting
@@ -23,7 +23,7 @@ export function withFailureInjection(handler: RouteHandler): RouteHandler {
     const url = request.nextUrl.pathname;
 
     // 1. Rate limiting
-    if (isFeatureEnabled('apiRateLimiting')) {
+    if (isFailureActive('apiRateLimiting')) {
       const now = Date.now();
       // Prune old timestamps outside the window
       while (requestTimestamps.length > 0 && requestTimestamps[0]! < now - RATE_LIMIT_WINDOW_MS) {
@@ -44,7 +44,7 @@ export function withFailureInjection(handler: RouteHandler): RouteHandler {
     }
 
     // 2. Intermittent errors (~30% chance)
-    if (isFeatureEnabled('apiIntermittentErrors')) {
+    if (isFailureActive('apiIntermittentErrors')) {
       if (Math.random() < 0.3) {
         log.error({ method, url, injectedStatus: 500 }, 'chaos: intermittent error injected');
         return NextResponse.json(
@@ -58,7 +58,7 @@ export function withFailureInjection(handler: RouteHandler): RouteHandler {
     }
 
     // 3. Latency injection (2-5s random delay)
-    if (isFeatureEnabled('apiLatencyInjection')) {
+    if (isFailureActive('apiLatencyInjection')) {
       const delayMs = Math.floor(2000 + Math.random() * 3000);
       log.debug({ method, url, delayMs }, 'chaos: latency injected');
       await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -68,7 +68,7 @@ export function withFailureInjection(handler: RouteHandler): RouteHandler {
     const response = await handler(request, context);
 
     // 4. Malformed JSON (~25% chance) — return truncated body
-    if (isFeatureEnabled('apiMalformedResponse')) {
+    if (isFailureActive('apiMalformedResponse')) {
       if (Math.random() < 0.25) {
         log.warn(
           { method, url, corruption: 'truncated_json' },
@@ -85,7 +85,7 @@ export function withFailureInjection(handler: RouteHandler): RouteHandler {
     }
 
     // 5. Partial data — strip employee/category fields from response objects
-    if (isFeatureEnabled('apiPartialData')) {
+    if (isFailureActive('apiPartialData')) {
       try {
         const json = await response.json();
         const strippedFields: string[] = [];
@@ -119,7 +119,7 @@ export function withFailureInjection(handler: RouteHandler): RouteHandler {
     }
 
     // 6. Pagination bug — double total and inject duplicate entries
-    if (isFeatureEnabled('apiPaginationBug')) {
+    if (isFailureActive('apiPaginationBug')) {
       try {
         const json = await response.json();
 

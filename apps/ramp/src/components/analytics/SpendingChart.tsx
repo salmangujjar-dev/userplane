@@ -11,7 +11,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import type { ExpenseWithRelations } from '@/lib/data/types';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 
 const chartConfig = {
   total: {
@@ -26,7 +26,7 @@ interface SpendingChartProps {
 }
 
 export function SpendingChart({ expenses, days }: SpendingChartProps) {
-  if (!isFeatureEnabled('analyticsChartRender')) {
+  if (isFailureActive('analyticsChartRender')) {
     throw new Error('SpendingChart: Recharts internal error — invalid data series configuration.');
   }
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { withFailureInjection } from '@/lib/api/with-failure-injection';
 import * as repo from '@/lib/db/repository';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 import { log } from '@/lib/logger';
 
 export const GET = withFailureInjection(
@@ -11,7 +11,7 @@ export const GET = withFailureInjection(
     log.debug({ id }, 'GET /api/expenses/[id]');
 
     // Endpoint-specific flag: intermittent failure (50% chance)
-    if (!isFeatureEnabled('expenseDetailEndpoint') && Math.random() < 0.5) {
+    if (isFailureActive('expenseDetailEndpoint') && Math.random() < 0.5) {
       log.error(
         {
           endpoint: 'GET /api/expenses/[id]',
@@ -48,7 +48,7 @@ export const PUT = withFailureInjection(
     log.debug({ id }, 'PUT /api/expenses/[id]');
 
     // Endpoint-specific flag: conflict error
-    if (!isFeatureEnabled('expenseUpdate')) {
+    if (isFailureActive('expenseUpdate')) {
       log.error(
         { endpoint: 'PUT /api/expenses/[id]', flag: 'expenseUpdate', injectedError: 'conflict' },
         'injected endpoint failure'

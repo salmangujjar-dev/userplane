@@ -32,7 +32,7 @@ import { toastManager } from '@/components/ui/toast';
 import { useExpense } from '@/hooks/useExpenses';
 import { api } from '@/lib/api/client';
 import { log } from '@/lib/client-logger';
-import { getActiveFailureFlags, isFeatureEnabled } from '@/lib/feature-flags';
+import { getActiveFailureFlags, isFailureActive } from '@/lib/feature-flags';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 const AVATAR_COLORS = ['#1F1F1F', '#E4F222', '#737373', '#A3A3A3', '#D4D4D4'];
@@ -45,7 +45,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
   const [editOpen, setEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const actionsDisabled = !isFeatureEnabled('expenseDetailActions');
+  const actionsDisabled = isFailureActive('expenseDetailActions');
 
   useEffect(() => {
     const activeFlags = getActiveFailureFlags();

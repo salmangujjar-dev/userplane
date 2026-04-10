@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function SignupPage() {
     setError('');
     setLoading(true);
 
-    if (!isFeatureEnabled('signUp')) {
+    if (isFailureActive('signUp')) {
       console.error('[Auth] Registration service is temporarily unavailable');
       setError('Registration service is temporarily unavailable. Please try again later.');
       setLoading(false);

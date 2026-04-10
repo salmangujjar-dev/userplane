@@ -30,7 +30,7 @@ import { useExpenses } from '@/hooks/useExpenses';
 import { api } from '@/lib/api/client';
 import { log } from '@/lib/client-logger';
 import type { ExpenseWithRelations } from '@/lib/data/types';
-import { getActiveFailureFlags, isFeatureEnabled } from '@/lib/feature-flags';
+import { getActiveFailureFlags, isFailureActive } from '@/lib/feature-flags';
 
 type SortField = 'date' | 'amount' | 'employee' | 'category' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -84,7 +84,7 @@ function ExpensesContent() {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleSearchChange = useCallback(
     (value: string) => {
-      if (!isFeatureEnabled('searchDebounce')) {
+      if (isFailureActive('searchDebounce')) {
         // Sabotage: fire immediately on every keystroke — no debounce
         setFilters({ search: value, page: 0 });
         return;
@@ -225,7 +225,7 @@ function ExpensesContent() {
         />
         <Button
           onClick={() => {
-            if (!isFeatureEnabled('newExpenseButton')) {
+            if (isFailureActive('newExpenseButton')) {
               console.error('[Expenses] New expense action is temporarily unavailable');
               toastManager.add({
                 title: 'Unable to create expense',
