@@ -55,7 +55,7 @@ export class SubscriptionRepository {
     if (!raw) return null;
     const result = FeatureGatesSchema.safeParse(raw);
     if (!result.success) {
-      logger.warn({ errors: result.error.errors }, 'Invalid featureGates in subscription');
+      logger.warn({ errors: result.error.issues }, 'Invalid featureGates in subscription');
       return null;
     }
     return result.data;
@@ -69,7 +69,7 @@ export class SubscriptionRepository {
   } {
     const parsedAddonsResult = AddonItemsDbSchema.safeParse(row.addons);
     if (!parsedAddonsResult.success) {
-      logger.warn({ errors: parsedAddonsResult.error.errors }, 'Invalid addons in subscription');
+      logger.warn({ errors: parsedAddonsResult.error.issues }, 'Invalid addons in subscription');
     }
     const parsedAddons = parsedAddonsResult.success ? parsedAddonsResult.data : [];
 

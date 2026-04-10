@@ -8,12 +8,12 @@ import { z } from 'zod';
 /**
  * System metadata - arbitrary key-value pairs
  */
-export const systemMetaSchema = z.record(z.unknown());
+export const systemMetaSchema = z.record(z.string(), z.unknown());
 
 /**
  * Custom metadata - arbitrary key-value pairs
  */
-export const customMetaSchema = z.record(z.unknown());
+export const customMetaSchema = z.record(z.string(), z.unknown());
 
 /**
  * System metadata type

@@ -51,7 +51,7 @@ export interface CreateLinkParams {
   createdBy: string;
   linkReference?: string;
   linkReusable?: boolean;
-  meta?: Record<string, string>;
+  linkMeta?: Record<string, string>;
 }
 
 /**
@@ -80,13 +80,13 @@ export interface UpdateLinkParams {
   linkProviderType?: LinkProviderType;
   linkProviderId?: string | null;
   linkProviderRef?: string | null;
-  meta?: Record<string, string>;
+  linkMeta?: Record<string, string>;
 }
 
 /**
- * Extract user-provided meta from linkProviderData JSONB
+ * Extract user-provided link meta from linkProviderData JSONB
  */
-function extractMeta(providerData: unknown): Record<string, string> | null {
+function extractLinkMeta(providerData: unknown): Record<string, string> | null {
   if (
     providerData != null &&
     typeof providerData === 'object' &&
@@ -379,7 +379,7 @@ export class LinkService {
         linkProviderType: parsed.linkProviderType,
         linkProviderId: parsed.linkProviderId,
         linkProviderRef: parsed.linkProviderRef,
-        linkProviderData: params.meta ? { meta: params.meta } : undefined,
+        linkProviderData: params.linkMeta ? { meta: params.linkMeta } : undefined,
       },
       options
     );
@@ -468,7 +468,7 @@ export class LinkService {
         row.recordingCaptureServerLog,
         row.recordingCaptureNetworkLog
       ),
-      meta: extractMeta(row.linkProviderData),
+      linkMeta: extractLinkMeta(row.linkProviderData),
       createdAt: row.createdAt,
       project: {
         projectId: row.projectId,
@@ -520,11 +520,11 @@ export class LinkService {
       throw linkError.LINK_WORKSPACE_MISMATCH();
     }
 
-    // Merge meta into existing provider data if provided
+    // Merge link meta into existing provider data if provided
     const updateInput: UpdateLinkParams & { linkProviderData?: unknown } = { ...params };
-    if (params.meta !== undefined) {
+    if (params.linkMeta !== undefined) {
       const existing = (existingLink.linkProviderData as Record<string, unknown>) ?? {};
-      updateInput.linkProviderData = { ...existing, meta: params.meta };
+      updateInput.linkProviderData = { ...existing, meta: params.linkMeta };
     }
 
     // Perform update
@@ -611,7 +611,7 @@ export class LinkService {
         linkWithDetails.recordingCaptureServerLog,
         linkWithDetails.recordingCaptureNetworkLog
       ),
-      meta: extractMeta(linkWithDetails.linkProviderData),
+      linkMeta: extractLinkMeta(linkWithDetails.linkProviderData),
       createdAt: linkWithDetails.createdAt,
       project: {
         projectId: linkWithDetails.projectId,

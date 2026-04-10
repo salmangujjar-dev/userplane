@@ -39,6 +39,12 @@ export const auth = createAuth({
     enableEmailNormalization: true,
     enableNameNormalization: true,
   },
+  // MCP OAuth 2.1 Provider — enables AI tools to authenticate via OAuth
+  mcp: {
+    loginPage: `${env.dashboard.baseUrl}/authorize`,
+    consentPage: `${env.dashboard.baseUrl}/oauth/consent`,
+    resourceServerUrl: `${env.auth.url}/mcp`,
+  },
   onUserCreated: async (user) => {
     try {
       await getDodoClient().customers.create({

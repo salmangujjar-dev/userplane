@@ -30,7 +30,7 @@ export function parseCommaSeparated(value: string | undefined, defaultValue: str
  * Required string with custom error message
  */
 export const requiredString = (envVar: string) =>
-  z.string({ required_error: `${envVar} is required` }).min(1, `${envVar} cannot be empty`);
+  z.string({ message: `${envVar} is required` }).min(1, `${envVar} cannot be empty`);
 
 /**
  * String with default value
@@ -59,7 +59,7 @@ export const commaSeparatedArray = (defaultValue: string[]) =>
  */
 export const requiredUrl = (envVar: string) =>
   z
-    .string({ required_error: `${envVar} is required` })
+    .string({ message: `${envVar} is required` })
     .min(1, `${envVar} cannot be empty`)
     .url(`${envVar} must be a valid URL`);
 
@@ -92,7 +92,7 @@ export const commaSeparatedUrls = (defaultValue: string[]) =>
  */
 export const requiredEmail = (envVar: string) =>
   z
-    .string({ required_error: `${envVar} is required` })
+    .string({ message: `${envVar} is required` })
     .min(1, `${envVar} cannot be empty`)
     .email(`${envVar} must be a valid email address`);
 
@@ -128,7 +128,7 @@ export const integerWithDefault = (defaultValue: number) =>
  */
 export const requiredInteger = (envVar: string) =>
   z
-    .string({ required_error: `${envVar} is required` })
+    .string({ message: `${envVar} is required` })
     .min(1, `${envVar} cannot be empty`)
     .transform((val): number => {
       const parsed = parseInt(val, 10);

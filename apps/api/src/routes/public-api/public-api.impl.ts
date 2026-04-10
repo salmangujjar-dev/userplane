@@ -144,7 +144,7 @@ const createLinkImpl = (linkService: LinkService, apiKeyAuth: ApiKeyMiddleware) 
         domainId: input.body.domainId,
         linkReference: input.body.linkReference,
         linkReusable: input.body.linkReusable,
-        meta: input.body.meta,
+        linkMeta: input.body.linkMeta,
       });
       const link = await linkService.getById(createdLink.linkId, input.params.workspaceId);
       return {
@@ -174,7 +174,7 @@ const updateLinkImpl = (linkService: LinkService, apiKeyAuth: ApiKeyMiddleware) 
         linkProviderType: input.body.linkProviderType,
         linkProviderId: input.body.linkProviderId,
         linkProviderRef: input.body.linkProviderRef,
-        meta: input.body.meta,
+        linkMeta: input.body.linkMeta,
       });
       const link = await linkService.getById(input.params.linkId, input.params.workspaceId);
       return {

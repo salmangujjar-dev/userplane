@@ -174,7 +174,9 @@ export const SlackViewSubmissionPayloadSchema = z.object({
     private_metadata: z.string(),
     state: z.object({
       values: z.record(
+        z.string(),
         z.record(
+          z.string(),
           z.object({
             type: z.string(),
             selected_option: z
