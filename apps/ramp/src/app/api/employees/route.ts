@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server';
 
 import { withFailureInjection } from '@/lib/api/with-failure-injection';
 import * as repo from '@/lib/db/repository';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 import { log } from '@/lib/logger';
 
 export const GET = withFailureInjection(async () => {
   log.debug('GET /api/employees');
 
   // Endpoint-specific flag: upstream service unavailable
-  if (!isFeatureEnabled('employeesEndpoint')) {
+  if (isFailureActive('employeesEndpoint')) {
     log.error(
       {
         endpoint: 'GET /api/employees',

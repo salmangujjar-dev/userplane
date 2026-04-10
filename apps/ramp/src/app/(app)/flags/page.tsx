@@ -20,9 +20,19 @@ import {
   type RuntimeVariantInfo,
   type VariantFlag,
 } from '@/lib/feature-flags';
+import { cn } from '@/lib/utils';
 
 type GroupedFlags = Record<string, RuntimeFlagInfo[]>;
 type GroupedVariants = Record<string, RuntimeVariantInfo[]>;
+
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  'Client UI': 'Client-side rendering and interaction failures',
+  Auth: 'Authentication and account flow failures',
+  'Server API': 'Server endpoint errors and status codes',
+  'Chaos (API)': 'Cross-cutting API chaos: latency, errors, bad data',
+  'Chaos (Client)': 'Client-side network and console chaos',
+  Integrations: 'Third-party integration configuration',
+};
 
 function groupByCategory(flags: RuntimeFlagInfo[]): GroupedFlags {
   const groups: GroupedFlags = {};
@@ -138,6 +148,32 @@ export default function FlagsPage() {
     setLocalVariants((prev) => prev.map((v) => ({ ...v, value: v.defaultValue })));
   };
 
+  const {
+    serverValueMap,
+    serverVariantValueMap,
+    serverOverrideMap,
+    serverOverrideCount,
+    activeFailureCount,
+  } = useMemo(() => {
+    const valueMap = new Map(serverFlags.map((f) => [f.flag, f.value]));
+    const variantValueMap = new Map(serverVariants.map((v) => [v.flag, v.value]));
+    const overrideMap = new Map(serverFlags.map((f) => [f.flag, f.isOverridden]));
+
+    let overrides = 0;
+    for (const f of serverFlags) if (f.isOverridden) overrides++;
+    for (const v of serverVariants) if (v.isOverridden) overrides++;
+
+    const active = localFlags.filter((f) => f.value === true).length;
+
+    return {
+      serverValueMap: valueMap,
+      serverVariantValueMap: variantValueMap,
+      serverOverrideMap: overrideMap,
+      serverOverrideCount: overrides,
+      activeFailureCount: active,
+    };
+  }, [serverFlags, serverVariants, localFlags]);
+
   if (loading) {
     return (
       <div className="p-4 md:p-6">
@@ -146,14 +182,7 @@ export default function FlagsPage() {
     );
   }
 
-  const serverOverrideCount =
-    serverFlags.filter((f) => f.isOverridden).length +
-    serverVariants.filter((v) => v.isOverridden).length;
-
   const totalFlagCount = localFlags.length + localVariants.length;
-
-  const serverValueMap = new Map(serverFlags.map((f) => [f.flag, f.value]));
-  const serverVariantValueMap = new Map(serverVariants.map((v) => [v.flag, v.value]));
 
   const grouped = groupByCategory(localFlags);
   const groupedVariants = groupVariantsByCategory(localVariants);
@@ -171,8 +200,17 @@ export default function FlagsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold tracking-tight">Failure Injection</h2>
+          <p className="text-sm text-muted-foreground">
+            Toggle on to activate a failure. Toggle off for normal behavior.
+          </p>
+          <div className="flex items-center gap-2 pt-1">
             <span className="text-sm text-muted-foreground">{totalFlagCount} flags</span>
+            {activeFailureCount > 0 && (
+              <Badge variant="error" size="sm">
+                {activeFailureCount} active
+              </Badge>
+            )}
             {serverOverrideCount > 0 && (
               <Badge variant="warning" size="sm">
                 {serverOverrideCount} overridden
@@ -193,14 +231,16 @@ export default function FlagsPage() {
 
         return (
           <div key={category}>
-            <h3 className="text-sm font-semibold mb-3">{category}</h3>
+            <h3 className="text-sm font-semibold mb-1">{category}</h3>
+            {CATEGORY_DESCRIPTIONS[category] && (
+              <p className="text-xs text-muted-foreground mb-3">
+                {CATEGORY_DESCRIPTIONS[category]}
+              </p>
+            )}
             <div className="rounded-lg border divide-y">
               {categoryFlags?.map((flag) => {
                 const isUnsaved = flag.value !== serverValueMap.get(flag.flag);
-                const isServerOverridden = serverFlags.find(
-                  (sf) => sf.flag === flag.flag
-                )?.isOverridden;
-
+                const isServerOverridden = serverOverrideMap.get(flag.flag);
                 return (
                   <div
                     key={flag.flag}
@@ -219,16 +259,20 @@ export default function FlagsPage() {
                             overridden
                           </Badge>
                         )}
-                        {flag.isChaos && (
-                          <Badge variant="error" size="sm">
-                            chaos
-                          </Badge>
-                        )}
                       </div>
                       <p className="text-sm text-muted-foreground">{flag.description}</p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
+                      <span
+                        className={cn(
+                          'text-xs font-medium',
+                          flag.value ? 'text-destructive-foreground' : 'text-success-foreground'
+                        )}
+                      >
+                        {flag.value ? 'Failing' : 'OK'}
+                      </span>
                       <Switch
+                        variant={flag.value ? 'destructive' : 'default'}
                         checked={flag.value}
                         onCheckedChange={(checked) => handleToggle(flag.flag, checked)}
                       />
@@ -238,9 +282,9 @@ export default function FlagsPage() {
               })}
               {categoryVariants?.map((variant) => {
                 const isUnsaved = variant.value !== serverVariantValueMap.get(variant.flag);
-                const isServerOverridden = serverVariants.find(
-                  (sv) => sv.flag === variant.flag
-                )?.isOverridden;
+                const isServerOverridden = serverVariants.some(
+                  (sv) => sv.flag === variant.flag && sv.isOverridden
+                );
 
                 return (
                   <div

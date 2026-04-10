@@ -1,5 +1,5 @@
 import { log } from '@/lib/client-logger';
-import { isFeatureEnabled } from '@/lib/feature-flags';
+import { isFailureActive } from '@/lib/feature-flags';
 
 const BASE_URL = '/api';
 
@@ -9,7 +9,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   log.debug({ method, url: fullUrl }, 'api request');
 
   // Network error simulation: 20% chance of TypeError
-  if (isFeatureEnabled('networkErrorSimulation') && Math.random() < 0.2) {
+  if (isFailureActive('networkErrorSimulation') && Math.random() < 0.2) {
     log.error(
       { method, url: fullUrl, injectedError: 'network_drop' },
       'chaos: simulated network failure'
@@ -79,7 +79,7 @@ export const api = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const fetcher = async (url: string): Promise<any> => {
   // Network error simulation: 20% chance of TypeError
-  if (isFeatureEnabled('networkErrorSimulation') && Math.random() < 0.2) {
+  if (isFailureActive('networkErrorSimulation') && Math.random() < 0.2) {
     log.error({ url, injectedError: 'network_drop' }, 'chaos: simulated network failure (fetcher)');
     throw new TypeError('Failed to fetch');
   }

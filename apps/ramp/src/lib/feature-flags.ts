@@ -1,71 +1,70 @@
-// Feature flags for deliberately gating or breaking surfaces.
-// Convention: `true` = normal/working, `false` = failure active.
-// Chaos flags (opt-in failures) use the reverse: `false` = off, `true` = active.
+// Feature flags for deliberately injecting failures into surfaces.
+// Convention: `false` = normal/working (default), `true` = failure active.
 // Works on both client and server (plain object, no React dependency).
 
 const featureFlags = {
   // ── Client-side UI flags ──────────────────────────────────────────────
 
-  // Controls whether the "New Expense" button opens the dialog
-  newExpenseButton: true,
+  // "New Expense" button stops opening the dialog
+  newExpenseButton: false,
 
-  // Controls whether the spending trend period tabs are switchable
-  spendingTrendTabs: true,
+  // Spending trend period tabs become unresponsive
+  spendingTrendTabs: false,
 
-  // When false, ExpensesTable throws during render → caught by ErrorBoundary
-  expenseTableRender: true,
+  // ExpensesTable throws during render → caught by ErrorBoundary
+  expenseTableRender: false,
 
-  // When false, SpendingChart throws during render → caught by ErrorBoundary
-  analyticsChartRender: true,
+  // SpendingChart throws during render → caught by ErrorBoundary
+  analyticsChartRender: false,
 
-  // When false, form silently drops required fields → server returns 400
-  expenseFormValidation: true,
+  // Form silently drops required fields → server returns 400
+  expenseFormValidation: false,
 
-  // When false, approve/reject/edit buttons silently disabled
-  expenseDetailActions: true,
+  // Approve/reject/edit buttons silently disabled
+  expenseDetailActions: false,
 
-  // When false, search fires on every keystroke with no debounce
-  searchDebounce: true,
+  // Search fires on every keystroke with no debounce
+  searchDebounce: false,
 
-  // When false, sign-in form shows fake "authentication service unavailable" error
-  signIn: true,
+  // Sign-in form shows fake "authentication service unavailable" error
+  signIn: false,
 
-  // When false, sign-up form shows fake "registration service unavailable" error
-  signUp: true,
+  // Sign-up form shows fake "registration service unavailable" error
+  signUp: false,
 
-  // When false, sign-out silently fails and user stays logged in
-  signOut: true,
+  // Sign-out silently fails and user stays logged in
+  signOut: false,
 
-  // When false, profile update shows fake "profile service unavailable" error
-  profileUpdate: true,
+  // Profile update shows fake "profile service unavailable" error
+  profileUpdate: false,
 
-  // When false, password change shows fake "password service unavailable" error
-  passwordChange: true,
+  // Password change shows fake "password service unavailable" error
+  passwordChange: false,
 
   // ── Server-side API flags ─────────────────────────────────────────────
 
-  // POST /api/expenses → 503 "temporarily unavailable"
-  createExpenseSubmit: true,
+  // POST /api/expenses returns 503 "temporarily unavailable"
+  createExpenseSubmit: false,
 
-  // POST /approve → 500 "database connection lost"
-  expenseApproval: true,
+  // POST /approve returns 500 "database connection lost"
+  expenseApproval: false,
 
-  // POST /reject → 500 "transaction deadlock"
-  expenseRejection: true,
+  // POST /reject returns 500 "transaction deadlock"
+  expenseRejection: false,
 
-  // PUT /expenses/:id → 409 "conflict"
-  expenseUpdate: true,
+  // PUT /expenses/:id returns 409 "conflict"
+  expenseUpdate: false,
 
-  // GET /expenses/:id → 500 intermittently (50% chance)
-  expenseDetailEndpoint: true,
+  // GET /expenses/:id returns 500 intermittently (50% chance)
+  expenseDetailEndpoint: false,
 
-  // GET /employees → 503 "upstream service unavailable"
-  employeesEndpoint: true,
+  // GET /employees returns 503 "upstream service unavailable"
+  employeesEndpoint: false,
 
-  // GET /categories → 500 "cache poisoned"
-  categoriesEndpoint: true,
+  // GET /categories returns 500 "cache poisoned"
+  categoriesEndpoint: false,
 
-  // ── Cross-cutting API chaos flags (opt-in, default off) ───────────────
+  // ── Cross-cutting API chaos flags ─────────────────────────────────────
 
   // Adds 2-5s delay to all API responses
   apiLatencyInjection: false,
@@ -85,7 +84,7 @@ const featureFlags = {
   // Returns wrong total and duplicated entries
   apiPaginationBug: false,
 
-  // ── Client-side chaos flags (opt-in, default off) ─────────────────────
+  // ── Client-side chaos flags ───────────────────────────────────────────
 
   // Client fetch randomly throws TypeError: Failed to fetch
   networkErrorSimulation: false,
@@ -118,8 +117,8 @@ const overriddenFlags = new Set<FeatureFlag>();
 const runtimeVariants: Record<VariantFlag, string> = { ...variantFlags };
 const overriddenVariants = new Set<VariantFlag>();
 
-// Check if a feature is enabled
-export function isFeatureEnabled(flag: FeatureFlag): boolean {
+// Check if a failure is currently active for the given flag
+export function isFailureActive(flag: FeatureFlag): boolean {
   return runtimeFlags[flag];
 }
 
@@ -147,93 +146,97 @@ interface FlagMeta {
 const FLAG_METADATA: Record<FeatureFlag, FlagMeta> = {
   newExpenseButton: {
     category: 'Client UI',
-    description: 'Controls whether the "New Expense" button opens the dialog',
+    description: '"New Expense" button stops opening the dialog',
     isChaos: false,
   },
   spendingTrendTabs: {
     category: 'Client UI',
-    description: 'Controls whether the spending trend period tabs are switchable',
+    description: 'Spending trend period tabs become unresponsive',
     isChaos: false,
   },
   expenseTableRender: {
     category: 'Client UI',
-    description: 'When off, ExpensesTable throws during render',
+    description: 'ExpensesTable throws during render, caught by ErrorBoundary',
     isChaos: false,
   },
   analyticsChartRender: {
     category: 'Client UI',
-    description: 'When off, SpendingChart throws during render',
+    description: 'SpendingChart throws during render, caught by ErrorBoundary',
     isChaos: false,
   },
   expenseFormValidation: {
     category: 'Client UI',
-    description: 'When off, form silently drops required fields',
+    description: 'Form silently drops required fields, causing server 400 errors',
     isChaos: false,
   },
   expenseDetailActions: {
     category: 'Client UI',
-    description: 'When off, approve/reject/edit buttons are disabled',
+    description: 'Approve, reject, and edit buttons silently disabled',
     isChaos: false,
   },
   searchDebounce: {
     category: 'Client UI',
-    description: 'When off, search fires on every keystroke with no debounce',
+    description: 'Search fires on every keystroke with no debounce',
     isChaos: false,
   },
   signIn: {
     category: 'Auth',
-    description: 'When off, sign-in shows "authentication service unavailable"',
+    description: 'Sign-in form shows "authentication service unavailable" error',
     isChaos: false,
   },
   signUp: {
     category: 'Auth',
-    description: 'When off, sign-up shows "registration service unavailable"',
+    description: 'Sign-up form shows "registration service unavailable" error',
     isChaos: false,
   },
-  signOut: { category: 'Auth', description: 'When off, sign-out silently fails', isChaos: false },
+  signOut: {
+    category: 'Auth',
+    description: 'Sign-out silently fails, user stays logged in',
+    isChaos: false,
+  },
   profileUpdate: {
     category: 'Auth',
-    description: 'When off, profile update shows "profile service unavailable"',
+    description: 'Profile update shows "profile service unavailable" error',
     isChaos: false,
   },
   passwordChange: {
     category: 'Auth',
-    description: 'When off, password change shows "password service unavailable"',
+    description: 'Password change shows "password service unavailable" error',
     isChaos: false,
   },
   createExpenseSubmit: {
     category: 'Server API',
-    description: 'POST /api/expenses → 503 "temporarily unavailable"',
+    description: 'POST /api/expenses returns 503 "temporarily unavailable"',
     isChaos: false,
   },
   expenseApproval: {
     category: 'Server API',
-    description: 'POST /approve → 500 "database connection lost"',
+    description: 'POST /approve returns 500 "database connection lost"',
     isChaos: false,
   },
   expenseRejection: {
     category: 'Server API',
-    description: 'POST /reject → 500 "transaction deadlock"',
+    description: 'POST /reject returns 500 "transaction deadlock"',
     isChaos: false,
   },
   expenseUpdate: {
     category: 'Server API',
-    description: 'PUT /expenses/:id → 409 "conflict"',
+    description: 'PUT /expenses/:id returns 409 "conflict"',
     isChaos: false,
   },
   expenseDetailEndpoint: {
     category: 'Server API',
-    description: 'GET /expenses/:id → 500 intermittently (50%)',
+    description: 'GET /expenses/:id returns 500 intermittently (50% chance)',
     isChaos: false,
   },
   employeesEndpoint: {
     category: 'Server API',
-    description: 'GET /employees → 503 "upstream service unavailable"',
+    description: 'GET /employees returns 503 "upstream service unavailable"',
     isChaos: false,
   },
   categoriesEndpoint: {
     category: 'Server API',
-    description: 'GET /categories → 500 "cache poisoned"',
+    description: 'GET /categories returns 500 "cache poisoned"',
     isChaos: false,
   },
   apiLatencyInjection: {
@@ -376,26 +379,9 @@ export function getRuntimeVariants(): RuntimeVariantInfo[] {
 }
 
 // Returns all currently active failure flags (useful for logging on app init).
-// "Active" means: standard flags set to `false` (failure on) or chaos flags set to `true` (chaos on).
 export function getActiveFailureFlags(): string[] {
-  const chaosFlags: FeatureFlag[] = [
-    'apiLatencyInjection',
-    'apiIntermittentErrors',
-    'apiRateLimiting',
-    'apiMalformedResponse',
-    'apiPartialData',
-    'apiPaginationBug',
-    'networkErrorSimulation',
-    'consoleNoise',
-  ];
-
   return (Object.entries(runtimeFlags) as [FeatureFlag, boolean][])
-    .filter(([key, value]) => {
-      if (chaosFlags.includes(key)) {
-        return value === true; // chaos flag active when true
-      }
-      return value === false; // standard flag active (failing) when false
-    })
+    .filter(([, value]) => value === true)
     .map(([key]) => key);
 }
 

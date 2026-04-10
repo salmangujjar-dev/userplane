@@ -7,7 +7,7 @@ import { log } from '@/lib/client-logger';
 import {
   getActiveFailureFlags,
   getFeatureFlagsMetadata,
-  isFeatureEnabled,
+  isFailureActive,
 } from '@/lib/feature-flags';
 
 export type UserIdentity = {
@@ -62,7 +62,7 @@ export function UserplaneProvider({ workspaceId, user, children }: UserplaneProv
 
   // Console noise injection
   useEffect(() => {
-    if (!isFeatureEnabled('consoleNoise')) return;
+    if (!isFailureActive('consoleNoise')) return;
 
     let index = 0;
     const interval = setInterval(() => {

@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs';
 import { toastManager } from '@/components/ui/toast';
 import { useExpenses } from '@/hooks/useExpenses';
 import { log } from '@/lib/client-logger';
-import { getActiveFailureFlags, isFeatureEnabled } from '@/lib/feature-flags';
+import { getActiveFailureFlags, isFailureActive } from '@/lib/feature-flags';
 import { formatCurrency } from '@/lib/utils';
 
 export default function AnalyticsPage() {
@@ -95,7 +95,7 @@ export default function AnalyticsPage() {
           <Tabs
             value={trendPeriod}
             onValueChange={(val) => {
-              if (!isFeatureEnabled('spendingTrendTabs')) {
+              if (isFailureActive('spendingTrendTabs')) {
                 console.error('[Analytics] Spending trend controls are temporarily unavailable');
                 toastManager.add({
                   title: 'Unable to change time period',
