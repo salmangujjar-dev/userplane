@@ -92,6 +92,27 @@
       "when": 1775035527884,
       "tag": "0012_condemned_gabe_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1775747258799,
+      "tag": "0013_new_toad",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1775761790156,
+      "tag": "0014_perpetual_warpath",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1775796348813,
+      "tag": "0015_bitter_brood",
+      "breakpoints": true
     }
   ]
 }
