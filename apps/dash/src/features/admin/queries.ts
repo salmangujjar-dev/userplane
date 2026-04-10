@@ -436,7 +436,10 @@ export function useAdminUpdateSubscription() {
     mutationFn: async ({ workspaceId, featureGates, entitlements }) => {
       const [error, response] = await apiClient.admin.workspaces.subscription.update({
         params: { workspaceId },
-        body: { featureGates, entitlements },
+        body: {
+          featureGates,
+          entitlements: entitlements as Record<ResourceType, Partial<ResourceLimits>> | undefined,
+        },
       });
       return handleSafeResult(error, response?.data ?? null);
     },

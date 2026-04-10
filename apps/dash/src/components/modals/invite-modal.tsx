@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
 } from '@userplane/ui/components/tooltip';
 import { AlertCircle, ChevronDown, ChevronUp, HelpCircle, Link, X } from 'lucide-react';
-import { KeyboardEvent, useState } from 'react';
+import { KeyboardEvent, useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import validator from 'validator';
 import { z } from 'zod';
@@ -266,6 +266,15 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
     control,
     name: 'emails',
   });
+
+  // Reset all state when modal closes (Cancel, click-outside, Escape, etc.)
+  useEffect(() => {
+    if (!open) {
+      reset();
+      setEmailInput('');
+      setShowEmailInvite(false);
+    }
+  }, [open, reset]);
 
   const handleCopyLink = async () => {
     try {
