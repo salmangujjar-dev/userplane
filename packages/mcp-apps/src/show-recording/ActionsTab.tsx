@@ -70,7 +70,7 @@ export function ActionsTab({ data, recordingStartTime }: ActionsTabProps) {
 
   const filtered = useMemo(() => {
     return data.filter((entry) => {
-      const actionType = entry.data?.type;
+      const actionType = entry.data?.type ?? 'unknown';
       if (activeFilters.size > 0 && !activeFilters.has(actionType)) return false;
       if (search) {
         const searchLower = search.toLowerCase();
@@ -120,7 +120,11 @@ export function ActionsTab({ data, recordingStartTime }: ActionsTabProps) {
           <div className="py-8 text-center text-sm text-muted-foreground">No matching actions</div>
         ) : (
           filtered.map((entry, i) => (
-            <ActionEntryRow key={i} entry={entry} recordingStartTime={recordingStartTime} />
+            <ActionEntryRow
+              key={`${entry.timestamp}-${i}`}
+              entry={entry}
+              recordingStartTime={recordingStartTime}
+            />
           ))
         )}
       </div>

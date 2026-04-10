@@ -1,3 +1,4 @@
+import type { App } from '@modelcontextprotocol/ext-apps';
 import { useCallback, useRef, useState } from 'react';
 
 import { LoadingState, Tabs, TabsContent, TabsList, TabsTrigger } from '../shared/components';
@@ -14,8 +15,10 @@ import type {
 } from './types';
 
 interface RecordingTabsProps {
+  app: App;
   recording: RecordingDetail;
   resources: RecordingResources;
+  workspaceId: string;
 }
 
 /**
@@ -35,10 +38,36 @@ function getRecordingStartTime(recording: RecordingDetail): number | undefined {
 
 type LogData<T> = { data: T[] | null; loading: boolean; error: string | null };
 
-export function RecordingTabs({ recording, resources }: RecordingTabsProps) {
-  const recordingStartTime = getRecordingStartTime(recording);
+/**
+ * Fetch log data via the MCP server tool channel.
+ * Workaround for Claude.ai CSP blocking fetch() to R2 domains.
+ */
+async function fetchLogViaTool<T>(
+  app: App,
+  workspaceId: string,
+  recordingId: string,
+  resourceType: 'consoleLog' | 'networkLog' | 'action'
+): Promise<T[]> {
+  const result = await app.callServerTool({
+    name: 'userplane_app_fetch_resource',
+    arguments: { workspaceId, recordingId, resourceType },
+  });
 
-  // Lazy-loaded log data — fetched from presigned URLs when tab is first activated
+  const textContent = result.content?.find((c: { type: string }) => c.type === 'text');
+  if (!textContent || textContent.type !== 'text') throw new Error('No text content');
+
+  const data = JSON.parse(textContent.text);
+  if (data.error) throw new Error(data.error);
+  if (!data.json) throw new Error('No data returned');
+
+  return Array.isArray(data.json) ? data.json : [];
+}
+
+export function RecordingTabs({ app, recording, resources, workspaceId }: RecordingTabsProps) {
+  const recordingStartTime = getRecordingStartTime(recording);
+  const recordingId = recording.recordingId;
+
+  // Lazy-loaded log data — fetched via MCP tool channel when tab is first activated
   const [consoleLogs, setConsoleLogs] = useState<LogData<ConsoleLogEntry>>({
     data: null,
     loading: false,
@@ -59,22 +88,19 @@ export function RecordingTabs({ recording, resources }: RecordingTabsProps) {
   const loaded = useRef<Set<string>>(new Set());
 
   const fetchLogData = useCallback(
-    async <T,>(url: string | null, setter: React.Dispatch<React.SetStateAction<LogData<T>>>) => {
-      if (!url) {
-        setter({ data: [], loading: false, error: null });
-        return;
-      }
+    async <T,>(
+      resourceType: 'consoleLog' | 'networkLog' | 'action',
+      setter: React.Dispatch<React.SetStateAction<LogData<T>>>
+    ) => {
       setter((prev) => ({ ...prev, loading: true, error: null }));
       try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        setter({ data: Array.isArray(data) ? data : [], loading: false, error: null });
+        const data = await fetchLogViaTool<T>(app, workspaceId, recordingId, resourceType);
+        setter({ data, loading: false, error: null });
       } catch (err) {
         setter({ data: null, loading: false, error: String(err) });
       }
     },
-    []
+    [app, workspaceId, recordingId]
   );
 
   const handleTabChange = useCallback(
@@ -84,13 +110,16 @@ export function RecordingTabs({ recording, resources }: RecordingTabsProps) {
 
       switch (tab) {
         case 'console':
-          fetchLogData<ConsoleLogEntry>(resources.consoleLog.url, setConsoleLogs);
+          if (resources.consoleLog.url) fetchLogData<ConsoleLogEntry>('consoleLog', setConsoleLogs);
+          else setConsoleLogs({ data: [], loading: false, error: null });
           break;
         case 'network':
-          fetchLogData<NetworkLogEntry>(resources.networkLog.url, setNetworkLogs);
+          if (resources.networkLog.url) fetchLogData<NetworkLogEntry>('networkLog', setNetworkLogs);
+          else setNetworkLogs({ data: [], loading: false, error: null });
           break;
         case 'actions':
-          fetchLogData<ActionLogEntry>(resources.action.url, setActionLogs);
+          if (resources.action.url) fetchLogData<ActionLogEntry>('action', setActionLogs);
+          else setActionLogs({ data: [], loading: false, error: null });
           break;
       }
     },
@@ -98,7 +127,7 @@ export function RecordingTabs({ recording, resources }: RecordingTabsProps) {
   );
 
   return (
-    <Tabs defaultValue="info" onValueChange={handleTabChange} className="flex flex-col h-full">
+    <Tabs defaultValue="info" onValueChange={handleTabChange}>
       <TabsList>
         <TabsTrigger value="info">Info</TabsTrigger>
         <TabsTrigger value="console">Console</TabsTrigger>
@@ -106,12 +135,12 @@ export function RecordingTabs({ recording, resources }: RecordingTabsProps) {
         <TabsTrigger value="actions">Actions</TabsTrigger>
       </TabsList>
 
-      <div className="flex-1 overflow-y-auto">
-        <TabsContent value="info" className="h-full">
+      <div>
+        <TabsContent value="info">
           <InfoTab recording={recording} />
         </TabsContent>
 
-        <TabsContent value="console" className="h-full">
+        <TabsContent value="console">
           {consoleLogs.loading ? (
             <LoadingState message="Loading console logs..." />
           ) : consoleLogs.error ? (
@@ -121,7 +150,7 @@ export function RecordingTabs({ recording, resources }: RecordingTabsProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="network" className="h-full">
+        <TabsContent value="network">
           {networkLogs.loading ? (
             <LoadingState message="Loading network logs..." />
           ) : networkLogs.error ? (
@@ -131,7 +160,7 @@ export function RecordingTabs({ recording, resources }: RecordingTabsProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="actions" className="h-full">
+        <TabsContent value="actions">
           {actionLogs.loading ? (
             <LoadingState message="Loading actions..." />
           ) : actionLogs.error ? (

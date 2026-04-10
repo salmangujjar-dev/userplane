@@ -289,6 +289,25 @@ app.get('/.well-known/oauth-authorization-server', (c) => authServerMetadataHand
 
 app.get('/.well-known/openid-configuration', (c) => openIdConfigHandler(c.req.raw));
 
+// OAuth 2.1 DCR workaround — force public client registration
+// Claude Desktop (and other MCP clients) send token_endpoint_auth_method: "client_secret_post",
+// but Better Auth's oauth-provider rejects unauthenticated confidential DCR with 401.
+// MCP clients are always public (PKCE-protected, no stored secrets), so rewrite to "none".
+// Tracked upstream: https://github.com/better-auth/better-auth/issues/8588
+app.post('/api/auth/oauth2/register', async (c) => {
+  const body = await c.req.json();
+  if (body.token_endpoint_auth_method !== 'none') {
+    body.token_endpoint_auth_method = 'none';
+  }
+  return auth.handler(
+    new Request(c.req.raw.url, {
+      method: 'POST',
+      headers: c.req.raw.headers,
+      body: JSON.stringify(body),
+    })
+  );
+});
+
 // Better Auth routes - must come before API routes
 app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw));
 

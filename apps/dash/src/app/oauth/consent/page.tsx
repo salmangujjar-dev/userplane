@@ -37,6 +37,7 @@ const SCOPE_LABELS: Record<string, string> = {
   profile: 'View your profile information',
   email: 'View your email address',
   'mcp:tools': 'Access workspace tools and data',
+  offline_access: 'Stay connected between sessions',
 };
 
 function getScopeLabel(scope: string): string {
@@ -58,6 +59,7 @@ function ConsentContent() {
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
   const [isLoadingClient, setIsLoadingClient] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch client info
@@ -121,7 +123,16 @@ function ConsentContent() {
       }
 
       if (data.redirect && data.url) {
-        window.location.href = data.url;
+        if (accept) {
+          // Brief success state before redirect
+          setIsAuthorized(true);
+          setTimeout(() => {
+            window.location.href = data.url;
+          }, 800);
+        } else {
+          // Denial — redirect immediately, no success message
+          window.location.href = data.url;
+        }
         return;
       }
 
@@ -180,36 +191,58 @@ function ConsentContent() {
     return <LoadingScreen message="Loading application info..." />;
   }
 
-  const displayName = clientInfo?.name || clientId;
+  const displayName = clientInfo?.name || null;
+
+  // Success state after authorization
+  if (isAuthorized) {
+    return (
+      <AuthLayout>
+        <div className="flex flex-col items-center gap-4 py-8">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <Image
+              src="/icons/checkmark.svg"
+              alt="Success"
+              width={32}
+              height={32}
+              className="h-8 w-8"
+            />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground">Authorization complete</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Redirecting back to {displayName || 'the application'}...
+            </p>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  const subtitle = displayName ? (
+    <>
+      <span className="font-medium text-foreground">{displayName}</span> wants to access your
+      Userplane account
+    </>
+  ) : (
+    'An application wants to access your Userplane account'
+  );
 
   return (
     <AuthLayout>
-      <AuthHeader subtitle="An application is requesting access to your account" />
+      <div className="flex flex-col items-center gap-4">
+        {clientInfo?.icon ? (
+          <Image
+            src={clientInfo.icon}
+            alt={displayName ?? 'Application'}
+            width={48}
+            height={48}
+            className="h-12 w-12 rounded-xl object-contain"
+          />
+        ) : null}
+        <AuthHeader subtitle={subtitle} />
+      </div>
 
       <div className="space-y-6">
-        {/* Client info */}
-        <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3">
-          {clientInfo?.icon ? (
-            <Image
-              src={clientInfo.icon}
-              alt={displayName}
-              width={40}
-              height={40}
-              className="h-10 w-10 rounded-lg object-contain"
-            />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg border bg-background text-xs font-medium text-muted-foreground">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-            {clientInfo?.uri && (
-              <p className="text-xs text-muted-foreground truncate">{clientInfo.uri}</p>
-            )}
-          </div>
-        </div>
-
         {/* Requested permissions */}
         {scopes.length > 0 && (
           <div className="rounded-lg border bg-card">

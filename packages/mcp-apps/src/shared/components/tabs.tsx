@@ -34,7 +34,10 @@ export function Tabs({
 }) {
   const [internal, setInternal] = useState(defaultValue ?? '');
   const activeTab = value ?? internal;
-  const setActiveTab = onValueChange ?? setInternal;
+  const setActiveTab = (tab: string) => {
+    if (value === undefined) setInternal(tab);
+    onValueChange?.(tab);
+  };
 
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab }}>

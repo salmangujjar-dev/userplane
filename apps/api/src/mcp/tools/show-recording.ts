@@ -11,12 +11,11 @@ import type { McpDeps } from '../types';
 
 /**
  * Derive CSP origins from environment config so the MCP App iframe
- * can load thumbnails, video, and log data from presigned R2 URLs.
+ * can load resources from presigned R2 URLs.
  *
- * Format: full origins like `https://cdn.example.com` or
- * wildcard subdomains like `https://*.r2.cloudflarestorage.com`.
- *
- * All origins are derived from env — nothing hardcoded.
+ * NOTE: Claude.ai currently ignores these CSP fields (anthropics/claude-ai-mcp#40).
+ * We still declare them so the app works correctly on hosts that do respect them
+ * (ChatGPT, GitHub Copilot, MCP-Jam, etc.) and on Claude.ai once they fix the bug.
  */
 function getCspDomains(): { connectDomains: string[]; resourceDomains: string[] } {
   const connectOrigins = new Set<string>();
@@ -53,13 +52,33 @@ function getCspDomains(): { connectDomains: string[]; resourceDomains: string[] 
   };
 }
 
+/**
+ * Fetch a thumbnail from its presigned URL and return a base64 data URI.
+ * Returns null on any failure — the UI degrades gracefully without it.
+ */
+async function fetchThumbnailDataUri(
+  url: string | null,
+  format: string | null
+): Promise<string | null> {
+  if (!url) return null;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const mimeType = response.headers.get('content-type') || `image/${format || 'png'}`;
+    return `data:${mimeType};base64,${buffer.toString('base64')}`;
+  } catch {
+    return null;
+  }
+}
+
 export function registerShowRecordingTools(server: McpServer, deps: McpDeps, userId: string) {
   const { title, description, inputSchema, annotations } = userplaneShowRecording;
   const csp = getCspDomains();
 
   // -----------------------------------------------------------------------
   // Main tool: userplane_show_recording
-  // Returns recording detail + all resource URLs, with an interactive UI.
+  // Returns recording detail + resource URLs + inline thumbnail data URI.
   // -----------------------------------------------------------------------
   registerAppTool(
     server,
@@ -89,41 +108,82 @@ export function registerShowRecordingTools(server: McpServer, deps: McpDeps, use
         deps.recordingService.getActionResource(recordingId, workspaceId),
       ]);
 
+      // Inline the thumbnail as a base64 data URI so the MCP App can
+      // render it immediately without a separate fetch.
+      // Thumbnails are small (~50-100KB) so this is fine to include in the result.
+      const thumbnailDataUri = await fetchThumbnailDataUri(thumbnail.url, thumbnail.format ?? null);
+
+      const dashboardUrl = `${env.dashboard.baseUrl}/workspace/${workspaceId}/recordings/${recordingId}`;
+
       return textResult({
         workspaceId,
         recording,
         resources: { video, thumbnail, consoleLog, networkLog, action },
+        thumbnailDataUri,
+        dashboardUrl,
       });
     }
   );
 
   // -----------------------------------------------------------------------
-  // Private app-only tool: refresh presigned URLs for expired resources
-  // Hidden from LLM, only callable by the MCP App iframe UI.
+  // Private app-only tool: fetch log data via the server.
+  // Workaround for Claude.ai CSP blocking connect-src to R2 domains
+  // (anthropics/claude-ai-mcp#40). The MCP App calls this tool instead of
+  // using fetch() directly, since postMessage bypasses CSP entirely.
+  //
+  // Only handles JSON log resources (console, network, actions).
+  // Thumbnails are inlined in the main tool result. Video is not proxied —
+  // the app links to the dashboard instead.
   // -----------------------------------------------------------------------
   server.registerTool(
-    'userplane_app_refresh_recording_urls',
+    'userplane_app_fetch_resource',
     {
-      description: 'Refresh presigned resource URLs for a recording (video, thumbnail, logs).',
+      description:
+        'Fetch recording log data (console, network, or actions) and return its content.',
       inputSchema: {
         workspaceId: z.string().describe('Workspace ID'),
         recordingId: z.string().describe('Recording ID'),
+        resourceType: z
+          .enum(['consoleLog', 'networkLog', 'action'])
+          .describe('Which log resource to fetch'),
       },
       annotations: EXTERNAL_RESOURCE_ANNOTATIONS,
       _meta: { visibility: ['app'] },
     },
-    async ({ workspaceId, recordingId }) => {
+    async ({ workspaceId, recordingId, resourceType }) => {
       await requireWorkspaceMember(deps, userId, workspaceId);
 
-      const [video, thumbnail, consoleLog, networkLog, action] = await Promise.all([
-        deps.recordingService.getVideoResource(recordingId, workspaceId),
-        deps.recordingService.getThumbnailResource(recordingId, workspaceId),
-        deps.recordingService.getConsoleLogResource(recordingId, workspaceId),
-        deps.recordingService.getNetworkLogResource(recordingId, workspaceId),
-        deps.recordingService.getActionResource(recordingId, workspaceId),
-      ]);
+      const getters = {
+        consoleLog: deps.recordingService.getConsoleLogResource.bind(deps.recordingService),
+        networkLog: deps.recordingService.getNetworkLogResource.bind(deps.recordingService),
+        action: deps.recordingService.getActionResource.bind(deps.recordingService),
+      } as const;
 
-      return textResult({ video, thumbnail, consoleLog, networkLog, action });
+      const resource = await getters[resourceType](recordingId, workspaceId);
+      if (!resource.url) {
+        return textResult({ error: 'Resource not available', resourceType });
+      }
+
+      let response: Response;
+      try {
+        response = await fetch(resource.url);
+      } catch (err) {
+        return textResult({ error: `Network error fetching resource: ${err}`, resourceType });
+      }
+
+      if (!response.ok) {
+        return textResult({
+          error: `Failed to fetch resource: HTTP ${response.status}`,
+          resourceType,
+        });
+      }
+
+      try {
+        const json = await response.json();
+        return textResult({ resourceType, json });
+      } catch (err) {
+        return textResult({ error: `Error parsing JSON: ${err}`, resourceType });
+      }
     }
   );
 }

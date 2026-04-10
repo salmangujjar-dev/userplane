@@ -1,105 +1,52 @@
-import type { App } from '@modelcontextprotocol/ext-apps';
-import { useCallback, useState } from 'react';
-
-import { PlayIcon, RefreshCwIcon } from '../shared/icons';
+import { ExternalLinkIcon } from '../shared/icons';
 import { formatDuration } from '../shared/utils';
 
 interface VideoPlayerProps {
-  app: App;
-  videoUrl: string | null;
-  thumbnailUrl: string | null;
+  thumbnailDataUri: string | null;
+  dashboardUrl: string;
   durationMs: number;
-  workspaceId: string;
-  recordingId: string;
 }
 
-export function VideoPlayer({
-  app,
-  videoUrl,
-  thumbnailUrl,
-  durationMs,
-  workspaceId,
-  recordingId,
-}: VideoPlayerProps) {
-  const [currentVideoUrl, setCurrentVideoUrl] = useState(videoUrl);
-  const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState(thumbnailUrl);
-  const [error, setError] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const result = await app.callServerTool({
-        name: 'userplane_app_refresh_recording_urls',
-        arguments: { workspaceId, recordingId },
-      });
-      const textContent = result.content?.find((c: { type: string }) => c.type === 'text');
-      if (textContent && textContent.type === 'text') {
-        const text = textContent.text;
-        const data = JSON.parse(text);
-        if (data.video?.url) setCurrentVideoUrl(data.video.url);
-        if (data.thumbnail?.url) setCurrentThumbnailUrl(data.thumbnail.url);
-        setError(false);
-      }
-    } catch {
-      // Refresh failed — keep error state
-    } finally {
-      setRefreshing(false);
-    }
-  }, [app, workspaceId, recordingId]);
-
-  if (!currentVideoUrl || error) {
-    return (
-      <div className="relative aspect-video bg-muted flex items-center justify-center">
-        {/* Thumbnail background when available */}
-        {currentThumbnailUrl && !error && (
-          <img
-            src={currentThumbnailUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover opacity-30"
-          />
-        )}
-
-        {/* Fallback content */}
-        <div className="relative z-10 flex flex-col items-center gap-3">
-          {error ? (
-            <>
-              <p className="text-sm text-muted-foreground">Video unavailable</p>
-              <button
-                type="button"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                <RefreshCwIcon className={`size-4 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
-              </button>
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                <PlayIcon className="w-6 h-6 text-gray-800 ml-0.5" />
-              </div>
-              <span className="text-sm text-muted-foreground">{formatDuration(durationMs)}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
+/**
+ * Recording thumbnail poster with a right-click link to the dashboard player.
+ *
+ * Video is NOT played inline because Claude.ai's CSP blocks all external origins
+ * in connect-src, img-src, and media-src — ignoring the connectDomains/resourceDomains
+ * we declare in _meta.ui.csp (anthropics/claude-ai-mcp#40, no fix timeline).
+ * The sandbox also blocks popups (allow-popups not set) so window.open() and
+ * app.openLink() don't work either. The user must right-click → Open in new tab.
+ *
+ * Thumbnails are small (~50-100KB) and inlined as base64 data URIs in the tool result
+ * so they render instantly without network requests. img-src allows data: URIs.
+ */
+export function VideoPlayer({ thumbnailDataUri, dashboardUrl, durationMs }: VideoPlayerProps) {
   return (
-    <div className="relative bg-black">
-      <video
-        controls
-        preload="metadata"
-        poster={currentThumbnailUrl ?? undefined}
-        onError={() => setError(true)}
-        className="w-full aspect-video"
+    <div className="relative aspect-video bg-muted overflow-hidden">
+      {/* Thumbnail */}
+      {thumbnailDataUri && (
+        <img
+          src={thumbnailDataUri}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
+
+      {/* Duration badge — bottom left */}
+      <span className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
+        {formatDuration(durationMs)}
+      </span>
+
+      {/* Right-click to open — top right */}
+      <a
+        href={dashboardUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.preventDefault()}
+        className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 hover:bg-black/80 px-2.5 py-1.5 text-xs font-medium text-white transition-colors"
       >
-        <source src={currentVideoUrl} type="video/webm" />
-        <source src={currentVideoUrl} type="video/mp4" />
-      </video>
+        Right-click to open
+        <ExternalLinkIcon className="size-3" />
+      </a>
     </div>
   );
 }

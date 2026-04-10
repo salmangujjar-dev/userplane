@@ -3,6 +3,10 @@ export interface ShowRecordingData {
   workspaceId: string;
   recording: RecordingDetail;
   resources: RecordingResources;
+  /** Base64 data URI for the thumbnail (inlined by the server). */
+  thumbnailDataUri: string | null;
+  /** Dashboard URL to open the full recording player. */
+  dashboardUrl: string;
 }
 
 export interface RecordingDetail {
