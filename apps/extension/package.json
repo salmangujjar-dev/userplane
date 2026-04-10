@@ -15,7 +15,7 @@
     "submit": "wxt submit"
   },
   "dependencies": {
-    "@hookform/resolvers": "^3.9.1",
+    "@hookform/resolvers": "^5.2.2",
     "@tanstack/react-query": "^5.90.10",
     "@tanstack/react-router": "latest",
     "@userplane/auth": "*",
@@ -31,7 +31,7 @@
     "react-hook-form": "^7.71.1",
     "tailwindcss": "^4.1.11",
     "posthog-js": "^1.205.2",
-    "zod": "3.25.76",
+    "zod": "^4.3.6",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

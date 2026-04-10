@@ -19,7 +19,8 @@ export type RateLimitTier =
   | 'authenticated'
   | 'billing'
   | 'admin'
-  | 'webhook';
+  | 'webhook'
+  | 'mcp';
 
 /**
  * Rate limit configuration per tier
@@ -75,6 +76,11 @@ export const TIER_CONFIGS: Record<RateLimitTier, TierConfig> = {
     limit: 1000,
     windowSeconds: 60,
     description: 'Webhook endpoints (high limit to ensure processing)',
+  },
+  mcp: {
+    limit: 60,
+    windowSeconds: 60,
+    description: 'MCP tool call endpoints',
   },
 };
 
