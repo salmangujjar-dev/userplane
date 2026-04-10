@@ -14,7 +14,7 @@ interface CreateLinkInput {
   projectId?: string;
   linkReference?: string;
   linkReusable: boolean;
-  meta?: Record<string, string>;
+  linkMeta?: Record<string, string>;
 }
 
 type LinksQueryData = QueryData<LinksData>;
@@ -82,14 +82,14 @@ interface UpdateLinkInput {
   title: string;
   reference: string;
   reusable: boolean;
-  meta?: Record<string, string>;
+  linkMeta?: Record<string, string>;
 }
 
 export function useUpdateLink(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ linkId, title, reference, reusable, meta }: UpdateLinkInput) => {
+    mutationFn: async ({ linkId, title, reference, reusable, linkMeta }: UpdateLinkInput) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.link.update({
         params: { workspaceId, linkId },
@@ -97,12 +97,12 @@ export function useUpdateLink(workspaceId: string | null) {
           linkTitle: title || null,
           linkProviderRef: reference || null,
           linkReusable: reusable,
-          meta,
+          linkMeta,
         },
       });
       return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async ({ linkId, title, reusable, meta }) => {
+    onMutate: async ({ linkId, title, reusable, linkMeta }) => {
       await queryClient.cancelQueries({ queryKey: linkKeys.lists() });
 
       // Snapshot ALL matching queries for rollback
@@ -124,7 +124,7 @@ export function useUpdateLink(workspaceId: string | null) {
                     ...link,
                     linkTitle: title || null,
                     linkReusable: reusable,
-                    meta: meta ?? link.meta,
+                    linkMeta: linkMeta ?? link.linkMeta,
                   }
                 : link
             ),

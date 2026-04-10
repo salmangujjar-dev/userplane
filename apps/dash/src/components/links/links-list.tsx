@@ -50,9 +50,9 @@ export function LinksList({
     title: string,
     reference: string,
     reusable: boolean,
-    meta?: Record<string, string>
+    linkMeta?: Record<string, string>
   ) => {
-    updateLinkMutation.mutate({ linkId, title, reference, reusable, meta });
+    updateLinkMutation.mutate({ linkId, title, reference, reusable, linkMeta });
   };
 
   const handleDeleteLink = (linkId: string, linkTitle: string | null) => {
@@ -90,15 +90,15 @@ export function LinksList({
             reference={link.linkProviderReference}
             linkProvider={link.linkProviderType}
             linkProviderId={link.linkProviderId}
-            meta={link.meta}
+            linkMeta={link.linkMeta}
             createdBy={link.creator.name}
             createdAt={link.createdAt}
             projectName={link.project.title}
             isReusable={link.linkReusable}
             domainUrl={link.domain.url}
             canDelete={canDeleteLink(link.creator.workspaceMemberId)}
-            onEdit={(title, reference, reusable, meta) =>
-              handleEditLink(link.linkId, title, reference, reusable, meta)
+            onEdit={(title, reference, reusable, linkMeta) =>
+              handleEditLink(link.linkId, title, reference, reusable, linkMeta)
             }
             onDelete={() => handleDeleteLink(link.linkId, link.linkTitle)}
           />

@@ -37,7 +37,7 @@ interface LinkPreviewProps {
   reference: string | null;
   linkProvider: LinkProviderType | null;
   linkProviderId: string | null;
-  meta: Record<string, string> | null;
+  linkMeta: Record<string, string> | null;
   createdBy: string;
   createdAt: Date;
   projectName: string | null;
@@ -50,7 +50,7 @@ interface LinkPreviewProps {
     title: string,
     reference: string,
     isReusable: boolean,
-    meta?: Record<string, string>
+    linkMeta?: Record<string, string>
   ) => void;
   onDelete?: () => void;
 }
@@ -62,7 +62,7 @@ export function LinkPreview({
   reference,
   linkProvider,
   linkProviderId,
-  meta,
+  linkMeta,
   createdBy,
   createdAt,
   projectName,
@@ -260,7 +260,7 @@ export function LinkPreview({
         isReusable={isReusable}
         linkProvider={linkProvider || undefined}
         linkProviderId={linkProviderId || undefined}
-        meta={meta}
+        linkMeta={linkMeta}
         onSave={handleSaveEdit}
       />
 

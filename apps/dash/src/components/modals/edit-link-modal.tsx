@@ -1,7 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LINK_PROVIDER_TYPE_OPTIONS, type LinkProviderType } from '@userplane/contract';
+import {
+  LINK_PROVIDER_TYPE_OPTIONS,
+  type LinkProviderType,
+  LinkProviderTypeSchema,
+} from '@userplane/contract';
 import { Button } from '@userplane/ui/components/button';
 import {
   Dialog,
@@ -48,7 +52,7 @@ interface EditLinkModalProps {
   isReusable: boolean;
   linkProvider?: LinkProviderType;
   linkProviderId?: string;
-  meta?: Record<string, string> | null;
+  linkMeta?: Record<string, string> | null;
   onSave: (
     title: string,
     reference: string,
@@ -63,7 +67,7 @@ const editLinkFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   // Allow empty string (no reference) or a valid URL; undefined also accepted
   reference: z.string().optional(),
-  linkProvider: z.string().optional(),
+  linkProvider: LinkProviderTypeSchema.optional(),
   providerId: z.string().optional(),
   isReusable: z.boolean(),
   meta: z.array(z.object({ key: z.string(), value: z.string() })).default([]),
@@ -77,7 +81,7 @@ export function EditLinkModal({
   isReusable,
   linkProvider,
   linkProviderId,
-  meta,
+  linkMeta,
   onSave,
 }: EditLinkModalProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -99,7 +103,7 @@ export function EditLinkModal({
       linkProvider: linkProvider,
       providerId: linkProviderId || '',
       isReusable: isReusable,
-      meta: recordToMetaEntries(meta),
+      meta: recordToMetaEntries(linkMeta),
     },
   });
 
@@ -117,21 +121,14 @@ export function EditLinkModal({
       linkProvider: linkProvider,
       providerId: linkProviderId || '',
       isReusable: isReusable,
-      meta: recordToMetaEntries(meta),
+      meta: recordToMetaEntries(linkMeta),
     });
     setShowAdvanced(false);
     setView('form');
   }
   prevOpenRef.current = open;
 
-  const onSubmit = (data: {
-    title: string;
-    reference?: string;
-    linkProvider?: LinkProviderType;
-    providerId?: string;
-    isReusable: boolean;
-    meta: MetaEntry[];
-  }) => {
+  const onSubmit = (data: z.infer<typeof editLinkFormSchema>) => {
     onSave(
       data.title,
       data.reference || '',
@@ -161,7 +158,9 @@ export function EditLinkModal({
               <Controller
                 name="meta"
                 control={control}
-                render={({ field }) => <MetaInput value={field.value} onChange={field.onChange} />}
+                render={({ field }) => (
+                  <MetaInput value={field.value ?? []} onChange={field.onChange} />
+                )}
               />
             </div>
             <DialogFooter className="mt-6">
