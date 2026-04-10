@@ -86,7 +86,11 @@ export function ConsoleTab({ data, recordingStartTime }: ConsoleTabProps) {
           <div className="py-8 text-center text-sm text-muted-foreground">No matching entries</div>
         ) : (
           filtered.map((entry, i) => (
-            <ConsoleLogEntryRow key={i} entry={entry} recordingStartTime={recordingStartTime} />
+            <ConsoleLogEntryRow
+              key={`${entry.timestamp}-${i}`}
+              entry={entry}
+              recordingStartTime={recordingStartTime}
+            />
           ))
         )}
       </div>
