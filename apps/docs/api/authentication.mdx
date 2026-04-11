@@ -11,12 +11,12 @@ Include your API key in the `Authorization` header with every request:
 
 <CodeGroup>
 ```bash curl
-curl https://api.userplane.com/api/v1/public/me \
+curl https://api.userplane.io/api/v1/public/me \
   -H "Authorization: Bearer uspl_your_api_key"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.userplane.com/api/v1/public/me', {
+const response = await fetch('https://api.userplane.io/api/v1/public/me', {
   headers: {
     Authorization: 'Bearer uspl_your_api_key',
   },
@@ -29,7 +29,7 @@ const data = await response.json();
 import requests
 
 response = requests.get(
-    "https://api.userplane.com/api/v1/public/me",
+    "https://api.userplane.io/api/v1/public/me",
     headers={"Authorization": "Bearer uspl_your_api_key"},
 )
 

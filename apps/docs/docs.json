@@ -10,7 +10,7 @@
     "playground": {
       "display": "interactive"
     },
-    "baseUrl": "https://api.userplane.com/api/v1",
+    "baseUrl": "https://api.userplane.io/api/v1",
     "auth": {
       "method": "bearer",
       "name": "Authorization",
