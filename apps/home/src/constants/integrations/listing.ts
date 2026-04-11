@@ -56,7 +56,7 @@ export const LISTING_HERO: {
   secondaryCTA: {
     text: 'View docs',
     href: withUTM(
-      'https://docs.userplane.co',
+      'https://docs.userplane.io',
       buildUTM('integration', 'integrations-listing', 'hero-secondary')
     ),
   },

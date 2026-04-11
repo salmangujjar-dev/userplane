@@ -8,7 +8,7 @@ import { getMarketingUrl } from './urls';
 export const FOOTER_COPYRIGHT = 'Userplane. All rights reserved.';
 
 const ASK_QUERY = encodeURIComponent(
-  "What does Userplane(tryuserplane.com) do? It's a support tool that helps SaaS teams resolve support issues faster by capturing recordings, logs, and session data from customer\nRead: https://userplane.io/index.md"
+  "What does Userplane(userplane.io) do? It's a support tool that helps SaaS teams resolve support issues faster by capturing recordings, logs, and session data from customer\nRead: https://userplane.io/index.md"
 );
 
 /**

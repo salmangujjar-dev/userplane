@@ -8,13 +8,44 @@
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import type { ConditionalSchemaConverter } from '@orpc/openapi';
 import { OpenAPIGenerator } from '@orpc/openapi';
-import { ZodToJsonSchemaConverter } from '@orpc/zod';
+import { z } from 'zod';
 
 import { publicApiContract } from '../src/public/index';
 
+/**
+ * Schema converter for Zod 4.
+ *
+ * `@orpc/zod`'s built-in `ZodToJsonSchemaConverter` targets Zod 3 and rejects
+ * Zod 4 schemas (`"_zod" in schema` → condition returns false). This converter
+ * bridges the gap by delegating to Zod 4's native `z.toJSONSchema()`.
+ */
+class Zod4ToJsonSchemaConverter implements ConditionalSchemaConverter {
+  condition(schema: unknown): boolean {
+    return schema != null && typeof schema === 'object' && '_zod' in schema;
+  }
+
+  convert(schema: unknown): [required: boolean, jsonSchema: Record<string, unknown> | boolean] {
+    if (schema == null) return [false, true];
+
+    const zodSchema = schema as z.ZodType;
+    const jsonSchema = z.toJSONSchema(zodSchema, {
+      target: 'openApi3.1',
+      unrepresentable: 'any',
+    });
+
+    const isOptional =
+      typeof zodSchema === 'object' &&
+      '_zod' in zodSchema &&
+      (zodSchema._zod as { def: { type: string } }).def.type === 'optional';
+
+    return [!isOptional, jsonSchema];
+  }
+}
+
 const generator = new OpenAPIGenerator({
-  schemaConverters: [new ZodToJsonSchemaConverter()],
+  schemaConverters: [new Zod4ToJsonSchemaConverter()],
 });
 
 const spec = await generator.generate(publicApiContract, {
@@ -26,7 +57,7 @@ const spec = await generator.generate(publicApiContract, {
   },
   servers: [
     {
-      url: 'https://api.userplane.com/api/v1',
+      url: 'https://api.userplane.io/api/v1',
       description: 'Production',
     },
   ],

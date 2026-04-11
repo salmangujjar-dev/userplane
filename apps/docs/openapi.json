@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "https://api.userplane.com/api/v1",
+      "url": "https://api.userplane.io/api/v1",
       "description": "Production"
     }
   ],
@@ -71,37 +71,47 @@
                                 }
                               ]
                             },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "x-native-type": "date"
-                            }
+                            "createdAt": {}
                           },
-                          "required": ["id", "name", "email", "emailVerified", "image", "createdAt"]
+                          "required": [
+                            "id",
+                            "name",
+                            "email",
+                            "emailVerified",
+                            "image",
+                            "createdAt"
+                          ],
+                          "additionalProperties": false
                         },
                         "stats": {
                           "type": "object",
                           "properties": {
                             "workspaces": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "recordings": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "links": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             }
                           },
-                          "required": ["workspaces", "recordings", "links"]
+                          "required": ["workspaces", "recordings", "links"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["user", "stats"]
+                      "required": ["user", "stats"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -379,10 +389,12 @@
           {
             "name": "page",
             "in": "query",
+            "required": true,
             "schema": {
               "default": 1,
               "type": "integer",
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "allowEmptyValue": true,
             "allowReserved": true
@@ -390,6 +402,7 @@
           {
             "name": "per_page",
             "in": "query",
+            "required": true,
             "schema": {
               "default": 10,
               "type": "integer",
@@ -402,6 +415,7 @@
           {
             "name": "include_workspace_membership",
             "in": "query",
+            "required": true,
             "schema": {
               "default": false,
               "type": "boolean"
@@ -436,16 +450,8 @@
                               "workspaceName": {
                                 "type": "string"
                               },
-                              "createdAt": {
-                                "type": "string",
-                                "format": "date-time",
-                                "x-native-type": "date"
-                              },
-                              "updatedAt": {
-                                "type": "string",
-                                "format": "date-time",
-                                "x-native-type": "date"
-                              },
+                              "createdAt": {},
+                              "updatedAt": {},
                               "workspaceMembership": {
                                 "type": "object",
                                 "properties": {
@@ -454,58 +460,65 @@
                                     "minLength": 1
                                   },
                                   "workspaceRole": {
+                                    "type": "string",
                                     "enum": ["owner", "admin", "member"]
                                   },
-                                  "workspaceJoinedAt": {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "x-native-type": "date"
-                                  }
+                                  "workspaceJoinedAt": {}
                                 },
                                 "required": [
                                   "workspaceMemberId",
                                   "workspaceRole",
                                   "workspaceJoinedAt"
-                                ]
+                                ],
+                                "additionalProperties": false
                               }
                             },
-                            "required": ["workspaceId", "workspaceName", "createdAt", "updatedAt"]
+                            "required": ["workspaceId", "workspaceName", "createdAt", "updatedAt"],
+                            "additionalProperties": false
                           }
                         },
                         "total": {
                           "type": "integer",
-                          "minimum": 0
+                          "minimum": 0,
+                          "maximum": 9007199254740991
                         },
                         "pagination": {
                           "type": "object",
                           "properties": {
                             "page": {
                               "type": "integer",
-                              "minimum": 0
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "perPage": {
                               "type": "integer",
-                              "minimum": 0
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "total": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "totalPages": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "hasMore": {
                               "type": "boolean"
                             }
                           },
-                          "required": ["page", "perPage", "total", "totalPages", "hasMore"]
+                          "required": ["page", "perPage", "total", "totalPages", "hasMore"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspaces", "total", "pagination"]
+                      "required": ["workspaces", "total", "pagination"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -792,10 +805,12 @@
           {
             "name": "page",
             "in": "query",
+            "required": true,
             "schema": {
               "default": 1,
               "type": "integer",
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "allowEmptyValue": true,
             "allowReserved": true
@@ -803,6 +818,7 @@
           {
             "name": "per_page",
             "in": "query",
+            "required": true,
             "schema": {
               "default": 10,
               "type": "integer",
@@ -815,6 +831,7 @@
           {
             "name": "created_by",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
@@ -830,6 +847,7 @@
           {
             "name": "project_id",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
@@ -845,6 +863,7 @@
           {
             "name": "domain_id",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
@@ -860,9 +879,11 @@
           {
             "name": "link_provider_type",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
+                "type": "string",
                 "enum": [
                   "intercom",
                   "zendesk",
@@ -903,35 +924,35 @@
           {
             "name": "link_type",
             "in": "query",
+            "required": false,
             "schema": {
+              "type": "string",
               "enum": ["file", "recording", "session", "screenshot"]
             },
-            "style": "deepObject",
-            "explode": true,
             "allowEmptyValue": true,
             "allowReserved": true
           },
           {
             "name": "sort_by",
             "in": "query",
+            "required": true,
             "schema": {
               "default": "created_at",
+              "type": "string",
               "enum": ["created_at", "link_title"]
             },
-            "style": "deepObject",
-            "explode": true,
             "allowEmptyValue": true,
             "allowReserved": true
           },
           {
             "name": "sort_direction",
             "in": "query",
+            "required": true,
             "schema": {
               "default": "desc",
+              "type": "string",
               "enum": ["asc", "desc"]
             },
-            "style": "deepObject",
-            "explode": true,
             "allowEmptyValue": true,
             "allowReserved": true
           }
@@ -974,12 +995,14 @@
                                 ]
                               },
                               "linkType": {
+                                "type": "string",
                                 "enum": ["file", "recording", "session", "screenshot"]
                               },
                               "linkReusable": {
                                 "type": "boolean"
                               },
                               "linkProviderType": {
+                                "type": "string",
                                 "enum": [
                                   "intercom",
                                   "zendesk",
@@ -1034,7 +1057,7 @@
                               "linkURL": {
                                 "type": "string"
                               },
-                              "meta": {
+                              "linkMeta": {
                                 "anyOf": [
                                   {
                                     "type": "object",
@@ -1047,11 +1070,7 @@
                                   }
                                 ]
                               },
-                              "createdAt": {
-                                "type": "string",
-                                "format": "date-time",
-                                "x-native-type": "date"
-                              },
+                              "createdAt": {},
                               "project": {
                                 "type": "object",
                                 "properties": {
@@ -1070,7 +1089,8 @@
                                     ]
                                   }
                                 },
-                                "required": ["projectId", "title"]
+                                "required": ["projectId", "title"],
+                                "additionalProperties": false
                               },
                               "creator": {
                                 "type": "object",
@@ -1083,7 +1103,8 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["workspaceMemberId", "name"]
+                                "required": ["workspaceMemberId", "name"],
+                                "additionalProperties": false
                               },
                               "domain": {
                                 "type": "object",
@@ -1096,10 +1117,12 @@
                                     "type": "string"
                                   },
                                   "status": {
+                                    "type": "string",
                                     "enum": ["pending", "verified", "revoked"]
                                   }
                                 },
-                                "required": ["domainId", "url", "status"]
+                                "required": ["domainId", "url", "status"],
+                                "additionalProperties": false
                               }
                             },
                             "required": [
@@ -1111,12 +1134,13 @@
                               "linkProviderId",
                               "linkProviderReference",
                               "linkURL",
-                              "meta",
+                              "linkMeta",
                               "createdAt",
                               "project",
                               "creator",
                               "domain"
-                            ]
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "pagination": {
@@ -1124,31 +1148,38 @@
                           "properties": {
                             "page": {
                               "type": "integer",
-                              "minimum": 0
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "perPage": {
                               "type": "integer",
-                              "minimum": 0
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "total": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "totalPages": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "hasMore": {
                               "type": "boolean"
                             }
                           },
-                          "required": ["page", "perPage", "total", "totalPages", "hasMore"]
+                          "required": ["page", "perPage", "total", "totalPages", "hasMore"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspaceId", "links", "pagination"]
+                      "required": ["workspaceId", "links", "pagination"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -1454,20 +1485,16 @@
                     "default": false,
                     "type": "boolean"
                   },
-                  "meta": {
+                  "linkMeta": {
                     "type": "object",
-                    "propertyNames": {
-                      "type": "string",
-                      "maxLength": 256,
-                      "pattern": "^[a-zA-Z0-9_-]+$"
-                    },
                     "additionalProperties": {
                       "type": "string",
                       "maxLength": 1024
                     }
                   }
                 },
-                "required": ["domainId"]
+                "required": ["domainId", "linkReusable"],
+                "additionalProperties": false
               }
             }
           }
@@ -1508,12 +1535,14 @@
                               ]
                             },
                             "linkType": {
+                              "type": "string",
                               "enum": ["file", "recording", "session", "screenshot"]
                             },
                             "linkReusable": {
                               "type": "boolean"
                             },
                             "linkProviderType": {
+                              "type": "string",
                               "enum": [
                                 "intercom",
                                 "zendesk",
@@ -1568,7 +1597,7 @@
                             "linkURL": {
                               "type": "string"
                             },
-                            "meta": {
+                            "linkMeta": {
                               "anyOf": [
                                 {
                                   "type": "object",
@@ -1581,11 +1610,7 @@
                                 }
                               ]
                             },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "x-native-type": "date"
-                            },
+                            "createdAt": {},
                             "project": {
                               "type": "object",
                               "properties": {
@@ -1604,7 +1629,8 @@
                                   ]
                                 }
                               },
-                              "required": ["projectId", "title"]
+                              "required": ["projectId", "title"],
+                              "additionalProperties": false
                             },
                             "creator": {
                               "type": "object",
@@ -1617,7 +1643,8 @@
                                   "type": "string"
                                 }
                               },
-                              "required": ["workspaceMemberId", "name"]
+                              "required": ["workspaceMemberId", "name"],
+                              "additionalProperties": false
                             },
                             "domain": {
                               "type": "object",
@@ -1630,10 +1657,12 @@
                                   "type": "string"
                                 },
                                 "status": {
+                                  "type": "string",
                                   "enum": ["pending", "verified", "revoked"]
                                 }
                               },
-                              "required": ["domainId", "url", "status"]
+                              "required": ["domainId", "url", "status"],
+                              "additionalProperties": false
                             }
                           },
                           "required": [
@@ -1645,18 +1674,21 @@
                             "linkProviderId",
                             "linkProviderReference",
                             "linkURL",
-                            "meta",
+                            "linkMeta",
                             "createdAt",
                             "project",
                             "creator",
                             "domain"
-                          ]
+                          ],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspaceId", "link"]
+                      "required": ["workspaceId", "link"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -2176,12 +2208,14 @@
                               ]
                             },
                             "linkType": {
+                              "type": "string",
                               "enum": ["file", "recording", "session", "screenshot"]
                             },
                             "linkReusable": {
                               "type": "boolean"
                             },
                             "linkProviderType": {
+                              "type": "string",
                               "enum": [
                                 "intercom",
                                 "zendesk",
@@ -2236,7 +2270,7 @@
                             "linkURL": {
                               "type": "string"
                             },
-                            "meta": {
+                            "linkMeta": {
                               "anyOf": [
                                 {
                                   "type": "object",
@@ -2249,11 +2283,7 @@
                                 }
                               ]
                             },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "x-native-type": "date"
-                            },
+                            "createdAt": {},
                             "project": {
                               "type": "object",
                               "properties": {
@@ -2272,7 +2302,8 @@
                                   ]
                                 }
                               },
-                              "required": ["projectId", "title"]
+                              "required": ["projectId", "title"],
+                              "additionalProperties": false
                             },
                             "creator": {
                               "type": "object",
@@ -2285,7 +2316,8 @@
                                   "type": "string"
                                 }
                               },
-                              "required": ["workspaceMemberId", "name"]
+                              "required": ["workspaceMemberId", "name"],
+                              "additionalProperties": false
                             },
                             "domain": {
                               "type": "object",
@@ -2298,10 +2330,12 @@
                                   "type": "string"
                                 },
                                 "status": {
+                                  "type": "string",
                                   "enum": ["pending", "verified", "revoked"]
                                 }
                               },
-                              "required": ["domainId", "url", "status"]
+                              "required": ["domainId", "url", "status"],
+                              "additionalProperties": false
                             }
                           },
                           "required": [
@@ -2313,18 +2347,21 @@
                             "linkProviderId",
                             "linkProviderReference",
                             "linkURL",
-                            "meta",
+                            "linkMeta",
                             "createdAt",
                             "project",
                             "creator",
                             "domain"
-                          ]
+                          ],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspaceId", "link"]
+                      "required": ["workspaceId", "link"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -2738,6 +2775,7 @@
                     "type": "boolean"
                   },
                   "linkProviderType": {
+                    "type": "string",
                     "enum": [
                       "intercom",
                       "zendesk",
@@ -2791,19 +2829,15 @@
                       }
                     ]
                   },
-                  "meta": {
+                  "linkMeta": {
                     "type": "object",
-                    "propertyNames": {
-                      "type": "string",
-                      "maxLength": 256,
-                      "pattern": "^[a-zA-Z0-9_-]+$"
-                    },
                     "additionalProperties": {
                       "type": "string",
                       "maxLength": 1024
                     }
                   }
-                }
+                },
+                "additionalProperties": false
               }
             }
           }
@@ -2844,12 +2878,14 @@
                               ]
                             },
                             "linkType": {
+                              "type": "string",
                               "enum": ["file", "recording", "session", "screenshot"]
                             },
                             "linkReusable": {
                               "type": "boolean"
                             },
                             "linkProviderType": {
+                              "type": "string",
                               "enum": [
                                 "intercom",
                                 "zendesk",
@@ -2904,7 +2940,7 @@
                             "linkURL": {
                               "type": "string"
                             },
-                            "meta": {
+                            "linkMeta": {
                               "anyOf": [
                                 {
                                   "type": "object",
@@ -2917,11 +2953,7 @@
                                 }
                               ]
                             },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "x-native-type": "date"
-                            },
+                            "createdAt": {},
                             "project": {
                               "type": "object",
                               "properties": {
@@ -2940,7 +2972,8 @@
                                   ]
                                 }
                               },
-                              "required": ["projectId", "title"]
+                              "required": ["projectId", "title"],
+                              "additionalProperties": false
                             },
                             "creator": {
                               "type": "object",
@@ -2953,7 +2986,8 @@
                                   "type": "string"
                                 }
                               },
-                              "required": ["workspaceMemberId", "name"]
+                              "required": ["workspaceMemberId", "name"],
+                              "additionalProperties": false
                             },
                             "domain": {
                               "type": "object",
@@ -2966,10 +3000,12 @@
                                   "type": "string"
                                 },
                                 "status": {
+                                  "type": "string",
                                   "enum": ["pending", "verified", "revoked"]
                                 }
                               },
-                              "required": ["domainId", "url", "status"]
+                              "required": ["domainId", "url", "status"],
+                              "additionalProperties": false
                             }
                           },
                           "required": [
@@ -2981,18 +3017,21 @@
                             "linkProviderId",
                             "linkProviderReference",
                             "linkURL",
-                            "meta",
+                            "linkMeta",
                             "createdAt",
                             "project",
                             "creator",
                             "domain"
-                          ]
+                          ],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspaceId", "link"]
+                      "required": ["workspaceId", "link"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -3457,10 +3496,12 @@
                           "minLength": 1
                         }
                       },
-                      "required": ["workspaceId", "linkId"]
+                      "required": ["workspaceId", "linkId"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -3917,10 +3958,12 @@
           {
             "name": "page",
             "in": "query",
+            "required": true,
             "schema": {
               "default": 1,
               "type": "integer",
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "allowEmptyValue": true,
             "allowReserved": true
@@ -3928,6 +3971,7 @@
           {
             "name": "per_page",
             "in": "query",
+            "required": true,
             "schema": {
               "default": 10,
               "type": "integer",
@@ -3940,6 +3984,7 @@
           {
             "name": "created_by",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
@@ -3955,6 +4000,7 @@
           {
             "name": "project_id",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
@@ -3970,6 +4016,7 @@
           {
             "name": "link_id",
             "in": "query",
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
@@ -3985,24 +4032,24 @@
           {
             "name": "sort_by",
             "in": "query",
+            "required": true,
             "schema": {
               "default": "created_at",
+              "type": "string",
               "enum": ["created_at", "recording_duration"]
             },
-            "style": "deepObject",
-            "explode": true,
             "allowEmptyValue": true,
             "allowReserved": true
           },
           {
             "name": "sort_direction",
             "in": "query",
+            "required": true,
             "schema": {
               "default": "desc",
+              "type": "string",
               "enum": ["asc", "desc"]
             },
-            "style": "deepObject",
-            "explode": true,
             "allowEmptyValue": true,
             "allowReserved": true
           }
@@ -4047,7 +4094,9 @@
                               "recordingDurationMs": {
                                 "anyOf": [
                                   {
-                                    "type": "integer"
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
                                   },
                                   {
                                     "type": "null"
@@ -4056,21 +4105,13 @@
                               },
                               "expiresAt": {
                                 "anyOf": [
-                                  {
-                                    "type": "string",
-                                    "format": "date-time",
-                                    "x-native-type": "date"
-                                  },
+                                  {},
                                   {
                                     "type": "null"
                                   }
                                 ]
                               },
-                              "createdAt": {
-                                "type": "string",
-                                "format": "date-time",
-                                "x-native-type": "date"
-                              },
+                              "createdAt": {},
                               "creator": {
                                 "type": "object",
                                 "properties": {
@@ -4082,7 +4123,8 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["workspaceMemberId", "name"]
+                                "required": ["workspaceMemberId", "name"],
+                                "additionalProperties": false
                               },
                               "linkTitle": {
                                 "anyOf": [
@@ -4103,7 +4145,8 @@
                               "createdAt",
                               "creator",
                               "linkTitle"
-                            ]
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "pagination": {
@@ -4111,31 +4154,38 @@
                           "properties": {
                             "page": {
                               "type": "integer",
-                              "minimum": 0
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "perPage": {
                               "type": "integer",
-                              "minimum": 0
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "total": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "totalPages": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "hasMore": {
                               "type": "boolean"
                             }
                           },
-                          "required": ["page", "perPage", "total", "totalPages", "hasMore"]
+                          "required": ["page", "perPage", "total", "totalPages", "hasMore"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspaceId", "recordings", "pagination"]
+                      "required": ["workspaceId", "recordings", "pagination"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -4455,15 +4505,13 @@
                               "minLength": 1
                             },
                             "recordingDurationMs": {
-                              "type": "integer"
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
                             "recordingStartedAt": {
                               "anyOf": [
-                                {
-                                  "type": "string",
-                                  "format": "date-time",
-                                  "x-native-type": "date"
-                                },
+                                {},
                                 {
                                   "type": "null"
                                 }
@@ -4492,6 +4540,7 @@
                                     "providerType": {
                                       "anyOf": [
                                         {
+                                          "type": "string",
                                           "enum": [
                                             "intercom",
                                             "zendesk",
@@ -4549,11 +4598,7 @@
                                       ]
                                     },
                                     "providerData": {},
-                                    "createdAt": {
-                                      "type": "string",
-                                      "format": "date-time",
-                                      "x-native-type": "date"
-                                    }
+                                    "createdAt": {}
                                   },
                                   "required": [
                                     "linkId",
@@ -4561,8 +4606,10 @@
                                     "providerType",
                                     "providerId",
                                     "providerRef",
+                                    "providerData",
                                     "createdAt"
-                                  ]
+                                  ],
+                                  "additionalProperties": false
                                 },
                                 "creator": {
                                   "type": "object",
@@ -4575,7 +4622,8 @@
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["workspaceMemberId", "name"]
+                                  "required": ["workspaceMemberId", "name"],
+                                  "additionalProperties": false
                                 },
                                 "project": {
                                   "type": "object",
@@ -4602,7 +4650,8 @@
                                       ]
                                     }
                                   },
-                                  "required": ["projectId", "title"]
+                                  "required": ["projectId", "title"],
+                                  "additionalProperties": false
                                 },
                                 "domain": {
                                   "type": "object",
@@ -4615,13 +4664,15 @@
                                       "type": "string"
                                     }
                                   },
-                                  "required": ["domainId", "url"]
+                                  "required": ["domainId", "url"],
+                                  "additionalProperties": false
                                 },
                                 "workspaceId": {
                                   "type": "string",
                                   "minLength": 1
                                 },
                                 "status": {
+                                  "type": "string",
                                   "enum": ["pending", "available", "expired", "purged"]
                                 },
                                 "systemMeta": {
@@ -4658,26 +4709,14 @@
                                 },
                                 "expiresAt": {
                                   "anyOf": [
-                                    {
-                                      "type": "string",
-                                      "format": "date-time",
-                                      "x-native-type": "date"
-                                    },
+                                    {},
                                     {
                                       "type": "null"
                                     }
                                   ]
                                 },
-                                "createdAt": {
-                                  "type": "string",
-                                  "format": "date-time",
-                                  "x-native-type": "date"
-                                },
-                                "updatedAt": {
-                                  "type": "string",
-                                  "format": "date-time",
-                                  "x-native-type": "date"
-                                }
+                                "createdAt": {},
+                                "updatedAt": {}
                               },
                               "required": [
                                 "link",
@@ -4692,7 +4731,8 @@
                                 "expiresAt",
                                 "createdAt",
                                 "updatedAt"
-                              ]
+                              ],
+                              "additionalProperties": false
                             }
                           },
                           "required": [
@@ -4700,13 +4740,16 @@
                             "recordingDurationMs",
                             "recordingStartedAt",
                             "meta"
-                          ]
+                          ],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspaceId", "recording"]
+                      "required": ["workspaceId", "recording"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -5121,10 +5164,12 @@
                           "minLength": 1
                         }
                       },
-                      "required": ["workspaceId", "recordingId"]
+                      "required": ["workspaceId", "recordingId"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -5674,13 +5719,16 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["url", "type"]
+                                "required": ["url", "type"],
+                                "additionalProperties": false
                               }
                             },
                             "size": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -5690,7 +5738,9 @@
                             "durationMs": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -5701,13 +5751,16 @@
                               "type": "boolean"
                             }
                           },
-                          "required": ["url", "message"]
+                          "required": ["url", "message"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["recordingId", "resource"]
+                      "required": ["recordingId", "resource"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -6167,13 +6220,16 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["url", "type"]
+                                "required": ["url", "type"],
+                                "additionalProperties": false
                               }
                             },
                             "size": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -6183,7 +6239,9 @@
                             "durationMs": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -6194,13 +6252,16 @@
                               "type": "boolean"
                             }
                           },
-                          "required": ["url", "message"]
+                          "required": ["url", "message"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["recordingId", "resource"]
+                      "required": ["recordingId", "resource"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -6660,13 +6721,16 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["url", "type"]
+                                "required": ["url", "type"],
+                                "additionalProperties": false
                               }
                             },
                             "size": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -6676,7 +6740,9 @@
                             "durationMs": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -6687,13 +6753,16 @@
                               "type": "boolean"
                             }
                           },
-                          "required": ["url", "message"]
+                          "required": ["url", "message"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["recordingId", "resource"]
+                      "required": ["recordingId", "resource"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -7153,13 +7222,16 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["url", "type"]
+                                "required": ["url", "type"],
+                                "additionalProperties": false
                               }
                             },
                             "size": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -7169,7 +7241,9 @@
                             "durationMs": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -7180,13 +7254,16 @@
                               "type": "boolean"
                             }
                           },
-                          "required": ["url", "message"]
+                          "required": ["url", "message"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["recordingId", "resource"]
+                      "required": ["recordingId", "resource"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -7646,13 +7723,16 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["url", "type"]
+                                "required": ["url", "type"],
+                                "additionalProperties": false
                               }
                             },
                             "size": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -7662,7 +7742,9 @@
                             "durationMs": {
                               "anyOf": [
                                 {
-                                  "type": "integer"
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
                                 },
                                 {
                                   "type": "null"
@@ -7673,13 +7755,16 @@
                               "type": "boolean"
                             }
                           },
-                          "required": ["url", "message"]
+                          "required": ["url", "message"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["recordingId", "resource"]
+                      "required": ["recordingId", "resource"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -8088,24 +8173,19 @@
                             "workspaceName": {
                               "type": "string"
                             },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "x-native-type": "date"
-                            },
-                            "updatedAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "x-native-type": "date"
-                            }
+                            "createdAt": {},
+                            "updatedAt": {}
                           },
-                          "required": ["workspaceId", "workspaceName", "createdAt", "updatedAt"]
+                          "required": ["workspaceId", "workspaceName", "createdAt", "updatedAt"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspace"]
+                      "required": ["workspace"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -8462,10 +8542,12 @@
                           "minLength": 1
                         }
                       },
-                      "required": ["inviteUrl", "workspaceId"]
+                      "required": ["inviteUrl", "workspaceId"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -8802,10 +8884,12 @@
           {
             "name": "page",
             "in": "query",
+            "required": true,
             "schema": {
               "default": 1,
               "type": "integer",
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "allowEmptyValue": true,
             "allowReserved": true
@@ -8813,6 +8897,7 @@
           {
             "name": "per_page",
             "in": "query",
+            "required": true,
             "schema": {
               "default": 5,
               "type": "integer",
@@ -8825,24 +8910,24 @@
           {
             "name": "sort_by",
             "in": "query",
+            "required": true,
             "schema": {
               "default": "created_at",
+              "type": "string",
               "enum": ["created_at", "project_title"]
             },
-            "style": "deepObject",
-            "explode": true,
             "allowEmptyValue": true,
             "allowReserved": true
           },
           {
             "name": "sort_direction",
             "in": "query",
+            "required": true,
             "schema": {
               "default": "desc",
+              "type": "string",
               "enum": ["asc", "desc"]
             },
-            "style": "deepObject",
-            "explode": true,
             "allowEmptyValue": true,
             "allowReserved": true
           }
@@ -8881,18 +8966,12 @@
                                 "type": "boolean"
                               },
                               "recordingRetentionDays": {
-                                "type": "integer"
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
                               },
-                              "createdAt": {
-                                "type": "string",
-                                "format": "date-time",
-                                "x-native-type": "date"
-                              },
-                              "updatedAt": {
-                                "type": "string",
-                                "format": "date-time",
-                                "x-native-type": "date"
-                              }
+                              "createdAt": {},
+                              "updatedAt": {}
                             },
                             "required": [
                               "projectId",
@@ -8901,7 +8980,8 @@
                               "recordingRetentionDays",
                               "createdAt",
                               "updatedAt"
-                            ]
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "pagination": {
@@ -8909,31 +8989,38 @@
                           "properties": {
                             "page": {
                               "type": "integer",
-                              "minimum": 0
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "perPage": {
                               "type": "integer",
-                              "minimum": 0
+                              "exclusiveMinimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "total": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "totalPages": {
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "hasMore": {
                               "type": "boolean"
                             }
                           },
-                          "required": ["page", "perPage", "total", "totalPages", "hasMore"]
+                          "required": ["page", "perPage", "total", "totalPages", "hasMore"],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspaceId", "projects", "pagination"]
+                      "required": ["workspaceId", "projects", "pagination"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -9279,18 +9366,12 @@
                               "type": "boolean"
                             },
                             "recordingRetentionDays": {
-                              "type": "integer"
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "x-native-type": "date"
-                            },
-                            "updatedAt": {
-                              "type": "string",
-                              "format": "date-time",
-                              "x-native-type": "date"
-                            }
+                            "createdAt": {},
+                            "updatedAt": {}
                           },
                           "required": [
                             "projectId",
@@ -9299,13 +9380,16 @@
                             "recordingRetentionDays",
                             "createdAt",
                             "updatedAt"
-                          ]
+                          ],
+                          "additionalProperties": false
                         }
                       },
-                      "required": ["workspaceId", "project"]
+                      "required": ["workspaceId", "project"],
+                      "additionalProperties": false
                     }
                   },
-                  "required": ["message", "data"]
+                  "required": ["message", "data"],
+                  "additionalProperties": false
                 }
               }
             }
