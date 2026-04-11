@@ -409,6 +409,13 @@ export const slackCanvasService = new SlackCanvasService({
   cacheService,
 });
 
+// MCP Connection service
+import { McpConnectionRepository } from '@/api/repositories/mcp-connections.repository';
+import { McpConnectionService } from '@/api/services/mcp-connection.service';
+
+const mcpConnectionRepo = new McpConnectionRepository(db);
+export const mcpConnectionService = new McpConnectionService(mcpConnectionRepo);
+
 // API Key service (Unkey integration)
 export const apiKeyService = new ApiKeyService({
   rootKey: env.unkey.rootKey,

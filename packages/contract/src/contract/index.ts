@@ -14,6 +14,7 @@ import * as diagnostics from './diagnostics';
 import * as domain from './domain';
 import * as invite from './invite';
 import * as link from './link';
+import * as mcpConnection from './mcp-connection';
 import * as project from './project';
 import * as provisioner from './provisioner';
 import * as recording from './recording';
@@ -334,6 +335,15 @@ export const zendeskAppContract = {
 };
 
 /**
+ * MCP connection contract
+ * Authorized MCP client management
+ */
+export const mcpConnectionContract = {
+  list: mcpConnection.listMcpConnections,
+  revoke: mcpConnection.revokeMcpConnection,
+};
+
+/**
  * Complete API contract
  * Combines all domain contracts for full API implementation
  */
@@ -355,6 +365,7 @@ export const contract = {
   zendeskApp: zendeskAppContract,
   publicApi: publicApiContract,
   apiKey: apiKeyContract,
+  mcpConnection: mcpConnectionContract,
 };
 
 /**
@@ -374,5 +385,6 @@ export type LinkContract = typeof linkContract;
 export type RecordingContract = typeof recordingContract;
 export type ShareContract = typeof shareContract;
 export type SessionContract = typeof sessionContract;
+export type McpConnectionContract = typeof mcpConnectionContract;
 export type ZendeskAppContract = typeof zendeskAppContract;
 export type Contract = typeof contract;

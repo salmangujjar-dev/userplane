@@ -96,3 +96,9 @@ export const PAGINATION_DEFAULTS = {
     LINKS: DEFAULT_SEARCHABLE_LINKS_PER_PAGE,
   },
 } as const;
+
+/**
+ * Default items per page for MCP connections
+ * Used in: useMcpConnections hook
+ */
+export const DEFAULT_MCP_CONNECTIONS_PER_PAGE = 5;

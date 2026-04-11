@@ -36,6 +36,7 @@ import {
   inviteService,
   linkRepo,
   linkService,
+  mcpConnectionService,
   notificationChannelService,
   notificationService,
   projectService,
@@ -62,6 +63,7 @@ import { createDiagnosticsProcedures } from './diagnostics/diagnostics.impl';
 import { createDomainProcedures } from './domain/domain.impl';
 import { createInviteProcedures } from './invite/invite.impl';
 import { createLinkProcedures } from './link/link.impl';
+import { createMcpConnectionProcedures } from './mcp-connection/mcp-connection.impl';
 import { createProjectProcedures } from './project/project.impl';
 import { createProvisionerProcedures } from './provisioner/provisioner.impl';
 import { createApiKeyManagementProcedures } from './public-api/api-key-management.impl';
@@ -195,6 +197,7 @@ const publicApiProcedures = createPublicApiProcedures({
 });
 
 const apiKeyManagementProcedures = createApiKeyManagementProcedures(apiKeyService);
+const mcpConnectionProcedures = createMcpConnectionProcedures(mcpConnectionService);
 
 /**
  * Complete router export
@@ -233,6 +236,7 @@ export const apiRouter = {
   zendeskApp: zendeskAppProcedures,
   publicApi: publicApiProcedures,
   apiKey: apiKeyManagementProcedures,
+  mcpConnection: mcpConnectionProcedures,
 };
 
 export type ApiRouter = typeof apiRouter;

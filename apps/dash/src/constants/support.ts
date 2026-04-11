@@ -26,4 +26,5 @@ export const SUPPORT_LINKS = {
   domainPreferences: docsUrl('/recording-links/domain-preferences'),
   integrations: docsUrl('/integrations/intercom'),
   apiKeys: docsUrl('/api/authentication'),
+  mcpGettingStarted: docsUrl('/integrations/mcp-getting-started'),
 } as const;
