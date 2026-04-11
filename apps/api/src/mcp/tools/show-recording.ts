@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { env } from '@/api/env';
 
 import { APP_RESOURCE_URIS } from '../app-resources';
-import { requireWorkspaceMember, textResult } from '../helpers';
+import { fetchThumbnailDataUri, requireWorkspaceMember, textResult } from '../helpers';
 import type { McpDeps } from '../types';
 
 /**
@@ -52,26 +52,6 @@ function getCspDomains(): { connectDomains: string[]; resourceDomains: string[] 
   };
 }
 
-/**
- * Fetch a thumbnail from its presigned URL and return a base64 data URI.
- * Returns null on any failure — the UI degrades gracefully without it.
- */
-async function fetchThumbnailDataUri(
-  url: string | null,
-  format: string | null
-): Promise<string | null> {
-  if (!url) return null;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-    const buffer = Buffer.from(await response.arrayBuffer());
-    const mimeType = response.headers.get('content-type') || `image/${format || 'png'}`;
-    return `data:${mimeType};base64,${buffer.toString('base64')}`;
-  } catch {
-    return null;
-  }
-}
-
 export function registerShowRecordingTools(server: McpServer, deps: McpDeps, userId: string) {
   const { title, description, inputSchema, annotations } = userplaneShowRecording;
   const csp = getCspDomains();
@@ -90,7 +70,7 @@ export function registerShowRecordingTools(server: McpServer, deps: McpDeps, use
       annotations,
       _meta: {
         ui: {
-          resourceUri: APP_RESOURCE_URIS.showRecording,
+          resourceUri: APP_RESOURCE_URIS.preview,
           csp,
         },
       },

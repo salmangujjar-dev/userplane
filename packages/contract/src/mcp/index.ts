@@ -12,15 +12,12 @@ import { userplaneGetProject, userplaneListProjects } from './tools/projects';
 import {
   userplaneGetRecActions,
   userplaneGetRecConsole,
+  userplaneGetRecInfo,
   userplaneGetRecNetwork,
   userplaneGetRecThumb,
   userplaneGetRecVideo,
 } from './tools/recording-resources';
-import {
-  userplaneDeleteRecording,
-  userplaneGetRecording,
-  userplaneListRecordings,
-} from './tools/recordings';
+import { userplaneDeleteRecording, userplaneListRecordings } from './tools/recordings';
 import { userplaneShowRecording } from './tools/show-recording';
 import { userplaneGetProfile } from './tools/user';
 import { userplaneGetWorkspace, userplaneListWorkspaces } from './tools/workspaces';
@@ -33,13 +30,13 @@ export const mcpToolDefinitions = [
   userplaneListProjects,
   userplaneGetProject,
   userplaneListRecordings,
-  userplaneGetRecording,
   userplaneDeleteRecording,
   userplaneListLinks,
   userplaneCreateLink,
   userplaneGetLink,
   userplaneUpdateLink,
   userplaneDeleteLink,
+  userplaneGetRecInfo,
   userplaneGetRecVideo,
   userplaneGetRecThumb,
   userplaneGetRecConsole,

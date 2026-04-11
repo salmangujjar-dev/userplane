@@ -24,7 +24,7 @@ const APP_HTML = {
 
 /** Resource URI constants used by tools to reference their UI. */
 export const APP_RESOURCE_URIS = {
-  showRecording: 'ui://userplane/show-recording',
+  preview: 'ui://userplane/preview',
 } as const;
 
 /**
@@ -37,13 +37,13 @@ export function registerAppResources(server: McpServer) {
     const html = APP_HTML.showRecording;
     registerAppResource(
       server,
-      'show-recording-ui',
-      APP_RESOURCE_URIS.showRecording,
+      'preview-ui',
+      APP_RESOURCE_URIS.preview,
       { mimeType: RESOURCE_MIME_TYPE },
       async () => ({
         contents: [
           {
-            uri: APP_RESOURCE_URIS.showRecording,
+            uri: APP_RESOURCE_URIS.preview,
             mimeType: RESOURCE_MIME_TYPE,
             text: html,
           },

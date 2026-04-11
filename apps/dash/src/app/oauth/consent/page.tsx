@@ -19,13 +19,13 @@ import { useSession } from '@/features/auth';
 // ---------------------------------------------------------------------------
 
 interface ClientInfo {
-  clientId: string;
-  name: string;
-  uri?: string;
-  icon?: string;
+  client_id: string;
+  client_name: string;
+  client_uri?: string;
+  logo_uri?: string;
   contacts?: string[];
-  tos?: string;
-  policy?: string;
+  tos_uri?: string;
+  policy_uri?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -191,7 +191,7 @@ function ConsentContent() {
     return <LoadingScreen message="Loading application info..." />;
   }
 
-  const displayName = clientInfo?.name || null;
+  const displayName = clientInfo?.client_name || null;
 
   // Success state after authorization
   if (isAuthorized) {
@@ -230,9 +230,9 @@ function ConsentContent() {
   return (
     <AuthLayout>
       <div className="flex flex-col items-center gap-4">
-        {clientInfo?.icon ? (
+        {clientInfo?.logo_uri ? (
           <Image
-            src={clientInfo.icon}
+            src={clientInfo.logo_uri}
             alt={displayName ?? 'Application'}
             width={48}
             height={48}
