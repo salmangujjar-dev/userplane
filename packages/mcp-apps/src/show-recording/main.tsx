@@ -1,12 +1,12 @@
-import '../shared/styles.css';
+import '../ui/styles.css';
 
 import { App } from '@modelcontextprotocol/ext-apps';
 import { createRoot } from 'react-dom/client';
 
-import { LoadingState } from '../shared/components';
-import { setupThemeSync } from '../shared/theme';
+import { LoadingState } from '../components';
+import type { ShowRecordingData } from '../recording/types';
+import { setupThemeSync } from '../ui/theme';
 import { ShowRecording } from './ShowRecording';
-import type { ShowRecordingData } from './types';
 
 const app = new App({ name: 'Userplane Preview', version: '1.0.0' });
 
@@ -77,7 +77,7 @@ app.ontoolresult = (result) => {
       <div className="flex items-center justify-center min-h-[200px] p-8 text-center">
         <div>
           <p className="text-sm font-medium text-destructive mb-2">Failed to load</p>
-          <p className="text-xs text-muted-foreground max-w-md break-words">{String(err)}</p>
+          <p className="text-xs text-muted-foreground max-w-md wrap-break-word">{String(err)}</p>
         </div>
       </div>
     );

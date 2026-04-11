@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { EmptyState, FilterPill, SearchInput } from '../shared/components';
+import { EmptyState, FilterPill, SearchInput } from '../components';
 import {
   ArrowRightIcon,
   ChevronRightIcon,
@@ -13,8 +13,8 @@ import {
   PauseIcon,
   PlayIcon,
   RefreshCwIcon,
-} from '../shared/icons';
-import { cn, formatTimestamp } from '../shared/utils';
+} from '../components/icons';
+import { cn, formatTimestamp } from '../utils';
 import type { ActionLogEntry } from './types';
 
 interface ActionsTabProps {

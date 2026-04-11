@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Avatar, InfoRow, InfoSection, JsonTree } from '../shared/components';
+import { Avatar, InfoRow, InfoSection, JsonTree } from '../components';
 import {
   AppWindowIcon,
   CalendarIcon,
@@ -18,9 +18,9 @@ import {
   StickyNoteIcon,
   TagsIcon,
   UserIcon,
-} from '../shared/icons';
-import { formatDate, isValidUrl } from '../shared/utils';
-import type { RecordingDetail, RecordingMeta } from './types';
+} from '../components/icons';
+import type { RecordingDetail, RecordingMeta } from '../recording/types';
+import { formatDate, isValidUrl } from '../utils';
 
 interface InfoTabProps {
   recording: RecordingDetail;

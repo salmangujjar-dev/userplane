@@ -20,11 +20,17 @@ function loadAppHtml(appName: string): string | null {
 /** Pre-loaded app HTML — read at import time to avoid per-request I/O. */
 const APP_HTML = {
   showRecording: loadAppHtml('show-recording'),
+  showRecConsole: loadAppHtml('show-rec-console'),
+  showRecNetwork: loadAppHtml('show-rec-network'),
+  showRecActions: loadAppHtml('show-rec-actions'),
 } as const;
 
 /** Resource URI constants used by tools to reference their UI. */
 export const APP_RESOURCE_URIS = {
   preview: 'ui://userplane/preview',
+  console: 'ui://userplane/console',
+  network: 'ui://userplane/network',
+  actions: 'ui://userplane/actions',
 } as const;
 
 /**
@@ -44,6 +50,63 @@ export function registerAppResources(server: McpServer) {
         contents: [
           {
             uri: APP_RESOURCE_URIS.preview,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+          },
+        ],
+      })
+    );
+  }
+
+  if (APP_HTML.showRecConsole) {
+    const html = APP_HTML.showRecConsole;
+    registerAppResource(
+      server,
+      'console-ui',
+      APP_RESOURCE_URIS.console,
+      { mimeType: RESOURCE_MIME_TYPE },
+      async () => ({
+        contents: [
+          {
+            uri: APP_RESOURCE_URIS.console,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+          },
+        ],
+      })
+    );
+  }
+
+  if (APP_HTML.showRecNetwork) {
+    const html = APP_HTML.showRecNetwork;
+    registerAppResource(
+      server,
+      'network-ui',
+      APP_RESOURCE_URIS.network,
+      { mimeType: RESOURCE_MIME_TYPE },
+      async () => ({
+        contents: [
+          {
+            uri: APP_RESOURCE_URIS.network,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+          },
+        ],
+      })
+    );
+  }
+
+  if (APP_HTML.showRecActions) {
+    const html = APP_HTML.showRecActions;
+    registerAppResource(
+      server,
+      'actions-ui',
+      APP_RESOURCE_URIS.actions,
+      { mimeType: RESOURCE_MIME_TYPE },
+      async () => ({
+        contents: [
+          {
+            uri: APP_RESOURCE_URIS.actions,
             mimeType: RESOURCE_MIME_TYPE,
             text: html,
           },
