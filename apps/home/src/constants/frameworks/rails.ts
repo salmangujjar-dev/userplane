@@ -22,15 +22,15 @@ export const railsConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Ruby on Rails | Session Recordings with Console Logs',
+    title: 'Userplane for Ruby on Rails | Screen Recordings with Console Logs',
     description:
-      'Add session recordings to your Rails app. One script tag in your application layout. Compatible with Turbo, Devise, and Rails middleware.',
+      'Add screen recordings to your Rails app. One script tag in your application layout. Compatible with Turbo, Devise, and Rails middleware.',
     keywords:
       'ruby on rails screen recording, rails session replay, rails console logs, rails debugging, erb template screen recording, turbo session replay, devise screen recording, userplane rails',
   },
   hero: {
     headline: {
-      lines: ['Debug Rails issues', 'with session recordings'],
+      lines: ['Debug Rails issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'red' }],
       icons: [
         {
@@ -41,7 +41,7 @@ export const railsConfig = defineFramework({
       ],
     },
     description: [
-      'Add session recordings to your Rails app with a single script tag.',
+      'Add screen recordings to your Rails app with a single script tag.',
       'Compatible with Turbo, Devise, and Rails middleware.',
     ],
     preview: {
@@ -101,7 +101,7 @@ export const railsConfig = defineFramework({
       number: '04',
       title: 'Pipes to your help desk',
       description:
-        'Session recordings route to Intercom, Zendesk, and Slack. Link recordings to support tickets. API and webhook endpoints for custom pipelines.',
+        'Screen recordings route to Intercom, Zendesk, and Slack. Link recordings to support tickets. API and webhook endpoints for custom pipelines.',
       tagline: 'Context lands where you work',
       capabilities: [
         'Intercom, Zendesk, Slack',

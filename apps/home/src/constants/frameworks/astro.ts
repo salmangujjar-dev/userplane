@@ -22,7 +22,7 @@ export const astroConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Astro | Session Recordings with Console Logs',
+    title: 'Userplane for Astro | Screen Recordings with Console Logs',
     description:
       'Console logs, network requests, and session details from your Astro site. Captures across React, Vue, and Svelte islands.',
     keywords:

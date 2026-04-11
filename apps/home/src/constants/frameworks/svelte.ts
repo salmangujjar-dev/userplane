@@ -21,7 +21,7 @@ export const svelteConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Svelte | Session Recordings with Console Logs',
+    title: 'Userplane for Svelte | Screen Recordings with Console Logs',
     description:
       'Capture console logs, network requests, and session data from your Svelte app. Compatible with SvelteKit routing and server hooks.',
     keywords:
@@ -29,7 +29,7 @@ export const svelteConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Resolve Svelte issues', 'with session recordings'],
+      lines: ['Resolve Svelte issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'red' }],
       icons: [
         {
@@ -53,7 +53,7 @@ export const svelteConfig = defineFramework({
   features: [
     {
       number: '01',
-      title: 'Instant session recordings',
+      title: 'Instant screen recordings',
       description:
         'Customers click a link and record. You get a full replay of their SvelteKit session — every page load, transition, and runtime error. No extensions needed.',
       tagline: 'Replay every session',

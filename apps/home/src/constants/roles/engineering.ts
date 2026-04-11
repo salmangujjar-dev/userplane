@@ -1,3 +1,4 @@
+import { NAV_LINKS } from '../navigation';
 import { SIGNUP_URL } from '../onboarding';
 import { defineRole } from './defaults';
 import {
@@ -22,7 +23,7 @@ export const engineeringConfig = defineRole({
     ],
   },
   seo: {
-    title: 'Userplane for Engineering Teams | Debug Customer Issues with Full Session Context',
+    title: 'Userplane for Engineering Teams | Debug Customer Issues with Screen Recordings',
     description:
       'Screen recordings with console logs, network data, and session metadata. Engineering teams get full reproduction context without the back and forth with support. Drop-in SDK for React, Next.js, Vue, Angular, and more.',
     keywords:
@@ -30,15 +31,14 @@ export const engineeringConfig = defineRole({
   },
   hero: {
     headline: {
-      lines: ['Debug customer issues', 'with full session context'],
+      lines: ['Debug customer issues', 'with screen recordings'],
       highlights: [
         { wordIndex: 1, color: 'purple' },
         { wordIndex: 2, color: 'purple' },
       ],
     },
     description: [
-      'Console logs, network activity, and session metadata — captured with every recording.',
-      'Works with React, Next.js, Vue, Angular, and more.',
+      'Capture console logs, network activity, and session metadata with screen recordings. Works with React, Next.js, Vue, Angular, and more.',
     ],
     preview: {
       src: getRoleHeroUrl('microsites/roles/engineering/hero.png'),
@@ -54,9 +54,9 @@ export const engineeringConfig = defineRole({
   features: [
     {
       number: '01',
-      title: 'Console logs and network data',
+      title: 'Screen Recordings with Logs',
       description:
-        'Debug customer-reported issues with full context — without chasing support for more detail. Every recording captures errors, network snapshots, browser metadata, and user steps.',
+        'Get screen recordings with console logs, network snapshots, application state, and user steps. Resolve customer-reported bugs without chasing support for more detail.',
       tagline: 'Zero-config session data',
       capabilities: [
         'Capture console logs and errors',
@@ -75,7 +75,7 @@ export const engineeringConfig = defineRole({
       tagline: 'Works with your stack',
       capabilities: ['React & Next.js', 'Vue & Nuxt', 'Angular', 'Svelte & vanilla JS'],
       image: getRoleFeatureUrl('microsites/roles/engineering/engineering-sdk.png'),
-      learnMoreHref: DOCS_DEVELOPER_INSTALLATION,
+      learnMoreHref: NAV_LINKS.frameworks,
     },
     {
       number: '03',
@@ -90,13 +90,13 @@ export const engineeringConfig = defineRole({
         'Chrome extension included',
       ],
       image: getRoleFeatureUrl('microsites/roles/engineering/engineering-helpdesk-setup.png'),
-      learnMoreHref: DOCS_DEVELOPER_INSTALLATION,
+      learnMoreHref: NAV_LINKS.integrations,
     },
     {
       number: '04',
       title: 'Privacy controls in code',
       description:
-        'Define redaction rules, consent flows, and capture scope in your codebase. Control exactly what gets captured, what gets redacted, and how consent is handled.',
+        'Control exactly what gets captured, what gets redacted, and how user consent is handled. Define redaction rules, consent flows, and capture scope in your codebase.',
       tagline: 'Compliance as code',
       capabilities: [
         'SDK-level redaction rules',

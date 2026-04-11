@@ -21,7 +21,7 @@ export const solidjsConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for SolidJS | Session Recordings with Console Logs',
+    title: 'Userplane for SolidJS | Screen Recordings with Console Logs',
     description:
       'Capture console logs, network requests, and session data from your SolidJS app. Works with SolidStart SSR and Vite-based setups.',
     keywords:
@@ -29,7 +29,7 @@ export const solidjsConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Resolve SolidJS issues', 'with session recordings'],
+      lines: ['Resolve SolidJS issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'blue' }],
       icons: [
         {
@@ -140,7 +140,7 @@ export const solidjsConfig = defineFramework({
   },
   cta: {
     headline: {
-      lines: ['Identify SolidJS issues with full session recordings'],
+      lines: ['Identify SolidJS issues with screen recordings'],
       highlights: [
         { wordIndex: 1, color: 'blue' },
         { wordIndex: 2, color: 'blue' },

@@ -21,7 +21,7 @@ export const angularConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Angular | Session Recordings with Console Logs',
+    title: 'Userplane for Angular | Screen Recordings with Console Logs',
     description:
       'Console logs, network requests, and session activity from your Angular app. Works with standalone components and NgModules.',
     keywords:
@@ -29,7 +29,7 @@ export const angularConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Identify and fix Angular issues', 'with session recordings'],
+      lines: ['Identify and fix Angular issues', 'with screen recordings'],
       highlights: [{ wordIndex: 3, color: 'red' }],
       icons: [
         {
@@ -53,9 +53,9 @@ export const angularConfig = defineFramework({
   features: [
     {
       number: '01',
-      title: 'Customer session recordings',
+      title: 'Customer screen recordings',
       description:
-        'Customers record their session from a link. You get a full replay — every component interaction, route change, and HTTP call captured. No downloads required.',
+        'Customers record their bugs from a link. You get a full replay — every component interaction, route change, and HTTP call captured. No downloads required.',
       tagline: 'Full replay, zero friction',
       capabilities: [
         'Link-based recording',
@@ -70,7 +70,7 @@ export const angularConfig = defineFramework({
       number: '02',
       title: 'Errors, network, and state',
       description:
-        'Console errors, network request timelines, browser fingerprints, and complete user action sequences — attached to every session recording.',
+        'Console errors, network request timelines, browser fingerprints, and complete user action sequences — attached to every screen recording.',
       tagline: 'Technical depth on every ticket',
       capabilities: [
         'Console logs and error traces',
@@ -100,7 +100,7 @@ export const angularConfig = defineFramework({
       number: '04',
       title: 'Delivers to your help desk',
       description:
-        'Session recordings attach to Intercom, Zendesk, and Slack conversations. Session data links to tickets. API and webhook endpoints for custom routing.',
+        'Screen recordings attach to Intercom, Zendesk, and Slack conversations. Session data links to tickets. API and webhook endpoints for custom routing.',
       tagline: 'Recordings where tickets live',
       capabilities: [
         'Intercom, Zendesk, Slack',

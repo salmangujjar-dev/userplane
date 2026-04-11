@@ -21,7 +21,7 @@ export const nuxtConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Nuxt | Session Recordings with Console Logs',
+    title: 'Userplane for Nuxt | Screen Recordings with Console Logs',
     description:
       'Console logs, network requests, and session info from your Nuxt app. SSR-safe. Works with Nuxt 3 runtime config.',
     keywords:
@@ -29,7 +29,7 @@ export const nuxtConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Debug Nuxt issues', 'with session recordings'],
+      lines: ['Debug Nuxt issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'green' }],
       icons: [
         {
@@ -100,7 +100,7 @@ export const nuxtConfig = defineFramework({
       number: '04',
       title: 'Pipes to your help desk',
       description:
-        'Session recordings route to Intercom, Zendesk, and Slack. Link recordings to support tickets. API and webhook endpoints for custom integrations.',
+        'Screen recordings route to Intercom, Zendesk, and Slack. Link recordings to support tickets. API and webhook endpoints for custom integrations.',
       tagline: 'Context lands where you work',
       capabilities: [
         'Intercom, Zendesk, Slack',

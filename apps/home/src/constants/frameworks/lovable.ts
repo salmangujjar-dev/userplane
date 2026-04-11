@@ -21,15 +21,15 @@ export const lovableConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Lovable | Session Recordings for Lovable Apps',
+    title: 'Userplane for Lovable | Screen Recordings for Lovable Apps',
     description:
-      'Add session recordings to production-deployed Lovable apps. Console logs, network data, and session details — captured from every deployed build.',
+      'Add screen recordings to production-deployed Lovable apps. Console logs, network data, and session details — captured from every deployed build.',
     keywords:
       'lovable screen recording, lovable session replay, lovable console logs, lovable debugging, ai app builder screen recording, userplane lovable',
   },
   hero: {
     headline: {
-      lines: ['Resolve support issues', 'with session recordings'],
+      lines: ['Resolve support issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'red' }],
       icons: [
         {

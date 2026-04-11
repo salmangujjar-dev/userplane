@@ -29,7 +29,7 @@ export const nextjsConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Fix Next.js support issues', 'with session recordings'],
+      lines: ['Fix Next.js support issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'blue' }],
       icons: [
         {
