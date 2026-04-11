@@ -21,6 +21,25 @@ export function textResult(data: unknown) {
 }
 
 /**
+ * Derive the recording start time for log timestamp alignment.
+ * Prefer the explicit recordingStartedAt stored during upload.
+ * Fall back to createdAt - durationMs for older recordings (approximate).
+ */
+export function getRecordingStartTime(recording: {
+  recordingStartedAt: string | Date | null;
+  recordingDurationMs: number;
+  meta: { createdAt: string | Date };
+}): number | undefined {
+  if (recording.recordingStartedAt) {
+    return new Date(recording.recordingStartedAt).getTime();
+  }
+  if (recording.meta.createdAt) {
+    return new Date(recording.meta.createdAt).getTime() - recording.recordingDurationMs;
+  }
+  return undefined;
+}
+
+/**
  * Fetch a thumbnail from its presigned URL and return a base64 data URI.
  * Returns null on any failure — callers degrade gracefully without it.
  */

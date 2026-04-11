@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { EmptyState, FilterPill, SearchInput } from '../shared/components';
+import { EmptyState, FilterPill, SearchInput } from '../components';
 import {
   CableIcon,
   ChevronRightIcon,
@@ -11,14 +11,14 @@ import {
   FileTypeIcon,
   FileVideoIcon,
   GlobeIcon,
-} from '../shared/icons';
+} from '../components/icons';
 import {
   cn,
   extractDomain,
   extractFilename,
   formatNetworkDuration,
   formatTimestamp,
-} from '../shared/utils';
+} from '../utils';
 import type { NetworkLogEntry } from './types';
 
 interface NetworkTabProps {

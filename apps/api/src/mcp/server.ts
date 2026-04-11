@@ -19,6 +19,7 @@ import { registerProjectTools } from './tools/projects';
 import { registerRecordingResourceTools } from './tools/recording-resources';
 import { registerRecordingTools } from './tools/recordings';
 import { registerShowRecordingTools } from './tools/show-recording';
+import { registerShowResourceAppTools } from './tools/show-resource-apps';
 import { registerUserTools } from './tools/user';
 import { registerWorkspaceTools } from './tools/workspaces';
 import type { McpDeps, McpRequestContext } from './types';
@@ -48,6 +49,7 @@ export function createMcpServer(deps: McpDeps, requestCtx: McpRequestContext) {
 
   // MCP Apps: interactive UI tools + resources
   registerShowRecordingTools(server, deps, userId);
+  registerShowResourceAppTools(server, deps, userId);
   registerAppResources(server);
 
   return server;

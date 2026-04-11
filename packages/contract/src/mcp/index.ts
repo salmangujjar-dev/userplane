@@ -18,6 +18,9 @@ import {
   userplaneGetRecVideo,
 } from './tools/recording-resources';
 import { userplaneDeleteRecording, userplaneListRecordings } from './tools/recordings';
+import { userplaneShowRecActions } from './tools/show-rec-actions';
+import { userplaneShowRecConsole } from './tools/show-rec-console';
+import { userplaneShowRecNetwork } from './tools/show-rec-network';
 import { userplaneShowRecording } from './tools/show-recording';
 import { userplaneGetProfile } from './tools/user';
 import { userplaneGetWorkspace, userplaneListWorkspaces } from './tools/workspaces';
@@ -43,4 +46,7 @@ export const mcpToolDefinitions = [
   userplaneGetRecNetwork,
   userplaneGetRecActions,
   userplaneShowRecording,
+  userplaneShowRecConsole,
+  userplaneShowRecNetwork,
+  userplaneShowRecActions,
 ] as const;

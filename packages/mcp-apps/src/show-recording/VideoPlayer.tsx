@@ -1,5 +1,5 @@
-import { ExternalLinkIcon } from '../shared/icons';
-import { formatDuration } from '../shared/utils';
+import { ExternalLinkIcon } from '../components/icons';
+import { formatDuration } from '../utils';
 
 interface VideoPlayerProps {
   thumbnailDataUri: string | null;

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { EmptyState, FilterPill, SearchInput } from '../shared/components';
+import { EmptyState, FilterPill, SearchInput } from '../shared';
 import {
   AlertCircleIcon,
   AlertTriangleIcon,
@@ -8,8 +8,8 @@ import {
   ChevronRightIcon,
   InfoIcon,
   MessageSquareIcon,
-} from '../shared/icons';
-import { cn, formatTimestamp } from '../shared/utils';
+} from '../components/icons';
+import { cn, formatTimestamp } from '../../utils';
 import type { ConsoleLogEntry } from './types';
 
 interface ConsoleTabProps {
