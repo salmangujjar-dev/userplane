@@ -1,0 +1,97 @@
+---
+title: Connected Apps
+description: View and manage MCP clients authorized to access your Userplane account
+---
+
+The **Connections** tab in Account Settings lists every MCP client that has been authorized to access your account. From here you can review what each client can do, check its status, and revoke access at any time.
+
+<Frame caption="Connected apps — Account Settings">
+  <img src="/media/account/connections/connected-apps.png" />
+</Frame>
+
+## What you can see
+
+Each connected app shows four pieces of information:
+
+| Column          | What it means                                                                    |
+| --------------- | -------------------------------------------------------------------------------- |
+| **Application** | The MCP client name and icon (Claude, Cursor, VS Code, etc.)                     |
+| **Permissions** | OAuth scopes granted — hover to see the full list                                |
+| **Status**      | **Active** if the token is valid; **Inactive** if it has expired or been revoked |
+| **Authorized**  | The date you approved the connection                                             |
+
+## Revoking access
+
+<Steps>
+  <Step title="Open Connections">
+    Go to [Account Settings > Connections](https://dash.userplane.io/_/account?tab=connections).
+  </Step>
+  <Step title="Open the actions menu">
+    Locate the app and click the three-dot menu on the right. Select **Revoke Access**.
+
+    <Frame caption="Revoke access option">
+      <img src="/media/account/connections/revoke-access-option.png" />
+    </Frame>
+
+  </Step>
+  <Step title="Confirm">
+    Type the application name in the confirmation field and click **Revoke Access**. The client loses access immediately.
+
+    <Frame caption="After revoking access">
+      <img src="/media/account/connections/revoked-access.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+<Note>
+  Revoking one client does not affect others. Each MCP client registers independently — Claude,
+  Cursor, and VS Code hold separate authorizations.
+</Note>
+
+## What happens after you revoke
+
+- The MCP client loses access to your account immediately.
+- Existing data the client retrieved is not affected.
+- Other connected clients continue working without interruption.
+- To reconnect, add the server URL to the client again and re-authorize through the OAuth flow.
+
+## No connected apps
+
+If you haven't authorized any MCP clients yet, the tab shows an empty state.
+
+<Frame caption="No connected apps">
+  <img src="/media/account/connections/empty-state.png" />
+</Frame>
+
+<CardGroup cols={2}>
+  <Card title="Get started with MCP" icon="rocket" href="/integrations/mcp-getting-started">
+    Connect Claude, Cursor, VS Code, or ChatGPT to your Userplane workspace
+  </Card>
+  <Card title="How authentication works" icon="lock" href="/integrations/mcp-authentication">
+    OAuth 2.1 flow, PKCE, token scoping, and per-client registration
+  </Card>
+</CardGroup>
+
+## What the MCP integration gives you
+
+Once connected, your AI client can analyze recordings, surface console errors and network failures, manage recording links, and browse workspace data — directly in the conversation.
+
+<CardGroup cols={2}>
+  <Card
+    title="Analyze recordings"
+    icon="magnifying-glass"
+    href="/integrations/mcp-tools-recordings"
+  >
+    Fetch console logs, network requests, and user actions from any recording
+  </Card>
+  <Card title="Interactive viewers" icon="display" href="/integrations/mcp-apps">
+    Video playback, log viewers, and network inspectors rendered inside your AI client
+  </Card>
+  <Card title="Manage recording links" icon="link" href="/integrations/mcp-tools-links">
+    Create and track recording links for customer issues
+  </Card>
+  <Card title="Workspace data" icon="folder-open" href="/integrations/mcp-tools-workspace">
+    Browse workspaces, projects, and your profile
+  </Card>
+</CardGroup>

@@ -399,6 +399,7 @@ function RevokeMcpConnectionModal({
 }) {
   const [confirmText, setConfirmText] = useState('');
   const revokeMutation = useRevokeMcpConnection();
+  const displayName = clientName || 'App';
 
   useEffect(() => {
     if (!open) {
@@ -433,13 +434,13 @@ function RevokeMcpConnectionModal({
 
           <div>
             <Label htmlFor="revoke-mcp-confirm" className="mb-2 block">
-              Type <strong>REVOKE</strong> to confirm
+              Type <strong>{displayName}</strong> to confirm
             </Label>
             <Input
               id="revoke-mcp-confirm"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="REVOKE"
+              placeholder={displayName}
               autoComplete="off"
             />
           </div>
@@ -459,7 +460,7 @@ function RevokeMcpConnectionModal({
             <Button
               type="button"
               className="px-6"
-              disabled={confirmText !== 'REVOKE' || revokeMutation.isPending}
+              disabled={confirmText !== displayName || revokeMutation.isPending}
               onClick={handleRevoke}
             >
               {revokeMutation.isPending ? 'Revoking...' : 'Revoke Access'}
