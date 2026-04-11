@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext, useState } from 'react';
 
-import { cn } from '../utils';
+import { cn } from '../../utils';
 
 // ---------------------------------------------------------------------------
 // Tabs — simple state-driven tabs with underline indicator

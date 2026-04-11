@@ -1,6 +1,6 @@
 import type { ReactNode, SVGProps } from 'react';
 
-import { cn } from '../utils';
+import { cn } from '../../utils';
 
 export function InfoRow({
   icon: Icon,

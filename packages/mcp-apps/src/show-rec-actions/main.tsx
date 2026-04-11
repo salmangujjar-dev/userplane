@@ -3,10 +3,10 @@ import '../ui/styles.css';
 import { App } from '@modelcontextprotocol/ext-apps';
 import { createRoot } from 'react-dom/client';
 
-import { EmptyState, LoadingState } from '../components';
-import { MousePointer2Icon } from '../components/icons';
-import { ActionsTab } from '../recording/ActionsTab';
-import type { ActionLogEntry } from '../recording/types';
+import { ActionsTab } from '../components/recording/ActionsTab';
+import type { ActionLogEntry } from '../components/recording/types';
+import { EmptyState, LoadingState } from '../components/shared';
+import { MousePointer2Icon } from '../components/shared/icons';
 import { setupThemeSync } from '../ui/theme';
 import { extractJsonFromResult, fetchLogViaTool } from '../utils/extract-json';
 

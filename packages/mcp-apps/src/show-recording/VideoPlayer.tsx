@@ -1,4 +1,4 @@
-import { ExternalLinkIcon } from '../components/icons';
+import { ExternalLinkIcon } from '../components/shared/icons';
 import { formatDuration } from '../utils';
 
 interface VideoPlayerProps {

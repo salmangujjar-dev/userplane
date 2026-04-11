@@ -3,10 +3,10 @@ import '../ui/styles.css';
 import { App } from '@modelcontextprotocol/ext-apps';
 import { createRoot } from 'react-dom/client';
 
-import { EmptyState, LoadingState } from '../components';
-import { MessageSquareIcon } from '../components/icons';
-import { ConsoleTab } from '../recording/ConsoleTab';
-import type { ConsoleLogEntry } from '../recording/types';
+import { ConsoleTab } from '../components/recording/ConsoleTab';
+import type { ConsoleLogEntry } from '../components/recording/types';
+import { EmptyState, LoadingState } from '../components/shared';
+import { MessageSquareIcon } from '../components/shared/icons';
 import { setupThemeSync } from '../ui/theme';
 import { extractJsonFromResult, fetchLogViaTool } from '../utils/extract-json';
 

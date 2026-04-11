@@ -1,17 +1,17 @@
 import type { App } from '@modelcontextprotocol/ext-apps';
 import { useCallback, useRef, useState } from 'react';
 
-import { LoadingState, Tabs, TabsContent, TabsList, TabsTrigger } from '../components';
-import { ActionsTab } from '../recording/ActionsTab';
-import { ConsoleTab } from '../recording/ConsoleTab';
-import { NetworkTab } from '../recording/NetworkTab';
+import { ActionsTab } from '../components/recording/ActionsTab';
+import { ConsoleTab } from '../components/recording/ConsoleTab';
+import { NetworkTab } from '../components/recording/NetworkTab';
 import type {
   ActionLogEntry,
   ConsoleLogEntry,
   NetworkLogEntry,
   RecordingDetail,
   RecordingResources,
-} from '../recording/types';
+} from '../components/recording/types';
+import { LoadingState, Tabs, TabsContent, TabsList, TabsTrigger } from '../components/shared';
 import { InfoTab } from './InfoTab';
 
 interface RecordingTabsProps {
