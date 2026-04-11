@@ -159,6 +159,21 @@ export const LAUNCH_RESOURCES: {
   ],
 };
 
+// ── Listing Badges ──
+
+export const LAUNCH_LISTING_BADGES = [
+  {
+    name: 'Twelve Tools',
+    href: 'https://twelve.tools',
+    badge: {
+      src: 'https://twelve.tools/badge0-white.svg',
+      alt: 'Featured on Twelve Tools',
+      width: 200,
+      height: 54,
+    },
+  },
+];
+
 // ── CTA ──
 
 export const LAUNCH_CTA: {
