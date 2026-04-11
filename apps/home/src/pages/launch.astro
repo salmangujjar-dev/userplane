@@ -1,5 +1,5 @@
 ---
-import HomepageLayout from '../layouts/HomepageLayout.astro';
+import LaunchLayout from '../layouts/LaunchLayout.astro';
 import JsonLd from '../components/seo/JsonLd.astro';
 import LaunchHero from '../components/launch/Hero';
 import LogoMarquee from '../components/integrations/LogoMarquee';
@@ -15,6 +15,7 @@ import {
   LAUNCH_FEATURES,
   LAUNCH_RESOURCES,
   LAUNCH_CTA,
+  LAUNCH_LISTING_BADGES,
 } from '../constants/launch/general';
 import { INTEGRATION_LOGOS } from '../constants/integrations';
 
@@ -40,11 +41,12 @@ const breadcrumb = {
 };
 ---
 
-<HomepageLayout
+<LaunchLayout
   title={LAUNCH_SEO.title}
   description={LAUNCH_SEO.description}
   keywords={LAUNCH_SEO.keywords}
   ogImage={LAUNCH_SEO.ogImage}
+  listingBadges={LAUNCH_LISTING_BADGES}
 >
   <JsonLd data={breadcrumb} />
   <main class="flex flex-col" style={gradientVars}>
@@ -73,4 +75,4 @@ const breadcrumb = {
       client:load
     />
   </main>
-</HomepageLayout>
+</LaunchLayout>

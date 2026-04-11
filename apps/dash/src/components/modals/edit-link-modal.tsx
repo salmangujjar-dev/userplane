@@ -36,12 +36,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { LinkReferenceInput } from '@/components/link-reference-input';
-import {
-  metaEntriesToRecord,
-  type MetaEntry,
-  MetaInput,
-  recordToMetaEntries,
-} from '@/components/meta-input';
+import { metaEntriesToRecord, MetaInput, recordToMetaEntries } from '@/components/meta-input';
 import { SUPPORT_LINKS } from '@/constants';
 
 interface EditLinkModalProps {
