@@ -177,7 +177,7 @@ export const oauthConsent = pgTable(
     referenceId: text('reference_id'),
 
     // Authorized scopes
-    scopes: text('scopes').notNull(), // JSON-serialized string[]
+    scopes: jsonb('scopes').$type<string[]>().notNull(), // string[]
 
     // Timestamps
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
