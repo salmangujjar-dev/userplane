@@ -157,7 +157,12 @@
           {
             "group": "Account",
             "icon": "circle-user",
-            "pages": ["account/profile", "account/notifications", "account/leaving-workspace"]
+            "pages": [
+              "account/profile",
+              "account/notifications",
+              "account/connections",
+              "account/leaving-workspace"
+            ]
           },
           {
             "group": "Billing",

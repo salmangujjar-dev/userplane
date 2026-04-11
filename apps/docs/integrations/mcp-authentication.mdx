@@ -33,6 +33,11 @@ The server uses a single OAuth scope: `mcp:tools`.
   </Step>
   <Step title="Approve access">
     The consent screen shows the requesting client and the `mcp:tools` scope. Click **Allow**.
+
+    <Frame caption="OAuth consent screen">
+      <img src="/media/mcp/claude/oauth/consent-screen.png" />
+    </Frame>
+
   </Step>
   <Step title="Connection established">
     The client receives an access token and can make authenticated tool calls. Tokens refresh
@@ -65,6 +70,22 @@ MCP tools respect the same workspace roles as the Userplane dashboard and REST A
 - **JWT verification** — every request is verified against Userplane's JWKS endpoint with issuer and audience checks.
 - **No shared secrets** — no API keys or client secrets are shared with the AI client. All clients use PKCE (public client flow).
 
+## Managing connections
+
+Each authorized MCP client appears in your account's [Connected Apps](https://dash.userplane.io/_/account?tab=connections) list. From there you can review permissions, check authorization dates, and revoke access.
+
+To revoke a specific client's access:
+
+1. Go to [Account Settings > Connections](https://dash.userplane.io/_/account?tab=connections).
+2. Locate the client and open the actions menu (three dots).
+3. Select **Revoke Access**, type the application name to confirm, and click **Revoke**.
+
+The client loses access immediately. Other connected clients are not affected.
+
+<Note>
+  For the full walkthrough including screenshots, see [Connected Apps](/account/connections).
+</Note>
+
 <Note>
   The Userplane REST API uses `uspl_` API keys for authentication (see [API
   Authentication](/api/authentication)). The MCP server uses OAuth 2.1 instead — the two
@@ -76,5 +97,6 @@ MCP tools respect the same workspace roles as the Userplane dashboard and REST A
 
 - [Model Context Protocol](/integrations/mcp) — overview of the Userplane MCP server.
 - [Getting Started](/integrations/mcp-getting-started) — connect your AI client and start analyzing recordings.
+- [Connected Apps](/account/connections) — view and revoke MCP client access from Account Settings.
 - [API Authentication](/api/authentication) — REST API authentication with `uspl_` API keys.
 - [Roles & Permissions](/workspace/roles-permissions) — full breakdown of workspace roles.
