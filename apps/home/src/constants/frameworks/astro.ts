@@ -74,9 +74,9 @@ export const astroConfig = defineFramework({
         'Console errors, network activity, browser metadata, and user actions — captured regardless of which framework island generated them.',
       tagline: 'Cross-island diagnostics',
       capabilities: [
-        'Console logs and error traces',
+        'Errors, warnings, and logs',
         'Network activity capture',
-        'Browser & OS metadata',
+        'Environment and device metadata',
         'Island-agnostic capture',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/astro/astro-console-logs.png'),
@@ -92,7 +92,7 @@ export const astroConfig = defineFramework({
         'Client-side data masking',
         'SSR middleware support',
         'Token preservation',
-        'GDPR & CCPA compliant',
+        'GDPR and CCPA compliant',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/astro/astro-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
@@ -101,12 +101,12 @@ export const astroConfig = defineFramework({
       number: '04',
       title: 'Routes to your support stack',
       description:
-        'Recordings attach to Intercom, Zendesk, and Slack conversations. Link session details to support tickets. API and webhook access for custom routing.',
+        'Recordings attach to Intercom, Zendesk, and Slack. Session data routes to tickets automatically. API and webhook integration for custom pipelines.',
       tagline: 'Where your team triages',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Ticket-linked recordings',
-        'API and webhook access',
+        'Attach recordings to tickets',
+        'API and webhook integration',
         'Browser extension support',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/astro/astro-helpdesk-setup.png'),
@@ -126,14 +126,14 @@ export const astroConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'One script tag or npm install. Attach metadata, trigger recordings, and mask sensitive fields.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session details automatically.',
+          'How recordings capture errors, network traffic, and session behavior automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

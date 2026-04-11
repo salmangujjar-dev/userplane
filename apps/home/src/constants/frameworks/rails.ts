@@ -74,7 +74,7 @@ export const railsConfig = defineFramework({
         'Console errors, network requests, browser metadata, and user steps — captured across Turbo page transitions. Recordings persist through partial page replacements.',
       tagline: 'Works with Turbo Drive',
       capabilities: [
-        'Console logs and error traces',
+        'Console output and error logs',
         'Network request overview',
         'Turbo Drive compatible',
         'Persists across navigations',
@@ -89,10 +89,10 @@ export const railsConfig = defineFramework({
         'Sensitive data is masked before recordings leave the browser. Works with Rails built-in CSP DSL and Devise authentication flows. GDPR and CCPA compliant.',
       tagline: 'CSP and Devise ready',
       capabilities: [
-        'Client-side data masking',
+        'Client-side field masking',
         'Rails CSP DSL compatible',
         'Devise flow support',
-        'GDPR & CCPA compliant',
+        'GDPR & CCPA ready',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/rails/rails-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
@@ -105,8 +105,8 @@ export const railsConfig = defineFramework({
       tagline: 'Context lands where you work',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Recordings linked to tickets',
-        'API and webhook endpoints',
+        'Ticket-linked session data',
+        'API and webhook support',
         'Record from any browser',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/rails/rails-helpdesk-setup.png'),
@@ -126,14 +126,14 @@ export const railsConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'CDN script or npm package. Identify users, manage sessions, and apply privacy settings.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session info automatically.',
+          'How recordings gather console output, network requests, and session interactions automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

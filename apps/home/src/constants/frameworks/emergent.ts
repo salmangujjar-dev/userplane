@@ -70,9 +70,9 @@ export const emergentConfig = defineFramework({
         'Console errors, network activity, browser metadata, and user steps — captured from every AI-generated page. Debug generated code with full production context.',
       tagline: 'Debug generated code',
       capabilities: [
-        'Console logs and error traces',
+        'Console errors and stack traces',
         'Network activity capture',
-        'Browser & OS metadata',
+        'Browser and OS context',
         'Step-by-step user actions',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/emergent/emergent-console-logs.png'),
@@ -85,9 +85,9 @@ export const emergentConfig = defineFramework({
         'Sensitive data is redacted before recordings leave the browser. Configure redaction rules via prompt. GDPR and CCPA compliant out of the box.',
       tagline: 'Compliant by default',
       capabilities: [
-        'Client-side PII redaction',
+        'In-browser data redaction',
         'Prompt-configured privacy',
-        'GDPR & CCPA compliant',
+        'GDPR & CCPA covered',
         'Configurable consent flows',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/emergent/emergent-data-redaction.png'),
@@ -101,9 +101,9 @@ export const emergentConfig = defineFramework({
       tagline: 'Fits your support workflow',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Recordings attached to tickets',
+        'Sessions attached to tickets',
         'API and webhook endpoints',
-        'Browser extension support',
+        'Chrome extension support',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/emergent/emergent-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
@@ -122,14 +122,14 @@ export const emergentConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'Script tag or npm. Pass user metadata, control recording state, and configure redaction.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session activity automatically.',
+          'How recordings collect console errors, network data, and session activity automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

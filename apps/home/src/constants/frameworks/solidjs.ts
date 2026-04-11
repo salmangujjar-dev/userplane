@@ -73,9 +73,9 @@ export const solidjsConfig = defineFramework({
         'Console errors, network requests, browser metadata, and user actions — captured from every SolidJS render. Debug reactive state issues with full session context.',
       tagline: 'Reactive state visibility',
       capabilities: [
-        'Console logs and error traces',
+        'Errors, warnings, and logs',
         'Network request timeline',
-        'Browser & OS metadata',
+        'Environment and device metadata',
         'User action trail',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/solidjs/solidjs-console-logs.png'),
@@ -88,9 +88,9 @@ export const solidjsConfig = defineFramework({
         'Sensitive data is masked before recordings leave the browser. Works with SolidStart middleware. GDPR and CCPA compliant out of the box.',
       tagline: 'Redacted before capture',
       capabilities: [
-        'Client-side PII masking',
+        'Client-side data masking',
         'SolidStart middleware support',
-        'GDPR & CCPA compliant',
+        'GDPR and CCPA compliant',
         'Configurable redaction rules',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/solidjs/solidjs-data-redaction.png'),
@@ -104,9 +104,9 @@ export const solidjsConfig = defineFramework({
       tagline: 'Fits where you triage',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Attach sessions to tickets',
-        'API and webhook support',
-        'Custom pipeline routing',
+        'Attach recordings to tickets',
+        'API and webhook integration',
+        'Flexible pipeline support',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/solidjs/solidjs-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
@@ -125,14 +125,14 @@ export const solidjsConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'One script tag or npm install. Attach metadata, trigger recordings, and mask sensitive fields.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session data automatically.',
+          'How recordings capture errors, network traffic, and session behavior automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

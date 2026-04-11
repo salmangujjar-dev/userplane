@@ -73,9 +73,9 @@ export const vueConfig = defineFramework({
         'Console errors, network snapshots, browser metadata, and step-by-step user actions — attached to every recording from your Vue application automatically.',
       tagline: 'Everything to triage',
       capabilities: [
-        'Console logs and error traces',
+        'Console output and error logs',
         'Network request timeline',
-        'Browser & OS metadata',
+        'Device and browser details',
         'Step-by-step user actions',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/vue/vue-console-logs.png'),
@@ -88,9 +88,9 @@ export const vueConfig = defineFramework({
         "Sensitive data is redacted before it leaves the customer's browser. Router-aware token preservation. GDPR and CCPA compliant out of the box.",
       tagline: 'Redacted before capture',
       capabilities: [
-        'Client-side data redaction',
+        'Client-side field masking',
         'Router-aware token handling',
-        'GDPR & CCPA compliant',
+        'GDPR & CCPA ready',
         'Configurable privacy rules',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/vue/vue-data-redaction.png'),
@@ -104,7 +104,7 @@ export const vueConfig = defineFramework({
       tagline: 'Fits your support workflow',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Session data linked to tickets',
+        'Ticket-linked session data',
         'API and webhook support',
         'Record from any browser',
       ],
@@ -125,14 +125,14 @@ export const vueConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'CDN script or npm package. Identify users, manage sessions, and apply privacy settings.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session data automatically.',
+          'How recordings gather console output, network requests, and session interactions automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

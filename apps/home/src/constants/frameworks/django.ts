@@ -73,9 +73,9 @@ export const djangoConfig = defineFramework({
         'Console errors, network requests, browser metadata, and user steps — captured from every Django-rendered page. Debug template issues and API failures in one recording.',
       tagline: 'Server-rendered page context',
       capabilities: [
-        'Console logs and error traces',
+        'Console errors and stack traces',
         'Network request details',
-        'Browser & OS metadata',
+        'Browser and OS context',
         'User action trail',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/django/django-console-logs.png'),
@@ -88,10 +88,10 @@ export const djangoConfig = defineFramework({
         'Sensitive data is masked before recordings leave the browser. Configure via data attributes or meta tags. Compatible with Django CSP middleware. GDPR and CCPA compliant.',
       tagline: 'CSP-compatible privacy',
       capabilities: [
-        'Client-side data masking',
+        'In-browser data redaction',
         'Attribute-based redaction',
         'Django CSP compatible',
-        'GDPR & CCPA compliant',
+        'GDPR & CCPA covered',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/django/django-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
@@ -104,8 +104,8 @@ export const djangoConfig = defineFramework({
       tagline: 'Support context delivered',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Session data linked to tickets',
-        'API and webhook support',
+        'Sessions attached to tickets',
+        'API and webhook endpoints',
         'Custom routing pipelines',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/django/django-helpdesk-setup.png'),
@@ -125,14 +125,14 @@ export const djangoConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'Script tag or npm. Pass user metadata, control recording state, and configure redaction.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session info automatically.',
+          'How recordings collect console errors, network data, and session activity automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

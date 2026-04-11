@@ -75,7 +75,7 @@ export const nextjsConfig = defineFramework({
       capabilities: [
         'Console logs and error traces',
         'Network request overview',
-        'Browser & OS metadata',
+        'Browser and device metadata',
         'Step-by-step user actions',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/nextjs/nextjs-console-logs.png'),

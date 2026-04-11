@@ -74,9 +74,9 @@ export const lovableConfig = defineFramework({
         'Console errors, network data, browser metadata, and step-by-step user actions — captured from every deployed Lovable app. Debug production issues without reproducing them.',
       tagline: 'Production-grade visibility',
       capabilities: [
-        'Console logs and error traces',
+        'Console output and error logs',
         'Network request log',
-        'Browser & OS metadata',
+        'Device and browser details',
         'Step-by-step user actions',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/lovable/lovable-console-logs.png'),
@@ -91,7 +91,7 @@ export const lovableConfig = defineFramework({
       capabilities: [
         'Client-side field masking',
         'Prompt-configured blur targets',
-        'GDPR & CCPA compliant',
+        'GDPR & CCPA ready',
         'Customer consent controls',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/lovable/lovable-data-redaction.png'),
@@ -105,9 +105,9 @@ export const lovableConfig = defineFramework({
       tagline: 'Support context, delivered',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Ticket-linked recordings',
-        'API and webhook access',
-        'Custom integration support',
+        'Ticket-linked session data',
+        'API and webhook support',
+        'Custom workflow support',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/lovable/lovable-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
@@ -125,14 +125,14 @@ export const lovableConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'CDN script or npm package. Identify users, manage sessions, and apply privacy settings.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session details automatically.',
+          'How recordings gather console output, network requests, and session interactions automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],
