@@ -1,0 +1,126 @@
+---
+title: Link Tools
+description: MCP tools for creating, managing, and deleting recording links
+---
+
+Tools for managing recording links — the URLs sent to end users to initiate a screen recording. Create new links, update settings, and track link usage.
+
+## userplane_list_links
+
+List recording links in a workspace. Filter by project, domain, or creator.
+
+| Parameter     | Type   | Required | Description                             |
+| ------------- | ------ | -------- | --------------------------------------- |
+| `workspaceId` | string | Yes      | Workspace ID                            |
+| `page`        | number | No       | Page number (default: 1)                |
+| `per_page`    | number | No       | Results per page (default: 10, max: 50) |
+| `project_id`  | string | No       | Filter by project ID                    |
+| `domain_id`   | string | No       | Filter by domain ID                     |
+| `created_by`  | string | No       | Filter by creator workspace member ID   |
+
+**Returns:** Paginated list of links with ID, URL, project, domain, reference, reusability status, and creation date.
+
+---
+
+## userplane_create_link
+
+Create a new recording link for a domain. The link generates a URL that initiates a screen recording when visited by an end user. Optionally assign to a project, add a reference name, or attach metadata.
+
+| Parameter       | Type    | Required | Description                                                  |
+| --------------- | ------- | -------- | ------------------------------------------------------------ |
+| `workspaceId`   | string  | Yes      | Workspace ID                                                 |
+| `domainId`      | string  | Yes      | Domain ID to associate the link with                         |
+| `projectId`     | string  | No       | Project ID (uses workspace default if omitted)               |
+| `linkReference` | string  | No       | Custom reference name (e.g., a ticket ID)                    |
+| `linkReusable`  | boolean | No       | Whether the link can be used multiple times (default: false) |
+| `linkMeta`      | object  | No       | Custom key-value metadata pairs                              |
+
+**Returns:** The created link with ID, full URL, project, domain, and settings.
+
+<Tip>
+  Set `linkReusable` to `true` for links you want to embed in documentation, onboarding flows, or
+  shared Slack channels. One-time links are better for individual support tickets.
+</Tip>
+
+---
+
+## userplane_get_link
+
+Retrieve full details for a recording link including URL, project, domain, provider integration, and metadata.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `linkId`      | string | Yes      | Link ID      |
+
+**Returns:** Link URL, project, domain, reference, reusability, provider integration details, metadata, and creation date.
+
+---
+
+## userplane_update_link
+
+Update settings on a recording link. Only the provided fields are changed — omitted fields remain unchanged.
+
+| Parameter          | Type    | Required | Description                                        |
+| ------------------ | ------- | -------- | -------------------------------------------------- |
+| `workspaceId`      | string  | Yes      | Workspace ID                                       |
+| `linkId`           | string  | Yes      | Link ID                                            |
+| `linkTitle`        | string  | No       | New title for the link                             |
+| `linkReusable`     | boolean | No       | Whether the link is reusable                       |
+| `linkProviderType` | string  | No       | Provider type (e.g., `web`, `zendesk`, `intercom`) |
+| `linkProviderId`   | string  | No       | External provider ID                               |
+| `linkProviderRef`  | string  | No       | External provider reference                        |
+| `linkMeta`         | object  | No       | Custom key-value metadata pairs                    |
+
+**Returns:** The updated link with all current settings.
+
+<Note>
+  This operation is idempotent — calling it multiple times with the same parameters produces the
+  same result.
+</Note>
+
+---
+
+## userplane_delete_link
+
+Delete a recording link. Only workspace admins, owners, or the link creator can delete. Existing recordings captured through the link are not affected.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `linkId`      | string | Yes      | Link ID      |
+
+<Warning>
+  This action is irreversible. The link URL will stop working immediately. Recordings already
+  submitted through the link are preserved.
+</Warning>
+
+---
+
+## Example prompts
+
+<CodeGroup>
+  ```text Prompt Create a recording link for domain {domainId} in workspace {workspaceId}. Set the
+  project to {projectName} and reference it as {ticketId}. ```
+</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt Create a reusable recording link for domain {domainId} in workspace {workspaceId}.
+  Reference it as "feedback-form". ```
+</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt How many recordings have been submitted through link {linkId} in workspace{' '}
+  {workspaceId}? When was the most recent one? ```
+</CodeGroup>
+
+<Note>
+  Replace `{workspaceId}`, `{domainId}`, `{linkId}`, `{projectName}`, and `{ticketId}` with your
+  actual values from the Userplane dashboard.
+</Note>
+
+## Related articles
+
+- [Additional Tools](/integrations/mcp-tools-workspace) — tools for profiles, workspaces, and projects.
+- [Recording Tools](/integrations/mcp-tools-recordings) — tools for listing, inspecting, and analyzing recordings.
+- [Getting Started](/integrations/mcp-getting-started) — first steps after connecting your AI client.

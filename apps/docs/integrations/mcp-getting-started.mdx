@@ -1,0 +1,222 @@
+---
+title: Getting Started
+description: Connect your AI client to the Userplane MCP server and start analyzing recordings
+---
+
+Connect your AI client to the Userplane MCP server. Authentication is handled automatically via OAuth 2.1 — your client will prompt you to sign in on first use. No API keys required.
+
+## Server URL
+
+```
+https://api.userplane.io/mcp
+```
+
+<Info>
+  You need a Userplane account and workspace membership to connect. If you don't have an account,
+  ask your workspace admin for an invite.
+</Info>
+
+## Connect your AI client
+
+<Tabs>
+  <Tab title="Claude">
+    <Steps>
+      <Step title="Open Connectors">
+        Navigate to the **Connectors** page in your [Claude settings](https://claude.ai/settings).
+      </Step>
+      <Step title="Add a custom connector">
+        Select **Add custom connector**.
+      </Step>
+      <Step title="Enter server details">
+        Enter a name (e.g., `userplane`) and the MCP server URL:
+        ```
+        https://api.userplane.io/mcp
+        ```
+        Select **Add**.
+      </Step>
+      <Step title="Authorize">
+        On first use, Claude opens a browser window for Userplane sign-in. Log in with your credentials and click **Allow** on the consent screen.
+      </Step>
+      <Step title="Start using it">
+        Open a new conversation, select the attachments button (the **+** icon), then select your Userplane connector.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Claude Code">
+    Add the server via CLI:
+
+    ```bash
+    claude mcp add --transport http userplane https://api.userplane.io/mcp
+    ```
+
+    Verify the connection:
+
+    ```bash
+    claude mcp list
+    ```
+
+    The `userplane` server should appear in the list. On first tool call, Claude Code opens a browser window for Userplane sign-in.
+
+    <Note>
+      See the [Claude Code documentation](https://code.claude.com/docs/en/mcp#installing-mcp-servers) for more details.
+    </Note>
+
+  </Tab>
+  <Tab title="Cursor">
+    <Steps>
+      <Step title="Open the command palette">
+        Press `Cmd+Shift+P` (or `Ctrl+Shift+P` on Windows/Linux).
+      </Step>
+      <Step title="Open MCP settings">
+        Search for **Open MCP settings** and select it. This opens `mcp.json`.
+      </Step>
+      <Step title="Configure the server">
+        Add Userplane to the `mcpServers` object:
+
+        ```json
+        {
+          "mcpServers": {
+            "userplane": {
+              "url": "https://api.userplane.io/mcp"
+            }
+          }
+        }
+        ```
+      </Step>
+      <Step title="Authorize">
+        On first use, Cursor opens a browser window for sign-in. Log in and approve access.
+      </Step>
+    </Steps>
+
+    <Note>
+      See [Installing MCP servers](https://cursor.com/docs#installing-mcp-servers) in the Cursor documentation for more details.
+    </Note>
+
+  </Tab>
+  <Tab title="VS Code">
+    <Steps>
+      <Step title="Create the config file">
+        Create a `.vscode/mcp.json` file in your project root.
+      </Step>
+      <Step title="Configure the server">
+        Add Userplane as a server:
+
+        ```json
+        {
+          "servers": {
+            "userplane": {
+              "type": "http",
+              "url": "https://api.userplane.io/mcp"
+            }
+          }
+        }
+        ```
+      </Step>
+      <Step title="Authorize">
+        On first tool call, VS Code opens a browser window for Userplane sign-in.
+      </Step>
+    </Steps>
+
+    <Note>
+      See the [VS Code documentation](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) for more details.
+    </Note>
+
+  </Tab>
+  <Tab title="ChatGPT">
+    <Steps>
+      <Step title="Open settings">
+        Open **Settings** in ChatGPT.
+      </Step>
+      <Step title="Navigate to connectors">
+        Go to the **Connectors** section and select **Add connector**.
+      </Step>
+      <Step title="Enter server details">
+        Enter a name (e.g., `userplane`) and the MCP server URL:
+        ```
+        https://api.userplane.io/mcp
+        ```
+      </Step>
+      <Step title="Authorize">
+        On first use, ChatGPT opens a browser window for Userplane sign-in. Log in and approve access.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Try it out
+
+<Steps>
+  <Step title="Verify your connection">
+    Ask your agent to list your workspaces:
+
+    <CodeGroup>
+    ```text Prompt
+    List my Userplane workspaces.
+    ```
+    </CodeGroup>
+
+    If you see your workspaces, you're connected. If you're prompted to sign in, complete the authorization and try again.
+
+  </Step>
+  <Step title="Analyze a recording">
+    Copy a recording URL from the [Userplane dashboard](https://dash.userplane.io) and paste it into your AI client. The agent extracts the workspace and recording IDs from the URL and fetches the session data.
+
+    <CodeGroup>
+    ```text Prompt
+    Here's a recording from a customer reporting a checkout issue:
+    https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
+    What's causing the problem?
+    ```
+    </CodeGroup>
+
+  </Step>
+  <Step title="Explore interactive viewers">
+    Ask your agent to show a recording. In Claude and ChatGPT, this opens an interactive viewer with video playback, console logs, network requests, and user actions.
+
+    <CodeGroup>
+    ```text Prompt
+    Show me the full recording for {recordingId} in workspace {workspaceId}.
+    ```
+    </CodeGroup>
+
+    <Note>
+      Interactive viewers render in Claude (desktop and web) and ChatGPT. Other clients display the same data as structured text. See [MCP Apps](/integrations/mcp-apps) for details.
+    </Note>
+
+  </Step>
+  <Step title="Create a recording link">
+    Ask your agent to create a recording link for a customer issue.
+
+    <CodeGroup>
+    ```text Prompt
+    Create a recording link for domain {domainId} in workspace {workspaceId}. Reference it as {ticketId}.
+    ```
+    </CodeGroup>
+
+  </Step>
+</Steps>
+
+## Tips
+
+<Tip>
+  Agents work best when you provide specific recording IDs or dashboard URLs. Copy the URL directly
+  from your browser when viewing a recording in the dashboard.
+</Tip>
+
+<Tip>
+  You can chain requests in a single conversation. Start with "Show me the recording" and follow up
+  with "Now focus on the network errors" or "What did the user do right before the error?"
+</Tip>
+
+<Tip>
+  For details on the OAuth 2.1 authentication flow, see
+  [Authentication](/integrations/mcp-authentication).
+</Tip>
+
+## Related articles
+
+- [Model Context Protocol](/integrations/mcp) — overview of the Userplane MCP server.
+- [Recording Tools](/integrations/mcp-tools-recordings) — tools for listing, inspecting, and analyzing recordings.
+- [Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
+- [MCP Apps](/integrations/mcp-apps) — rich viewers rendered inside your AI client.
+- [Authentication](/integrations/mcp-authentication) — OAuth 2.1 flow and permissions.

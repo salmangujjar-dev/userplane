@@ -54,6 +54,10 @@
     {
       "source": "/frameworks/lovable",
       "destination": "/platforms/lovable"
+    },
+    {
+      "source": "/integrations/agent-skills",
+      "destination": "/developer/agent-skills"
     }
   ],
   "navigation": {
@@ -191,7 +195,7 @@
           {
             "group": "AI Agents",
             "icon": "robot",
-            "pages": ["integrations/agent-skills", "integrations/mcp"]
+            "pages": ["developer/agent-skills", "developer/mcp"]
           },
           {
             "group": "SDK Reference",
@@ -356,9 +360,29 @@
             ]
           },
           {
-            "group": "AI Agents",
+            "group": "Model Context Protocol",
             "icon": "robot",
-            "pages": ["integrations/mcp", "integrations/agent-skills"]
+            "pages": [
+              "integrations/mcp",
+              "integrations/mcp-getting-started",
+              {
+                "group": "MCP Apps",
+                "pages": [
+                  "integrations/mcp-apps",
+                  "integrations/mcp-apps-recording",
+                  "integrations/mcp-apps-resources"
+                ]
+              },
+              {
+                "group": "MCP Tools",
+                "pages": [
+                  "integrations/mcp-tools-recordings",
+                  "integrations/mcp-tools-links",
+                  "integrations/mcp-tools-workspace"
+                ]
+              },
+              "integrations/mcp-authentication"
+            ]
           }
         ]
       }
