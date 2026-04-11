@@ -1,5 +1,6 @@
 'use client';
 
+import { MCP_SCOPE_LABELS } from '@userplane/contract';
 import { Button } from '@userplane/ui/components/button';
 import Logo from '@userplane/ui/components/logo';
 import { Skeleton } from '@userplane/ui/components/skeleton';
@@ -32,16 +33,8 @@ interface ClientInfo {
 // Scope display labels
 // ---------------------------------------------------------------------------
 
-const SCOPE_LABELS: Record<string, string> = {
-  openid: 'Verify your identity',
-  profile: 'View your profile information',
-  email: 'View your email address',
-  'mcp:tools': 'Access workspace tools and data',
-  offline_access: 'Stay connected between sessions',
-};
-
 function getScopeLabel(scope: string): string {
-  return SCOPE_LABELS[scope] ?? scope;
+  return MCP_SCOPE_LABELS[scope] ?? scope;
 }
 
 // ---------------------------------------------------------------------------

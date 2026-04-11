@@ -187,6 +187,19 @@ export const ADMIN_WORKSPACE_PROJECTS_PAGINATION = {
 } as const;
 
 /**
+ * MCP connection pagination limits
+ * List authorized MCP clients for a user
+ */
+export const MCP_CONNECTION_PAGINATION = {
+  /** Maximum items per page */
+  MAX_PER_PAGE: 10,
+  /** Default items per page */
+  DEFAULT_PER_PAGE: 5,
+  /** Minimum items per page */
+  MIN_PER_PAGE: 1,
+} as const;
+
+/**
  * Complete pagination constants
  * Export all pagination limits for easy import
  */
@@ -205,4 +218,5 @@ export const PAGINATION_CONSTANTS = {
   ADMIN_WORKSPACES: ADMIN_WORKSPACES_PAGINATION,
   ADMIN_WORKSPACE_MEMBERS: ADMIN_WORKSPACE_MEMBERS_PAGINATION,
   ADMIN_WORKSPACE_PROJECTS: ADMIN_WORKSPACE_PROJECTS_PAGINATION,
+  MCP_CONNECTION: MCP_CONNECTION_PAGINATION,
 } as const;

@@ -10,6 +10,7 @@ export * from './billing';
 export * from './diagnostics';
 export * from './domain';
 export * from './link';
+export * from './mcp-connection';
 export * from './member';
 export * from './notifications';
 export * from './project';

@@ -130,8 +130,8 @@ export function RecordingLayout({ player, panel }: RecordingLayoutProps) {
   // Desktop (>= 1024px): resizable + collapsible panel
   return (
     <PanelTabContext.Provider value={tabContext}>
-      <main className="w-full pl-4 overflow-hidden flex-1">
-        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg">
+      <main className="w-full px-4 overflow-hidden flex-1">
+        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg overflow-hidden">
           <ResizablePanel defaultSize={66} minSize={30} className="overflow-x-visible">
             <div className="relative pr-4 h-full">{player}</div>
           </ResizablePanel>
@@ -151,7 +151,7 @@ export function RecordingLayout({ player, panel }: RecordingLayoutProps) {
             onExpand={() => setIsCollapsed(false)}
             className="overflow-hidden"
           >
-            <div className="pl-4 h-full">{panel}</div>
+            <div className="px-4 h-full">{panel}</div>
           </ResizablePanel>
         </ResizablePanelGroup>
 

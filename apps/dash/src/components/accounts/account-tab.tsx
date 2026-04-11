@@ -7,6 +7,7 @@ import { tabParser } from '@/lib/parsers';
 
 import { AccountSettingsSection } from './account-settings-section';
 import { DevelopersSection } from './developers-section';
+import { McpConnectionsSection } from './mcp-connections-section';
 import { WorkspaceMembershipSection } from './workspace-membership-section';
 
 export function AccountTab() {
@@ -19,6 +20,7 @@ export function AccountTab() {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="workspaces">Workspaces</TabsTrigger>
           <TabsTrigger value="developers">Developers</TabsTrigger>
+          <TabsTrigger value="connections">Connections</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-8">
@@ -31,6 +33,10 @@ export function AccountTab() {
 
         <TabsContent value="developers" className="space-y-8">
           <DevelopersSection />
+        </TabsContent>
+
+        <TabsContent value="connections" className="space-y-8">
+          <McpConnectionsSection />
         </TabsContent>
       </Tabs>
     </div>
