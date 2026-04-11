@@ -104,8 +104,8 @@ export const angularConfig = defineFramework({
       tagline: 'Recordings where tickets live',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Ticket attachment support',
-        'API and webhook endpoints',
+        'Recordings linked to tickets',
+        'API and webhook access',
         'Custom integration support',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/angular/angular-helpdesk-setup.png'),
@@ -132,7 +132,7 @@ export const angularConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session activity automatically.',
+          'How recordings capture console logs, network requests, and session details automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

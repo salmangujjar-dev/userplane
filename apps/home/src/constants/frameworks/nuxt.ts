@@ -75,7 +75,7 @@ export const nuxtConfig = defineFramework({
       capabilities: [
         'Console logs and error traces',
         'Network activity log',
-        'Browser & OS metadata',
+        'Browser and device metadata',
         'Server and client coverage',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/nuxt/nuxt-console-logs.png'),
@@ -88,7 +88,7 @@ export const nuxtConfig = defineFramework({
         'PII is redacted client-side before recordings are transmitted. Browser-only initialization keeps your server bundle clean. GDPR and CCPA compliant.',
       tagline: 'Redacted, then transmitted',
       capabilities: [
-        'Client-side PII redaction',
+        'Client-side PII masking',
         'Browser-only initialization',
         'Server bundle safe',
         'GDPR & CCPA compliant',
@@ -104,8 +104,8 @@ export const nuxtConfig = defineFramework({
       tagline: 'Context lands where you work',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Recordings attached to tickets',
-        'API and webhook endpoints',
+        'Recordings linked to tickets',
+        'API and webhook access',
         'Custom pipeline routing',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/nuxt/nuxt-helpdesk-setup.png'),
@@ -132,7 +132,7 @@ export const nuxtConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session info automatically.',
+          'How recordings capture console logs, network requests, and session details automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

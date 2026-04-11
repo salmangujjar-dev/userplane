@@ -73,9 +73,9 @@ export const svelteConfig = defineFramework({
         'Console errors, network details, and browser metadata captured automatically. Debug server-rendered pages and client-side interactions in one recording.',
       tagline: 'SSR and CSR in one view',
       capabilities: [
-        'Console logs and error traces',
+        'Console errors and stack traces',
         'Network request details',
-        'Browser & OS metadata',
+        'Browser and OS context',
         'SSR and CSR debugging',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/svelte/svelte-console-logs.png'),
@@ -88,9 +88,9 @@ export const svelteConfig = defineFramework({
         'Sensitive fields are masked before recordings leave the browser. Server hooks handle token preservation through SvelteKit redirects. GDPR and CCPA ready.',
       tagline: 'Masked before it ships',
       capabilities: [
-        'Client-side field masking',
+        'In-browser data redaction',
         'Server hook token handling',
-        'GDPR & CCPA ready',
+        'GDPR & CCPA covered',
         'SvelteKit redirect support',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/svelte/svelte-data-redaction.png'),
@@ -104,8 +104,8 @@ export const svelteConfig = defineFramework({
       tagline: 'Support context, delivered',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Attach sessions to tickets',
-        'API and webhook support',
+        'Sessions attached to tickets',
+        'API and webhook endpoints',
         'Custom routing pipelines',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/svelte/svelte-helpdesk-setup.png'),
@@ -125,14 +125,14 @@ export const svelteConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'Script tag or npm. Pass user metadata, control recording state, and configure redaction.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session data automatically.',
+          'How recordings collect console errors, network data, and session activity automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

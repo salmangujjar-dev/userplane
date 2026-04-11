@@ -67,9 +67,9 @@ export const webConfig = defineFramework({
         'Console errors, network request data, browser metadata, and user steps — attached to every recording. Works on any page that runs JavaScript.',
       tagline: 'Works everywhere',
       capabilities: [
-        'Console logs and error traces',
+        'Errors, warnings, and logs',
         'Network request log',
-        'Browser & OS metadata',
+        'Environment and device metadata',
         'User action trail',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/web/web-console-logs.png'),
@@ -85,7 +85,7 @@ export const webConfig = defineFramework({
         'Attribute-based redaction',
         'Meta tag configuration',
         'No code changes needed',
-        'GDPR & CCPA compliant',
+        'GDPR and CCPA compliant',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/web/web-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
@@ -98,8 +98,8 @@ export const webConfig = defineFramework({
       tagline: 'Help desk agnostic',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Ticket attachment',
-        'API and webhook support',
+        'Attach recordings to tickets',
+        'API and webhook integration',
         'Custom integrations',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/web/web-helpdesk-setup.png'),
@@ -118,14 +118,14 @@ export const webConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'One script tag or npm install. Attach metadata, trigger recordings, and mask sensitive fields.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session activity automatically.',
+          'How recordings capture errors, network traffic, and session behavior automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

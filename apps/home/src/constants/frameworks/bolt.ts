@@ -72,7 +72,7 @@ export const boltConfig = defineFramework({
       capabilities: [
         'Console logs and error traces',
         'Network request snapshots',
-        'Browser & OS metadata',
+        'Browser and device metadata',
         'User action trail',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/bolt/bolt-console-logs.png'),
@@ -101,7 +101,7 @@ export const boltConfig = defineFramework({
       tagline: 'Context where you triage',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Link to support tickets',
+        'Recordings linked to tickets',
         'API and webhook access',
         'Chrome extension included',
       ],
@@ -129,7 +129,7 @@ export const boltConfig = defineFramework({
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session data automatically.',
+          'How recordings capture console logs, network requests, and session details automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

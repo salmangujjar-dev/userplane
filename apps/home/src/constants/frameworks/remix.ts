@@ -73,9 +73,9 @@ export const remixConfig = defineFramework({
         'Console errors, network requests, browser metadata, and user actions — captured across nested routes. Debug loader failures and form submission errors with full session context.',
       tagline: 'Full route visibility',
       capabilities: [
-        'Console logs and error traces',
+        'Console output and error logs',
         'Network request timeline',
-        'Browser & OS metadata',
+        'Device and browser details',
         'User action trail',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/remix/remix-console-logs.png'),
@@ -88,9 +88,9 @@ export const remixConfig = defineFramework({
         'Sensitive data is masked before recordings leave the browser. Works alongside Remix middleware and loader-level access control. GDPR and CCPA compliant out of the box.',
       tagline: 'Redacted before capture',
       capabilities: [
-        'Client-side PII masking',
+        'Client-side field masking',
         'Loader-aware redaction',
-        'GDPR & CCPA compliant',
+        'GDPR & CCPA ready',
         'Configurable redaction rules',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/remix/remix-data-redaction.png'),
@@ -104,9 +104,9 @@ export const remixConfig = defineFramework({
       tagline: 'Fits where you triage',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Attach sessions to tickets',
+        'Ticket-linked session data',
         'API and webhook support',
-        'Custom pipeline routing',
+        'Custom routing rules',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/remix/remix-helpdesk-setup.png'),
       learnMoreHref: DOCS_SDK_OVERVIEW,
@@ -125,14 +125,14 @@ export const remixConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'CDN script or npm package. Identify users, manage sessions, and apply privacy settings.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session data automatically.',
+          'How recordings gather console output, network requests, and session interactions automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],

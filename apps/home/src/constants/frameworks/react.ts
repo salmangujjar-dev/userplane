@@ -73,9 +73,9 @@ export const reactConfig = defineFramework({
         'Errors, request details, browser metadata, and user action trails — captured automatically with every recording from your React application.',
       tagline: 'Full stack visibility',
       capabilities: [
-        'Console logs and error traces',
+        'Console errors and stack traces',
         'Network request snapshots',
-        'Browser & OS metadata',
+        'Browser and OS context',
         'User action trail',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/react/react-console-logs.png'),
@@ -88,10 +88,10 @@ export const reactConfig = defineFramework({
         'Sensitive fields are masked client-side before recordings reach your team. SDK-level redaction rules and consent flow controls. GDPR and CCPA compliant.',
       tagline: 'Compliant from day one',
       capabilities: [
-        'Client-side PII masking',
+        'In-browser data redaction',
         'SDK-level redaction rules',
         'Consent flow controls',
-        'GDPR & CCPA compliant',
+        'GDPR & CCPA covered',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/react/react-data-redaction.png'),
       learnMoreHref: DOCS_SENSITIVE_DATA_REDACTION,
@@ -104,8 +104,8 @@ export const reactConfig = defineFramework({
       tagline: 'Context where you triage',
       capabilities: [
         'Intercom, Zendesk, Slack',
-        'Link to support tickets',
-        'API and webhook access',
+        'Sessions attached to tickets',
+        'API and webhook endpoints',
         'Custom pipeline support',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/react/react-helpdesk-setup.png'),
@@ -125,14 +125,14 @@ export const reactConfig = defineFramework({
         label: 'SDK',
         title: 'SDK Overview',
         description:
-          'Embed script or npm package. Attach metadata, control recordings, and configure privacy.',
+          'Script tag or npm. Pass user metadata, control recording state, and configure redaction.',
         href: DOCS_SDK_OVERVIEW,
       },
       {
         label: 'Recording',
         title: 'How Screen Recording Works',
         description:
-          'How recordings capture console logs, network requests, and session info automatically.',
+          'How recordings collect console errors, network data, and session activity automatically.',
         href: DOCS_RECORDING_REQUESTING,
       },
     ],
