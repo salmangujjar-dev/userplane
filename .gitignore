@@ -41,6 +41,9 @@ dist/
 apps/recorder/public/bridge-worker.js
 packages/postbridge/src/bridge-worker.js
 
+# TypeScript build cache
+*.tsbuildinfo
+
 # TypeScript compiled files in dist directories
 **/dist/**/*.js
 **/dist/**/*.d.ts

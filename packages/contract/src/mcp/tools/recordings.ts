@@ -25,18 +25,6 @@ export const userplaneListRecordings = {
   annotations: READ_ONLY_ANNOTATIONS,
 } as const satisfies McpToolDefinition;
 
-export const userplaneGetRecording = {
-  name: 'userplane_get_recording',
-  title: 'Get recording details',
-  description:
-    'Retrieve complete details for a screen recording including duration, metadata, and upload status. Use the recording resource tools to access video, thumbnail, and log files.',
-  inputSchema: {
-    workspaceId: z.string().describe('Workspace ID'),
-    recordingId: z.string().describe('Recording ID'),
-  },
-  annotations: READ_ONLY_ANNOTATIONS,
-} as const satisfies McpToolDefinition;
-
 export const userplaneDeleteRecording = {
   name: 'userplane_delete_recording',
   title: 'Delete a recording',

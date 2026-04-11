@@ -1,9 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import {
-  userplaneDeleteRecording,
-  userplaneGetRecording,
-  userplaneListRecordings,
-} from '@userplane/contract';
+import { userplaneDeleteRecording, userplaneListRecordings } from '@userplane/contract';
 
 import { requireWorkspaceMember, textResult } from '../helpers';
 import type { McpDeps } from '../types';
@@ -32,15 +28,6 @@ export function registerRecordingTools(server: McpServer, deps: McpDeps, userId:
         return textResult({ workspaceId, recordings, total, page: p, per_page: pp });
       }
     );
-  }
-
-  {
-    const { name, ...config } = userplaneGetRecording;
-    server.registerTool(name, config, async ({ workspaceId, recordingId }) => {
-      await requireWorkspaceMember(deps, userId, workspaceId);
-      const recording = await deps.recordingService.getById(recordingId, workspaceId);
-      return textResult({ workspaceId, recording });
-    });
   }
 
   {
