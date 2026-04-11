@@ -25,7 +25,7 @@ export const SPOTLIGHT_IMAGE = {
   alt: 'AI handling customer support calls',
 };
 
-const VIMEO_VIDEO_ID = '1176596203';
+const VIMEO_VIDEO_ID = '1181995697';
 
 export const SPOTLIGHT_VIDEO = {
   src: `https://player.vimeo.com/video/${VIMEO_VIDEO_ID}?autoplay=1`,
