@@ -1,0 +1,53 @@
+---
+title: Interactive Apps
+description: Rich viewers for recordings, console logs, network requests, and user actions rendered inside your AI client
+---
+
+The Userplane MCP server includes four interactive apps that render directly inside AI clients that support MCP Apps. Instead of reading raw data, you get video playback, filterable log viewers, network inspectors, and user action timelines.
+
+## Available apps
+
+| App                                                        | Tool                         | What it shows                                                                         |
+| ---------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------- |
+| [Recording viewer](/integrations/mcp-apps-recording)       | `userplane_show_recording`   | Video playback, session metadata, console, network, and actions in a tabbed interface |
+| [Console log viewer](/integrations/mcp-apps-resources)     | `userplane_show_rec_console` | Log entries with level filtering, search, and expandable stack traces                 |
+| [Network request viewer](/integrations/mcp-apps-resources) | `userplane_show_rec_network` | HTTP requests with status codes, durations, and expandable headers and bodies         |
+| [User action viewer](/integrations/mcp-apps-resources)     | `userplane_show_rec_actions` | Clicks, navigation, tab switches, and page lifecycle events                           |
+
+## Client support
+
+| Client                   | Interactive viewers | Fallback        |
+| ------------------------ | ------------------- | --------------- |
+| Claude (desktop and web) | Yes                 | —               |
+| ChatGPT                  | Yes                 | —               |
+| Claude Code (CLI)        | —                   | Structured text |
+| Cursor                   | —                   | Structured text |
+| VS Code (Copilot)        | —                   | Structured text |
+
+<Info>
+  In clients without MCP Apps support, the same tools return structured text with identical data.
+  Your agent can still analyze console errors, network failures, and user actions — only the visual
+  presentation differs.
+</Info>
+
+## How it works
+
+MCP Apps are self-contained HTML bundles served as resources by the MCP server. When your AI client supports MCP Apps, the tool response includes a reference to the app resource. The client renders the app in a sandboxed environment and passes the tool result data to it.
+
+The apps are built with React and Tailwind CSS, matching the look and feel of the Userplane dashboard.
+
+<CardGroup cols={2}>
+  <Card title="Recording viewer" icon="play" href="/integrations/mcp-apps-recording">
+    Full recording experience with video, metadata, and session data tabs
+  </Card>
+  <Card title="Resource viewers" icon="table" href="/integrations/mcp-apps-resources">
+    Focused viewers for console logs, network requests, and user actions
+  </Card>
+</CardGroup>
+
+## Related articles
+
+- [Recording Viewer](/integrations/mcp-apps-recording) — full recording viewer with video, metadata, and session data tabs.
+- [Resource Viewers](/integrations/mcp-apps-resources) — focused viewers for console, network, and action data.
+- [Recording Tools](/integrations/mcp-tools-recordings) — all recording-related MCP tools and parameters.
+- [Getting Started](/integrations/mcp-getting-started) — first steps after connecting your AI client.

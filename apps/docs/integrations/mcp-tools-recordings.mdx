@@ -1,0 +1,254 @@
+---
+title: Recording Tools
+description: MCP tools for listing, inspecting, and analyzing screen recordings
+---
+
+Tools for listing recordings, retrieving session data, and accessing recording resources (video, console logs, network logs, user actions). Most tools are read-only — only `userplane_delete_recording` modifies data.
+
+## Listing and management
+
+### userplane_list_recordings
+
+List screen recordings in a workspace. Recordings are screen captures from end users. Filter by project, link, or creator. Returns paginated results newest first.
+
+| Parameter     | Type   | Required | Description                             |
+| ------------- | ------ | -------- | --------------------------------------- |
+| `workspaceId` | string | Yes      | Workspace ID                            |
+| `page`        | number | No       | Page number (default: 1)                |
+| `per_page`    | number | No       | Results per page (default: 10, max: 50) |
+| `project_id`  | string | No       | Filter by project ID                    |
+| `link_id`     | string | No       | Filter by link ID                       |
+| `created_by`  | string | No       | Filter by creator workspace member ID   |
+
+**Returns:** Paginated list of recordings with ID, duration, project, creator, and creation date.
+
+---
+
+### userplane_delete_recording
+
+Soft-delete a screen recording. Only workspace admins, owners, or the recording creator can delete.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+<Warning>
+  This action is irreversible. The recording is soft-deleted and cannot be recovered.
+</Warning>
+
+---
+
+## Recording details
+
+### userplane_get_rec_info
+
+Retrieve complete details for a screen recording including duration, metadata, and upload status. Use the recording resource tools to access video, thumbnail, and log files.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+**Returns:** Recording duration, upload status, metadata, project, domain, link, and creator details.
+
+---
+
+### userplane_get_rec_video
+
+Retrieve a time-limited presigned URL to download or stream the screen recording video file.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+**Returns:** Presigned URL (expires after a short time window).
+
+---
+
+### userplane_get_rec_thumb
+
+Retrieve the recording's thumbnail preview as an inline base64 data URI.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+**Returns:** Base64-encoded data URI of the thumbnail image.
+
+---
+
+## Session data
+
+### userplane_get_rec_console
+
+Retrieve browser console log entries captured during the recording. Returns an array of log entries with level, message, timestamp, and optional stack traces. Useful for debugging errors and warnings.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+**Returns:** Array of console entries. Each entry includes:
+
+- `log_type` — log level (error, warning, info, log, debug)
+- `args` — log message content
+- `timestamp` — time relative to recording start
+- `trace` — stack trace (if available)
+- `url` — page URL where the log was emitted
+
+---
+
+### userplane_get_rec_network
+
+Retrieve network request/response log entries captured during the recording. Returns an array of entries with URL, method, status, duration, headers, and bodies. Useful for diagnosing API issues.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+**Returns:** Array of network entries. Each entry includes:
+
+- `url` — request URL
+- `method` — HTTP method
+- `status` — response status code
+- `duration` — request duration in milliseconds
+- `headers` — request and response headers
+- `body` — request and response bodies (when captured)
+- `timestamp` — time relative to recording start
+
+---
+
+### userplane_get_rec_actions
+
+Retrieve user interaction events captured during the recording. Returns an array of actions including clicks, navigation, tab switches, and page lifecycle events.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+**Returns:** Array of action entries. Each entry includes:
+
+- `type` — action type (click, navigation, tab switch, page lifecycle)
+- `timestamp` — time relative to recording start
+- `data` — action-specific details (element selector, URL, event type)
+
+---
+
+## Interactive viewers
+
+These tools render rich, interactive viewers in AI clients that support [MCP Apps](/integrations/mcp-apps). In other clients, they return the same data as structured text.
+
+### userplane_show_recording
+
+Display the full interactive recording viewer with video playback, session metadata, and tabbed access to console logs, network requests, and user actions.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+See [Recording Viewer](/integrations/mcp-apps-recording) for details.
+
+---
+
+### userplane_show_rec_console
+
+Display an interactive console log viewer with level filtering, full-text search, and expandable entries.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+See [Resource Viewers](/integrations/mcp-apps-resources) for details.
+
+---
+
+### userplane_show_rec_network
+
+Display an interactive network request viewer with type filtering, status codes, durations, and expandable headers and bodies.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+See [Resource Viewers](/integrations/mcp-apps-resources) for details.
+
+---
+
+### userplane_show_rec_actions
+
+Display an interactive user action viewer with type filtering, search, and expandable event details.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `recordingId` | string | Yes      | Recording ID |
+
+See [Resource Viewers](/integrations/mcp-apps-resources) for details.
+
+---
+
+## Example prompts
+
+<CodeGroup>
+  ```text Prompt List the 5 most recent recordings in workspace {workspaceId}. For each one, tell me
+  who submitted it, which project it belongs to, and when it was created. ```
+</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt A customer just submitted a recording in the Billing project. Pull up the latest
+  recording and tell me what went wrong. ```
+</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt Here's a recording from a customer who can't complete checkout:
+  https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
+  What's causing the issue? ```
+</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt Give me a full root cause analysis of this recording. Check the console for
+  JavaScript errors, the network requests for failed API calls, and the user actions for anything
+  unusual. Summarize what happened and what likely caused the issue. https://dash.userplane.io/
+  {workspaceId}/recordings/{recordingId}
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt Show me the console logs for this recording. Are there any JavaScript errors or
+  unhandled exceptions? https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt Check the network requests in this recording. Are there any 500 errors, 404s, or
+  requests that took longer than 3 seconds? https://dash.userplane.io/{workspaceId}/recordings/
+  {recordingId}
+  ```
+</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt Walk me through what the user did in this recording. What pages did they visit,
+  what did they click, and where did things break? https://dash.userplane.io/{workspaceId}
+  /recordings/{recordingId}
+  ```
+</CodeGroup>
+
+<Note>
+  Replace `{workspaceId}` and `{recordingId}` with your actual values from the Userplane dashboard
+  URL bar.
+</Note>
+
+## Related articles
+
+- [Additional Tools](/integrations/mcp-tools-workspace) — tools for profiles, workspaces, and projects.
+- [Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
+- [Recording Viewer](/integrations/mcp-apps-recording) — interactive viewer for full recording playback.
+- [Resource Viewers](/integrations/mcp-apps-resources) — focused viewers for console, network, and action data.

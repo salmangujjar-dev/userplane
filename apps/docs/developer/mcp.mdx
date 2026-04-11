@@ -1,0 +1,144 @@
+---
+title: Model Context Protocol
+description: Connect AI tools like Claude, Cursor, and VS Code directly to Userplane documentation via MCP
+---
+
+Userplane's MCP server gives AI tools like Claude, Cursor, Goose, and ChatGPT direct access to your documentation — so they can search it inline while generating responses, rather than relying on web search.
+
+## Connect to your AI tool
+
+Your Userplane MCP server is available at:
+
+```
+https://docs.userplane.io/mcp
+```
+
+<Tabs>
+  <Tab title="Claude">
+    <Steps>
+      <Step title="Open Connectors">
+        Navigate to the **Connectors** page in your [Claude settings](https://claude.ai/settings).
+      </Step>
+      <Step title="Add a custom connector">
+        Select **Add custom connector**.
+      </Step>
+      <Step title="Enter server details">
+        Enter a name (e.g., `userplane`) and the MCP server URL:
+        ```
+        https://docs.userplane.io/mcp
+        ```
+        Select **Add**.
+      </Step>
+      <Step title="Use it in a conversation">
+        Open a new conversation, select the attachments button (the **+** icon), then select your Userplane connector.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Claude Code">
+    Run the following command in your terminal:
+
+    ```bash
+    claude mcp add --transport http userplane https://docs.userplane.io/mcp
+    ```
+
+    Verify the connection:
+
+    ```bash
+    claude mcp list
+    ```
+
+    The `userplane` server should appear in the list.
+
+    <Note>
+      See the [Claude Code documentation](https://code.claude.com/docs/en/mcp#installing-mcp-servers) for more details.
+    </Note>
+
+  </Tab>
+  <Tab title="Cursor">
+    <Steps>
+      <Step title="Open the command palette">
+        Press `Cmd+Shift+P` (or `Ctrl+Shift+P` on Windows).
+      </Step>
+      <Step title="Open MCP settings">
+        Search for **Open MCP settings** and select it. This opens `mcp.json`.
+      </Step>
+      <Step title="Configure the server">
+        Add Userplane to the `mcpServers` object:
+
+        ```json
+        {
+          "mcpServers": {
+            "userplane": {
+              "url": "https://docs.userplane.io/mcp"
+            }
+          }
+        }
+        ```
+      </Step>
+      <Step title="Test the connection">
+        In Cursor's chat, ask _"What tools do you have available?"_ — Cursor should list the Userplane MCP server.
+      </Step>
+    </Steps>
+
+    <Note>
+      See [Installing MCP servers](https://cursor.com/docs#installing-mcp-servers) in the Cursor documentation for more details.
+    </Note>
+
+  </Tab>
+  <Tab title="VS Code">
+    <Steps>
+      <Step title="Create the config file">
+        Create a `.vscode/mcp.json` file in your project root.
+      </Step>
+      <Step title="Configure the server">
+        Add Userplane as a server:
+
+        ```json
+        {
+          "servers": {
+            "userplane": {
+              "type": "http",
+              "url": "https://docs.userplane.io/mcp"
+            }
+          }
+        }
+        ```
+      </Step>
+    </Steps>
+
+    <Note>
+      See the [VS Code documentation](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) for more details.
+    </Note>
+
+  </Tab>
+</Tabs>
+
+## MCP vs web search
+
+AI tools can search the web, but MCP provides distinct advantages for documentation access.
+
+|                    | Web search                                       | MCP                                              |
+| ------------------ | ------------------------------------------------ | ------------------------------------------------ |
+| **Source**         | Search engine index — may be stale or incomplete | Your current indexed documentation, directly     |
+| **Workflow**       | Separate search step before or after a response  | Searches inline during response generation       |
+| **Signal quality** | SEO and ranking algorithms influence results     | Straight to your documentation content, no noise |
+
+## Rate limits
+
+To protect availability, Userplane applies the following rate limits to MCP requests.
+
+| Scope                  | Limit                 |
+| ---------------------- | --------------------- |
+| Per user (IP address)  | 5,000 requests / hour |
+| Per documentation site | 1,000 requests / hour |
+
+<Note>
+  To connect AI agents to your Userplane workspace for debugging and root cause analysis, see the
+  [Core API MCP server](/integrations/mcp).
+</Note>
+
+## Related articles
+
+- [Core API MCP Server](/integrations/mcp) — connect AI agents to your workspace for debugging and root cause analysis.
+- [Agent Skills](/developer/agent-skills) — install Userplane Agent Skills for SDK integration guidance.
+- [Installation](/developer/installation) — install the Userplane SDK in your app.

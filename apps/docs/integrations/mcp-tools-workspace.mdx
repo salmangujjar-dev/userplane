@@ -1,0 +1,83 @@
+---
+title: Additional Tools
+description: MCP tools for accessing user profiles, workspaces, and projects
+---
+
+Tools for retrieving your profile, listing workspaces, and navigating projects. All tools in this group are read-only.
+
+## userplane_get_profile
+
+Retrieve the authenticated user's Userplane profile including name, email, and aggregate usage stats (workspace count, recording count, link count).
+
+**Parameters:** None
+
+**Returns:** User name, email, workspace count, recording count, link count.
+
+---
+
+## userplane_list_workspaces
+
+List Userplane workspaces the authenticated user belongs to. A workspace is a team-level container that holds projects, recordings, links, and members. Returns paginated results.
+
+| Parameter  | Type   | Required | Description                            |
+| ---------- | ------ | -------- | -------------------------------------- |
+| `page`     | number | No       | Page number (default: 1)               |
+| `per_page` | number | No       | Results per page (default: 5, max: 50) |
+
+**Returns:** Paginated list of workspaces with ID, name, and member count.
+
+---
+
+## userplane_get_workspace
+
+Retrieve details for a specific Userplane workspace. The authenticated user must be a member.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+
+**Returns:** Workspace name, member count, domain count, project count, and settings.
+
+---
+
+## userplane_list_projects
+
+List projects in a Userplane workspace. Projects organize recordings and links, each with its own retention policy. Returns paginated results.
+
+| Parameter     | Type   | Required | Description                            |
+| ------------- | ------ | -------- | -------------------------------------- |
+| `workspaceId` | string | Yes      | Workspace ID                           |
+| `page`        | number | No       | Page number (default: 1)               |
+| `per_page`    | number | No       | Results per page (default: 5, max: 50) |
+
+**Returns:** Paginated list of projects with ID, title, and retention policy.
+
+---
+
+## userplane_get_project
+
+Retrieve details for a specific project including title, retention policy, and whether it is the workspace default.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `projectId`   | string | Yes      | Project ID   |
+
+**Returns:** Project title, retention policy, default status, recording count.
+
+---
+
+## Example prompts
+
+<CodeGroup>```text Prompt List my Userplane workspaces. ```</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt List all projects in workspace {workspaceId} and tell me how many recordings each
+  one has. ```
+</CodeGroup>
+
+## Related articles
+
+- [Recording Tools](/integrations/mcp-tools-recordings) — tools for listing, inspecting, and analyzing recordings.
+- [Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
+- [Getting Started](/integrations/mcp-getting-started) — first steps after connecting your AI client.
