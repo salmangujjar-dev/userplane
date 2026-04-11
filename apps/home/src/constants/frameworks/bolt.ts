@@ -21,15 +21,15 @@ export const boltConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Bolt | Session Recordings for Bolt.new Apps',
+    title: 'Userplane for Bolt | Screen Recordings for Bolt.new Apps',
     description:
-      'Add session recordings to your Bolt.new app with a single prompt. Console logs, network data, and session data — no code editing required.',
+      'Add screen recordings to your Bolt.new app with a single prompt. Console logs, network data, and session data capture — no code editing required.',
     keywords:
       'bolt screen recording, bolt.new session replay, bolt console logs, ai builder screen recording, bolt debugging, userplane bolt',
   },
   hero: {
     headline: {
-      lines: ['Resolve support tickets', 'with session recordings'],
+      lines: ['Resolve support tickets', 'with screen recordings'],
       highlights: [
         { wordIndex: 1, color: 'yellow' },
         { wordIndex: 2, color: 'yellow' },
@@ -37,7 +37,7 @@ export const boltConfig = defineFramework({
       icons: [],
     },
     description: [
-      'Add session recordings to your Bolt.new app with a single prompt.',
+      'Add screen recordings to your Bolt.new app with a single prompt.',
       'Console logs, network data, and session data — no code editing required.',
     ],
     preview: {

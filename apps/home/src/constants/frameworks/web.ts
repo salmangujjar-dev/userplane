@@ -22,7 +22,7 @@ export const webConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Web | Session Recordings with Console Logs',
+    title: 'Userplane for Web | Screen Recordings with Console Logs',
     description:
       'Console logs, network requests, and session activity from any website. One script tag. No framework, no build step, no dependencies.',
     keywords:
@@ -30,7 +30,7 @@ export const webConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Fix user-reported issues', 'with session recordings'],
+      lines: ['Fix user-reported issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'blue' }],
     },
     description: [

@@ -21,15 +21,15 @@ export const djangoConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Django | Session Recordings with Console Logs',
+    title: 'Userplane for Django | Screen Recordings with Console Logs',
     description:
-      'Add session recordings to your Django app. One script tag in your base template. Console logs, network data, and session info — works with template inheritance.',
+      'Add screen recordings to your Django app. One script tag in your base template. Console logs, network data, and session info — works with template inheritance.',
     keywords:
       'django screen recording, django session replay, django console logs, django debugging, python web framework screen recording, django template screen recording, userplane django',
   },
   hero: {
     headline: {
-      lines: ['Identify Django issues', 'with session recordings'],
+      lines: ['Identify Django issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'green' }],
       icons: [
         {
@@ -40,7 +40,7 @@ export const djangoConfig = defineFramework({
       ],
     },
     description: [
-      'Add session recordings to your Django app with a single script tag.',
+      'Add screen recordings to your Django app with a single script tag.',
       'Works with template inheritance, login_required, and Django middleware.',
     ],
     preview: {

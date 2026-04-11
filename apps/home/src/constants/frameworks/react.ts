@@ -21,7 +21,7 @@ export const reactConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for React | Session Recordings with Console Logs',
+    title: 'Userplane for React | Screen Recordings with Console Logs',
     description:
       'Console logs, network activity, and session info — captured from your React app. Works with Vite, CRA, and custom setups.',
     keywords:
@@ -29,7 +29,7 @@ export const reactConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Debug React issues', 'with session recordings'],
+      lines: ['Debug React issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'green' }],
       icons: [
         {
@@ -100,7 +100,7 @@ export const reactConfig = defineFramework({
       number: '04',
       title: 'Routes to your support tools',
       description:
-        'Session recordings flow to Intercom, Zendesk, or Slack. Link recordings to support tickets. API and webhooks for custom pipelines.',
+        'Screen recordings flow to Intercom, Zendesk, or Slack. Link recordings to support tickets. API and webhooks for custom pipelines.',
       tagline: 'Context where you triage',
       capabilities: [
         'Intercom, Zendesk, Slack',

@@ -25,7 +25,7 @@ export const supportEngineersConfig = defineRole({
     title:
       'Userplane for Support Engineers | Console Logs, Network Data, and Repro Steps with Every Ticket',
     description:
-      'Console logs, network data, repro steps, and full session recordings. Complete context from first contact — no chasing customers for details.',
+      'Console logs, network data, repro steps, and full session details. Complete context from first contact — no chasing customers for details.',
     keywords:
       'support engineer tools, bug report context, repro steps, console logs support, engineer-ready tickets, clean handoffs, userplane',
   },
@@ -35,12 +35,12 @@ export const supportEngineersConfig = defineRole({
       highlights: [{ wordIndex: 3, color: 'blue' }],
     },
     description: [
-      'Console logs, network data, repro steps, and a full session recording.',
+      'Console logs, network data, repro steps, and a full session snapshot.',
       'Get everything you need to diagnose the issue.',
     ],
     preview: {
       src: getRoleHeroUrl('microsites/roles/support-engineers/hero.png'),
-      alt: 'Userplane session recording with console logs and network data',
+      alt: 'Userplane screen recording with console logs and network data',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },

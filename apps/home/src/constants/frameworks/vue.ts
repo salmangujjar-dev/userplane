@@ -21,7 +21,7 @@ export const vueConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Vue | Session Recordings with Console Logs',
+    title: 'Userplane for Vue | Screen Recordings with Console Logs',
     description:
       'Capture console logs, network requests, and session data from your Vue app. Compatible with Vue 3 and Vue Router.',
     keywords:
@@ -29,7 +29,7 @@ export const vueConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Resolve Vue issues', 'with session recordings'],
+      lines: ['Resolve Vue issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'green' }],
       icons: [
         {

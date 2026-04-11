@@ -21,7 +21,7 @@ export const remixConfig = defineFramework({
     ],
   },
   seo: {
-    title: 'Userplane for Remix | Session Recordings with Console Logs',
+    title: 'Userplane for Remix | Screen Recordings with Console Logs',
     description:
       'Capture console logs, network requests, and session data from your Remix app. Works with loaders, actions, and nested routes.',
     keywords:
@@ -29,7 +29,7 @@ export const remixConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Diagnose Remix issues', 'with session recordings'],
+      lines: ['Diagnose Remix issues', 'with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'blue' }],
       icons: [
         {

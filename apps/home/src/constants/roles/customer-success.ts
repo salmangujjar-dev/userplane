@@ -41,7 +41,7 @@ export const customerSuccessConfig = defineRole({
     ],
     preview: {
       src: getRoleHeroUrl('microsites/roles/customer-success/hero.png'),
-      alt: 'Userplane session recording with full technical context for CS teams',
+      alt: 'Userplane screen recording with full technical context for CS teams',
     },
     primaryCTA: { text: 'Get Started', href: SIGNUP_URL },
     secondaryCTA: { text: 'Talk to a Human', href: TALLY_SALES_FORM_URL },
