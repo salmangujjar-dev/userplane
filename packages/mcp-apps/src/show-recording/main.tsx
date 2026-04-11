@@ -3,8 +3,8 @@ import '../ui/styles.css';
 import { App } from '@modelcontextprotocol/ext-apps';
 import { createRoot } from 'react-dom/client';
 
-import { LoadingState } from '../components';
-import type { ShowRecordingData } from '../recording/types';
+import type { ShowRecordingData } from '../components/recording/types';
+import { LoadingState } from '../components/shared';
 import { setupThemeSync } from '../ui/theme';
 import { ShowRecording } from './ShowRecording';
 

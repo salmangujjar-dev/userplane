@@ -1,4 +1,4 @@
-import { cn } from '../utils';
+import { cn } from '../../utils';
 
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn('animate-shimmer rounded-md', className)} />;

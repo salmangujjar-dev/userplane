@@ -1,4 +1,4 @@
-import { cn } from '../utils';
+import { cn } from '../../utils';
 
 const AVATAR_COLORS = [
   'bg-blue-500',

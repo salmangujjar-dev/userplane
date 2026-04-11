@@ -1,6 +1,6 @@
 import type { App } from '@modelcontextprotocol/ext-apps';
 
-import type { ShowRecordingData } from '../recording/types';
+import type { ShowRecordingData } from '../components/recording/types';
 import { RecordingTabs } from './RecordingTabs';
 import { VideoPlayer } from './VideoPlayer';
 

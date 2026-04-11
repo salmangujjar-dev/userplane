@@ -3,10 +3,10 @@ import '../ui/styles.css';
 import { App } from '@modelcontextprotocol/ext-apps';
 import { createRoot } from 'react-dom/client';
 
-import { EmptyState, LoadingState } from '../components';
-import { GlobeIcon } from '../components/icons';
-import { NetworkTab } from '../recording/NetworkTab';
-import type { NetworkLogEntry } from '../recording/types';
+import { NetworkTab } from '../components/recording/NetworkTab';
+import type { NetworkLogEntry } from '../components/recording/types';
+import { EmptyState, LoadingState } from '../components/shared';
+import { GlobeIcon } from '../components/shared/icons';
 import { setupThemeSync } from '../ui/theme';
 import { extractJsonFromResult, fetchLogViaTool } from '../utils/extract-json';
 
