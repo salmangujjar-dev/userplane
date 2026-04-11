@@ -29,7 +29,7 @@ export const FRAMEWORK_REGISTRY: Record<string, FrameworkConfig> = {
   lovable: lovableConfig,
   web: webConfig,
   remix: remixConfig,
-  solidjs: solidjsConfig,
   bolt: boltConfig,
   emergent: emergentConfig,
+  solidjs: solidjsConfig,
 };

@@ -206,7 +206,7 @@ export default function IntegrationsDropdown({
                 )}
               </div>
               <div className="grid grid-cols-7 gap-x-1 gap-y-0.5">
-                {frameworks.map((item) => (
+                {frameworks.slice(0, 14).map((item) => (
                   <a
                     key={item.slug}
                     href={item.pageHref}
