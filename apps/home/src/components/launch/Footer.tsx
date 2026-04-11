@@ -47,7 +47,7 @@ export default function LaunchFooter({ listingBadges }: LaunchFooterProps) {
                           alt={item.badge.alt}
                           width={item.badge.width / 2}
                           height={item.badge.height / 2}
-                          className="block brightness-0 opacity-50 transition-opacity group-hover:opacity-70"
+                          className="block"
                         />
                       </a>
                     ))}
