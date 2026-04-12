@@ -232,6 +232,116 @@ export const LAUNCH_LISTING_BADGES = [
       height: 54,
     },
   },
+  {
+    name: 'Uneed',
+    href: 'https://www.uneed.best/tool/userplane',
+    badge: {
+      src: 'https://www.uneed.best/EMBED3.png',
+      alt: 'Uneed Embed Badge',
+      width: 200,
+      height: 54,
+    },
+  },
+  {
+    name: 'Neeed Directory',
+    href: 'https://neeed.directory/products/userplane?utm_source=userplane',
+    badge: {
+      src: 'https://neeed.directory/badges/neeed-badge-light.svg',
+      alt: 'Featured on neeed.directory',
+      width: 139,
+      height: 54,
+    },
+  },
+  {
+    name: 'Startup Fast',
+    href: 'https://startupfa.st',
+    badge: {
+      src: 'https://startupfa.st/images/badges/powered-by-light.svg',
+      alt: 'Powered by Startup Fast',
+      width: 150,
+      height: 44,
+    },
+  },
+  {
+    name: 'FoundrList',
+    href: 'https://www.foundrlist.com/product/userplane?utm_source=badge&utm_medium=embed',
+    badge: {
+      src: 'https://www.foundrlist.com/api/badge/userplane',
+      alt: 'Featured on FoundrList',
+      width: 150,
+      height: 48,
+    },
+  },
+  {
+    name: 'NextGen Tools',
+    href: 'https://www.nxgntools.com/tools/userplane?utm_source=userplane',
+    badge: {
+      src: 'https://www.nxgntools.com/api/embed/userplane?type=LAUNCHING_SOON_ON&hideUpvotes=true',
+      alt: 'Launching Soon on NextGen Tools',
+      width: 200,
+      height: 48,
+    },
+  },
+  {
+    name: 'Shipybara',
+    href: 'https://shipybara.com/projects/userplane',
+    badge: {
+      src: 'https://shipybara.com/images/badges/shipybara-badge-light.svg',
+      alt: 'Featured on Shipybara',
+      width: 150,
+      height: 54,
+    },
+  },
+  {
+    name: 'Unite List',
+    href: 'https://unitelist.com',
+    badge: {
+      src: 'https://unitelist.com/assets/images/badge.png',
+      alt: 'Unite List',
+      width: 180,
+      height: 54,
+    },
+  },
+  {
+    name: 'Dofollow Tools',
+    href: 'https://dofollow.tools',
+    badge: {
+      src: 'https://dofollow.tools/badge/badge_transparent.svg',
+      alt: 'Featured on Dofollow.Tools',
+      width: 200,
+      height: 54,
+    },
+  },
+  {
+    name: 'ToolDirs',
+    href: 'https://tooldirs.com',
+    badge: {
+      src: 'https://tooldirs.com/badge/badge_transparent.svg',
+      alt: 'Featured on ToolDirs',
+      width: 200,
+      height: 54,
+    },
+  },
+  {
+    name: 'TryLaunch',
+    href: 'https://trylaunch.ai/launch/userplane',
+    badge: {
+      src: 'https://trylaunch.ai/badges/badge-color.png',
+      alt: 'Featured on Launch',
+      width: 180,
+      height: 53,
+    },
+  },
+  {
+    name: 'LaunchIgniter',
+    href: 'https://launchigniter.com/product/userplane?ref=badge-userplane',
+    badge: {
+      src: 'https://launchigniter.com/api/badge/userplane?theme=light',
+      alt: 'Featured on LaunchIgniter',
+      width: 212,
+      height: 55,
+    },
+  },
 ];
 
 // ── CTA ──
