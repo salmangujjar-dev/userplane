@@ -163,6 +163,26 @@ export const LAUNCH_RESOURCES: {
 
 export const LAUNCH_LISTING_BADGES = [
   {
+    name: 'Fazier',
+    href: 'https://fazier.com',
+    badge: {
+      src: 'https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=featured&theme=neutral',
+      alt: 'Fazier badge',
+      width: 250,
+      height: 54,
+    },
+  },
+  {
+    name: 'Startup Fame',
+    href: 'https://startupfa.me/s/userplane.io-936?utm_source=userplane.io',
+    badge: {
+      src: 'https://startupfa.me/badges/featured/light.webp',
+      alt: 'Userplane - Featured on Startup Fame',
+      width: 171,
+      height: 54,
+    },
+  },
+  {
     name: 'Twelve Tools',
     href: 'https://twelve.tools',
     badge: {
