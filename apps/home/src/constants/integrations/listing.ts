@@ -5,17 +5,6 @@ import { SIGNUP_URL } from '../onboarding';
 import { buildUTM, withUTM } from '../utm';
 import { getHeroUrl } from './media';
 
-// ── SEO ──
-
-export const LISTING_SEO = {
-  title: 'Integrations | Userplane - Screen Recordings for Your Support Stack',
-  description:
-    'Send recording links to customers. Get back a full replay with logs, network data, and user context.',
-  keywords:
-    'userplane integrations, screen recording integrations, support tool integrations, intercom integration, zendesk integration, slack integration, chrome extension',
-  ogImage: '/images/preview/og-integrations.webp',
-} as const;
-
 // ── Gradient ──
 
 export const LISTING_GRADIENT: GradientConfig = {

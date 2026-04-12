@@ -20,8 +20,8 @@
     "@astrojs/mdx": "^4.3.11",
     "@astrojs/react": "^4.4.2",
     "@astrojs/sitemap": "^3.7.2",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.1.16",
-    "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
     "@userplane/common-logger": "*",
@@ -30,11 +30,10 @@
     "@userplane/storage": "*",
     "@userplane/ui": "*",
     "astro": "^5.15.9",
-    "canvas-confetti": "^1.9.3",
     "lucide-react": "^0.554.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-icons": "^5.5.0",
+    "satori": "^0.26.0",
     "tailwindcss": "^4.1.16",
     "zod": "^4.3.6"
   },
@@ -43,6 +42,7 @@
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "eslint": "^9.32.0",
+    "geist": "^1.7.0",
     "tw-animate-css": "^1.3.6",
     "wrangler": "^4.63.0"
   }

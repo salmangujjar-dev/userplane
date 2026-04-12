@@ -4,6 +4,10 @@ import JsonLd from '../components/seo/JsonLd.astro';
 import { RoadmapComponent } from '../components/roadmap/Roadmap';
 import type { RoadmapProps } from '@/types/roadmap';
 import { TALLY_FEATURE_REQUEST_URL } from '../constants/contact';
+import { STATIC_PAGE_REGISTRY } from '../constants/static-pages';
+import { getOgImagePath } from '../lib/og/sources';
+
+const meta = STATIC_PAGE_REGISTRY.roadmap;
 
 /**
  * Roadmap item structure:
@@ -358,9 +362,11 @@ const roadmapItems: RoadmapProps[] = [
 ---
 
 <HomepageLayout
-  title="Roadmap — Userplane"
-  description="See what's coming next and help shape our development priorities."
-  keywords="userplane roadmap, product roadmap, upcoming features, screen recording features, feature requests"
+  title={meta.seo.title}
+  description={meta.seo.description}
+  keywords={meta.seo.keywords}
+  ogImage={getOgImagePath(meta.category, meta.slug)}
+  ogImageAlt={meta.og.alt}
 >
   <JsonLd
     data={{

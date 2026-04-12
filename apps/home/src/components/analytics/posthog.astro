@@ -47,8 +47,11 @@ const posthogHost = import.meta.env.PUBLIC_POSTHOG_HOST || 'https://i.userplane.
         }),
         (e.__SV = 1));
     })(document, window.posthog || []);
-    posthog.init(posthogKey, {
-      api_host: posthogHost,
-    });
+    const initPostHog = () => posthog.init(posthogKey, { api_host: posthogHost });
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(initPostHog, { timeout: 2000 });
+    } else {
+      setTimeout(initPostHog, 1);
+    }
   }
 </script>

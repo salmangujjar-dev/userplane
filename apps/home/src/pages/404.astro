@@ -10,6 +10,7 @@ import { SITE_META } from '../constants/site';
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href={SITE_META.favicon} />
     <meta name="color-scheme" content="light only" />
+    <meta name="robots" content="noindex, follow" />
     <style>
       html,
       body {
@@ -30,6 +31,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="80"
           height="80"
+          loading="lazy"
+          decoding="async"
           class="absolute top-[18%] -left-6 rotate-[-15deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
@@ -37,6 +40,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="90"
           height="90"
+          loading="lazy"
+          decoding="async"
           class="absolute top-[38%] -left-8 rotate-12 transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
@@ -44,6 +49,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="85"
           height="85"
+          loading="lazy"
+          decoding="async"
           class="absolute top-[58%] -left-7 rotate-[-8deg] transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
@@ -51,6 +58,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="75"
           height="75"
+          loading="lazy"
+          decoding="async"
           class="absolute top-[78%] -left-5 rotate-18 transition-transform duration-300 hover:-translate-x-2 hover:scale-110 cursor-pointer"
         />
       </div>
@@ -62,6 +71,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="85"
           height="85"
+          loading="lazy"
+          decoding="async"
           class="absolute top-[17%] -right-7 rotate-10 transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
@@ -69,6 +80,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="75"
           height="75"
+          loading="lazy"
+          decoding="async"
           class="absolute top-[38%] -right-5 rotate-[-14deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
@@ -76,6 +89,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="80"
           height="80"
+          loading="lazy"
+          decoding="async"
           class="absolute top-[59%] -right-6 rotate-[-10deg] transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
         <img
@@ -83,6 +98,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="85"
           height="85"
+          loading="lazy"
+          decoding="async"
           class="absolute top-[80%] -right-7 rotate-13 transition-transform duration-300 hover:translate-x-2 hover:scale-110 cursor-pointer"
         />
       </div>
@@ -94,6 +111,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="70"
           height="70"
+          loading="lazy"
+          decoding="async"
           class="absolute bottom-[-20px] left-[10%] rotate-[-15deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
         <img
@@ -101,6 +120,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="75"
           height="75"
+          loading="lazy"
+          decoding="async"
           class="absolute bottom-[-25px] left-[32%] rotate-12 transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
         <img
@@ -108,6 +129,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="70"
           height="70"
+          loading="lazy"
+          decoding="async"
           class="absolute bottom-[-22px] left-[54%] rotate-[-8deg] transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
         <img
@@ -115,6 +138,8 @@ import { SITE_META } from '../constants/site';
           alt=""
           width="65"
           height="65"
+          loading="lazy"
+          decoding="async"
           class="absolute bottom-[-20px] left-[76%] -rotate-12 transition-transform duration-300 hover:translate-y-2 hover:scale-110 cursor-pointer"
         />
       </div>
@@ -135,7 +160,7 @@ import { SITE_META } from '../constants/site';
 
         <!-- Footer -->
         <div class="flex items-center gap-3 pb-4">
-          <img src="/brand/logo-dark.svg" alt={COMPANY_NAME} class="h-6 w-auto" />
+          <img src="/brand/logo-dark.svg" alt={COMPANY_NAME} class="h-6 w-auto" decoding="async" />
           <span class="text-sm font-medium text-foreground">{COMPANY_NAME}</span>
         </div>
       </div>

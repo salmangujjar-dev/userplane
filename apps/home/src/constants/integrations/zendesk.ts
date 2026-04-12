@@ -29,7 +29,6 @@ export const zendeskConfig = defineIntegration({
       'Collect screen recordings from Zendesk. Agents can request a recording and instantly receive a replay with logs, network activity, and user context. No follow-ups needed.',
     keywords:
       'zendesk screen recording, zendesk integration, zendesk ticket recording, zendesk support tool, userplane, screen recording for zendesk, zendesk marketplace app',
-    ogImage: '/images/preview/og-zendesk.webp',
   },
   hero: {
     headline: {

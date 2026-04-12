@@ -9,13 +9,23 @@ import FAQ from '../components/shared/FAQ';
 import CTA from '../components/home/CTA';
 import { SPOTLIGHT_IMAGE } from '../constants/home/spotlight';
 import { FAQ_ITEMS } from '../constants/home/faq';
+import { STATIC_PAGE_REGISTRY } from '../constants/static-pages';
+import { getOgImagePath } from '../lib/og/sources';
+
+const meta = STATIC_PAGE_REGISTRY.home;
+
+// dateModified reflects when the site was last built/deployed
+const BUILT_AT = new Date().toISOString();
+// TODO: replace with the actual public launch date of userplane.io
+const SITE_PUBLISHED_AT = '2025-11-18T00:00:00.000Z';
 
 const organizationLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'Userplane',
   url: new URL('/', Astro.site).href,
-  logo: new URL('/images/preview/preview.webp', Astro.site).href,
+  logo: new URL('/og/home/index.png', Astro.site).href,
+  description: 'Screen recording tool for customer support teams.',
 };
 
 const websiteLd = {
@@ -23,6 +33,34 @@ const websiteLd = {
   '@type': 'WebSite',
   name: 'Userplane',
   url: new URL('/', Astro.site).href,
+};
+
+const webPageLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  '@id': new URL('/', Astro.site).href,
+  url: new URL('/', Astro.site).href,
+  name: 'Userplane — Resolve Support Tickets Faster with One-Click Screen Recordings',
+  description: meta.seo.description,
+  inLanguage: 'en-US',
+  datePublished: SITE_PUBLISHED_AT,
+  dateModified: BUILT_AT,
+  primaryImageOfPage: new URL('/og/home/index.png', Astro.site).href,
+};
+
+const softwareApplicationLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Userplane',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web, Chrome',
+  url: new URL('/', Astro.site).href,
+  description: meta.seo.description,
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
 };
 
 const faqLd = {
@@ -41,18 +79,22 @@ const faqLd = {
 
 <HomepageLayout
   preloadImage={SPOTLIGHT_IMAGE}
-  title="Userplane - One Click Screen Recordings for Customer Support"
-  description="Request screen recordings from your customers showing exactly what went wrong. Captures console logs, network data, and user steps. Works with Intercom, Zendesk, Slack, and Chrome."
-  keywords="screen recording, customer support screen recording, one click screen recording, customer debugging tool, userplane, support team tools, bug reproduction, console logs capture, intercom screen recording, zendesk screen recording"
+  title={meta.seo.title}
+  description={meta.seo.description}
+  keywords={meta.seo.keywords}
+  ogImage={getOgImagePath(meta.category, meta.slug)}
+  ogImageAlt={meta.og.alt}
 >
   <JsonLd data={organizationLd} />
   <JsonLd data={websiteLd} />
+  <JsonLd data={webPageLd} />
+  <JsonLd data={softwareApplicationLd} />
   <JsonLd data={faqLd} />
   <main class="flex flex-col items-center">
     <Hero />
     <Spotlight client:visible />
-    <Features client:visible />
-    <Pricing client:visible />
+    <Features />
+    <Pricing />
     <FAQ client:idle />
     <CTA />
   </main>

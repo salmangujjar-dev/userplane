@@ -1,0 +1,32 @@
+# Cloudflare Pages redirects (HTTP 301)
+# https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# Format: <source> <destination> <status>
+# Served as real 301s by Cloudflare Pages — preferred over Astro's
+# static-mode meta-refresh redirects for SEO.
+
+# Integrations shortcuts
+/intercom         /integrations/intercom           301
+/slack            /integrations/slack              301
+/zendesk          /integrations/zendesk            301
+/chrome           /integrations/chrome-extension   301
+/chrome-extension /integrations/chrome-extension   301
+
+# Framework shortcuts
+/nextjs           /frameworks/nextjs               301
+/react            /frameworks/react                301
+/vue              /frameworks/vue                  301
+/angular          /frameworks/angular              301
+/nuxt             /frameworks/nuxt                 301
+/svelte           /frameworks/svelte               301
+/astro            /frameworks/astro                301
+/django           /frameworks/django               301
+/rails            /frameworks/ruby-on-rails        301
+/remix            /frameworks/remix                301
+/solidjs          /frameworks/solidjs              301
+/lovable          /frameworks/lovable              301
+/bolt             /frameworks/bolt                 301
+/emergent         /frameworks/emergent             301
+
+# Sitemap canonical alias
+/sitemap.xml      /sitemap-index.xml               301

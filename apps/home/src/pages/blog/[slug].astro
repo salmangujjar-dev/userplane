@@ -3,6 +3,7 @@ import BlogLayout from '../../layouts/BlogLayout.astro';
 import JsonLd from '../../components/seo/JsonLd.astro';
 import { getCollection, render } from 'astro:content';
 import { NAV_LINKS } from '../../constants/navigation';
+import { getOgImagePath } from '../../lib/og/sources';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -24,6 +25,7 @@ const articleLd = {
   headline: post.data.title,
   description: post.data.excerpt,
   datePublished: post.data.date.toISOString(),
+  dateModified: post.data.date.toISOString(),
   author: {
     '@type': 'Person',
     name: post.data.author,
@@ -51,6 +53,8 @@ const breadcrumb = {
   title={`${post.data.title} | Userplane`}
   description={post.data.excerpt}
   keywords={`${post.data.category}, userplane, customer support, screen recording`}
+  ogImage={getOgImagePath('blog', post.id.replace(/\.md$/, ''))}
+  ogImageAlt={post.data.title}
 >
   <JsonLd data={articleLd} />
   <JsonLd data={breadcrumb} />
@@ -76,7 +80,7 @@ const breadcrumb = {
     <header class="mb-12">
       <h1 class="text-5xl font-bold mb-6 font-dm-sans">{post.data.title}</h1>
       <div class="flex items-center text-zinc-600">
-        <time class="mr-6">
+        <time class="mr-6" datetime={post.data.date.toISOString()}>
           {
             post.data.date.toLocaleDateString('en-US', {
               month: 'short',

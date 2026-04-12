@@ -8,6 +8,7 @@ interface Props {
   description?: string;
   keywords?: string;
   ogImage?: string;
+  ogImageAlt?: string;
   preloadImage?: { src: string; srcSet: string; sizes: string };
 }
 
@@ -16,11 +17,13 @@ const {
   description = SITE_META.description,
   keywords = SITE_META.keywords,
   ogImage = SITE_META.ogImage,
+  ogImageAlt = 'Userplane — screen recordings for customer support',
   preloadImage,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const absoluteOgImage = ogImage.startsWith('http') ? ogImage : new URL(ogImage, Astro.site).href;
+const posthogHost = import.meta.env.PUBLIC_POSTHOG_HOST || 'https://i.userplane.io';
 ---
 
 <!doctype html>
@@ -51,8 +54,24 @@ const absoluteOgImage = ogImage.startsWith('http') ? ogImage : new URL(ogImage, 
       )
     }
 
+    <!-- Preconnect to analytics host -->
+    <link rel="preconnect" href={posthogHost} crossorigin />
+
     <!-- Canonical URL -->
     <link rel="canonical" href={canonicalURL} />
+
+    <!-- Crawling directives -->
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta name="googlebot" content="index, follow" />
+
+    <!-- Sitemap discovery -->
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap-index.xml" />
+
+    <!-- Language -->
+    <meta http-equiv="content-language" content="en-US" />
 
     <!-- Primary Meta Tags -->
     <title>{title}</title>
@@ -67,6 +86,7 @@ const absoluteOgImage = ogImage.startsWith('http') ? ogImage : new URL(ogImage, 
     <meta property="og:description" content={description} />
     <meta property="og:locale" content={SITE_META.locale} />
     <meta property="og:image" content={absoluteOgImage} />
+    <meta property="og:image:alt" content={ogImageAlt} />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />

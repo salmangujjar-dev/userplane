@@ -12,9 +12,10 @@ interface Props {
   description?: string;
   keywords?: string;
   ogImage?: string;
+  ogImageAlt?: string;
 }
 
-const { title, description, keywords, ogImage } = Astro.props;
+const { title, description, keywords, ogImage, ogImageAlt } = Astro.props;
 
 const dropdownEntries = Object.values(INTEGRATION_REGISTRY).map((config) => ({
   slug: config.slug,
@@ -50,6 +51,7 @@ const frameworkDropdownEntries = Object.values(FRAMEWORK_REGISTRY).map((config) 
   description={description}
   keywords={keywords}
   ogImage={ogImage}
+  ogImageAlt={ogImageAlt}
 >
   <Header
     integrations={dropdownEntries}

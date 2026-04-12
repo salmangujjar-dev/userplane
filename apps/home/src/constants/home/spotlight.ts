@@ -22,6 +22,8 @@ export const SPOTLIGHT_IMAGE = {
   src: SPOTLIGHT_SOURCES.desktop,
   srcSet: `${SPOTLIGHT_SOURCES.mobile} 768w, ${SPOTLIGHT_SOURCES.tablet} 1280w, ${SPOTLIGHT_SOURCES.desktop} 1920w`,
   sizes: '100vw',
+  width: 1920,
+  height: 1080,
   alt: 'AI handling customer support calls',
 };
 

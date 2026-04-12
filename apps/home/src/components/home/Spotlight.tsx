@@ -27,7 +27,11 @@ export default function Spotlight() {
                 src={SPOTLIGHT_IMAGE.src}
                 srcSet={SPOTLIGHT_IMAGE.srcSet}
                 sizes={SPOTLIGHT_IMAGE.sizes}
+                width={SPOTLIGHT_IMAGE.width}
+                height={SPOTLIGHT_IMAGE.height}
                 alt={SPOTLIGHT_IMAGE.alt}
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-full object-cover"
                 draggable={false}
               />

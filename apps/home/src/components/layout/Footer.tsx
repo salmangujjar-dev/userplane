@@ -23,7 +23,11 @@ export default function Footer() {
               <div className="flex shrink-0 flex-col gap-4">
                 <Logo size="lg" />
                 <p className="max-w-sm text-muted-foreground text-sm">
-                  &copy; {new Date().getFullYear()} {FOOTER_COPYRIGHT}
+                  &copy;{' '}
+                  <time dateTime={new Date().toISOString().slice(0, 10)}>
+                    {new Date().getFullYear()}
+                  </time>{' '}
+                  {FOOTER_COPYRIGHT}
                 </p>
                 <div className="flex items-center gap-3">
                   <a
@@ -86,7 +90,15 @@ export default function Footer() {
                       rel="noopener noreferrer"
                       target="_blank"
                     >
-                      <img alt={link.label} className="size-5" src={link.icon} />
+                      <img
+                        alt={link.label}
+                        className="size-5"
+                        src={link.icon}
+                        width={20}
+                        height={20}
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </a>
                   ))}
                 </div>

@@ -9,9 +9,8 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
   site: 'https://userplane.io',
   trailingSlash: 'never',
-  redirects: {
-    '/intercom': '/integrations/intercom',
-  },
+  // Redirects live in `public/_redirects` so Cloudflare Pages serves real 301s
+  // instead of the meta-refresh HTML files Astro emits in static mode.
   server: {
     port: 4321,
     host: true,

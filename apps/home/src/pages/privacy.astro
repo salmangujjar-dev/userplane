@@ -1,6 +1,10 @@
 ---
 import { getEntry, render } from 'astro:content';
 import LegalLayout from '../layouts/LegalLayout.astro';
+import { STATIC_PAGE_REGISTRY } from '../constants/static-pages';
+import { getOgImagePath } from '../lib/og/sources';
+
+const meta = STATIC_PAGE_REGISTRY.privacy;
 
 const entry = await getEntry('legal', 'privacy');
 if (!entry) {
@@ -10,9 +14,11 @@ const { Content } = await render(entry);
 ---
 
 <LegalLayout
-  title="Privacy Policy"
-  description="Userplane's privacy policy. Learn how we collect, use, and protect your data when using our screen recording and customer support tools."
-  keywords="userplane privacy policy, data protection, screen recording privacy, customer data security, GDPR, CCPA"
+  title={meta.seo.title}
+  description={meta.seo.description}
+  keywords={meta.seo.keywords}
+  ogImage={getOgImagePath(meta.category, meta.slug)}
+  ogImageAlt={meta.og.alt}
 >
   <article class="legal flex flex-col gap-12">
     <section class="flex flex-col gap-4">

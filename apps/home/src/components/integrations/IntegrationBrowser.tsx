@@ -145,6 +145,10 @@ export default function IntegrationBrowser({ integrations }: IntegrationBrowserP
                         <img
                           src={item.image.src}
                           alt={item.image.alt}
+                          width={1440}
+                          height={900}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full object-cover transition-transform duration-300 group-hover/img:scale-[1.02]"
                         />
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-background to-transparent" />

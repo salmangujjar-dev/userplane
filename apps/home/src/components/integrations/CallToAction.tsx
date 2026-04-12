@@ -92,6 +92,9 @@ function InlineIcon({ icon }: { icon: IconData }) {
     <img
       src={icon.src}
       alt={icon.alt}
+      width={16}
+      height={16}
+      decoding="async"
       className="inline-block size-[0.75em] align-middle object-contain"
     />
   );

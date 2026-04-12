@@ -8,12 +8,11 @@ import CallToAction from '../../components/integrations/CallToAction';
 
 import { ROLE_REGISTRY } from '../../constants/roles/registry';
 import { INTEGRATION_LOGOS, INTEGRATION_LOGOS_LABEL } from '../../constants/integrations';
-import {
-  LISTING_SEO,
-  LISTING_GRADIENT,
-  LISTING_HERO,
-  LISTING_CTA,
-} from '../../constants/roles/listing';
+import { LISTING_GRADIENT, LISTING_HERO, LISTING_CTA } from '../../constants/roles/listing';
+import { STATIC_PAGE_REGISTRY } from '../../constants/static-pages';
+import { getOgImagePath } from '../../lib/og/sources';
+
+const meta = STATIC_PAGE_REGISTRY.forListing;
 
 const roles = Object.values(ROLE_REGISTRY);
 
@@ -62,7 +61,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'Userplane for Your Team',
-  description: LISTING_SEO.description,
+  description: meta.seo.description,
   url: new URL('/for', Astro.site).href,
   mainEntity: {
     '@type': 'ItemList',
@@ -77,9 +76,16 @@ const jsonLd = {
 ---
 
 <HomepageLayout
-  title={LISTING_SEO.title}
-  description={LISTING_SEO.description}
-  keywords={LISTING_SEO.keywords}
+  title={meta.seo.title}
+  description={meta.seo.description}
+  keywords={meta.seo.keywords}
+  ogImage={getOgImagePath(meta.category, meta.slug)}
+  ogImageAlt={meta.og.alt}
+  preloadImage={{
+    src: LISTING_HERO.preview.src,
+    srcSet: '',
+    sizes: '(max-width: 1024px) 100vw, 52vw',
+  }}
 >
   <JsonLd data={breadcrumb} />
   <JsonLd data={jsonLd} />
@@ -90,18 +96,16 @@ const jsonLd = {
       primaryCTA={LISTING_HERO.primaryCTA}
       secondaryCTA={LISTING_HERO.secondaryCTA}
       preview={LISTING_HERO.preview}
-      client:load
     />
-    <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} client:load />
+    <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} />
 
-    <RoleBrowser roles={browserEntries} client:load />
+    <RoleBrowser roles={browserEntries} client:visible />
 
     <CallToAction
       headline={LISTING_CTA.headline}
       description={LISTING_CTA.description}
       primaryCTA={LISTING_CTA.primaryCTA}
       secondaryCTA={LISTING_CTA.secondaryCTA}
-      client:load
     />
   </main>
 </HomepageLayout>

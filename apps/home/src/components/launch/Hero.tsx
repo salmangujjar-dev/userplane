@@ -13,7 +13,14 @@ interface LaunchHeroProps {
   description: string[];
   primaryCTA: ButtonConfig;
   secondaryCTA: ButtonConfig;
-  screenshot: { src: string; alt: string };
+  screenshot: {
+    src: string;
+    srcSet?: string;
+    sizes?: string;
+    width?: number;
+    height?: number;
+    alt: string;
+  };
 }
 
 // ── Headline node builder (same logic as integrations/Hero) ──
@@ -181,7 +188,13 @@ export default function LaunchHero({
             <GlassCard className="h-[360px] w-full min-w-0 sm:h-[480px] md:h-[640px] md:min-w-[1440px] lg:h-[800px]">
               <img
                 src={screenshot.src}
+                srcSet={screenshot.srcSet}
+                sizes={screenshot.sizes}
+                width={screenshot.width}
+                height={screenshot.height}
                 alt={screenshot.alt}
+                fetchPriority="high"
+                decoding="async"
                 className="h-full w-full object-cover object-top-left"
               />
             </GlassCard>
