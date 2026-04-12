@@ -192,6 +192,46 @@ export const LAUNCH_LISTING_BADGES = [
       height: 54,
     },
   },
+  {
+    name: 'Findly Tools',
+    href: 'https://findly.tools/userplane?utm_source=userplane',
+    badge: {
+      src: 'https://findly.tools/badges/findly-tools-badge-light.svg',
+      alt: 'Featured on Findly.tools',
+      width: 175,
+      height: 55,
+    },
+  },
+  {
+    name: 'Tool Fame',
+    href: 'https://toolfame.com/item/userplane',
+    badge: {
+      src: 'https://toolfame.com/badge-light.svg',
+      alt: 'Featured on toolfame.com',
+      width: 180,
+      height: 54,
+    },
+  },
+  {
+    name: 'TinyLaunch',
+    href: 'https://tinylaunch.com',
+    badge: {
+      src: 'https://tinylaunch.com/tinylaunch_badge_live_now.svg',
+      alt: 'TinyLaunch Badge',
+      width: 202,
+      height: 54,
+    },
+  },
+  {
+    name: 'PeerPush',
+    href: 'https://peerpush.net/p/userplane',
+    badge: {
+      src: 'https://peerpush.net/p/userplane/badge.png',
+      alt: 'Userplane badge',
+      width: 230,
+      height: 54,
+    },
+  },
 ];
 
 // ── CTA ──
