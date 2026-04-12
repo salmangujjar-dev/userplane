@@ -33,24 +33,42 @@ export default function LaunchFooter({ listingBadges }: LaunchFooterProps) {
                   &copy; {new Date().getFullYear()} {FOOTER_COPYRIGHT}
                 </p>
                 {listingBadges && listingBadges.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {listingBadges.map((item) => (
-                      <a
-                        key={item.name}
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex w-fit items-center gap-3 rounded-lg border border-border/60 px-4 py-2.5 transition-colors hover:border-border hover:bg-muted/30"
-                      >
-                        <img
-                          src={item.badge.src}
-                          alt={item.badge.alt}
-                          width={item.badge.width / 2}
-                          height={item.badge.height / 2}
-                          className="block"
-                        />
-                      </a>
-                    ))}
+                  <div
+                    className="overflow-hidden w-48"
+                    style={{
+                      maskImage:
+                        'linear-gradient(to right, transparent, black 18%, black 82%, transparent)',
+                      WebkitMaskImage:
+                        'linear-gradient(to right, transparent, black 18%, black 82%, transparent)',
+                    }}
+                  >
+                    <style>{`
+                      @keyframes badge-scroll {
+                        0%   { transform: translateX(0); }
+                        100% { transform: translateX(-50%); }
+                      }
+                      .badge-carousel { animation: badge-scroll 20s linear infinite; }
+                      .badge-carousel:hover { animation-play-state: paused; }
+                    `}</style>
+                    <div className="badge-carousel flex gap-2" style={{ width: 'max-content' }}>
+                      {[...listingBadges, ...listingBadges].map((item, i) => (
+                        <a
+                          key={`${item.name}-${i}`}
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex w-fit items-center gap-3 rounded-lg border border-border/60 px-4 py-2.5 transition-colors hover:border-border hover:bg-muted/30"
+                        >
+                          <img
+                            src={item.badge.src}
+                            alt={item.badge.alt}
+                            width={item.badge.width / 2}
+                            height={item.badge.height / 2}
+                            className="block"
+                          />
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
