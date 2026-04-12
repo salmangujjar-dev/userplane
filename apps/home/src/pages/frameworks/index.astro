@@ -8,12 +8,11 @@ import CallToAction from '../../components/frameworks/CallToAction';
 
 import { FRAMEWORK_REGISTRY } from '../../constants/frameworks/registry';
 import { FRAMEWORK_LOGOS, FRAMEWORK_LOGOS_LABEL } from '../../constants/frameworks/logos';
-import {
-  LISTING_SEO,
-  LISTING_GRADIENT,
-  LISTING_HERO,
-  LISTING_CTA,
-} from '../../constants/frameworks/listing';
+import { LISTING_GRADIENT, LISTING_HERO, LISTING_CTA } from '../../constants/frameworks/listing';
+import { STATIC_PAGE_REGISTRY } from '../../constants/static-pages';
+import { getOgImagePath } from '../../lib/og/sources';
+
+const meta = STATIC_PAGE_REGISTRY.frameworksListing;
 
 const frameworks = Object.values(FRAMEWORK_REGISTRY);
 
@@ -63,7 +62,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'Userplane for Your Framework',
-  description: LISTING_SEO.description,
+  description: meta.seo.description,
   url: new URL('/frameworks', Astro.site).href,
   mainEntity: {
     '@type': 'ItemList',
@@ -78,9 +77,16 @@ const jsonLd = {
 ---
 
 <HomepageLayout
-  title={LISTING_SEO.title}
-  description={LISTING_SEO.description}
-  keywords={LISTING_SEO.keywords}
+  title={meta.seo.title}
+  description={meta.seo.description}
+  keywords={meta.seo.keywords}
+  ogImage={getOgImagePath(meta.category, meta.slug)}
+  ogImageAlt={meta.og.alt}
+  preloadImage={{
+    src: LISTING_HERO.preview.src,
+    srcSet: '',
+    sizes: '(max-width: 1024px) 100vw, 52vw',
+  }}
 >
   <JsonLd data={breadcrumb} />
   <JsonLd data={jsonLd} />
@@ -91,18 +97,16 @@ const jsonLd = {
       primaryCTA={LISTING_HERO.primaryCTA}
       secondaryCTA={LISTING_HERO.secondaryCTA}
       preview={LISTING_HERO.preview}
-      client:load
     />
-    <LogoMarquee label={FRAMEWORK_LOGOS_LABEL} logos={FRAMEWORK_LOGOS} client:load />
+    <LogoMarquee label={FRAMEWORK_LOGOS_LABEL} logos={FRAMEWORK_LOGOS} />
 
-    <FrameworkBrowser frameworks={browserEntries} client:load />
+    <FrameworkBrowser frameworks={browserEntries} client:visible />
 
     <CallToAction
       headline={LISTING_CTA.headline}
       description={LISTING_CTA.description}
       primaryCTA={LISTING_CTA.primaryCTA}
       secondaryCTA={LISTING_CTA.secondaryCTA}
-      client:load
     />
   </main>
 </HomepageLayout>

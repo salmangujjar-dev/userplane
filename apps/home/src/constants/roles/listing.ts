@@ -5,17 +5,6 @@ import { SIGNUP_URL } from '../onboarding';
 import { buildUTM, withUTM } from '../utm';
 import { getRoleHeroUrl } from './media';
 
-// ── SEO ──
-
-export const LISTING_SEO = {
-  title:
-    'Userplane for Your Team | Screen Recordings with Console Logs, Network Requests, and Session Data',
-  description:
-    'Userplane gives every team full visibility into customer issues. Screen recordings with console logs, network data, and session metadata.',
-  keywords:
-    'userplane, screen recording, session replay, support tools, developer tools, customer success, console logs, network data',
-} as const;
-
 // ── Gradient ──
 
 export const LISTING_GRADIENT: GradientConfig = {

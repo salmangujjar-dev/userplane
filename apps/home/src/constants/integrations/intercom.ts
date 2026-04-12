@@ -28,7 +28,6 @@ export const intercomConfig = defineIntegration({
       'Request screen recordings without leaving Intercom. Capture console logs, network requests, and session replays to understand and resolve support issues faster.',
     keywords:
       'intercom screen recording, intercom integration, intercom messenger app, intercom support tool, intercom bug reporting, screen recording intercom, userplane intercom, customer support screen recording',
-    ogImage: '/images/preview/og-intercom.webp',
   },
   hero: {
     headline: {

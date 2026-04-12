@@ -30,7 +30,11 @@ export default function LaunchFooter({ listingBadges }: LaunchFooterProps) {
               <div className="flex shrink-0 flex-col gap-4">
                 <Logo size="lg" />
                 <p className="max-w-sm text-muted-foreground text-sm">
-                  &copy; {new Date().getFullYear()} {FOOTER_COPYRIGHT}
+                  &copy;{' '}
+                  <time dateTime={new Date().toISOString().slice(0, 10)}>
+                    {new Date().getFullYear()}
+                  </time>{' '}
+                  {FOOTER_COPYRIGHT}
                 </p>
                 {listingBadges && listingBadges.length > 0 && (
                   <div
@@ -64,6 +68,8 @@ export default function LaunchFooter({ listingBadges }: LaunchFooterProps) {
                             alt={item.badge.alt}
                             width={item.badge.width / 2}
                             height={item.badge.height / 2}
+                            loading="lazy"
+                            decoding="async"
                             className="block"
                           />
                         </a>
@@ -112,7 +118,15 @@ export default function LaunchFooter({ listingBadges }: LaunchFooterProps) {
                       rel="noopener noreferrer"
                       target="_blank"
                     >
-                      <img alt={link.label} className="size-5" src={link.icon} />
+                      <img
+                        alt={link.label}
+                        src={link.icon}
+                        width={20}
+                        height={20}
+                        loading="lazy"
+                        decoding="async"
+                        className="size-5"
+                      />
                     </a>
                   ))}
                 </div>

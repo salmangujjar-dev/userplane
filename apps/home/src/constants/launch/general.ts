@@ -17,17 +17,6 @@ import {
 import { getLaunchFeatureUrl, getLaunchHeroUrl } from '../integrations/media';
 import { SIGNUP_URL } from '../onboarding';
 
-// ── SEO ──
-
-export const LAUNCH_SEO = {
-  title: 'Userplane — Screen Recordings for Customer Support',
-  description:
-    'Send a recording link. Get back a full replay with console logs, network requests, and session context. Built for support teams.',
-  keywords:
-    'screen recording, customer support, bug reporting, session replay, console logs, network requests, userplane, product hunt',
-  ogImage: '/images/preview/og-launch.webp',
-} as const;
-
 // ── Gradient ──
 
 export const LAUNCH_GRADIENT: GradientConfig = {
@@ -46,7 +35,14 @@ export const LAUNCH_HERO: {
   description: string[];
   primaryCTA: ButtonConfig;
   secondaryCTA: ButtonConfig;
-  screenshot: { src: string; alt: string };
+  screenshot: {
+    src: string;
+    srcSet: string;
+    sizes: string;
+    width: number;
+    height: number;
+    alt: string;
+  };
 } = {
   headline: {
     lines: ['Resolve support issues', 'without the back-and-forth'],
@@ -62,6 +58,15 @@ export const LAUNCH_HERO: {
   secondaryCTA: { text: 'See Demo', href: '/demo' },
   screenshot: {
     src: getLaunchHeroUrl('launch/general/hero.png'),
+    srcSet: [
+      `${getLaunchHeroUrl('launch/general/hero.png', 480)} 480w`,
+      `${getLaunchHeroUrl('launch/general/hero.png', 768)} 768w`,
+      `${getLaunchHeroUrl('launch/general/hero.png', 1280)} 1280w`,
+      `${getLaunchHeroUrl('launch/general/hero.png', 1440)} 1440w`,
+    ].join(', '),
+    sizes: '(max-width: 1024px) 100vw, 52vw',
+    width: 1440,
+    height: 900,
     alt: 'Userplane screen recording dashboard',
   },
 };
@@ -190,6 +195,16 @@ export const LAUNCH_LISTING_BADGES = [
       alt: 'Featured on Twelve Tools',
       width: 200,
       height: 54,
+    },
+  },
+  {
+    name: 'Findly Tools',
+    href: 'https://findly.tools/userplane?utm_source=userplane',
+    badge: {
+      src: 'https://findly.tools/badges/findly-tools-badge-light.svg',
+      alt: 'Featured on Findly.tools',
+      width: 175,
+      height: 55,
     },
   },
 ];

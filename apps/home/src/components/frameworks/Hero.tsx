@@ -100,6 +100,9 @@ function InlineIcon({ icon }: { icon: IconData }) {
     <img
       src={icon.src}
       alt={icon.alt}
+      width={16}
+      height={16}
+      decoding="async"
       className="inline-block size-[0.75em] align-middle object-contain"
     />
   );
@@ -190,6 +193,9 @@ export default function Hero({
                 <img
                   src={marketplace.icon.src}
                   alt={marketplace.icon.alt}
+                  width={32}
+                  height={32}
+                  decoding="async"
                   className="size-8 object-contain"
                 />
                 <span className="text-[13px] leading-tight text-muted-foreground">
@@ -215,6 +221,10 @@ export default function Hero({
               <img
                 src={preview.src}
                 alt={preview.alt}
+                width={1440}
+                height={900}
+                fetchPriority="high"
+                decoding="async"
                 className="h-full w-full object-cover object-top-left"
               />
             </GlassCard>

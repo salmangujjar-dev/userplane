@@ -8,7 +8,6 @@ import ResourceLinks from '../components/integrations/ResourceLinks';
 import CallToAction from '../components/integrations/CallToAction';
 
 import {
-  LAUNCH_SEO,
   LAUNCH_GRADIENT,
   LAUNCH_HERO,
   LAUNCH_LOGOS_LABEL,
@@ -18,6 +17,10 @@ import {
   LAUNCH_LISTING_BADGES,
 } from '../constants/launch/general';
 import { INTEGRATION_LOGOS } from '../constants/integrations';
+import { STATIC_PAGE_REGISTRY } from '../constants/static-pages';
+import { getOgImagePath } from '../lib/og/sources';
+
+const meta = STATIC_PAGE_REGISTRY.launch;
 
 const gradientVars = `--gradient-1: ${LAUNCH_GRADIENT.stops[0]}; --gradient-2: ${LAUNCH_GRADIENT.stops[1]}; --gradient-3: ${LAUNCH_GRADIENT.stops[2]}; --gradient-4: ${LAUNCH_GRADIENT.stops[3]};`;
 
@@ -42,10 +45,12 @@ const breadcrumb = {
 ---
 
 <LaunchLayout
-  title={LAUNCH_SEO.title}
-  description={LAUNCH_SEO.description}
-  keywords={LAUNCH_SEO.keywords}
-  ogImage={LAUNCH_SEO.ogImage}
+  title={meta.seo.title}
+  description={meta.seo.description}
+  keywords={meta.seo.keywords}
+  ogImage={getOgImagePath(meta.category, meta.slug)}
+  ogImageAlt={meta.og.alt}
+  preloadImage={LAUNCH_HERO.screenshot}
   listingBadges={LAUNCH_LISTING_BADGES}
 >
   <JsonLd data={breadcrumb} />
@@ -56,23 +61,20 @@ const breadcrumb = {
       primaryCTA={LAUNCH_HERO.primaryCTA}
       secondaryCTA={LAUNCH_HERO.secondaryCTA}
       screenshot={LAUNCH_HERO.screenshot}
-      client:load
     />
-    <LogoMarquee label={LAUNCH_LOGOS_LABEL} logos={INTEGRATION_LOGOS} client:load />
-    <FeatureShowcase features={LAUNCH_FEATURES} client:visible />
+    <LogoMarquee label={LAUNCH_LOGOS_LABEL} logos={INTEGRATION_LOGOS} />
+    <FeatureShowcase features={LAUNCH_FEATURES} />
     <ResourceLinks
       label={LAUNCH_RESOURCES.label}
       headline={LAUNCH_RESOURCES.headline}
       links={LAUNCH_RESOURCES.links}
       footerLinks={LAUNCH_RESOURCES.footerLinks}
-      client:visible
     />
     <CallToAction
       headline={LAUNCH_CTA.headline}
       description={LAUNCH_CTA.description}
       primaryCTA={LAUNCH_CTA.primaryCTA}
       secondaryCTA={LAUNCH_CTA.secondaryCTA}
-      client:load
     />
   </main>
 </LaunchLayout>

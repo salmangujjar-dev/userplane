@@ -16,10 +16,13 @@ function FeatureCard({ image, imageMobile, imageAlt, title, description }: Featu
             src={image}
             srcSet={`${imageMobile} 700w, ${image} 1400w`}
             sizes="(max-width: 768px) 100vw, 50vw"
+            width={1400}
+            height={788}
             alt={imageAlt}
             className="w-full h-full object-cover object-top-left"
             draggable={false}
             loading="lazy"
+            decoding="async"
           />
           <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-white via-white/90 to-transparent"></div>
         </div>

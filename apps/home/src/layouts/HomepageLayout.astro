@@ -13,10 +13,11 @@ interface Props {
   description?: string;
   keywords?: string;
   ogImage?: string;
+  ogImageAlt?: string;
   preloadImage?: { src: string; srcSet: string; sizes: string };
 }
 
-const { title, description, keywords, ogImage, preloadImage } = Astro.props;
+const { title, description, keywords, ogImage, ogImageAlt, preloadImage } = Astro.props;
 
 const dropdownEntries = Object.values(INTEGRATION_REGISTRY).map((config) => ({
   slug: config.slug,
@@ -64,6 +65,7 @@ const teamDropdownEntries = Object.values(ROLE_REGISTRY).map((config) => ({
   description={description}
   keywords={keywords}
   ogImage={ogImage}
+  ogImageAlt={ogImageAlt}
   preloadImage={preloadImage}
 >
   <Header

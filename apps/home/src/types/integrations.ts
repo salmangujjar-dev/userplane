@@ -64,7 +64,6 @@ export interface IntegrationConfig {
     title: string;
     description: string;
     keywords: string;
-    ogImage?: string;
   };
   jsonLd: Record<string, unknown>;
   gradient: GradientConfig;

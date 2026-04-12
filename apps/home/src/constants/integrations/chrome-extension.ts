@@ -29,7 +29,6 @@ export const chromeExtensionConfig = defineIntegration({
       'Send recording links to customers right from Chrome. Get back replays with console logs, network traces, and session data for your support team to resolve issues faster.',
     keywords:
       'chrome extension screen recording, browser screen recording, chrome screen capture, screen recording extension, userplane, chrome devtools recording, browser capture tool',
-    ogImage: '/images/preview/og-chrome-extension.webp',
   },
   hero: {
     headline: {

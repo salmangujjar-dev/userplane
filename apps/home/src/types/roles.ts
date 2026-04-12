@@ -27,7 +27,6 @@ export interface RoleConfig {
     title: string;
     description: string;
     keywords: string;
-    ogImage?: string;
   };
   jsonLd: Record<string, unknown>;
   gradient: GradientConfig;

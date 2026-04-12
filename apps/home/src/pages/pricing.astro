@@ -3,6 +3,10 @@ import HomepageLayout from '../layouts/HomepageLayout.astro';
 import JsonLd from '../components/seo/JsonLd.astro';
 import PricingPage from '../components/pricing/PricingPage';
 import { PRICING_FAQ_ITEMS } from '../constants/pricing/pricing-page';
+import { STATIC_PAGE_REGISTRY } from '../constants/static-pages';
+import { getOgImagePath } from '../lib/og/sources';
+
+const meta = STATIC_PAGE_REGISTRY.pricing;
 
 const faqLd = {
   '@context': 'https://schema.org',
@@ -48,9 +52,11 @@ const breadcrumb = {
 ---
 
 <HomepageLayout
-  title="Pricing - Userplane"
-  description="Simple, transparent pricing for teams of all sizes. Choose the plan that fits your needs with no hidden fees."
-  keywords="pricing, plans, screen recording, customer support, debugging, Userplane pricing"
+  title={meta.seo.title}
+  description={meta.seo.description}
+  keywords={meta.seo.keywords}
+  ogImage={getOgImagePath(meta.category, meta.slug)}
+  ogImageAlt={meta.og.alt}
 >
   <JsonLd data={breadcrumb} />
   <JsonLd data={softwareLd} />

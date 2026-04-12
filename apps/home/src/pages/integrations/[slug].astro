@@ -9,6 +9,7 @@ import ResourceLinks from '../../components/integrations/ResourceLinks';
 
 import { INTEGRATION_REGISTRY } from '../../constants/integrations/registry';
 import { INTEGRATION_LOGOS, INTEGRATION_LOGOS_LABEL } from '../../constants/integrations';
+import { getOgImagePath } from '../../lib/og/sources';
 
 import type { IntegrationConfig } from '@/types/integrations';
 
@@ -24,6 +25,9 @@ interface Props {
 }
 
 const { config } = Astro.props;
+
+const ogImage = getOgImagePath('integration', config.slug);
+const ogImageAlt = `Userplane for ${config.name}`;
 
 const integrationLinks = Object.values(INTEGRATION_REGISTRY)
   .filter((c) => c.slug !== config.slug)
@@ -69,7 +73,11 @@ const breadcrumb = {
   title={config.seo.title}
   description={config.seo.description}
   keywords={config.seo.keywords}
-  ogImage={config.seo.ogImage}
+  ogImage={ogImage}
+  ogImageAlt={ogImageAlt}
+  preloadImage={config.hero.preview
+    ? { src: config.hero.preview.src, srcSet: '', sizes: '(max-width: 1024px) 100vw, 52vw' }
+    : undefined}
 >
   <JsonLd data={config.jsonLd} />
   <JsonLd data={breadcrumb} />
@@ -79,10 +87,9 @@ const breadcrumb = {
       description={config.hero.description}
       preview={config.hero.preview}
       marketplace={config.hero.marketplace}
-      client:load
     />
-    <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} client:load />
-    <FeatureShowcase features={config.features} client:visible />
+    <LogoMarquee label={INTEGRATION_LOGOS_LABEL} logos={INTEGRATION_LOGOS} />
+    <FeatureShowcase features={config.features} />
     <ResourceLinks
       label={config.resources.label}
       headline={config.resources.headline}
@@ -91,14 +98,12 @@ const breadcrumb = {
         { text: 'View all integrations', href: '/integrations' },
         { text: 'See all docs', href: config.resources.seeAllHref, external: true },
       ]}
-      client:visible
     />
     <CallToAction
       headline={config.cta.headline}
       description={config.cta.description}
       primaryCTA={config.cta.primaryCTA}
       secondaryCTA={config.cta.secondaryCTA}
-      client:load
     />
   </main>
 </HomepageLayout>

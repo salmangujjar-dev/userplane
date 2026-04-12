@@ -30,12 +30,14 @@ export function getFeatureUrl(asset: MicrositeAssetKey) {
   return mediaClient.getMicrositeMediaUrl(asset, { transform: FEATURE_TRANSFORM });
 }
 
-/** Full-width hero image for the launch page */
-export function getLaunchHeroUrl(asset: LaunchAssetKey) {
-  return mediaClient.getLaunchMediaUrl(asset, { transform: HERO_TRANSFORM });
+/** Full-width hero image for the launch page, optionally at a specific width */
+export function getLaunchHeroUrl(asset: LaunchAssetKey, width?: number) {
+  const transform = width ? mergeTransformOptions('feature', { width }) : HERO_TRANSFORM;
+  return mediaClient.getLaunchMediaUrl(asset, { transform });
 }
 
-/** Feature card image for the launch page */
-export function getLaunchFeatureUrl(asset: LaunchAssetKey) {
-  return mediaClient.getLaunchMediaUrl(asset, { transform: FEATURE_TRANSFORM });
+/** Feature card image for the launch page, optionally at a specific width */
+export function getLaunchFeatureUrl(asset: LaunchAssetKey, width?: number) {
+  const transform = width ? mergeTransformOptions('feature', { width }) : FEATURE_TRANSFORM;
+  return mediaClient.getLaunchMediaUrl(asset, { transform });
 }

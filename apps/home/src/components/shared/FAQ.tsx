@@ -43,9 +43,9 @@ function FAQAccordionItem({ item, isOpen, onToggle }: FAQAccordionItemProps) {
         onClick={onToggle}
         className="w-full flex items-center justify-between gap-4 py-6 text-left hover:opacity-80 transition-opacity min-w-0"
       >
-        <h3 className="text-lg font-medium text-zinc-900 flex-1 min-w-0 wrap-break-word overflow-hidden">
+        <span className="text-lg font-medium text-zinc-900 flex-1 min-w-0 wrap-break-word overflow-hidden">
           {item.question}
-        </h3>
+        </span>
         <div className="shrink-0 flex-none">
           {isOpen ? (
             <Minus className="w-5 h-5 text-zinc-600" />

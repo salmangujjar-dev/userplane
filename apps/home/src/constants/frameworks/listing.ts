@@ -4,16 +4,6 @@ import { SIGNUP_URL } from '../onboarding';
 import { buildUTM, withUTM } from '../utm';
 import { getFrameworkHeroUrl } from './media';
 
-// ── SEO ──
-
-export const LISTING_SEO = {
-  title: 'Userplane for Your Framework | Screen Recordings with Console Logs',
-  description:
-    'Capture console logs, network requests, and session details from Next.js, React, Remix, Vue, Angular, Svelte, Nuxt, Astro, SolidJS, Django, Ruby on Rails, and more.',
-  keywords:
-    'screen recording sdk, session replay frameworks, nextjs screen recording, react session replay, remix screen recording, remix session replay, vue screen recording, angular debugging, svelte session capture, solidjs screen recording, django session replay, rails screen recording, userplane',
-} as const;
-
 // ── Gradient ──
 
 export const LISTING_GRADIENT: GradientConfig = {

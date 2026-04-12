@@ -66,6 +66,10 @@ export default function FeatureShowcase({ features }: FeatureShowcaseProps) {
                 <img
                   src={feature.image}
                   alt={feature.title}
+                  width={864}
+                  height={540}
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover object-top-left"
                 />
               </GlassCard>

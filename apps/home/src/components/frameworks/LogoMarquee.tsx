@@ -23,6 +23,7 @@ export default function LogoMarquee({ label, logos }: LogoMarqueeProps) {
                   height={24}
                   className="object-contain grayscale opacity-50"
                   loading="lazy"
+                  decoding="async"
                 />
                 <span className="whitespace-nowrap text-sm font-medium tracking-tight text-foreground/50">
                   {logo.name}
