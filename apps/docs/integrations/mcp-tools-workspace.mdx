@@ -11,7 +11,7 @@ Retrieve the authenticated user's Userplane profile including name, email, and a
 
 **Parameters:** None
 
-**Returns:** User name, email, workspace count, recording count, link count.
+**Returns:** A `user` object with `id`, `name`, and `email`, plus a `stats` object with `workspaces`, `recordings`, and `links` counts.
 
 ---
 
@@ -24,7 +24,7 @@ List Userplane workspaces the authenticated user belongs to. A workspace is a te
 | `page`     | number | No       | Page number (default: 1)               |
 | `per_page` | number | No       | Results per page (default: 5, max: 50) |
 
-**Returns:** Paginated list of workspaces with ID, name, and member count.
+**Returns:** Paginated list of workspaces. Each entry includes `workspaceId` and `workspaceName`.
 
 ---
 
@@ -36,7 +36,7 @@ Retrieve details for a specific Userplane workspace. The authenticated user must
 | ------------- | ------ | -------- | ------------ |
 | `workspaceId` | string | Yes      | Workspace ID |
 
-**Returns:** Workspace name, member count, domain count, project count, and settings.
+**Returns:** `workspaceId`, `workspaceName`, `createdAt`, and a `dashboardUrl` pointing to the workspace in the Userplane dashboard.
 
 ---
 
@@ -50,7 +50,7 @@ List projects in a Userplane workspace. Projects organize recordings and links, 
 | `page`        | number | No       | Page number (default: 1)               |
 | `per_page`    | number | No       | Results per page (default: 5, max: 50) |
 
-**Returns:** Paginated list of projects with ID, title, and retention policy.
+**Returns:** `workspaceId`, `total`, and a `projects` array. Each project includes `projectId`, `projectTitle`, `isDefault`, and `recordingRetentionDays`.
 
 ---
 
@@ -63,7 +63,7 @@ Retrieve details for a specific project including title, retention policy, and w
 | `workspaceId` | string | Yes      | Workspace ID |
 | `projectId`   | string | Yes      | Project ID   |
 
-**Returns:** Project title, retention policy, default status, recording count.
+**Returns:** `workspaceId`, `projectId`, `projectTitle`, `isDefault`, and `recordingRetentionDays`.
 
 ---
 
