@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { WorkspaceIdSchema } from '../../schemas/common';
 import type { McpToolDefinition } from '../types';
 import { READ_ONLY_ANNOTATIONS } from '../types';
 
@@ -31,3 +32,26 @@ export const userplaneGetWorkspace = {
   },
   annotations: READ_ONLY_ANNOTATIONS,
 } as const satisfies McpToolDefinition;
+
+// ---------------------------------------------------------------------------
+// Responses
+// ---------------------------------------------------------------------------
+
+export const McpWorkspaceItemSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  workspaceName: z.string(),
+});
+
+export const McpWorkspaceDetailSchema = McpWorkspaceItemSchema.extend({
+  createdAt: z.coerce.date(),
+  dashboardUrl: z.string().url(),
+});
+
+export const McpListWorkspacesSchema = z.object({
+  workspaces: z.array(McpWorkspaceItemSchema),
+  total: z.number().int().nonnegative(),
+});
+
+export type McpWorkspaceItem = z.infer<typeof McpWorkspaceItemSchema>;
+export type McpWorkspaceDetail = z.infer<typeof McpWorkspaceDetailSchema>;
+export type McpListWorkspaces = z.infer<typeof McpListWorkspacesSchema>;

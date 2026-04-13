@@ -10,8 +10,8 @@ This guide covers how to install Userplane in a Bolt.new app.
 Copy and send this prompt in Bolt:
 
 <CodeGroup>
-```text Prompt
-Add the following two tags inside the <head> of index.html, as early as possible before any other tags:
+```text
+Prompt: Add the following two tags inside the <head> of index.html, as early as possible before any other tags:
 
 <meta name="userplane:workspace" content="YOUR_WORKSPACE_ID" />
 <script type="module" src="https://cdn.userplane.io/embed/script.js"></script>
@@ -32,8 +32,8 @@ Replace `YOUR_WORKSPACE_ID` with your workspace ID. You can copy the exact snipp
 To blur sensitive elements in recordings, send this prompt:
 
 <CodeGroup>
-```text Prompt
-Add the attribute data-userplane-blur to every component or element that displays sensitive user data — for example: payment forms, password fields, personal information, account balances, health data.
+```text
+Prompt: Add the attribute data-userplane-blur to every component or element that displays sensitive user data - for example: payment forms, password fields, personal information, account balances, health data.
 
 Example usage:
 
@@ -59,8 +59,8 @@ See [Sensitive Data Redaction](/developer/sensitive-data-redaction) for all blur
 If your app has authentication or redirects, send this prompt:
 
 <CodeGroup>
-```text Prompt
-When redirecting users (for example, to a login page), preserve all URL query parameters that start with "userplane-" through the redirect.
+```text
+Prompt: When redirecting users (for example, to a login page), preserve all URL query parameters that start with "userplane-" through the redirect.
 
 Here is an example of how to do this:
 

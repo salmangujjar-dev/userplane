@@ -27,15 +27,22 @@ export interface McpToolDefinition<
   /** Optional MCP Apps metadata — used by hosts that support interactive UIs. */
   _meta?: {
     ui?: {
-      resourceUri: string;
+      resourceUri?: string;
+      /** Control which surfaces can see/call this tool ('model' | 'app'). */
+      visibility?: Array<'model' | 'app'>;
     };
-    /** Control which surfaces can see/call this tool ('model' | 'app'). */
-    visibility?: Array<'model' | 'app'>;
+    /** One-line human description rendered under the widget in ChatGPT. */
+    'openai/widgetDescription'?: string;
+    /** Status text shown while the tool is running. */
+    'openai/toolInvocation/invoking'?: string;
+    /** Status text shown after the tool completes. */
+    'openai/toolInvocation/invoked'?: string;
   };
 }
 
 export const READ_ONLY_ANNOTATIONS = {
   readOnlyHint: true,
+  destructiveHint: false,
   openWorldHint: false,
 } as const satisfies McpToolAnnotations;
 
@@ -62,5 +69,6 @@ export const DESTRUCTIVE_ANNOTATIONS = {
 
 export const EXTERNAL_RESOURCE_ANNOTATIONS = {
   readOnlyHint: true,
+  destructiveHint: false,
   openWorldHint: true,
 } as const satisfies McpToolAnnotations;

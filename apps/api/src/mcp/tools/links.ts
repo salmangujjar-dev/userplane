@@ -1,13 +1,13 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   userplaneCreateLink,
-  userplaneDeleteLink,
   userplaneGetLink,
   userplaneListLinks,
   userplaneUpdateLink,
 } from '@userplane/contract';
 
-import { requireWorkspaceMember, textResult } from '../helpers';
+import { requireWorkspaceMemberForMcp, textResult } from '../helpers';
+import { toMcpLinkResponse, toMcpListLinks } from '../responses';
 import type { McpDeps } from '../types';
 
 export function registerLinkTools(server: McpServer, deps: McpDeps, userId: string) {
@@ -17,10 +17,10 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
       name,
       config,
       async ({ workspaceId, page, per_page, project_id, domain_id, created_by }) => {
-        await requireWorkspaceMember(deps, userId, workspaceId);
+        await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
         const p = page ?? 1;
         const pp = per_page ?? 10;
-        const { links, total } = await deps.linkService.getByWorkspaceIdPaginated(
+        const { links, total } = await deps.linkService.getByWorkspaceIdPaginatedForMcp(
           workspaceId,
           p,
           pp,
@@ -31,7 +31,7 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
           },
           { field: 'created_at', direction: 'desc' }
         );
-        return textResult({ workspaceId, links, total, page: p, per_page: pp });
+        return textResult(toMcpListLinks(workspaceId, links, total));
       }
     );
   }
@@ -42,7 +42,7 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
       name,
       config,
       async ({ workspaceId, domainId, projectId, linkReference, linkReusable, linkMeta }) => {
-        const { member } = await requireWorkspaceMember(deps, userId, workspaceId);
+        const { member } = await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
         const createdLink = await deps.linkService.create({
           workspaceId,
           createdBy: member.workspaceMemberId,
@@ -52,8 +52,8 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
           linkReusable,
           linkMeta,
         });
-        const link = await deps.linkService.getById(createdLink.linkId, workspaceId);
-        return textResult({ workspaceId, link });
+        const link = await deps.linkService.getByIdForMcp(createdLink.linkId, workspaceId);
+        return textResult(toMcpLinkResponse(workspaceId, link));
       }
     );
   }
@@ -61,9 +61,9 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
   {
     const { name, ...config } = userplaneGetLink;
     server.registerTool(name, config, async ({ workspaceId, linkId }) => {
-      await requireWorkspaceMember(deps, userId, workspaceId);
-      const link = await deps.linkService.getById(linkId, workspaceId);
-      return textResult({ workspaceId, link });
+      await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
+      const link = await deps.linkService.getByIdForMcp(linkId, workspaceId);
+      return textResult(toMcpLinkResponse(workspaceId, link));
     });
   }
 
@@ -82,7 +82,7 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
         linkProviderRef,
         linkMeta,
       }) => {
-        await requireWorkspaceMember(deps, userId, workspaceId);
+        await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
         await deps.linkService.update(linkId, workspaceId, {
           linkTitle,
           linkReusable,
@@ -93,24 +93,9 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
           linkProviderRef,
           linkMeta,
         });
-        const link = await deps.linkService.getById(linkId, workspaceId);
-        return textResult({ workspaceId, link });
+        const link = await deps.linkService.getByIdForMcp(linkId, workspaceId);
+        return textResult(toMcpLinkResponse(workspaceId, link));
       }
     );
-  }
-
-  {
-    const { name, ...config } = userplaneDeleteLink;
-    server.registerTool(name, config, async ({ workspaceId, linkId }) => {
-      const { member } = await requireWorkspaceMember(deps, userId, workspaceId);
-      const link = await deps.linkService.getById(linkId, workspaceId);
-      const isAdminOrOwner = member.workspaceRole === 'admin' || member.workspaceRole === 'owner';
-      const isCreator = link.creator.workspaceMemberId === member.workspaceMemberId;
-      if (!isAdminOrOwner && !isCreator) {
-        throw new Error('You do not have permission to delete this link.');
-      }
-      await deps.linkService.delete(linkId, workspaceId);
-      return textResult({ deleted: true, workspaceId, linkId });
-    });
   }
 }

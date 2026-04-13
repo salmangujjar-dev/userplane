@@ -11,9 +11,18 @@ Resource viewers provide focused, single-purpose views into specific recording d
 
 Displays browser console log entries captured during the recording.
 
-<Frame caption="Console log viewer in Claude">
-  <img src="/media/mcp/claude/apps/show-console-logs.png" />
-</Frame>
+<Tabs>
+  <Tab title="Claude">
+    <Frame caption="Console log viewer in Claude">
+      <img src="/media/mcp/claude/apps/show-console-logs.png" />
+    </Frame>
+  </Tab>
+  <Tab title="ChatGPT">
+    <Frame caption="Console log viewer in ChatGPT">
+      <img src="/media/mcp/chatgpt/apps/show-console-logs.png" />
+    </Frame>
+  </Tab>
+</Tabs>
 
 - **Level filtering** — toggle visibility by level: error, warning, info, log, debug
 - **Search** — full-text search across all log messages
@@ -24,12 +33,12 @@ Displays browser console log entries captured during the recording.
 ### Example prompts
 
 <CodeGroup>
-  ```text Prompt Show me the console logs for recording {recordingId} in workspace {workspaceId}.
+  ```text Prompt: Show me the console logs for recording {recordingId} in workspace {workspaceId}.
   Filter to errors only. ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Show me the console logs for this recording. Are there any JavaScript errors or
+  ```text Prompt: Show me the console logs for this recording. Are there any JavaScript errors or
   unhandled exceptions? https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
   ```
 </CodeGroup>
@@ -42,9 +51,18 @@ Displays browser console log entries captured during the recording.
 
 Displays HTTP request and response entries captured during the recording.
 
-<Frame caption="Network request viewer in Claude">
-  <img src="/media/mcp/claude/apps/show-network-logs.png" />
-</Frame>
+<Tabs>
+  <Tab title="Claude">
+    <Frame caption="Network request viewer in Claude">
+      <img src="/media/mcp/claude/apps/show-network-logs.png" />
+    </Frame>
+  </Tab>
+  <Tab title="ChatGPT">
+    <Frame caption="Network request viewer in ChatGPT">
+      <img src="/media/mcp/chatgpt/apps/show-network-logs.png" />
+    </Frame>
+  </Tab>
+</Tabs>
 
 - **Status codes** — color-coded by response class (2xx, 3xx, 4xx, 5xx)
 - **Durations** — request timing in milliseconds
@@ -59,12 +77,12 @@ Displays HTTP request and response entries captured during the recording.
 ### Example prompts
 
 <CodeGroup>
-  ```text Prompt Show me the network requests for recording {recordingId} in workspace {workspaceId}
-  . I need to find the failing API calls. ```
+  ```text Prompt: Show me the network requests for recording {recordingId} in workspace{' '}
+  {workspaceId}. I need to find the failing API calls. ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Check the network requests in this recording. Are there any 500 errors, 404s, or
+  ```text Prompt: Check the network requests in this recording. Are there any 500 errors, 404s, or
   requests that took longer than 3 seconds? https://dash.userplane.io/{workspaceId}/recordings/
   {recordingId}
   ```
@@ -78,9 +96,18 @@ Displays HTTP request and response entries captured during the recording.
 
 Displays user interaction events captured during the recording.
 
-<Frame caption="User action viewer in Claude">
-  <img src="/media/mcp/claude/apps/show-action-logs.png" />
-</Frame>
+<Tabs>
+  <Tab title="Claude">
+    <Frame caption="User action viewer in Claude">
+      <img src="/media/mcp/claude/apps/show-action-logs.png" />
+    </Frame>
+  </Tab>
+  <Tab title="ChatGPT">
+    <Frame caption="User action viewer in ChatGPT">
+      <img src="/media/mcp/chatgpt/apps/show-action-logs.png" />
+    </Frame>
+  </Tab>
+</Tabs>
 
 - **Action types** — clicks, page navigation, tab switches, page lifecycle events (load, unload, visibility change)
 - **Type filtering** — filter by action category
@@ -94,12 +121,12 @@ Displays user interaction events captured during the recording.
 ### Example prompts
 
 <CodeGroup>
-  ```text Prompt Show me the user actions for recording {recordingId} in workspace {workspaceId}.
+  ```text Prompt: Show me the user actions for recording {recordingId} in workspace {workspaceId}.
   What did the user do before the error occurred? ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Walk me through what the user did in this recording. What pages did they visit,
+  ```text Prompt: Walk me through what the user did in this recording. What pages did they visit,
   what did they click, and where did things break? https://dash.userplane.io/{workspaceId}
   /recordings/{recordingId}
   ```

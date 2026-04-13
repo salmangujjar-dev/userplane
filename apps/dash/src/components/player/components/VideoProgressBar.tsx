@@ -16,6 +16,11 @@ interface VideoProgressBarProps {
   markers?: VideoMarker[];
   /** Callback when user seeks to a new time */
   onSeek: (time: number) => void;
+  /**
+   * Callback when user clicks a marker. When provided, clicking (or keyboard-activating)
+   * a marker fires this instead of a seek. Markers without `kind` stay purely visual.
+   */
+  onMarkerClick?: (marker: VideoMarker) => void;
 }
 
 /**
@@ -27,6 +32,7 @@ export function VideoProgressBar({
   duration,
   markers = EMPTY_MARKERS,
   onSeek,
+  onMarkerClick,
 }: VideoProgressBarProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
@@ -52,8 +58,13 @@ export function VideoProgressBar({
     [duration]
   );
 
-  // Handle click to seek
+  // Handle click to seek. If hovering a marker with an onMarkerClick handler,
+  // fire the marker click instead of seeking.
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (activeMarker && onMarkerClick) {
+      onMarkerClick(activeMarker);
+      return;
+    }
     const newTime = getTimeFromPosition(e.clientX);
     onSeek(newTime);
   };
@@ -75,8 +86,13 @@ export function VideoProgressBar({
     setActiveMarker(hoveredMarker || null);
   };
 
-  // Handle mouse down for drag-to-scrub
+  // Handle mouse down for drag-to-scrub. Suppress drag when the click is consumed
+  // by an actionable marker so the user doesn't accidentally scrub after clicking.
   const handleProgressMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (activeMarker && onMarkerClick) {
+      handleProgressClick(e);
+      return;
+    }
     isDraggingRef.current = true;
     handleProgressClick(e);
   };
@@ -136,7 +152,6 @@ export function VideoProgressBar({
       className="custom-progress-container"
       role="button"
       tabIndex={0}
-      onClick={handleProgressClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -156,7 +171,22 @@ export function VideoProgressBar({
 
         {/* Hover tooltip */}
         {isHovering && hoverTime !== null && hoverPosition !== null && (
-          <div className="custom-progress-tooltip" style={{ left: `${hoverPosition}px` }}>
+          <div
+            className={`custom-progress-tooltip${
+              activeMarker && onMarkerClick && activeMarker.kind
+                ? ' custom-progress-tooltip--clickable'
+                : ''
+            }`}
+            style={{ left: `${hoverPosition}px` }}
+            onMouseDown={
+              activeMarker && onMarkerClick && activeMarker.kind
+                ? (e) => {
+                    e.stopPropagation();
+                    onMarkerClick(activeMarker);
+                  }
+                : undefined
+            }
+          >
             {activeMarker ? (
               <>
                 <div
@@ -178,10 +208,25 @@ export function VideoProgressBar({
         {/* Markers */}
         {markers.map((marker, index) => {
           const markerPosition = duration > 0 ? (marker.time / duration) * 100 : 0;
+          const isActionable = !!(onMarkerClick && marker.kind);
           return (
             <div
               key={`marker-${index}-${marker.time}`}
               className="custom-progress-marker"
+              role={isActionable ? 'button' : undefined}
+              tabIndex={isActionable ? 0 : -1}
+              aria-label={isActionable ? `Jump to ${marker.label}` : undefined}
+              onKeyDown={
+                isActionable
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onMarkerClick?.(marker);
+                      }
+                    }
+                  : undefined
+              }
               style={{
                 left: `${markerPosition}%`,
                 backgroundColor: marker.color || '#fbbf24',

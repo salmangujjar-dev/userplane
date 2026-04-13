@@ -12,7 +12,7 @@ import Logo from '@userplane/ui/components/logo';
 import { ArrowUpRight, Bot, MoreVertical, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { fetchSharedRecording } from '@/client/public';
 import { AiPromptModal } from '@/components/modals/ai-prompt-modal';
@@ -22,6 +22,7 @@ import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-r
 import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { RecordingPlayerProvider } from '@/components/recordings/recording-player-context';
 import { useConsoleErrorMarkers } from '@/components/recordings/use-console-error-markers';
+import { useNetworkErrorMarkers } from '@/components/recordings/use-network-error-markers';
 import { ErrorView } from '@/components/shared/error-view';
 import { NotFoundPage } from '@/components/shared/not-found-page';
 import { RecordingDetailSkeleton } from '@/components/skeleton';
@@ -81,11 +82,21 @@ function RecordingContent({
   recording: ViewSharedRecordingData['recording'];
   resources: ViewSharedRecordingData['resources'];
 }) {
-  const markers = useConsoleErrorMarkers(
+  const consoleMarkers = useConsoleErrorMarkers(
     null,
     recording.recordingId,
     recording,
     resources.consoleLog.url ?? undefined
+  );
+  const networkMarkers = useNetworkErrorMarkers(
+    null,
+    recording.recordingId,
+    recording,
+    resources.networkLog.url ?? undefined
+  );
+  const markers = useMemo(
+    () => [...consoleMarkers, ...networkMarkers],
+    [consoleMarkers, networkMarkers]
   );
 
   return (

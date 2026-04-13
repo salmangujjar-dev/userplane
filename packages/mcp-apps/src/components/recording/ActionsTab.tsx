@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 
-import { cn, formatTimestamp } from '../../utils';
-import { EmptyState, FilterPill, SearchInput } from '../shared';
+import { cn, formatTimestamp, safeStringify, useToggleSet } from '../../utils';
+import { DetailTabButton, EmptyState, FilterPill, SearchInput } from '../shared';
 import {
   ArrowRightIcon,
   ChevronRightIcon,
@@ -23,60 +23,114 @@ interface ActionsTabProps {
 }
 
 const ACTION_TYPES = [
-  { type: 'click', label: 'Clicks', icon: MousePointer2Icon, color: 'text-blue-500' },
-  { type: 'navigate', label: 'Navigation', icon: GlobeIcon, color: 'text-green-500' },
-  { type: 'spa_route', label: 'SPA Route', icon: RefreshCwIcon, color: 'text-purple-500' },
-  { type: 'tab_activated', label: 'Tab Active', icon: EyeIcon, color: 'text-cyan-500' },
-  { type: 'tab_deactivated', label: 'Tab Inactive', icon: EyeOffIcon, color: 'text-gray-500' },
-  { type: 'tab_switch', label: 'Tab Switch', icon: ArrowRightIcon, color: 'text-orange-500' },
-  { type: 'init_page', label: 'Page Init', icon: LogInIcon, color: 'text-green-500' },
-  { type: 'page_unload', label: 'Unload', icon: LogOutIcon, color: 'text-red-500' },
-  { type: 'recorder-pause', label: 'Pause', icon: PauseIcon, color: 'text-yellow-500' },
-  { type: 'recorder-resume', label: 'Resume', icon: PlayIcon, color: 'text-green-500' },
+  {
+    type: 'click',
+    label: 'Clicks',
+    pastLabel: 'Clicked',
+    icon: MousePointer2Icon,
+    color: 'text-blue-500',
+  },
+  {
+    type: 'navigate',
+    label: 'Navigation',
+    pastLabel: 'Navigated',
+    icon: GlobeIcon,
+    color: 'text-green-500',
+  },
+  {
+    type: 'spa_route',
+    label: 'SPA Route',
+    pastLabel: 'SPA Route',
+    icon: RefreshCwIcon,
+    color: 'text-purple-500',
+  },
+  {
+    type: 'tab_activated',
+    label: 'Tab Active',
+    pastLabel: 'Tab Activated',
+    icon: EyeIcon,
+    color: 'text-cyan-500',
+  },
+  {
+    type: 'tab_deactivated',
+    label: 'Tab Inactive',
+    pastLabel: 'Tab Deactivated',
+    icon: EyeOffIcon,
+    color: 'text-gray-500',
+  },
+  {
+    type: 'tab_switch',
+    label: 'Tab Switch',
+    pastLabel: 'Tab Switched',
+    icon: ArrowRightIcon,
+    color: 'text-orange-500',
+  },
+  {
+    type: 'init_page',
+    label: 'Page Init',
+    pastLabel: 'Page Initialized',
+    icon: LogInIcon,
+    color: 'text-green-500',
+  },
+  {
+    type: 'page_unload',
+    label: 'Unload',
+    pastLabel: 'Page Unloaded',
+    icon: LogOutIcon,
+    color: 'text-red-500',
+  },
+  {
+    type: 'recorder-pause',
+    label: 'Pause',
+    pastLabel: 'Recording Paused',
+    icon: PauseIcon,
+    color: 'text-yellow-500',
+  },
+  {
+    type: 'recorder-resume',
+    label: 'Resume',
+    pastLabel: 'Recording Resumed',
+    icon: PlayIcon,
+    color: 'text-green-500',
+  },
 ] as const;
 
-function getActionTypeConfig(type: string) {
-  return ACTION_TYPES.find((t) => t.type === type) ?? ACTION_TYPES[0];
+type ActionType = (typeof ACTION_TYPES)[number];
+
+const ACTION_TYPE_BY_KEY = new Map<string, ActionType>(ACTION_TYPES.map((t) => [t.type, t]));
+const DEFAULT_ACTION_TYPE: ActionType = ACTION_TYPE_BY_KEY.get('click')!;
+
+function getActionTypeConfig(type: string): ActionType {
+  return ACTION_TYPE_BY_KEY.get(type) ?? DEFAULT_ACTION_TYPE;
 }
 
 function getActionLabel(type: string): string {
-  const labels: Record<string, string> = {
-    click: 'Clicked',
-    navigate: 'Navigated',
-    spa_route: 'SPA Route',
-    tab_activated: 'Tab Activated',
-    tab_deactivated: 'Tab Deactivated',
-    tab_switch: 'Tab Switched',
-    init_page: 'Page Initialized',
-    page_unload: 'Page Unloaded',
-    'recorder-pause': 'Recording Paused',
-    'recorder-resume': 'Recording Resumed',
-  };
-  return labels[type] ?? type;
+  return ACTION_TYPE_BY_KEY.get(type)?.pastLabel ?? type;
 }
+
+const KNOWN_ACTION_KEYS = new Set([
+  'type',
+  'timestamp',
+  'url',
+  'pageTitle',
+  'method',
+  'triggeredBy',
+  'tabId',
+  'from',
+  'to',
+  'element',
+]);
 
 export function ActionsTab({ data, recordingStartTime }: ActionsTabProps) {
   const [search, setSearch] = useState('');
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
-
-  const toggleFilter = (type: string) => {
-    setActiveFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(type)) next.delete(type);
-      else next.add(type);
-      return next;
-    });
-  };
+  const [activeFilters, toggleFilter] = useToggleSet<string>();
 
   const filtered = useMemo(() => {
+    const needle = search.toLowerCase();
     return data.filter((entry) => {
       const actionType = entry.data?.type ?? 'unknown';
       if (activeFilters.size > 0 && !activeFilters.has(actionType)) return false;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        const text = JSON.stringify(entry.data).toLowerCase();
-        if (!text.includes(searchLower)) return false;
-      }
+      if (needle && !safeStringify(entry.data).toLowerCase().includes(needle)) return false;
       return true;
     });
   }, [data, activeFilters, search]);
@@ -153,25 +207,16 @@ function ActionEntryRow({
   const TypeIcon = typeConfig.icon;
 
   const elementDisplay = getElementDisplay(entry);
-  const hasNavigation = entry.data?.from || entry.data?.to;
-  const hasElement = entry.data?.element && Object.keys(entry.data.element).length > 0;
+  const hasNavigation = Boolean(entry.data?.from || entry.data?.to);
+  const hasElement = Boolean(entry.data?.element && Object.keys(entry.data.element).length > 0);
 
   // Collect extra data keys (exclude known ones)
-  const knownKeys = new Set([
-    'type',
-    'timestamp',
-    'url',
-    'pageTitle',
-    'method',
-    'triggeredBy',
-    'tabId',
-    'from',
-    'to',
-    'element',
-  ]);
-  const extraData = entry.data
-    ? Object.fromEntries(Object.entries(entry.data).filter(([k]) => !knownKeys.has(k)))
-    : {};
+  const extraData = useMemo(() => {
+    if (!entry.data) return {};
+    return Object.fromEntries(
+      Object.entries(entry.data).filter(([k]) => !KNOWN_ACTION_KEYS.has(k))
+    );
+  }, [entry.data]);
   const hasExtraData = Object.keys(extraData).length > 0;
 
   return (
@@ -214,7 +259,7 @@ function ActionEntryRow({
       {expanded && (
         <div className="px-4 pb-3 ml-[76px]">
           {/* Detail tabs */}
-          <div className="flex gap-4 mb-2 border-b">
+          <div className="flex gap-4 mb-2 border-b" role="tablist">
             <DetailTabButton
               active={activeDetailTab === 'details'}
               onClick={() => setActiveDetailTab('details')}
@@ -287,7 +332,7 @@ function ActionEntryRow({
 
           {activeDetailTab === 'data' && hasExtraData && (
             <pre className="text-xs font-family-geist-mono bg-muted/50 rounded-md p-2 overflow-x-auto whitespace-pre-wrap max-h-40">
-              {JSON.stringify(extraData, null, 2)}
+              {safeStringify(extraData, 2)}
             </pre>
           )}
         </div>
@@ -299,31 +344,6 @@ function ActionEntryRow({
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function DetailTabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'text-xs pb-2 capitalize transition-colors cursor-pointer',
-        active
-          ? 'text-foreground border-b-2 border-foreground font-medium'
-          : 'text-muted-foreground hover:text-foreground'
-      )}
-    >
-      {children}
-    </button>
-  );
-}
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (

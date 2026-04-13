@@ -27,8 +27,9 @@ function getSessionCookieName(): string {
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
-  const isPublicRoute = publicRoutes.some((route) => path.startsWith(route));
+  const matchesRoute = (route: string) => path === route || path.startsWith(`${route}/`);
+  const isAuthRoute = authRoutes.some(matchesRoute);
+  const isPublicRoute = publicRoutes.some(matchesRoute);
   const isProtectedRoute = !isAuthRoute && !isPublicRoute;
 
   const sessionCookieName = getSessionCookieName();

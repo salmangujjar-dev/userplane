@@ -6,8 +6,10 @@ import {
   extractFilename,
   formatNetworkDuration,
   formatTimestamp,
+  safeStringify,
+  useToggleSet,
 } from '../../utils';
-import { EmptyState, FilterPill, SearchInput } from '../shared';
+import { DetailTabButton, EmptyState, FilterPill, SearchInput } from '../shared';
 import {
   CableIcon,
   ChevronRightIcon,
@@ -37,21 +39,29 @@ const REQUEST_TYPES = [
   { type: 'other', label: 'Other', icon: FileIcon, color: 'text-muted-foreground' },
 ] as const;
 
-function getRequestTypeConfig(type: string) {
-  // Map common initiator types to our categories
-  const typeMap: Record<string, string> = {
-    xmlhttprequest: 'fetch',
-    fetch: 'fetch',
-    websocket: 'ws',
-    script: 'js',
-    stylesheet: 'css',
-    image: 'media',
-    media: 'media',
-    font: 'font',
-    document: 'doc',
-  };
-  const category = typeMap[type.toLowerCase()] ?? 'other';
-  return REQUEST_TYPES.find((t) => t.type === category) ?? REQUEST_TYPES[7];
+type RequestType = (typeof REQUEST_TYPES)[number];
+
+const REQUEST_TYPE_BY_CATEGORY = new Map<string, RequestType>(
+  REQUEST_TYPES.map((t) => [t.type, t])
+);
+const DEFAULT_REQUEST_TYPE: RequestType = REQUEST_TYPE_BY_CATEGORY.get('other')!;
+
+// Map common initiator types to our categories.
+const INITIATOR_TO_CATEGORY: Record<string, string> = {
+  xmlhttprequest: 'fetch',
+  fetch: 'fetch',
+  websocket: 'ws',
+  script: 'js',
+  stylesheet: 'css',
+  image: 'media',
+  media: 'media',
+  font: 'font',
+  document: 'doc',
+};
+
+function getRequestTypeConfig(type: string): RequestType {
+  const category = INITIATOR_TO_CATEGORY[type.toLowerCase()] ?? 'other';
+  return REQUEST_TYPE_BY_CATEGORY.get(category) ?? DEFAULT_REQUEST_TYPE;
 }
 
 function getStatusColor(status: number): string {
@@ -64,29 +74,19 @@ function getStatusColor(status: number): string {
 
 export function NetworkTab({ data, recordingStartTime }: NetworkTabProps) {
   const [search, setSearch] = useState('');
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
-
-  const toggleFilter = (type: string) => {
-    setActiveFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(type)) next.delete(type);
-      else next.add(type);
-      return next;
-    });
-  };
+  const [activeFilters, toggleFilter] = useToggleSet<string>();
 
   const filtered = useMemo(() => {
+    const needle = search.toLowerCase();
     return data.filter((entry) => {
       const typeConfig = getRequestTypeConfig(entry.type);
       if (activeFilters.size > 0 && !activeFilters.has(typeConfig.type)) return false;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        const matchUrl = entry.url.toLowerCase().includes(searchLower);
-        const matchMethod = entry.method.toLowerCase().includes(searchLower);
-        const matchStatus = String(entry.status).includes(searchLower);
-        if (!matchUrl && !matchMethod && !matchStatus) return false;
-      }
-      return true;
+      if (!needle) return true;
+      return (
+        entry.url.toLowerCase().includes(needle) ||
+        entry.method.toLowerCase().includes(needle) ||
+        String(entry.status).includes(needle)
+      );
     });
   }, [data, activeFilters, search]);
 
@@ -204,21 +204,15 @@ function NetworkEntryRow({
       {expanded && (
         <div className="px-4 pb-3 ml-[76px]">
           {/* Detail tabs */}
-          <div className="flex gap-4 mb-2 border-b">
+          <div className="flex gap-4 mb-2 border-b" role="tablist">
             {(['headers', 'request', 'response'] as const).map((tab) => (
-              <button
+              <DetailTabButton
                 key={tab}
-                type="button"
+                active={activeDetailTab === tab}
                 onClick={() => setActiveDetailTab(tab)}
-                className={cn(
-                  'text-xs pb-2 capitalize transition-colors cursor-pointer',
-                  activeDetailTab === tab
-                    ? 'text-foreground border-b-2 border-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
               >
                 {tab}
-              </button>
+              </DetailTabButton>
             ))}
           </div>
 
@@ -315,11 +309,9 @@ function BodyContent({
     return <p className="text-xs text-muted-foreground italic py-2">{emptyMessage}</p>;
   }
 
-  const formatted = typeof body === 'string' ? body : JSON.stringify(body, null, 2);
-
   return (
     <pre className="text-xs font-family-geist-mono bg-muted/50 rounded-md p-2 overflow-x-auto whitespace-pre-wrap break-all max-h-60">
-      {formatted}
+      {safeStringify(body, 2)}
     </pre>
   );
 }

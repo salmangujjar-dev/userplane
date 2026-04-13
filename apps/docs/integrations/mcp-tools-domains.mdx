@@ -1,0 +1,61 @@
+---
+title: Domain Tools
+description: MCP tools for listing custom domains and discovering domain IDs
+---
+
+Tools for discovering custom domains registered to a workspace. Creating a recording link requires a `domainId`, so these are the tools an agent uses to find one before calling `userplane_create_link`.
+
+## userplane_list_domains
+
+List custom domains registered to a workspace. Each domain has a status (`pending`, `verified`, `revoked`). Filter by status to find only usable domains.
+
+| Parameter     | Type   | Required | Description                                         |
+| ------------- | ------ | -------- | --------------------------------------------------- |
+| `workspaceId` | string | Yes      | Workspace ID                                        |
+| `page`        | number | No       | Page number (default: 1)                            |
+| `per_page`    | number | No       | Results per page (default: 10, max: 50)             |
+| `status`      | string | No       | Filter by status (`pending`, `verified`, `revoked`) |
+
+**Returns:** Paginated list of domains. Each entry is a flat object with `domainId`, `domainUrl`, `domainStatus`, and `createdAt`.
+
+<Tip>
+  Only `verified` domains can be used to create recording links. Pass `status: "verified"` to filter
+  out pending and revoked domains in a single call.
+</Tip>
+
+---
+
+## userplane_get_domain
+
+Retrieve details for a single custom domain including URL, verification status, and creation time.
+
+| Parameter     | Type   | Required | Description  |
+| ------------- | ------ | -------- | ------------ |
+| `workspaceId` | string | Yes      | Workspace ID |
+| `domainId`    | string | Yes      | Domain ID    |
+
+**Returns:** A flat object with `domainId`, `domainUrl`, `domainStatus`, and `createdAt`.
+
+---
+
+## Example prompts
+
+<CodeGroup>
+  ```text Prompt: List the verified domains in workspace {workspaceId}, then create a reusable
+  recording link on the first one and reference it as "onboarding-form". ```
+</CodeGroup>
+
+<CodeGroup>
+  ```text Prompt: Which domains are registered in workspace {workspaceId}? Are any of them still
+  pending verification? ```
+</CodeGroup>
+
+<Note>
+  Replace `{workspaceId}` with your actual workspace ID from the Userplane dashboard URL bar.
+</Note>
+
+## Related articles
+
+- [Recording Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
+- [Workspace Tools](/integrations/mcp-tools-workspace) — tools for profiles, workspaces, and projects.
+- [Getting Started](/integrations/mcp-getting-started) — first steps after connecting your AI client.

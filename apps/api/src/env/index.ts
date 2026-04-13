@@ -23,6 +23,7 @@ import {
   type EmailInboxes,
   type EnvConfig,
   type InngestConfig,
+  type McpConfig,
   type OAuthConfig,
   type PaymentsConfig,
   type PostHogConfig,
@@ -55,6 +56,7 @@ export type {
   EmailInboxes,
   EnvConfig,
   InngestConfig,
+  McpConfig,
   OAuthConfig,
   PaymentsConfig,
   PostHogConfig,
@@ -207,8 +209,6 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     },
     rateLimit: {
       enabled: raw.RATE_LIMIT_ENABLED,
-      windowMs: raw.RATE_LIMIT_WINDOW,
-      maxRequests: raw.RATE_LIMIT_MAX_REQUESTS,
     },
     redis: {
       url: raw.UPSTASH_REDIS_REST_URL,
@@ -273,6 +273,13 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       apiId: raw.UNKEY_API_ID,
       rateLimitPerMinute: raw.UNKEY_RATE_LIMIT_PER_MINUTE,
       rateLimitPerDay: raw.UNKEY_RATE_LIMIT_PER_DAY,
+    },
+    mcp: {
+      rateLimit: {
+        perIpPerMinute: raw.MCP_RATE_LIMIT_PER_IP_PER_MINUTE,
+        perUserPerMinute: raw.MCP_RATE_LIMIT_PER_USER_PER_MINUTE,
+        perUserPerDay: raw.MCP_RATE_LIMIT_PER_USER_PER_DAY,
+      },
     },
   };
 }
@@ -548,8 +555,13 @@ export function logConfig(): void {
       },
       rateLimit: {
         enabled: env.rateLimit.enabled,
-        window: `${env.rateLimit.windowMs}ms`,
-        maxRequests: env.rateLimit.maxRequests,
+      },
+      mcp: {
+        rateLimit: {
+          perIpPerMinute: env.mcp.rateLimit.perIpPerMinute,
+          perUserPerMinute: env.mcp.rateLimit.perUserPerMinute,
+          perUserPerDay: env.mcp.rateLimit.perUserPerDay,
+        },
       },
       cache: {
         enabled: env.cache.enabled,

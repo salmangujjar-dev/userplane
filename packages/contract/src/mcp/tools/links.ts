@@ -1,8 +1,13 @@
 import { z } from 'zod';
 
+import {
+  DomainIdSchema,
+  LinkIdSchema,
+  ProjectIdSchema,
+  WorkspaceIdSchema,
+} from '../../schemas/common';
 import type { McpToolDefinition } from '../types';
 import {
-  DESTRUCTIVE_ANNOTATIONS,
   IDEMPOTENT_MUTATING_ANNOTATIONS,
   MUTATING_ANNOTATIONS,
   READ_ONLY_ANNOTATIONS,
@@ -79,14 +84,41 @@ export const userplaneUpdateLink = {
   annotations: IDEMPOTENT_MUTATING_ANNOTATIONS,
 } as const satisfies McpToolDefinition;
 
-export const userplaneDeleteLink = {
-  name: 'userplane_delete_link',
-  title: 'Delete a recording link',
-  description:
-    'Delete a recording link. Only workspace admins, owners, or the link creator can delete. Existing recordings are not affected.',
-  inputSchema: {
-    workspaceId: z.string().describe('Workspace ID'),
-    linkId: z.string().describe('Link ID'),
-  },
-  annotations: DESTRUCTIVE_ANNOTATIONS,
-} as const satisfies McpToolDefinition;
+// ---------------------------------------------------------------------------
+// Responses
+// ---------------------------------------------------------------------------
+
+/**
+ * Flat link row. Drops `linkType`, `linkProviderType/Id/Ref`, `linkMeta`
+ * (integration plumbing), and unwraps nested `creator`/`project`/`domain`
+ * objects into flat `creatorName`/`projectId`/`projectTitle`/`domainUrl`.
+ * `domainId` is kept since it's a stable handle the agent may need to
+ * filter by.
+ */
+export const McpLinkItemSchema = z.object({
+  linkId: LinkIdSchema,
+  linkTitle: z.string().nullable(),
+  linkURL: z.string(),
+  linkReusable: z.boolean(),
+  projectId: ProjectIdSchema,
+  projectTitle: z.string().nullable(),
+  domainId: DomainIdSchema,
+  domainUrl: z.string(),
+  creatorName: z.string(),
+  createdAt: z.coerce.date(),
+});
+
+export const McpLinkResponseSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  link: McpLinkItemSchema,
+});
+
+export const McpListLinksSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  links: z.array(McpLinkItemSchema),
+  total: z.number().int().nonnegative(),
+});
+
+export type McpLinkItem = z.infer<typeof McpLinkItemSchema>;
+export type McpLinkResponse = z.infer<typeof McpLinkResponseSchema>;
+export type McpListLinks = z.infer<typeof McpListLinksSchema>;

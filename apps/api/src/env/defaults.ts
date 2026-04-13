@@ -142,10 +142,6 @@ export const SUPPORT = {
 // =============================================================================
 
 export const RATE_LIMIT = {
-  /** Window in milliseconds: 1 minute */
-  WINDOW_MS: 60000,
-  /** Max requests per window */
-  MAX_REQUESTS: 100,
   /** Rate limiting enabled by default */
   ENABLED: true,
 } as const;

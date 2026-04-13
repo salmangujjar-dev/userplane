@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableRow } from '@userplane/ui/components/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@userplane/ui/components/tabs';
+import { cn } from '@userplane/ui/lib/utils';
 import {
   Cable,
   File,
@@ -12,7 +13,7 @@ import {
   Play,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { RecordingNetworkLog } from './network-types';
 import { formatTime, getStatusColor } from './network-types';
@@ -245,10 +246,12 @@ function NetworkDetailPanel({
 interface NetworkEntryProps {
   request: RecordingNetworkLog;
   recordingStartTime?: number;
+  isFocused?: boolean;
 }
 
-export function NetworkEntry({ request, recordingStartTime }: NetworkEntryProps) {
+export function NetworkEntry({ request, recordingStartTime, isFocused }: NetworkEntryProps) {
   const [showDetails, setShowDetails] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
 
   const isStaticAsset = !request.isContentAllowed;
   const recordingTime = getRecordingTime(request.timestamp, recordingStartTime);
@@ -260,8 +263,20 @@ export function NetworkEntry({ request, recordingStartTime }: NetworkEntryProps)
   const domain = getDomain(request.url);
   const statusColor = getStatusColor(request.status);
 
+  useEffect(() => {
+    if (isFocused) {
+      rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isFocused]);
+
   return (
-    <>
+    <div
+      ref={rowRef}
+      className={cn(
+        'transition-colors duration-700',
+        isFocused && 'bg-yellow-100/80 dark:bg-yellow-500/15'
+      )}
+    >
       <button
         onClick={() => setShowDetails(!showDetails)}
         className={`w-full flex items-center gap-3 px-3 py-2 text-xs hover:bg-muted/50 text-left border-b border-border/50 ${showDetails ? 'bg-muted/30' : ''}`}
@@ -295,6 +310,6 @@ export function NetworkEntry({ request, recordingStartTime }: NetworkEntryProps)
           onClose={() => setShowDetails(false)}
         />
       )}
-    </>
+    </div>
   );
 }

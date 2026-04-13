@@ -3,6 +3,7 @@
  * Handles all database operations for domain entities
  */
 
+import type { DomainStatus } from '@userplane/contract';
 import type { DbClient } from '@userplane/db';
 import { and, asc, count, desc, eq, ilike, ne } from '@userplane/db';
 import { domains } from '@userplane/db';
@@ -11,6 +12,18 @@ import type { CreateDomainInput, Transaction } from '@/api/types';
 
 export type DomainSortField = 'created_at' | 'domain_url';
 export type SortDirection = 'asc' | 'desc';
+
+/**
+ * Lean domain row for MCP. Drops `workspaceId` (echoed by envelope),
+ * `updatedAt`/`deletedAt`/`isDeleted`, and the 5 recording-capture booleans
+ * (agents can't toggle them via MCP, separate concern).
+ */
+export interface McpDomainRow {
+  domainId: string;
+  domainUrl: string;
+  domainStatus: DomainStatus;
+  createdAt: Date;
+}
 
 export class DomainRepository {
   constructor(private db: DbClient) {}
@@ -122,6 +135,66 @@ export class DomainRepository {
       .orderBy(orderFn(sortColumn))
       .limit(limit)
       .offset(offset);
+  }
+
+  /**
+   * Find domains in workspace with pagination — MCP variant.
+   * Selects only the four columns surfaced in the lean MCP response.
+   */
+  async findByWorkspaceIdPaginatedForMcp(
+    workspaceId: string,
+    limit: number,
+    offset: number,
+    filters?: { status?: DomainStatus },
+    sortBy: DomainSortField = 'created_at',
+    sortDirection: SortDirection = 'desc'
+  ): Promise<McpDomainRow[]> {
+    const sortColumn = sortBy === 'domain_url' ? domains.domainUrl : domains.createdAt;
+    const orderFn = sortDirection === 'asc' ? asc : desc;
+
+    const conditions = [eq(domains.workspaceId, workspaceId), eq(domains.isDeleted, false)];
+    if (filters?.status) {
+      conditions.push(eq(domains.domainStatus, filters.status));
+    }
+
+    return this.db
+      .select({
+        domainId: domains.domainId,
+        domainUrl: domains.domainUrl,
+        domainStatus: domains.domainStatus,
+        createdAt: domains.createdAt,
+      })
+      .from(domains)
+      .where(and(...conditions))
+      .orderBy(orderFn(sortColumn))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /**
+   * Find domain by ID scoped to workspace — MCP variant.
+   * Four-column SELECT. `workspaceId` is used only as a filter to enforce
+   * that the caller is actually a member of the owning workspace.
+   */
+  async findByIdForMcp(domainId: string, workspaceId: string): Promise<McpDomainRow | null> {
+    const [domain] = await this.db
+      .select({
+        domainId: domains.domainId,
+        domainUrl: domains.domainUrl,
+        domainStatus: domains.domainStatus,
+        createdAt: domains.createdAt,
+      })
+      .from(domains)
+      .where(
+        and(
+          eq(domains.domainId, domainId),
+          eq(domains.workspaceId, workspaceId),
+          eq(domains.isDeleted, false)
+        )
+      )
+      .limit(1);
+
+    return domain || null;
   }
 
   /**

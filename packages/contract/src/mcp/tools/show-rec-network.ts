@@ -13,4 +13,10 @@ export const userplaneShowRecNetwork = {
     recordingId: z.string().describe('Recording ID'),
   },
   annotations: READ_ONLY_ANNOTATIONS,
+  _meta: {
+    'openai/widgetDescription':
+      'Interactive viewer for network requests with type filtering, status codes, durations, and expandable headers and bodies.',
+    'openai/toolInvocation/invoking': 'Loading network requests…',
+    'openai/toolInvocation/invoked': 'Network requests loaded',
+  },
 } as const satisfies McpToolDefinition;

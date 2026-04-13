@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+import {
+  LinkIdSchema,
+  ProjectIdSchema,
+  RecordingIdSchema,
+  UploadStatusSchema,
+  WorkspaceIdSchema,
+} from '../../schemas/common';
 import type { McpToolDefinition } from '../types';
 import { EXTERNAL_RESOURCE_ANNOTATIONS, READ_ONLY_ANNOTATIONS } from '../types';
 
@@ -60,3 +67,59 @@ export const userplaneGetRecActions = {
   inputSchema: resourceInput,
   annotations: READ_ONLY_ANNOTATIONS,
 } as const satisfies McpToolDefinition;
+
+// ---------------------------------------------------------------------------
+// Responses
+// ---------------------------------------------------------------------------
+
+/**
+ * Flat recording detail. Drops the `meta.*` wrapper, arbitrary JSONB
+ * (`systemMeta`/`customMeta`/`notes`), integration plumbing
+ * (`providerType`/`providerId`/`providerRef`/`providerData`), and
+ * `updatedAt`/`workspaceMemberId`/`domainId` that agents can't act on.
+ */
+export const McpRecordingDetailSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  recordingId: RecordingIdSchema,
+  durationMs: z.number().int(),
+  startedAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+  expiresAt: z.coerce.date().nullable(),
+  status: UploadStatusSchema,
+  linkId: LinkIdSchema,
+  linkTitle: z.string().nullable(),
+  projectId: ProjectIdSchema.nullable(),
+  projectTitle: z.string().nullable(),
+  domainUrl: z.string(),
+  creatorName: z.string(),
+  playerUrl: z.string().url(),
+});
+
+export const McpRecVideoSchema = z.object({
+  recordingId: RecordingIdSchema,
+  url: z.string().url().nullable(),
+  durationMs: z.number().int().nullable(),
+});
+
+/**
+ * Thumbnail is a presigned URL — never inlined base64. Violates
+ * `no_video_proxy_mcp` guidance otherwise.
+ */
+export const McpRecThumbSchema = z.object({
+  recordingId: RecordingIdSchema,
+  url: z.string().url().nullable(),
+});
+
+/**
+ * Shared shape for the three log-entry tools (console/network/actions).
+ * Entries are upstream JSON blobs; agents analyze them directly.
+ */
+export const McpLogEntriesSchema = z.object({
+  recordingId: RecordingIdSchema,
+  entries: z.array(z.unknown()),
+});
+
+export type McpRecordingDetail = z.infer<typeof McpRecordingDetailSchema>;
+export type McpRecVideo = z.infer<typeof McpRecVideoSchema>;
+export type McpRecThumb = z.infer<typeof McpRecThumbSchema>;
+export type McpLogEntries = z.infer<typeof McpLogEntriesSchema>;

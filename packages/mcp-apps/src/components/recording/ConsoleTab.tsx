@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { cn, formatTimestamp } from '../../utils';
+import { cn, formatTimestamp, safeStringify, useToggleSet } from '../../utils';
 import { EmptyState, FilterPill, SearchInput } from '../shared';
 import {
   AlertCircleIcon,
@@ -25,30 +25,24 @@ const LOG_LEVELS = [
   { type: 'debug', label: 'Debug', icon: BugIcon, color: 'text-purple-500' },
 ] as const;
 
-function getLevelConfig(type: string) {
-  return LOG_LEVELS.find((l) => l.type === type) ?? LOG_LEVELS[3]; // default to 'log'
+type LogLevel = (typeof LOG_LEVELS)[number];
+
+const LOG_LEVEL_BY_TYPE = new Map<string, LogLevel>(LOG_LEVELS.map((l) => [l.type, l]));
+const DEFAULT_LOG_LEVEL: LogLevel = LOG_LEVEL_BY_TYPE.get('log')!;
+
+function getLevelConfig(type: string): LogLevel {
+  return LOG_LEVEL_BY_TYPE.get(type) ?? DEFAULT_LOG_LEVEL;
 }
 
 export function ConsoleTab({ data, recordingStartTime }: ConsoleTabProps) {
   const [search, setSearch] = useState('');
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
-
-  const toggleFilter = (type: string) => {
-    setActiveFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(type)) next.delete(type);
-      else next.add(type);
-      return next;
-    });
-  };
+  const [activeFilters, toggleFilter] = useToggleSet<string>();
 
   const filtered = useMemo(() => {
+    const needle = search.toLowerCase();
     return data.filter((entry) => {
       if (activeFilters.size > 0 && !activeFilters.has(entry.type)) return false;
-      if (search) {
-        const text = JSON.stringify(entry.args).toLowerCase();
-        if (!text.includes(search.toLowerCase())) return false;
-      }
+      if (needle && !safeStringify(entry.args).toLowerCase().includes(needle)) return false;
       return true;
     });
   }, [data, activeFilters, search]);
@@ -182,26 +176,9 @@ function ConsoleLogEntryRow({
 // ---------------------------------------------------------------------------
 
 function formatArgs(args: unknown[]): string {
-  return args
-    .map((arg) => {
-      if (typeof arg === 'string') return arg;
-      if (typeof arg === 'number' || typeof arg === 'boolean') return String(arg);
-      if (arg === null || arg === undefined) return String(arg);
-      try {
-        return JSON.stringify(arg);
-      } catch {
-        return String(arg);
-      }
-    })
-    .join(' ');
+  return args.map((arg) => safeStringify(arg)).join(' ');
 }
 
 function formatValue(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (value === null || value === undefined) return String(value);
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
+  return safeStringify(value, 2);
 }

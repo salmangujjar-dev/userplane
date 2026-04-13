@@ -14,6 +14,7 @@ import { cleanUrl } from '@/api/lib/url';
 import {
   DomainRepository,
   type DomainSortField,
+  type McpDomainRow,
   type SortDirection,
 } from '@/api/repositories/domains.repository';
 import type { BillingService } from '@/api/services/billing.service';
@@ -200,6 +201,61 @@ export class DomainService {
       domains,
       total,
     };
+  }
+
+  /**
+   * Get domains for a workspace with pagination — MCP variant.
+   * Lean 4-column SELECT, optional status filter.
+   * Throws WORKSPACE_NOT_FOUND if workspace has no domains (workspace always
+   * has at least 1 domain, so an empty list means the workspace itself is
+   * missing).
+   */
+  async getByWorkspaceIdPaginatedForMcp(
+    workspaceId: string,
+    page: number = 1,
+    perPage: number = 10,
+    filters?: { status?: DomainStatus }
+  ): Promise<{ domains: McpDomainRow[]; total: number }> {
+    const total = await this.deps.domainRepo.countByWorkspace(workspaceId);
+
+    if (total === 0) {
+      throw workspaceError.WORKSPACE_NOT_FOUND();
+    }
+
+    const offset = (page - 1) * perPage;
+    const rows = await this.deps.domainRepo.findByWorkspaceIdPaginatedForMcp(
+      workspaceId,
+      perPage,
+      offset,
+      filters,
+      'created_at',
+      'desc'
+    );
+
+    return {
+      domains: rows,
+      total,
+    };
+  }
+
+  /**
+   * Get a single domain by ID scoped to workspace — MCP variant.
+   * Returns the lean 4-column row. The workspace scoping lives in the repo's
+   * WHERE clause, so cross-workspace access falls through to the not-found
+   * path.
+   */
+  async getByIdForMcp(domainId: string, workspaceId: string): Promise<McpDomainRow> {
+    const domain = await this.deps.domainRepo.findByIdForMcp(domainId, workspaceId);
+
+    if (!domain) {
+      const isSoftDeleted = await this.deps.domainRepo.isSoftDeleted(domainId);
+      if (isSoftDeleted === true) {
+        throw domainError.DOMAIN_GONE();
+      }
+      throw domainError.DOMAIN_NOT_FOUND();
+    }
+
+    return domain;
   }
 
   /**

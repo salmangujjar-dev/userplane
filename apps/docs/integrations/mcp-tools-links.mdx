@@ -1,6 +1,6 @@
 ---
-title: Link Tools
-description: MCP tools for creating, managing, and deleting recording links
+title: Recording Link Tools
+description: MCP tools for creating and managing recording links
 ---
 
 Tools for managing recording links — the URLs sent to end users to initiate a screen recording. Create new links, update settings, and track link usage.
@@ -18,7 +18,7 @@ List recording links in a workspace. Filter by project, domain, or creator.
 | `domain_id`   | string | No       | Filter by domain ID                     |
 | `created_by`  | string | No       | Filter by creator workspace member ID   |
 
-**Returns:** Paginated list of links with ID, URL, project, domain, reference, reusability status, and creation date.
+**Returns:** Paginated list of links. Each entry is a flat object with `linkId`, `linkTitle`, `linkURL`, `linkReusable`, `projectId`, `projectTitle`, `domainId`, `domainUrl`, `creatorName`, and `createdAt`.
 
 ---
 
@@ -81,36 +81,20 @@ Update settings on a recording link. Only the provided fields are changed — om
 
 ---
 
-## userplane_delete_link
-
-Delete a recording link. Only workspace admins, owners, or the link creator can delete. Existing recordings captured through the link are not affected.
-
-| Parameter     | Type   | Required | Description  |
-| ------------- | ------ | -------- | ------------ |
-| `workspaceId` | string | Yes      | Workspace ID |
-| `linkId`      | string | Yes      | Link ID      |
-
-<Warning>
-  This action is irreversible. The link URL will stop working immediately. Recordings already
-  submitted through the link are preserved.
-</Warning>
-
----
-
 ## Example prompts
 
 <CodeGroup>
-  ```text Prompt Create a recording link for domain {domainId} in workspace {workspaceId}. Set the
+  ```text Prompt: Create a recording link for domain {domainId} in workspace {workspaceId}. Set the
   project to {projectName} and reference it as {ticketId}. ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Create a reusable recording link for domain {domainId} in workspace {workspaceId}.
+  ```text Prompt: Create a reusable recording link for domain {domainId} in workspace {workspaceId}.
   Reference it as "feedback-form". ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt How many recordings have been submitted through link {linkId} in workspace{' '}
+  ```text Prompt: How many recordings have been submitted through link {linkId} in workspace{' '}
   {workspaceId}? When was the most recent one? ```
 </CodeGroup>
 
@@ -121,6 +105,7 @@ Delete a recording link. Only workspace admins, owners, or the link creator can 
 
 ## Related articles
 
-- [Additional Tools](/integrations/mcp-tools-workspace) — tools for profiles, workspaces, and projects.
+- [Domain Tools](/integrations/mcp-tools-domains) — tools for discovering the `domainId` required by `userplane_create_link`.
+- [Workspace Tools](/integrations/mcp-tools-workspace) — tools for profiles, workspaces, and projects.
 - [Recording Tools](/integrations/mcp-tools-recordings) — tools for listing, inspecting, and analyzing recordings.
 - [Getting Started](/integrations/mcp-getting-started) — first steps after connecting your AI client.

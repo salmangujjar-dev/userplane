@@ -9,6 +9,25 @@ import { workspaceMembers, workspaces } from '@userplane/db';
 
 import type { CreateWorkspaceInput, Transaction } from '@/api/types';
 
+/**
+ * Lean workspace list row for MCP. Only the two fields the agent-facing
+ * response surfaces — membership join is still required to scope by user.
+ */
+export interface McpWorkspaceRow {
+  workspaceId: string;
+  workspaceName: string;
+}
+
+/**
+ * Lean workspace detail row for MCP. Adds `createdAt` so the transformer
+ * can return it alongside the computed `dashboardUrl`.
+ */
+export interface McpWorkspaceDetailRow {
+  workspaceId: string;
+  workspaceName: string;
+  createdAt: Date;
+}
+
 export class WorkspaceRepository {
   constructor(private db: DbClient) {}
 
@@ -313,6 +332,54 @@ export class WorkspaceRepository {
 
       return workspace;
     });
+  }
+
+  /**
+   * Find workspaces for a user with pagination — MCP variant.
+   * Selects only the two columns the lean MCP response needs. The
+   * `workspaceMembers` JOIN is preserved to scope to "workspaces I belong to"
+   * but no columns are read from it.
+   */
+  async findByUserIdPaginatedForMcp(
+    userId: string,
+    limit: number,
+    offset: number
+  ): Promise<McpWorkspaceRow[]> {
+    return this.db
+      .select({
+        workspaceId: workspaces.workspaceId,
+        workspaceName: workspaces.workspaceName,
+      })
+      .from(workspaces)
+      .innerJoin(workspaceMembers, eq(workspaces.workspaceId, workspaceMembers.workspaceId))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaces.isDeleted, false),
+          eq(workspaceMembers.isDeleted, false)
+        )
+      )
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /**
+   * Find workspace by ID — MCP variant.
+   * Selects only `workspaceId`, `workspaceName`, `createdAt`. Drops the
+   * `updatedAt` column that `findById` returns but the MCP response omits.
+   */
+  async findByIdForMcp(workspaceId: string): Promise<McpWorkspaceDetailRow | null> {
+    const [workspace] = await this.db
+      .select({
+        workspaceId: workspaces.workspaceId,
+        workspaceName: workspaces.workspaceName,
+        createdAt: workspaces.createdAt,
+      })
+      .from(workspaces)
+      .where(and(eq(workspaces.workspaceId, workspaceId), eq(workspaces.isDeleted, false)))
+      .limit(1);
+
+    return workspace || null;
   }
 
   /**

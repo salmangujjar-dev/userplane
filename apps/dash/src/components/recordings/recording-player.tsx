@@ -3,10 +3,11 @@
 import './recording-player.css';
 
 import dynamic from 'next/dynamic';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import type { VideoMarker } from '@/components/player/types';
 
+import { usePanelTab } from './recording-layout';
 import { useRecordingPlayerSeek } from './recording-player-context';
 
 const EMPTY_MARKERS: VideoMarker[] = [];
@@ -34,11 +35,29 @@ export function RecordingPlayer({
   markers = EMPTY_MARKERS,
 }: RecordingPlayerProps) {
   const playerContext = useRecordingPlayerSeek();
+  const panelTab = usePanelTab();
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = React.useCallback(() => {
     setIsFullscreen((prev) => !prev);
   }, []);
+
+  // Click a seek-bar marker → seek + open the matching tab + request focus on the entry.
+  // Generic markers without `kind` just seek.
+  const handleMarkerClick = useCallback(
+    (marker: VideoMarker) => {
+      playerContext?.seekTo(marker.time);
+      if (marker.kind && marker.entryTimestamp != null) {
+        panelTab?.expandPanel();
+        panelTab?.setActiveTab(marker.kind);
+        playerContext?.requestFocus({
+          kind: marker.kind,
+          entryTimestamp: marker.entryTimestamp,
+        });
+      }
+    },
+    [playerContext, panelTab]
+  );
 
   // Handle ESC key to exit fullscreen
   useEffect(() => {
@@ -116,6 +135,7 @@ export function RecordingPlayer({
           key="stream-player-persistent"
           options={videoOptions}
           markers={markers}
+          onMarkerClick={handleMarkerClick}
           poster={poster}
           durationMs={durationMs}
           onPlayerReady={playerContext?.registerPlayer}
