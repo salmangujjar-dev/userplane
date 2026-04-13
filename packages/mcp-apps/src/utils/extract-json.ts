@@ -1,13 +1,26 @@
 import type { App } from '@modelcontextprotocol/ext-apps';
 
 /**
- * Extract JSON from a tool result's text content blocks.
- * Tries direct JSON.parse first, then looks for embedded JSON if the host
- * wrapped the text with a prefix.
+ * Extract the JSON payload from an MCP tool result.
+ *
+ * Per OpenAI's Apps SDK, `structuredContent` is the canonical widget data channel
+ * (see https://developers.openai.com/apps-sdk/build/mcp-server) — ChatGPT's bridge
+ * reshapes `content[0].text` when structuredContent is absent, which double-encodes
+ * the payload. Prefer structuredContent when present; fall back to parsing
+ * `content[0].text` for hosts/servers that still only emit text.
  */
 export function extractJsonFromResult(result: {
+  structuredContent?: unknown;
   content?: Array<{ type: string; text?: string }>;
 }): unknown {
+  if (
+    result.structuredContent !== undefined &&
+    result.structuredContent !== null &&
+    typeof result.structuredContent === 'object'
+  ) {
+    return result.structuredContent;
+  }
+
   const textBlocks = (result.content ?? []).filter(
     (c): c is { type: 'text'; text: string } => c.type === 'text' && typeof c.text === 'string'
   );
@@ -48,12 +61,13 @@ export async function fetchLogViaTool<T>(
     arguments: { workspaceId, recordingId, resourceType },
   });
 
-  const textContent = result.content?.find((c: { type: string }) => c.type === 'text');
-  if (!textContent || textContent.type !== 'text') throw new Error('No text content');
-
-  const data = JSON.parse(textContent.text);
+  const data = extractJsonFromResult(result) as {
+    error?: string;
+    json?: unknown;
+    resourceType?: string;
+  };
   if (data.error) throw new Error(data.error);
-  if (!data.json) throw new Error('No data returned');
+  if (data.json === undefined) throw new Error('No data returned');
 
-  return Array.isArray(data.json) ? data.json : [];
+  return Array.isArray(data.json) ? (data.json as T[]) : [];
 }

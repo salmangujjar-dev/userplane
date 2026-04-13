@@ -12,6 +12,7 @@ import type {
   RecordingResources,
 } from '../components/recording/types';
 import { LoadingState, Tabs, TabsContent, TabsList, TabsTrigger } from '../components/shared';
+import { fetchLogViaTool } from '../utils/extract-json';
 import { InfoTab } from './InfoTab';
 
 interface RecordingTabsProps {
@@ -37,31 +38,6 @@ function getRecordingStartTime(recording: RecordingDetail): number | undefined {
 }
 
 type LogData<T> = { data: T[] | null; loading: boolean; error: string | null };
-
-/**
- * Fetch log data via the MCP server tool channel.
- * Workaround for Claude.ai CSP blocking fetch() to R2 domains.
- */
-async function fetchLogViaTool<T>(
-  app: App,
-  workspaceId: string,
-  recordingId: string,
-  resourceType: 'consoleLog' | 'networkLog' | 'action'
-): Promise<T[]> {
-  const result = await app.callServerTool({
-    name: 'userplane_app_fetch_resource',
-    arguments: { workspaceId, recordingId, resourceType },
-  });
-
-  const textContent = result.content?.find((c: { type: string }) => c.type === 'text');
-  if (!textContent || textContent.type !== 'text') throw new Error('No text content');
-
-  const data = JSON.parse(textContent.text);
-  if (data.error) throw new Error(data.error);
-  if (!data.json) throw new Error('No data returned');
-
-  return Array.isArray(data.json) ? data.json : [];
-}
 
 export function RecordingTabs({ app, recording, resources, workspaceId }: RecordingTabsProps) {
   const recordingStartTime = getRecordingStartTime(recording);

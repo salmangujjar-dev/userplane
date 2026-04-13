@@ -1,3 +1,4 @@
+import '../utils/zod-jitless';
 import '../ui/styles.css';
 
 import { App } from '@modelcontextprotocol/ext-apps';
@@ -6,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import type { ShowRecordingData } from '../components/recording/types';
 import { LoadingState } from '../components/shared';
 import { setupThemeSync } from '../ui/theme';
+import { extractJsonFromResult } from '../utils/extract-json';
 import { ShowRecording } from './ShowRecording';
 
 const app = new App({ name: 'Userplane Preview', version: '1.0.0' });
@@ -17,39 +19,6 @@ root.render(<LoadingState message="Loading..." />);
 
 app.connect();
 setupThemeSync(app);
-
-/**
- * Extract JSON from a tool result's text content blocks.
- * Tries direct JSON.parse first, then looks for embedded JSON if the host
- * wrapped the text with a prefix.
- */
-function extractJsonFromResult(result: {
-  content?: Array<{ type: string; text?: string }>;
-}): unknown {
-  const textBlocks = (result.content ?? []).filter(
-    (c): c is { type: 'text'; text: string } => c.type === 'text' && typeof c.text === 'string'
-  );
-
-  if (textBlocks.length === 0) throw new Error('No text content in tool result');
-
-  for (let i = textBlocks.length - 1; i >= 0; i--) {
-    const text = textBlocks[i]!.text;
-    try {
-      return JSON.parse(text);
-    } catch {
-      const jsonStart = text.indexOf('{');
-      if (jsonStart >= 0) {
-        try {
-          return JSON.parse(text.slice(jsonStart));
-        } catch {
-          /* continue */
-        }
-      }
-    }
-  }
-
-  throw new Error(textBlocks[textBlocks.length - 1]!.text);
-}
 
 function isShowRecordingData(data: unknown): data is ShowRecordingData {
   if (typeof data !== 'object' || data === null) return false;

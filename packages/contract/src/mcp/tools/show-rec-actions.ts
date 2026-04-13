@@ -13,4 +13,10 @@ export const userplaneShowRecActions = {
     recordingId: z.string().describe('Recording ID'),
   },
   annotations: READ_ONLY_ANNOTATIONS,
+  _meta: {
+    'openai/widgetDescription':
+      'Interactive viewer for user interaction events — clicks, navigation, tab switches, and page lifecycle events.',
+    'openai/toolInvocation/invoking': 'Loading user actions…',
+    'openai/toolInvocation/invoked': 'User actions loaded',
+  },
 } as const satisfies McpToolDefinition;
