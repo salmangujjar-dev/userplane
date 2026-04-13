@@ -50,7 +50,7 @@ export function createMcpServer(deps: McpDeps, requestCtx: McpRequestContext) {
   // MCP Apps: interactive UI tools + resources
   registerShowRecordingTools(server, deps, userId);
   registerShowResourceAppTools(server, deps, userId);
-  registerAppResources(server);
+  registerAppResources(server, requestCtx);
 
   return server;
 }
