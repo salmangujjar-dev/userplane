@@ -13,4 +13,10 @@ export const userplaneShowRecording = {
     recordingId: z.string().describe('Recording ID'),
   },
   annotations: READ_ONLY_ANNOTATIONS,
+  _meta: {
+    'openai/widgetDescription':
+      'Interactive recording viewer with video playback, session info, console, network, and user actions.',
+    'openai/toolInvocation/invoking': 'Loading recording…',
+    'openai/toolInvocation/invoked': 'Recording loaded',
+  },
 } as const satisfies McpToolDefinition;
