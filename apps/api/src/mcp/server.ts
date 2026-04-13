@@ -14,6 +14,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { registerAppResources } from './app-resources';
+import { registerDomainTools } from './tools/domains';
 import { registerLinkTools } from './tools/links';
 import { registerProjectTools } from './tools/projects';
 import { registerRecordingResourceTools } from './tools/recording-resources';
@@ -43,6 +44,7 @@ export function createMcpServer(deps: McpDeps, requestCtx: McpRequestContext) {
   registerUserTools(server, deps, userId);
   registerWorkspaceTools(server, deps, userId);
   registerProjectTools(server, deps, userId);
+  registerDomainTools(server, deps, userId);
   registerRecordingTools(server, deps, userId);
   registerRecordingResourceTools(server, deps, userId);
   registerLinkTools(server, deps, userId);

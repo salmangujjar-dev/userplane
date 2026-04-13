@@ -1,6 +1,9 @@
+import type { RateLimiter } from '@userplane/cache';
+
 import type { LinkRepository } from '@/api/repositories/links.repository';
 import type { RecordingRepository } from '@/api/repositories/recordings.repository';
 import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
+import type { DomainService } from '@/api/services/domain.service';
 import type { LinkService } from '@/api/services/link.service';
 import type { ProjectService } from '@/api/services/project.service';
 import type { RecordingService } from '@/api/services/recording.service';
@@ -16,10 +19,12 @@ export interface McpDeps {
   workspaceService: WorkspaceService;
   workspaceMemberService: WorkspaceMemberService;
   projectService: ProjectService;
+  domainService: DomainService;
   userService: UserService;
   workspaceRepo: WorkspaceRepository;
   recordingRepo: RecordingRepository;
   linkRepo: LinkRepository;
+  rateLimiter: RateLimiter;
 }
 
 /** Per-request context injected by the MCP handler after JWT verification */

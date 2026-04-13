@@ -1,9 +1,9 @@
 export * from './tools';
 export * from './types';
 
+import { userplaneGetDomain, userplaneListDomains } from './tools/domains';
 import {
   userplaneCreateLink,
-  userplaneDeleteLink,
   userplaneGetLink,
   userplaneListLinks,
   userplaneUpdateLink,
@@ -17,7 +17,7 @@ import {
   userplaneGetRecThumb,
   userplaneGetRecVideo,
 } from './tools/recording-resources';
-import { userplaneDeleteRecording, userplaneListRecordings } from './tools/recordings';
+import { userplaneListRecordings } from './tools/recordings';
 import { userplaneShowRecActions } from './tools/show-rec-actions';
 import { userplaneShowRecConsole } from './tools/show-rec-console';
 import { userplaneShowRecNetwork } from './tools/show-rec-network';
@@ -32,13 +32,13 @@ export const mcpToolDefinitions = [
   userplaneGetWorkspace,
   userplaneListProjects,
   userplaneGetProject,
+  userplaneListDomains,
+  userplaneGetDomain,
   userplaneListRecordings,
-  userplaneDeleteRecording,
   userplaneListLinks,
   userplaneCreateLink,
   userplaneGetLink,
   userplaneUpdateLink,
-  userplaneDeleteLink,
   userplaneGetRecInfo,
   userplaneGetRecVideo,
   userplaneGetRecThumb,

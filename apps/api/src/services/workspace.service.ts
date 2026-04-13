@@ -277,6 +277,54 @@ export class WorkspaceService {
   }
 
   /**
+   * MCP variant of `getByUserIdPaginated` — pure pass-through to the lean
+   * repo method that selects only `workspaceId` and `workspaceName`.
+   */
+  async getByUserIdPaginatedForMcp(userId: string, page: number = 1, perPage: number = 10) {
+    if (!userId) {
+      throw workspaceError.WORKSPACE_USER_ID_REQUIRED();
+    }
+
+    const total = await this.deps.workspaceRepo.countByUserId(userId);
+    const offset = (page - 1) * perPage;
+    const workspaces = await this.deps.workspaceRepo.findByUserIdPaginatedForMcp(
+      userId,
+      perPage,
+      offset
+    );
+
+    return { workspaces, total };
+  }
+
+  /**
+   * MCP variant of `getById` — lean 3-column SELECT. Reuses the same
+   * cache-exists fast path so repeated calls stay cheap.
+   */
+  async getByIdForMcp(workspaceId: string) {
+    const cachedExists = await this.deps.cacheService.getWorkspaceExists(workspaceId);
+    if (cachedExists === false) {
+      throw workspaceError.WORKSPACE_NOT_FOUND();
+    }
+
+    const workspace = await this.deps.workspaceRepo.findByIdForMcp(workspaceId);
+    if (!workspace) {
+      const isSoftDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
+      if (isSoftDeleted === true) {
+        await this.deps.cacheService.setWorkspaceExists(workspaceId, false);
+        throw workspaceError.WORKSPACE_GONE();
+      }
+      await this.deps.cacheService.setWorkspaceExists(workspaceId, false);
+      throw workspaceError.WORKSPACE_NOT_FOUND();
+    }
+
+    if (cachedExists === null) {
+      await this.deps.cacheService.setWorkspaceExists(workspaceId, true);
+    }
+
+    return workspace;
+  }
+
+  /**
    * Count workspaces for a user with optional role-based filtering
    * Returns count of workspaces where user has specified roles
    * If no roles specified, counts all workspaces for the user

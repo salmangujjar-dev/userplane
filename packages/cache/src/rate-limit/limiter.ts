@@ -20,7 +20,9 @@ export type RateLimitTier =
   | 'billing'
   | 'admin'
   | 'webhook'
-  | 'mcp';
+  | 'mcp'
+  | 'mcp_user_minute'
+  | 'mcp_user_day';
 
 /**
  * Rate limit configuration per tier
@@ -45,6 +47,13 @@ export interface TierConfig {
  * | billing | /billing/* | 60s | 30 | WorkspaceID |
  * | admin | /admin/* | 60s | 200 | UserID |
  * | webhook | /api/auth/dodopayments/webhooks/* | 60s | 1000 | IP |
+ * | mcp | /mcp pre-auth DoS shield | 60s | 3000 | IP |
+ * | mcp_user_minute | /mcp post-auth per-user minute | 60s | 120 | UserID |
+ * | mcp_user_day | /mcp post-auth per-user day | 86400s | 10000 | UserID |
+ *
+ * Values here are compile-time fallback defaults. Callers can override per tier
+ * at `RateLimiter` construction time — see the `tierOverrides` constructor
+ * parameter. MCP tiers in particular are meant to be driven from env vars.
  */
 export const TIER_CONFIGS: Record<RateLimitTier, TierConfig> = {
   public: {
@@ -78,9 +87,19 @@ export const TIER_CONFIGS: Record<RateLimitTier, TierConfig> = {
     description: 'Webhook endpoints (high limit to ensure processing)',
   },
   mcp: {
-    limit: 60,
+    limit: 3000,
     windowSeconds: 60,
-    description: 'MCP tool call endpoints',
+    description: 'MCP pre-auth IP ceiling (DoS shield, shared-egress friendly)',
+  },
+  mcp_user_minute: {
+    limit: 120,
+    windowSeconds: 60,
+    description: 'MCP post-auth per-user minute window',
+  },
+  mcp_user_day: {
+    limit: 10000,
+    windowSeconds: 86_400,
+    description: 'MCP post-auth per-user day window',
   },
 };
 
@@ -101,25 +120,45 @@ export interface RateLimitResult {
 }
 
 /**
+ * Per-tier override for the fallback defaults in `TIER_CONFIGS`.
+ *
+ * Use this to drive limits from environment variables without mutating the
+ * exported `TIER_CONFIGS` constant. Any omitted tier (or omitted field) falls
+ * back to the compile-time default.
+ */
+export type TierOverrides = Partial<Record<RateLimitTier, Partial<TierConfig>>>;
+
+/**
  * Rate limiter instance per tier
  */
 export class RateLimiter {
   private limiters: Map<RateLimitTier, Ratelimit>;
+  private effectiveConfig: Map<RateLimitTier, TierConfig>;
   private enabled: boolean;
   private logger = createCacheLogger('RateLimiter');
 
-  constructor(redis: Redis | null, enabled: boolean = true) {
+  constructor(redis: Redis | null, enabled: boolean = true, tierOverrides: TierOverrides = {}) {
     this.limiters = new Map();
+    this.effectiveConfig = new Map();
     this.enabled = enabled && redis !== null;
+
+    // Build the effective config once (overrides merged on top of defaults)
+    // so both Ratelimit construction and fail-open paths see the same values.
+    for (const [tier, config] of Object.entries(TIER_CONFIGS) as Array<
+      [RateLimitTier, TierConfig]
+    >) {
+      const override = tierOverrides[tier] ?? {};
+      this.effectiveConfig.set(tier, { ...config, ...override });
+    }
 
     if (redis && this.enabled) {
       // Create a rate limiter for each tier
-      for (const [tier, config] of Object.entries(TIER_CONFIGS)) {
+      for (const [tier, effective] of this.effectiveConfig) {
         this.limiters.set(
-          tier as RateLimitTier,
+          tier,
           new Ratelimit({
             redis,
-            limiter: Ratelimit.slidingWindow(config.limit, `${config.windowSeconds} s`),
+            limiter: Ratelimit.slidingWindow(effective.limit, `${effective.windowSeconds} s`),
             prefix: `ratelimit:${tier}`,
             analytics: true,
           })
@@ -143,13 +182,15 @@ export class RateLimiter {
    * @returns Rate limit result with success status and headers
    */
   async check(tier: RateLimitTier, identifier: string): Promise<RateLimitResult> {
+    const effective = this.effectiveConfig.get(tier) ?? TIER_CONFIGS[tier];
+
     // If rate limiting is disabled, always allow
     if (!this.enabled) {
       return {
         success: true,
-        limit: TIER_CONFIGS[tier].limit,
-        remaining: TIER_CONFIGS[tier].limit,
-        reset: Math.floor(Date.now() / 1000) + TIER_CONFIGS[tier].windowSeconds,
+        limit: effective.limit,
+        remaining: effective.limit,
+        reset: Math.floor(Date.now() / 1000) + effective.windowSeconds,
       };
     }
 
@@ -160,9 +201,9 @@ export class RateLimiter {
       this.logger.warn({ tier }, 'No limiter found for tier');
       return {
         success: true,
-        limit: TIER_CONFIGS[tier].limit,
-        remaining: TIER_CONFIGS[tier].limit,
-        reset: Math.floor(Date.now() / 1000) + TIER_CONFIGS[tier].windowSeconds,
+        limit: effective.limit,
+        remaining: effective.limit,
+        reset: Math.floor(Date.now() / 1000) + effective.windowSeconds,
       };
     }
 
@@ -188,9 +229,9 @@ export class RateLimiter {
       this.logger.warn({ err: error, tier, identifier }, 'Error checking rate limit');
       return {
         success: true,
-        limit: TIER_CONFIGS[tier].limit,
-        remaining: TIER_CONFIGS[tier].limit,
-        reset: Math.floor(Date.now() / 1000) + TIER_CONFIGS[tier].windowSeconds,
+        limit: effective.limit,
+        remaining: effective.limit,
+        reset: Math.floor(Date.now() / 1000) + effective.windowSeconds,
       };
     }
   }

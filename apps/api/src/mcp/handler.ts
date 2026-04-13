@@ -72,6 +72,44 @@ export function createMcpHandler(deps: McpDeps) {
         });
       }
 
+      // Post-auth per-user rate limit. The pre-auth IP ceiling on /mcp is
+      // keyed on client IP, which collapses to a single bucket for every
+      // Claude Desktop / ChatGPT user sharing their proxy's egress — so a
+      // real per-user cap has to live here, after JWT verification.
+      //
+      // Minute + day windows are enforced as two separate tiers; both are
+      // checked in parallel. `rateLimiter.check` handles its own fail-open
+      // (disabled limiter, missing tier, Redis errors → success:true) so no
+      // outer guard is needed.
+      const [minute, day] = await Promise.all([
+        deps.rateLimiter.check('mcp_user_minute', userId),
+        deps.rateLimiter.check('mcp_user_day', userId),
+      ]);
+      const blocked = !minute.success ? minute : !day.success ? day : null;
+      if (blocked) {
+        logger.warn(
+          {
+            userId,
+            window: !minute.success ? 'minute' : 'day',
+            retryAfter: blocked.retryAfter,
+          },
+          'mcp user rate limit exceeded'
+        );
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded', retryAfter: blocked.retryAfter }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': String(blocked.retryAfter ?? 60),
+              'X-RateLimit-Limit': String(blocked.limit),
+              'X-RateLimit-Remaining': String(blocked.remaining),
+              'X-RateLimit-Reset': String(blocked.reset),
+            },
+          }
+        );
+      }
+
       // Create a per-request MCP server with the authenticated user bound.
       // Host is detected from HTTP headers (stateless transport means we
       // can't rely on MCP clientInfo) — see `host-detection.ts`.
