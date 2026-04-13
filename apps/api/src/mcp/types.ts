@@ -8,6 +8,8 @@ import type { UserService } from '@/api/services/user.service';
 import type { WorkspaceService } from '@/api/services/workspace.service';
 import type { WorkspaceMemberService } from '@/api/services/workspace-member.service';
 
+import type { McpHost } from './host-detection';
+
 export interface McpDeps {
   linkService: LinkService;
   recordingService: RecordingService;
@@ -23,4 +25,12 @@ export interface McpDeps {
 /** Per-request context injected by the MCP handler after JWT verification */
 export interface McpRequestContext {
   userId: string;
+  /**
+   * Detected calling host — drives `_meta.ui.domain` resolution. Claude.ai
+   * demands a SHA-256 hash subdomain; ChatGPT (and every other client we've
+   * tested) wants a full origin URL. Stateless transport means we can't rely
+   * on `clientInfo.name` from the MCP initialize handshake across reads, so
+   * the host is derived from HTTP headers by `detectMcpHost`.
+   */
+  mcpHost: McpHost;
 }

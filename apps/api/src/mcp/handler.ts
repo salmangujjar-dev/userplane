@@ -16,9 +16,31 @@ import type { Context } from 'hono';
 import { env } from '@/api/env';
 import { createLogger } from '@/api/lib/logger';
 
+import { detectMcpHost, type McpHost } from './host-detection';
 import { createMcpServer, type McpDeps } from './server';
 
 const logger = createLogger('mcp');
+
+/**
+ * One-shot log gate: we log each distinct detected host exactly once per
+ * process so we can verify empirically (on real Claude traffic) that the
+ * detection branch fires without spamming the log on every request.
+ */
+const loggedHosts = new Set<McpHost>();
+
+function logFirstHostDetection(host: McpHost, req: Request): void {
+  if (loggedHosts.has(host)) return;
+  loggedHosts.add(host);
+  logger.info(
+    {
+      mcpHost: host,
+      ua: req.headers.get('user-agent'),
+      hasAnthropicHeader: !!req.headers.get('x-anthropic-client'),
+      hasOpenAiHeader: !!req.headers.get('x-openai-session'),
+    },
+    'mcp host detected'
+  );
+}
 
 /**
  * Create a Hono-compatible handler for the /mcp endpoint.
@@ -50,8 +72,12 @@ export function createMcpHandler(deps: McpDeps) {
         });
       }
 
-      // Create a per-request MCP server with the authenticated user bound
-      const server = createMcpServer(deps, { userId });
+      // Create a per-request MCP server with the authenticated user bound.
+      // Host is detected from HTTP headers (stateless transport means we
+      // can't rely on MCP clientInfo) — see `host-detection.ts`.
+      const mcpHost = detectMcpHost(req);
+      logFirstHostDetection(mcpHost, req);
+      const server = createMcpServer(deps, { userId, mcpHost });
 
       // Stateless transport with JSON responses — no session tracking, no SSE streaming.
       // enableJsonResponse ensures handleRequest() waits for all tool responses before

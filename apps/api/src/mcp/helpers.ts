@@ -13,10 +13,21 @@ export async function requireWorkspaceMember(deps: McpDeps, userId: string, work
   return { workspace, member };
 }
 
-/** Wrap a value as MCP text content (pretty-printed for readability) */
+/**
+ * Wrap a value as an MCP tool result carrying both `content` and `structuredContent`.
+ *
+ * OpenAI's Apps SDK treats `structuredContent` as the canonical widget data channel —
+ * omitting it causes ChatGPT's MCP Apps bridge to reshape the payload and widgets end
+ * up with malformed data. Providing it directly keeps Claude and ChatGPT consistent.
+ */
 export function textResult(data: unknown) {
+  const structured =
+    typeof data === 'object' && data !== null && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : { value: data };
   return {
     content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }],
+    structuredContent: structured,
   };
 }
 
