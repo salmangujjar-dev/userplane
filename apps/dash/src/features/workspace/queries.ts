@@ -842,11 +842,14 @@ const PROVIDER_INVITE_PATHS: Record<SuggestionProvider, string> = {
  * Queries run in parallel. The first provider that reports `connected: true`
  * with suggestions wins. Falls back to empty if nothing is connected.
  */
-export function useIntegrationSuggestions(limit: number = 5): IntegrationSuggestionsResult {
+export function useIntegrationSuggestions(
+  limit: number = 5,
+  enabled: boolean = true
+): IntegrationSuggestionsResult {
   const workspaceId = useWorkspaceId();
-  const intercom = useIntercomSuggestions(limit);
-  const slack = useSlackSuggestions(limit);
-  const zendesk = useZendeskSuggestions(limit);
+  const intercom = useIntercomSuggestions(limit, enabled);
+  const slack = useSlackSuggestions(limit, enabled);
+  const zendesk = useZendeskSuggestions(limit, enabled);
 
   // Intercom takes priority if connected with suggestions
   if (intercom.data?.success && intercom.data.data.connected) {

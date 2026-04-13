@@ -259,6 +259,9 @@
 .custom-progress-tooltip-marker {
   font-weight: 600;
   margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .custom-progress-tooltip-time {
