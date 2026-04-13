@@ -1,7 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { userplaneGetWorkspace, userplaneListWorkspaces } from '@userplane/contract';
 
-import { requireWorkspaceMember, textResult } from '../helpers';
+import { requireWorkspaceMemberForMcp, textResult } from '../helpers';
+import { toMcpListWorkspaces, toMcpWorkspaceDetail } from '../responses';
 import type { McpDeps } from '../types';
 
 export function registerWorkspaceTools(server: McpServer, deps: McpDeps, userId: string) {
@@ -10,16 +11,20 @@ export function registerWorkspaceTools(server: McpServer, deps: McpDeps, userId:
     server.registerTool(name, config, async ({ page, per_page }) => {
       const p = page ?? 1;
       const pp = per_page ?? 5;
-      const { workspaces, total } = await deps.workspaceService.getByUserIdPaginated(userId, p, pp);
-      return textResult({ workspaces, total, page: p, per_page: pp });
+      const { workspaces, total } = await deps.workspaceService.getByUserIdPaginatedForMcp(
+        userId,
+        p,
+        pp
+      );
+      return textResult(toMcpListWorkspaces(workspaces, total));
     });
   }
 
   {
     const { name, ...config } = userplaneGetWorkspace;
     server.registerTool(name, config, async ({ workspaceId }) => {
-      const { workspace } = await requireWorkspaceMember(deps, userId, workspaceId);
-      return textResult({ workspace });
+      const { workspace } = await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
+      return textResult(toMcpWorkspaceDetail(workspace));
     });
   }
 }

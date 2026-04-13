@@ -192,6 +192,53 @@ export class ProjectService {
   }
 
   /**
+   * MCP variant of `getProjectsByWorkspacePaginated` — lean 4-column SELECT.
+   * Validates workspace existence on empty result the same way the dashboard
+   * version does.
+   */
+  async getProjectsByWorkspacePaginatedForMcp(
+    workspaceId: string,
+    page: number = 1,
+    perPage: number = 10,
+    sortBy: ProjectSortField = 'created_at',
+    sortDirection: SortDirection = 'desc'
+  ) {
+    const total = await this.deps.projectRepo.countByWorkspace(workspaceId);
+
+    if (total === 0) {
+      throw workspaceError.WORKSPACE_NOT_FOUND();
+    }
+
+    const offset = (page - 1) * perPage;
+    const projects = await this.deps.projectRepo.findByWorkspacePaginatedForMcp(
+      workspaceId,
+      perPage,
+      offset,
+      sortBy,
+      sortDirection
+    );
+
+    return { projects, total };
+  }
+
+  /**
+   * MCP variant of `getById` — lean 4-column SELECT scoped to workspace.
+   * The `workspaceId` filter doubles as a permission check: a project
+   * accessed via the wrong workspace looks like a not-found.
+   */
+  async getByIdForMcp(projectId: string, workspaceId: string) {
+    const project = await this.deps.projectRepo.findByIdForMcp(projectId, workspaceId);
+    if (!project) {
+      const isSoftDeleted = await this.deps.projectRepo.isSoftDeleted(projectId);
+      if (isSoftDeleted === true) {
+        throw projectError.PROJECT_GONE();
+      }
+      throw projectError.PROJECT_NOT_FOUND();
+    }
+    return project;
+  }
+
+  /**
    * Set project as default
    * Unsets current default and sets new one
    */

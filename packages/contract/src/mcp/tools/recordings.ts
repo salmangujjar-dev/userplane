@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
+import { RecordingIdSchema, WorkspaceIdSchema } from '../../schemas/common';
 import type { McpToolDefinition } from '../types';
-import { DESTRUCTIVE_ANNOTATIONS, READ_ONLY_ANNOTATIONS } from '../types';
+import { READ_ONLY_ANNOTATIONS } from '../types';
 
 export const userplaneListRecordings = {
   name: 'userplane_list_recordings',
@@ -25,14 +26,30 @@ export const userplaneListRecordings = {
   annotations: READ_ONLY_ANNOTATIONS,
 } as const satisfies McpToolDefinition;
 
-export const userplaneDeleteRecording = {
-  name: 'userplane_delete_recording',
-  title: 'Delete a recording',
-  description:
-    'Soft-delete a screen recording. Only workspace admins, owners, or the recording creator can delete.',
-  inputSchema: {
-    workspaceId: z.string().describe('Workspace ID'),
-    recordingId: z.string().describe('Recording ID'),
-  },
-  annotations: DESTRUCTIVE_ANNOTATIONS,
-} as const satisfies McpToolDefinition;
+// ---------------------------------------------------------------------------
+// Responses
+// ---------------------------------------------------------------------------
+
+/**
+ * Recording row for list responses. No thumbnail (agents can't render it),
+ * no linkId (the list row's JOIN doesn't return it; use get_rec_info to fetch
+ * the full link). `playerUrl` is built from `workspaceId + recordingId`.
+ */
+export const McpRecordingItemSchema = z.object({
+  recordingId: RecordingIdSchema,
+  durationMs: z.number().int().nullable(),
+  createdAt: z.coerce.date(),
+  expiresAt: z.coerce.date().nullable(),
+  creatorName: z.string(),
+  linkTitle: z.string().nullable(),
+  playerUrl: z.string().url(),
+});
+
+export const McpListRecordingsSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  recordings: z.array(McpRecordingItemSchema),
+  total: z.number().int().nonnegative(),
+});
+
+export type McpRecordingItem = z.infer<typeof McpRecordingItemSchema>;
+export type McpListRecordings = z.infer<typeof McpListRecordingsSchema>;

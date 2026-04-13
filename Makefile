@@ -216,9 +216,9 @@ dev\:extras: ## Run all apps including docs and extension
 	@echo "$(MAGENTA)Starting all apps in development mode...$(RESET)"
 	@bun dev
 
-dev\:web: ## Run web app only
+dev\:dash: ## Run web app only
 	@echo "$(MAGENTA)Starting web app (Next.js)...$(RESET)"
-	@cd apps/web && bun dev
+	@cd apps/dash && bun dev
 
 dev\:api: ## Run API only
 	@echo "$(MAGENTA)Starting Hono API...$(RESET)"

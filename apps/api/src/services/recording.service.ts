@@ -205,6 +205,51 @@ export class RecordingService {
   }
 
   /**
+   * MCP variant of `getByWorkspaceIdPaginated` — pure pass-through to the
+   * lean repo method. No thumbnail URL generation (MCP does not surface
+   * thumbnails in list responses).
+   */
+  async getByWorkspaceIdPaginatedForMcp(
+    workspaceId: string,
+    page: number = 1,
+    perPage: number = DEFAULT_PER_PAGE,
+    filters?: RecordingFilters,
+    sort?: RecordingSortOptions
+  ) {
+    const total = await this.deps.recordingRepo.countByWorkspace(workspaceId, filters);
+    const offset = (page - 1) * perPage;
+    const recordings = await this.deps.recordingRepo.findByWorkspaceIdPaginatedForMcp(
+      workspaceId,
+      perPage,
+      offset,
+      filters,
+      sort ?? { field: 'created_at', direction: 'desc' }
+    );
+    return { recordings, total };
+  }
+
+  /**
+   * MCP variant of `getById` — lean 13-column SELECT. The workspace-scope
+   * check uses the row's `workspaceId` the same way the full-fat path does.
+   */
+  async getByIdForMcp(recordingId: string, workspaceId: string) {
+    const row = await this.deps.recordingRepo.findByIdWithDetailsForMcp(recordingId);
+    if (!row) {
+      const isSoftDeleted = await this.deps.recordingRepo.isSoftDeleted(recordingId);
+      if (isSoftDeleted === true) {
+        throw recordingError.RECORDING_GONE();
+      }
+      throw recordingError.RECORDING_NOT_FOUND();
+    }
+
+    if (row.workspaceId !== workspaceId) {
+      throw recordingError.RECORDING_NOT_FOUND();
+    }
+
+    return row;
+  }
+
+  /**
    * Get recording detail and all resources in a single pass.
    * Fetches the recording once and reuses it for both the detail transformation
    * and resource URL generation — eliminates redundant DB queries.

@@ -52,6 +52,7 @@ import { captureException } from '@/api/posthog';
 import { apiRouter } from '@/api/routes/api.router';
 import { billingWebhookRoute } from '@/api/routes/billing/billing-webhook.route.setup';
 import {
+  domainService,
   integrationRepo,
   intercomCanvasService,
   intercomHealthCheckService,
@@ -318,10 +319,12 @@ const mcpHandler = createMcpHandler({
   workspaceService,
   workspaceMemberService,
   projectService,
+  domainService,
   userService,
   workspaceRepo,
   recordingRepo,
   linkRepo,
+  rateLimiter,
 });
 
 // POST = JSON-RPC messages, GET = SSE stream, DELETE = session termination.

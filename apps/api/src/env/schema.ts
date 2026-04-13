@@ -188,8 +188,6 @@ export const emailEnvSchema = z.object({
 /** Rate limit env vars schema */
 export const rateLimitEnvSchema = z.object({
   RATE_LIMIT_ENABLED: booleanWithDefault(RATE_LIMIT.ENABLED),
-  RATE_LIMIT_WINDOW: integerWithDefault(RATE_LIMIT.WINDOW_MS),
-  RATE_LIMIT_MAX_REQUESTS: integerWithDefault(RATE_LIMIT.MAX_REQUESTS),
 });
 
 /** Redis env vars schema */
@@ -266,6 +264,20 @@ export const unkeyEnvSchema = z.object({
   UNKEY_RATE_LIMIT_PER_DAY: integerWithDefault(10000),
 });
 
+/** MCP env vars schema */
+export const mcpEnvSchema = z.object({
+  /**
+   * Pre-auth IP ceiling for /mcp (DoS shield). Default sized to comfortably
+   * absorb ~100 concurrent users sharing a single egress (Claude Desktop,
+   * ChatGPT) without collisions.
+   */
+  MCP_RATE_LIMIT_PER_IP_PER_MINUTE: integerWithDefault(3000),
+  /** Post-auth per-user minute window. */
+  MCP_RATE_LIMIT_PER_USER_PER_MINUTE: integerWithDefault(120),
+  /** Post-auth per-user day window. */
+  MCP_RATE_LIMIT_PER_USER_PER_DAY: integerWithDefault(10000),
+});
+
 /** Admin env vars schema */
 export const adminEnvSchema = z.object({
   ADMIN_USER_IDS: commaSeparatedArray([]),
@@ -296,7 +308,8 @@ export const rawEnvSchema = serverEnvSchema
   .merge(storageEnvSchema)
   .merge(posthogEnvSchema)
   .merge(adminEnvSchema)
-  .merge(unkeyEnvSchema);
+  .merge(unkeyEnvSchema)
+  .merge(mcpEnvSchema);
 
 /** Raw parsed environment type */
 export type RawEnvConfig = z.infer<typeof rawEnvSchema>;
@@ -423,8 +436,15 @@ export const emailConfigSchema = z.object({
 /** Rate limit configuration schema */
 export const rateLimitConfigSchema = z.object({
   enabled: z.boolean(),
-  windowMs: z.number(),
-  maxRequests: z.number(),
+});
+
+/** MCP rate limit configuration schema */
+export const mcpConfigSchema = z.object({
+  rateLimit: z.object({
+    perIpPerMinute: z.number(),
+    perUserPerMinute: z.number(),
+    perUserPerDay: z.number(),
+  }),
 });
 
 /** Redis configuration schema */
@@ -532,6 +552,7 @@ export const envConfigSchema = z.object({
   posthog: posthogConfigSchema,
   admin: adminConfigSchema,
   unkey: unkeyConfigSchema,
+  mcp: mcpConfigSchema,
 });
 
 // =============================================================================
@@ -563,4 +584,5 @@ export type StorageConfig = z.infer<typeof storageConfigSchema>;
 export type PostHogConfig = z.infer<typeof posthogConfigSchema>;
 export type UnkeyConfig = z.infer<typeof unkeyConfigSchema>;
 export type AdminConfig = z.infer<typeof adminConfigSchema>;
+export type McpConfig = z.infer<typeof mcpConfigSchema>;
 export type EnvConfig = z.infer<typeof envConfigSchema>;

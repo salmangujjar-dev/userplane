@@ -8,7 +8,8 @@ import {
   userplaneGetRecVideo,
 } from '@userplane/contract';
 
-import { fetchThumbnailDataUri, requireWorkspaceMember, textResult } from '../helpers';
+import { requireWorkspaceMemberForMcp, textResult } from '../helpers';
+import { toMcpRecordingDetail, toMcpRecThumb, toMcpRecVideo } from '../responses';
 import type { McpDeps } from '../types';
 
 /**
@@ -47,9 +48,9 @@ export function registerRecordingResourceTools(server: McpServer, deps: McpDeps,
   {
     const { name, ...config } = userplaneGetRecInfo;
     server.registerTool(name, config, async ({ workspaceId, recordingId }) => {
-      await requireWorkspaceMember(deps, userId, workspaceId);
-      const recording = await deps.recordingService.getById(recordingId, workspaceId);
-      return textResult({ workspaceId, recording });
+      await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
+      const recording = await deps.recordingService.getByIdForMcp(recordingId, workspaceId);
+      return textResult(toMcpRecordingDetail(workspaceId, recording));
     });
   }
 
@@ -59,22 +60,21 @@ export function registerRecordingResourceTools(server: McpServer, deps: McpDeps,
   {
     const { name, ...config } = userplaneGetRecVideo;
     server.registerTool(name, config, async ({ workspaceId, recordingId }) => {
-      await requireWorkspaceMember(deps, userId, workspaceId);
+      await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
       const resource = await deps.recordingService.getVideoResource(recordingId, workspaceId);
-      return textResult({ recordingId, resource });
+      return textResult(toMcpRecVideo(recordingId, resource));
     });
   }
 
   // -----------------------------------------------------------------------
-  // userplane_get_rec_thumb — inline base64 thumbnail
+  // userplane_get_rec_thumb — presigned URL for thumbnail image
   // -----------------------------------------------------------------------
   {
     const { name, ...config } = userplaneGetRecThumb;
     server.registerTool(name, config, async ({ workspaceId, recordingId }) => {
-      await requireWorkspaceMember(deps, userId, workspaceId);
+      await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
       const resource = await deps.recordingService.getThumbnailResource(recordingId, workspaceId);
-      const thumbnailDataUri = await fetchThumbnailDataUri(resource.url, resource.format ?? null);
-      return textResult({ recordingId, thumbnailDataUri });
+      return textResult(toMcpRecThumb(recordingId, resource));
     });
   }
 
@@ -87,9 +87,9 @@ export function registerRecordingResourceTools(server: McpServer, deps: McpDeps,
   {
     const { name, ...config } = userplaneGetRecConsole;
     server.registerTool(name, config, async ({ workspaceId, recordingId }) => {
-      await requireWorkspaceMember(deps, userId, workspaceId);
-      const data = await fetchResourceData(deps, recordingId, workspaceId, 'consoleLog');
-      return textResult({ recordingId, entries: data, totalEntries: data.length });
+      await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
+      const entries = await fetchResourceData(deps, recordingId, workspaceId, 'consoleLog');
+      return textResult({ recordingId, entries });
     });
   }
 
@@ -99,9 +99,9 @@ export function registerRecordingResourceTools(server: McpServer, deps: McpDeps,
   {
     const { name, ...config } = userplaneGetRecNetwork;
     server.registerTool(name, config, async ({ workspaceId, recordingId }) => {
-      await requireWorkspaceMember(deps, userId, workspaceId);
-      const data = await fetchResourceData(deps, recordingId, workspaceId, 'networkLog');
-      return textResult({ recordingId, entries: data, totalEntries: data.length });
+      await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
+      const entries = await fetchResourceData(deps, recordingId, workspaceId, 'networkLog');
+      return textResult({ recordingId, entries });
     });
   }
 
@@ -111,9 +111,9 @@ export function registerRecordingResourceTools(server: McpServer, deps: McpDeps,
   {
     const { name, ...config } = userplaneGetRecActions;
     server.registerTool(name, config, async ({ workspaceId, recordingId }) => {
-      await requireWorkspaceMember(deps, userId, workspaceId);
-      const data = await fetchResourceData(deps, recordingId, workspaceId, 'action');
-      return textResult({ recordingId, entries: data, totalEntries: data.length });
+      await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
+      const entries = await fetchResourceData(deps, recordingId, workspaceId, 'action');
+      return textResult({ recordingId, entries });
     });
   }
 }

@@ -1,3 +1,4 @@
+export * from './domains';
 export * from './links';
 export * from './projects';
 export * from './recording-resources';

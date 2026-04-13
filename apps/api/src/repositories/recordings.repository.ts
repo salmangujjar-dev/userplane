@@ -47,6 +47,42 @@ export interface RecordingListRow {
 }
 
 /**
+ * Lean recording list row for MCP. Drops `recordingThumbnailRef` (agents
+ * don't render images) and `creatorId` (only `creatorName` is surfaced).
+ */
+export interface McpRecordingRow {
+  recordingId: string;
+  recordingDurationMs: number;
+  expiresAt: Date | null;
+  createdAt: Date;
+  creatorName: string;
+  linkTitle: string | null;
+}
+
+/**
+ * Lean recording detail row for MCP. Drops file refs
+ * (`recording{Video,Thumbnail,ConsoleLog,NetworkLogs,Action}Ref`),
+ * JSONB (`systemMeta`/`customMeta`/`notes`/`linkProviderData`), integration
+ * plumbing (`linkProviderType/Id/Ref`), `updatedAt`, `linkCreatedAt`,
+ * `domainId`, and `creatorId` — none of which land in the MCP response.
+ */
+export interface McpRecordingDetailRow {
+  recordingId: string;
+  workspaceId: string;
+  projectId: string;
+  projectTitle: string;
+  recordingLinkId: string;
+  linkTitle: string | null;
+  uploadStatus: Recording['uploadStatus'];
+  recordingDurationMs: number;
+  recordingStartedAt: Date | null;
+  expiresAt: Date | null;
+  createdAt: Date;
+  creatorName: string;
+  domainUrl: string;
+}
+
+/**
  * Shape of recording detail with all joined data
  * Uses inferred types from database schema to avoid duplication
  */
@@ -252,6 +288,42 @@ export class RecordingRepository {
   }
 
   /**
+   * Lean list query for MCP — drops `recordingThumbnailRef` and `creatorId`
+   * from the SELECT. Same JOINs (projects/workspaces still required for
+   * the `isDeleted = false` filters).
+   */
+  async findByWorkspaceIdPaginatedForMcp(
+    workspaceId: string,
+    limit: number,
+    offset: number,
+    filters?: RecordingFilters,
+    sort?: RecordingSortOptions
+  ): Promise<McpRecordingRow[]> {
+    const whereConditions = this.buildWhereConditions(workspaceId, filters);
+    const orderBy = this.buildOrderBy(sort);
+
+    return this.db
+      .select({
+        recordingId: recordings.recordingId,
+        recordingDurationMs: recordings.recordingDurationMs,
+        expiresAt: recordings.expiresAt,
+        createdAt: recordings.createdAt,
+        creatorName: user.name,
+        linkTitle: links.linkTitle,
+      })
+      .from(recordings)
+      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.workspaceMemberId))
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
+      .innerJoin(links, eq(recordings.recordingLinkId, links.linkId))
+      .where(and(whereConditions, eq(projects.isDeleted, false), eq(workspaces.isDeleted, false)))
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /**
    * Count recordings in a workspace with optional filters
    * Uses the same filtering logic as the paginated query
    * Excludes recordings from deleted projects or deleted workspaces
@@ -416,6 +488,54 @@ export class RecordingRepository {
       notes: result.notes ?? null,
       linkProviderData: result.linkProviderData as LinkProviderData | null,
     };
+  }
+
+  /**
+   * Lean by-id query for MCP — 13 columns vs 25 on the full-fat variant.
+   * Skips all file refs, JSONB metadata, integration plumbing, and the
+   * per-row JSONB transforms.
+   */
+  async findByIdWithDetailsForMcp(
+    recordingId: string,
+    statusGroup: RecordingFilters['statusGroup'] = 'AVAILABLE'
+  ): Promise<McpRecordingDetailRow | null> {
+    const statuses = [...getUploadStatusesForGroup(statusGroup ?? 'AVAILABLE')];
+
+    const [result] = await this.db
+      .select({
+        recordingId: recordings.recordingId,
+        workspaceId: recordings.workspaceId,
+        projectId: recordings.projectId,
+        projectTitle: projects.projectTitle,
+        recordingLinkId: recordings.recordingLinkId,
+        linkTitle: links.linkTitle,
+        uploadStatus: recordings.uploadStatus,
+        recordingDurationMs: recordings.recordingDurationMs,
+        recordingStartedAt: recordings.recordingStartedAt,
+        expiresAt: recordings.expiresAt,
+        createdAt: recordings.createdAt,
+        creatorName: user.name,
+        domainUrl: domains.domainUrl,
+      })
+      .from(recordings)
+      .innerJoin(workspaceMembers, eq(recordings.createdBy, workspaceMembers.workspaceMemberId))
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .innerJoin(links, eq(recordings.recordingLinkId, links.linkId))
+      .innerJoin(projects, eq(recordings.projectId, projects.projectId))
+      .innerJoin(workspaces, eq(recordings.workspaceId, workspaces.workspaceId))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
+      .where(
+        and(
+          eq(recordings.recordingId, recordingId),
+          eq(recordings.isDeleted, false),
+          inArray(recordings.uploadStatus, statuses),
+          eq(projects.isDeleted, false),
+          eq(workspaces.isDeleted, false)
+        )
+      )
+      .limit(1);
+
+    return result || null;
   }
 
   /**
