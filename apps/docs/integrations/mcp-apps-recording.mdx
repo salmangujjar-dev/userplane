@@ -11,9 +11,18 @@ The recording viewer is the primary interactive app. It combines video playback,
 
 The viewer opens with a video thumbnail and session metadata, with tabs for drilling into specific data:
 
-<Frame caption="Recording viewer in Claude">
-  <img src="/media/mcp/claude/apps/show-recording.png" />
-</Frame>
+<Tabs>
+  <Tab title="Claude">
+    <Frame caption="Recording viewer in Claude">
+      <img src="/media/mcp/claude/apps/show-recording.png" />
+    </Frame>
+  </Tab>
+  <Tab title="ChatGPT">
+    <Frame caption="Recording viewer in ChatGPT">
+      <img src="/media/mcp/chatgpt/apps/show-recording.png" />
+    </Frame>
+  </Tab>
+</Tabs>
 
 **Info tab**
 
@@ -52,19 +61,20 @@ The viewer opens with a video thumbnail and session metadata, with tabs for dril
 ## Example prompts
 
 <CodeGroup>
-  ```text Prompt Show me the recording for {recordingId} in workspace {workspaceId}. ```
+  ```text Prompt: Show me the recording for {recordingId} in workspace {workspaceId}. ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Here's a recording from a customer: https://dash.userplane.io/{workspaceId}
+  ```text Prompt: Here's a recording from a customer: https://dash.userplane.io/{workspaceId}
   /recordings/{recordingId}
   Show me the full recording viewer. ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Give me a full root cause analysis of this recording. Check the console for errors,
-  the network requests for failures, and the user actions for anything unusual. Summarize what
-  happened and what likely caused the issue. https://dash.userplane.io/{workspaceId}/recordings/
+  ```text Prompt: Give me a full root cause analysis of this recording. Check the console for
+  errors, the network requests for failures, and the user actions for anything unusual. Summarize
+  what happened and what likely caused the issue. https://dash.userplane.io/{workspaceId}
+  /recordings/
   {recordingId}
   ```
 </CodeGroup>
