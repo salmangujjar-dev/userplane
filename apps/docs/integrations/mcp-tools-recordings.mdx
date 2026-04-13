@@ -3,9 +3,9 @@ title: Recording Tools
 description: MCP tools for listing, inspecting, and analyzing screen recordings
 ---
 
-Tools for listing recordings, retrieving session data, and accessing recording resources (video, console logs, network logs, user actions). Most tools are read-only — only `userplane_delete_recording` modifies data.
+Tools for listing recordings, retrieving session data, and accessing recording resources (video, console logs, network logs, user actions). All recording tools are read-only.
 
-## Listing and management
+## Listing
 
 ### userplane_list_recordings
 
@@ -20,22 +20,7 @@ List screen recordings in a workspace. Recordings are screen captures from end u
 | `link_id`     | string | No       | Filter by link ID                       |
 | `created_by`  | string | No       | Filter by creator workspace member ID   |
 
-**Returns:** Paginated list of recordings with ID, duration, project, creator, and creation date.
-
----
-
-### userplane_delete_recording
-
-Soft-delete a screen recording. Only workspace admins, owners, or the recording creator can delete.
-
-| Parameter     | Type   | Required | Description  |
-| ------------- | ------ | -------- | ------------ |
-| `workspaceId` | string | Yes      | Workspace ID |
-| `recordingId` | string | Yes      | Recording ID |
-
-<Warning>
-  This action is irreversible. The recording is soft-deleted and cannot be recovered.
-</Warning>
+**Returns:** Paginated list of recordings. Each entry includes `recordingId`, `durationMs`, `createdAt`, `expiresAt`, `creatorName`, `linkTitle`, and a `playerUrl` that opens the recording in the dashboard player.
 
 ---
 
@@ -50,7 +35,7 @@ Retrieve complete details for a screen recording including duration, metadata, a
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Recording duration, upload status, metadata, project, domain, link, and creator details.
+**Returns:** A flat object with `recordingId`, `durationMs`, `startedAt`, `createdAt`, `expiresAt`, `status`, `linkId`, `linkTitle`, `projectId`, `projectTitle`, `domainUrl`, `creatorName`, and a `playerUrl` for the dashboard player.
 
 ---
 
@@ -63,20 +48,20 @@ Retrieve a time-limited presigned URL to download or stream the screen recording
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Presigned URL (expires after a short time window).
+**Returns:** `recordingId`, a presigned `url` (expires after a short time window), and `durationMs`.
 
 ---
 
 ### userplane_get_rec_thumb
 
-Retrieve the recording's thumbnail preview as an inline base64 data URI.
+Retrieve a presigned URL for the recording's thumbnail preview image.
 
 | Parameter     | Type   | Required | Description  |
 | ------------- | ------ | -------- | ------------ |
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Base64-encoded data URI of the thumbnail image.
+**Returns:** `recordingId` and a presigned `url` for the thumbnail image (expires after a short time window).
 
 ---
 
@@ -91,7 +76,7 @@ Retrieve browser console log entries captured during the recording. Returns an a
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Array of console entries. Each entry includes:
+**Returns:** `recordingId` and an `entries` array. Each entry includes:
 
 - `log_type` — log level (error, warning, info, log, debug)
 - `args` — log message content
@@ -110,7 +95,7 @@ Retrieve network request/response log entries captured during the recording. Ret
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Array of network entries. Each entry includes:
+**Returns:** `recordingId` and an `entries` array. Each entry includes:
 
 - `url` — request URL
 - `method` — HTTP method
@@ -131,7 +116,7 @@ Retrieve user interaction events captured during the recording. Returns an array
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Array of action entries. Each entry includes:
+**Returns:** `recordingId` and an `entries` array. Each entry includes:
 
 - `type` — action type (click, navigation, tab switch, page lifecycle)
 - `timestamp` — time relative to recording start
