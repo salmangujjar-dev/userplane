@@ -244,7 +244,11 @@ export function InviteModal({ open, onOpenChange }: InviteModalProps) {
 
   const { data: inviteResult, isLoading: isLoadingInvite } = useWorkspaceInvite();
   const { mutate: sendInvites, isPending } = useSendWorkspaceInvites(workspaceId);
-  const { suggestions, hasMore: hasMoreSuggestions, invitePath } = useIntegrationSuggestions(8);
+  const {
+    suggestions,
+    hasMore: hasMoreSuggestions,
+    invitePath,
+  } = useIntegrationSuggestions(8, open);
 
   const inviteToken = inviteResult?.success ? inviteResult.data : null;
   const inviteLink = inviteToken?.inviteUrl || 'Loading invite link...';
