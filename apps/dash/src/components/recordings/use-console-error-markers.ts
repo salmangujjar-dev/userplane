@@ -65,7 +65,13 @@ export function useConsoleErrorMarkers(
             ? formatSerializedValue(entry.args[0]).slice(0, 120)
             : 'Console error';
 
-        return { time: timeSec, label, color: '#ef4444' } satisfies VideoMarker;
+        return {
+          time: timeSec,
+          label,
+          color: '#ef4444',
+          kind: 'console',
+          entryTimestamp: entry.timestamp,
+        } satisfies VideoMarker;
       });
   }, [entries, recording]);
 }

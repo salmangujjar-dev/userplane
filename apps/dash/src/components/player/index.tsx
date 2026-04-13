@@ -18,6 +18,7 @@ const EMPTY_MARKERS: VideoMarker[] = [];
 interface StreamPlayerProps {
   options: PlayerOptions;
   markers?: VideoMarker[];
+  onMarkerClick?: (marker: VideoMarker) => void;
   poster?: string | null;
   durationMs?: number;
   onPlayerReady?: (player: Player) => void;
@@ -27,6 +28,7 @@ interface StreamPlayerProps {
 const StreamPlayer: React.FC<StreamPlayerProps> = ({
   options,
   markers = EMPTY_MARKERS,
+  onMarkerClick,
   poster = null,
   durationMs,
   onPlayerReady,
@@ -215,6 +217,7 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
       <StreamControls
         player={playerRef.current}
         markers={markers}
+        onMarkerClick={onMarkerClick}
         onFullscreen={onFullscreen}
         duration={playerState.duration}
         hasStarted={playerState.hasStarted}

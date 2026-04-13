@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import { useQueryState } from 'nuqs';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { AiPromptModal } from '@/components/modals/ai-prompt-modal';
 import { DeleteConfirmationModal } from '@/components/modals/delete-confirmation-modal';
@@ -15,6 +15,7 @@ import { RecordingLogReplayPanel } from '@/components/recordings/recording-log-r
 import { RecordingPlayer } from '@/components/recordings/recording-player';
 import { RecordingPlayerProvider } from '@/components/recordings/recording-player-context';
 import { useConsoleErrorMarkers } from '@/components/recordings/use-console-error-markers';
+import { useNetworkErrorMarkers } from '@/components/recordings/use-network-error-markers';
 import { RecordingDetailSkeleton } from '@/components/skeleton';
 import {
   useDeleteRecording,
@@ -70,7 +71,12 @@ export default function RecordingDetailPage() {
   const { data: networkLogResource } = useRecordingNetworkLog(workspaceId, recordingId);
   const { data: actionResource } = useRecordingAction(workspaceId, recordingId);
 
-  const markers = useConsoleErrorMarkers(workspaceId, recordingId, recordingData?.recording);
+  const consoleMarkers = useConsoleErrorMarkers(workspaceId, recordingId, recordingData?.recording);
+  const networkMarkers = useNetworkErrorMarkers(workspaceId, recordingId, recordingData?.recording);
+  const markers = useMemo(
+    () => [...consoleMarkers, ...networkMarkers],
+    [consoleMarkers, networkMarkers]
+  );
 
   // Show loading state
   if (isLoadingRecording || isLoadingVideo) {

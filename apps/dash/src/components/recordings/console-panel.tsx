@@ -10,13 +10,14 @@ import {
 import { SearchInput } from '@userplane/ui/components/search-input';
 import type { LucideIcon } from 'lucide-react';
 import { AlertCircle, AlertTriangle, Bug, Filter, Info, MessageSquare } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ConsolePanelEmptyState } from '../shared/empty-state';
 import { ConsoleLogEntry } from './console-log-entry';
 import type { RecordingConsoleLog } from './console-log-types';
 import { createMockConsoleLog, LogLevel } from './console-log-types';
 import { formatSerializedValue } from './console-log-types';
+import { useRecordingPlayerSeek } from './recording-player-context';
 
 const baseTime = Date.now() - 60000;
 
@@ -147,6 +148,11 @@ export function ConsolePanel({
   const [activeFilters, setActiveFilters] = useState<Set<LogLevel>>(
     new Set(['error', 'warning', 'info', 'log', 'debug'])
   );
+  const [focusedEntryTs, setFocusedEntryTs] = useState<number | null>(null);
+
+  const seekCtx = useRecordingPlayerSeek();
+  const focusRequest = seekCtx?.focusRequest;
+  const focusToken = focusRequest?.token;
 
   const toggleFilter = (level: LogLevel) => {
     const newFilters = new Set(activeFilters);
@@ -160,6 +166,35 @@ export function ConsolePanel({
 
   const isEmpty = data && data.length === 0;
   const logs = data ?? mockLogs;
+
+  // Handle focus requests from the seek-bar marker click pipeline.
+  // When a request targets a console entry: enable its level filter if needed,
+  // clear search only if it would still hide the entry, then mark it focused.
+  // Keyed on focusToken so repeat clicks on the same marker re-fire.
+  useEffect(() => {
+    if (!focusRequest || focusRequest.kind !== 'console') return;
+    const target = logs.find((l) => l.timestamp === focusRequest.entryTimestamp);
+    if (!target) return;
+
+    setActiveFilters((prev) => {
+      const level = target.type as LogLevel;
+      if (prev.has(level)) return prev;
+      const next = new Set(prev);
+      next.add(level);
+      return next;
+    });
+
+    const logText = target.args
+      .map((arg) => formatSerializedValue(arg))
+      .join(' ')
+      .toLowerCase();
+    setSearchQuery((prev) => (prev && !logText.includes(prev.toLowerCase()) ? '' : prev));
+
+    setFocusedEntryTs(focusRequest.entryTimestamp);
+    const t = setTimeout(() => setFocusedEntryTs(null), 1800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusToken]);
 
   const filteredLogs = logs.filter((log) => {
     const level = log.type as LogLevel;
@@ -246,6 +281,7 @@ export function ConsolePanel({
               key={`${log.timestamp}-${index}`}
               log={log}
               recordingStartTime={recordingStartTime}
+              isFocused={focusedEntryTs === log.timestamp}
             />
           ))
         )}
