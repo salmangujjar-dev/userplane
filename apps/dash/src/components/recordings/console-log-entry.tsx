@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableRow } from '@userplane/ui/components/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@userplane/ui/components/tabs';
+import { cn } from '@userplane/ui/lib/utils';
 import {
   AlertCircle,
   AlertTriangle,
@@ -10,7 +11,7 @@ import {
   Play,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { RecordingConsoleLog, SerializedValue } from './console-log-types';
 import { formatSerializedValue } from './console-log-types';
@@ -216,11 +217,13 @@ function ConsoleDetailPanel({ log, hasTrace, seekSeconds, onClose }: ConsoleDeta
 interface ConsoleLogEntryProps {
   log: RecordingConsoleLog;
   recordingStartTime?: number;
+  isFocused?: boolean;
 }
 
-export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProps) {
+export function ConsoleLogEntry({ log, recordingStartTime, isFocused }: ConsoleLogEntryProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [isObjectExpanded, setIsObjectExpanded] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
 
   const recordingTime = getRecordingTime(log.timestamp, recordingStartTime);
   const hasTrace = !!(log.trace && log.trace.length > 0);
@@ -229,8 +232,20 @@ export function ConsoleLogEntry({ log, recordingStartTime }: ConsoleLogEntryProp
       ? Math.max(0, (log.timestamp - recordingStartTime) / 1000)
       : undefined;
 
+  useEffect(() => {
+    if (isFocused) {
+      rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isFocused]);
+
   return (
-    <div className="border-b border-border/50">
+    <div
+      ref={rowRef}
+      className={cn(
+        'border-b border-border/50 transition-colors duration-700',
+        isFocused && 'bg-yellow-100/80 dark:bg-yellow-500/15'
+      )}
+    >
       <button
         onClick={() => setShowDetails(!showDetails)}
         className={`w-full flex items-start gap-2 px-3 py-1.5 text-xs hover:bg-muted/50 text-left ${showDetails ? 'bg-muted/30' : ''}`}

@@ -10,7 +10,15 @@ import { useIsTablet } from '@userplane/ui/hooks/use-mobile';
 import { cn } from '@userplane/ui/lib/utils';
 import { Globe, Info, MousePointerClick, Terminal } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 const PANEL_TABS = [
   { value: 'info', label: 'Info', icon: Info, color: 'text-blue-500' },
@@ -23,6 +31,8 @@ const PANEL_TABS = [
 const PanelTabContext = createContext<{
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  /** Expand the side panel if it's currently collapsed. No-op on tablet/mobile. */
+  expandPanel: () => void;
 } | null>(null);
 
 export function usePanelTab() {
@@ -84,6 +94,13 @@ export function RecordingLayout({ player, panel }: RecordingLayoutProps) {
     }
   }, []);
 
+  const expandPanel = useCallback(() => {
+    const ref = panelRef.current;
+    if (ref?.isCollapsed()) {
+      ref.resize(34);
+    }
+  }, []);
+
   const handleBookmarkTabClick = useCallback((tab: string) => {
     setActiveTab(tab);
     const ref = panelRef.current;
@@ -104,7 +121,10 @@ export function RecordingLayout({ player, panel }: RecordingLayoutProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [togglePanel]);
 
-  const tabContext = { activeTab, setActiveTab };
+  const tabContext = useMemo(
+    () => ({ activeTab, setActiveTab, expandPanel }),
+    [activeTab, expandPanel]
+  );
 
   // Tablet & phone (< 1024px): vertical top-bottom split
   if (isTablet) {
