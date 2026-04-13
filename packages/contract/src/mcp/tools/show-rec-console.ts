@@ -13,4 +13,10 @@ export const userplaneShowRecConsole = {
     recordingId: z.string().describe('Recording ID'),
   },
   annotations: READ_ONLY_ANNOTATIONS,
+  _meta: {
+    'openai/widgetDescription':
+      'Interactive viewer for browser console logs with level filtering, search, and expandable details.',
+    'openai/toolInvocation/invoking': 'Loading console logs…',
+    'openai/toolInvocation/invoked': 'Console logs loaded',
+  },
 } as const satisfies McpToolDefinition;

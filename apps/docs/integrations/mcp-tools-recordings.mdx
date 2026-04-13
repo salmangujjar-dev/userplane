@@ -3,9 +3,9 @@ title: Recording Tools
 description: MCP tools for listing, inspecting, and analyzing screen recordings
 ---
 
-Tools for listing recordings, retrieving session data, and accessing recording resources (video, console logs, network logs, user actions). Most tools are read-only — only `userplane_delete_recording` modifies data.
+Tools for listing recordings, retrieving session data, and accessing recording resources (video, console logs, network logs, user actions). All recording tools are read-only.
 
-## Listing and management
+## Listing
 
 ### userplane_list_recordings
 
@@ -20,22 +20,7 @@ List screen recordings in a workspace. Recordings are screen captures from end u
 | `link_id`     | string | No       | Filter by link ID                       |
 | `created_by`  | string | No       | Filter by creator workspace member ID   |
 
-**Returns:** Paginated list of recordings with ID, duration, project, creator, and creation date.
-
----
-
-### userplane_delete_recording
-
-Soft-delete a screen recording. Only workspace admins, owners, or the recording creator can delete.
-
-| Parameter     | Type   | Required | Description  |
-| ------------- | ------ | -------- | ------------ |
-| `workspaceId` | string | Yes      | Workspace ID |
-| `recordingId` | string | Yes      | Recording ID |
-
-<Warning>
-  This action is irreversible. The recording is soft-deleted and cannot be recovered.
-</Warning>
+**Returns:** Paginated list of recordings. Each entry includes `recordingId`, `durationMs`, `createdAt`, `expiresAt`, `creatorName`, `linkTitle`, and a `playerUrl` that opens the recording in the dashboard player.
 
 ---
 
@@ -50,7 +35,7 @@ Retrieve complete details for a screen recording including duration, metadata, a
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Recording duration, upload status, metadata, project, domain, link, and creator details.
+**Returns:** A flat object with `recordingId`, `durationMs`, `startedAt`, `createdAt`, `expiresAt`, `status`, `linkId`, `linkTitle`, `projectId`, `projectTitle`, `domainUrl`, `creatorName`, and a `playerUrl` for the dashboard player.
 
 ---
 
@@ -63,20 +48,20 @@ Retrieve a time-limited presigned URL to download or stream the screen recording
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Presigned URL (expires after a short time window).
+**Returns:** `recordingId`, a presigned `url` (expires after a short time window), and `durationMs`.
 
 ---
 
 ### userplane_get_rec_thumb
 
-Retrieve the recording's thumbnail preview as an inline base64 data URI.
+Retrieve a presigned URL for the recording's thumbnail preview image.
 
 | Parameter     | Type   | Required | Description  |
 | ------------- | ------ | -------- | ------------ |
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Base64-encoded data URI of the thumbnail image.
+**Returns:** `recordingId` and a presigned `url` for the thumbnail image (expires after a short time window).
 
 ---
 
@@ -91,7 +76,7 @@ Retrieve browser console log entries captured during the recording. Returns an a
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Array of console entries. Each entry includes:
+**Returns:** `recordingId` and an `entries` array. Each entry includes:
 
 - `log_type` — log level (error, warning, info, log, debug)
 - `args` — log message content
@@ -110,7 +95,7 @@ Retrieve network request/response log entries captured during the recording. Ret
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Array of network entries. Each entry includes:
+**Returns:** `recordingId` and an `entries` array. Each entry includes:
 
 - `url` — request URL
 - `method` — HTTP method
@@ -131,7 +116,7 @@ Retrieve user interaction events captured during the recording. Returns an array
 | `workspaceId` | string | Yes      | Workspace ID |
 | `recordingId` | string | Yes      | Recording ID |
 
-**Returns:** Array of action entries. Each entry includes:
+**Returns:** `recordingId` and an `entries` array. Each entry includes:
 
 - `type` — action type (click, navigation, tab switch, page lifecycle)
 - `timestamp` — time relative to recording start
@@ -198,23 +183,23 @@ See [Resource Viewers](/integrations/mcp-apps-resources) for details.
 ## Example prompts
 
 <CodeGroup>
-  ```text Prompt List the 5 most recent recordings in workspace {workspaceId}. For each one, tell me
-  who submitted it, which project it belongs to, and when it was created. ```
+  ```text Prompt: List the 5 most recent recordings in workspace {workspaceId}. For each one, tell
+  me who submitted it, which project it belongs to, and when it was created. ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt A customer just submitted a recording in the Billing project. Pull up the latest
+  ```text Prompt: A customer just submitted a recording in the Billing project. Pull up the latest
   recording and tell me what went wrong. ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Here's a recording from a customer who can't complete checkout:
+  ```text Prompt: Here's a recording from a customer who can't complete checkout:
   https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
   What's causing the issue? ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Give me a full root cause analysis of this recording. Check the console for
+  ```text Prompt: Give me a full root cause analysis of this recording. Check the console for
   JavaScript errors, the network requests for failed API calls, and the user actions for anything
   unusual. Summarize what happened and what likely caused the issue. https://dash.userplane.io/
   {workspaceId}/recordings/{recordingId}
@@ -222,20 +207,20 @@ See [Resource Viewers](/integrations/mcp-apps-resources) for details.
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Show me the console logs for this recording. Are there any JavaScript errors or
+  ```text Prompt: Show me the console logs for this recording. Are there any JavaScript errors or
   unhandled exceptions? https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
   ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Check the network requests in this recording. Are there any 500 errors, 404s, or
+  ```text Prompt: Check the network requests in this recording. Are there any 500 errors, 404s, or
   requests that took longer than 3 seconds? https://dash.userplane.io/{workspaceId}/recordings/
   {recordingId}
   ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Walk me through what the user did in this recording. What pages did they visit,
+  ```text Prompt: Walk me through what the user did in this recording. What pages did they visit,
   what did they click, and where did things break? https://dash.userplane.io/{workspaceId}
   /recordings/{recordingId}
   ```
@@ -248,7 +233,7 @@ See [Resource Viewers](/integrations/mcp-apps-resources) for details.
 
 ## Related articles
 
-- [Additional Tools](/integrations/mcp-tools-workspace) — tools for profiles, workspaces, and projects.
-- [Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
+- [Workspace Tools](/integrations/mcp-tools-workspace) — tools for profiles, workspaces, and projects.
+- [Recording Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
 - [Recording Viewer](/integrations/mcp-apps-recording) — interactive viewer for full recording playback.
 - [Resource Viewers](/integrations/mcp-apps-resources) — focused viewers for console, network, and action data.

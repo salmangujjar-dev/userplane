@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { ProjectIdSchema, WorkspaceIdSchema } from '../../schemas/common';
 import type { McpToolDefinition } from '../types';
 import { READ_ONLY_ANNOTATIONS } from '../types';
 
@@ -33,3 +34,28 @@ export const userplaneGetProject = {
   },
   annotations: READ_ONLY_ANNOTATIONS,
 } as const satisfies McpToolDefinition;
+
+// ---------------------------------------------------------------------------
+// Responses
+// ---------------------------------------------------------------------------
+
+export const McpProjectItemSchema = z.object({
+  projectId: ProjectIdSchema,
+  projectTitle: z.string(),
+  isDefault: z.boolean(),
+  recordingRetentionDays: z.number().int().positive(),
+});
+
+export const McpProjectDetailSchema = McpProjectItemSchema.extend({
+  workspaceId: WorkspaceIdSchema,
+});
+
+export const McpListProjectsSchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  projects: z.array(McpProjectItemSchema),
+  total: z.number().int().nonnegative(),
+});
+
+export type McpProjectItem = z.infer<typeof McpProjectItemSchema>;
+export type McpProjectDetail = z.infer<typeof McpProjectDetailSchema>;
+export type McpListProjects = z.infer<typeof McpListProjectsSchema>;

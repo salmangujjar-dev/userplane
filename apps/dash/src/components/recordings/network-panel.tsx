@@ -20,7 +20,7 @@ import {
   Filter,
   Globe,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { NetworkPanelEmptyState } from '../shared/empty-state';
 import { NetworkEntry } from './network-entry';
@@ -30,6 +30,7 @@ import {
   getFilterTypeFromMimeAndInitiator,
   NetworkFilterType,
 } from './network-types';
+import { useRecordingPlayerSeek } from './recording-player-context';
 
 const baseTime = Date.now() - 60000;
 
@@ -483,6 +484,11 @@ export function NetworkPanel({
   const [activeFilters, setActiveFilters] = useState<Set<Exclude<NetworkFilterType, 'all'>>>(
     new Set(ALL_NETWORK_TYPES)
   );
+  const [focusedEntryTs, setFocusedEntryTs] = useState<number | null>(null);
+
+  const seekCtx = useRecordingPlayerSeek();
+  const focusRequest = seekCtx?.focusRequest;
+  const focusToken = focusRequest?.token;
 
   const toggleFilter = (filter: Exclude<NetworkFilterType, 'all'>) => {
     const next = new Set(activeFilters);
@@ -496,6 +502,37 @@ export function NetworkPanel({
 
   const isEmpty = data && data.length === 0;
   const requests = data ?? mockRequests;
+
+  // Handle focus requests from the seek-bar marker click pipeline.
+  // Enable the entry's filter type if disabled, clear search only if it would
+  // still hide the entry, then mark it focused. Keyed on focusToken so repeat
+  // clicks re-fire.
+  useEffect(() => {
+    if (!focusRequest || focusRequest.kind !== 'network') return;
+    const target = requests.find((r) => r.timestamp === focusRequest.entryTimestamp);
+    if (!target) return;
+
+    const filterType = getFilterTypeFromMimeAndInitiator(target.type, target.mimeType);
+    setActiveFilters((prev) => {
+      if (prev.has(filterType)) return prev;
+      const next = new Set(prev);
+      next.add(filterType);
+      return next;
+    });
+
+    setSearchQuery((prev) => {
+      if (!prev) return prev;
+      const p = prev.toLowerCase();
+      const matches =
+        target.url.toLowerCase().includes(p) || target.method.toLowerCase().includes(p);
+      return matches ? prev : '';
+    });
+
+    setFocusedEntryTs(focusRequest.entryTimestamp);
+    const t = setTimeout(() => setFocusedEntryTs(null), 1800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusToken]);
 
   const filteredRequests = requests.filter((request) => {
     if (activeFilters.size === 0) return false;
@@ -593,6 +630,7 @@ export function NetworkPanel({
               key={`${request.timestamp}-${index}`}
               request={request}
               recordingStartTime={recordingStartTime}
+              isFocused={focusedEntryTs === request.timestamp}
             />
           ))
         )}

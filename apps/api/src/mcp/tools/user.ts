@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { userplaneGetProfile } from '@userplane/contract';
 
 import { textResult } from '../helpers';
+import { toMcpProfile } from '../responses';
 import type { McpDeps } from '../types';
 
 export function registerUserTools(server: McpServer, deps: McpDeps, userId: string) {
@@ -14,20 +15,12 @@ export function registerUserTools(server: McpServer, deps: McpDeps, userId: stri
       deps.linkRepo.countByUserId(userId),
     ]);
 
-    return textResult({
-      user: {
-        id: userData.id,
-        name: userData.name,
-        email: userData.email,
-        emailVerified: userData.emailVerified,
-        image: userData.image ?? null,
-        createdAt: userData.createdAt,
-      },
-      stats: {
+    return textResult(
+      toMcpProfile(userData, {
         workspaces: workspaceCount,
         recordings: recordingCount,
         links: linkCount,
-      },
-    });
+      })
+    );
   });
 }

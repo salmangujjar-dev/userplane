@@ -54,6 +54,32 @@ export interface LinkListRow {
 }
 
 /**
+ * Lean link row for MCP reads. Drops `linkType`, `linkProvider*` (integration
+ * plumbing), `linkProviderData` (potentially large JSONB), `workspaceId` echo,
+ * and `creatorId`. Keeps the 5 domain capture flags + `domainStatus` because
+ * `generateLinkURL` needs them to decide between custom domain and the default
+ * recorder base URL — these are booleans so the cost is negligible and the
+ * alternative is a URL that silently diverges from the dashboard.
+ */
+export interface McpLinkRow {
+  linkId: string;
+  linkTitle: string | null;
+  linkReusable: boolean;
+  createdAt: Date;
+  projectId: string;
+  projectTitle: string;
+  creatorName: string;
+  domainId: string;
+  domainUrl: string;
+  domainStatus: Domain['domainStatus'];
+  recordingHideSensitive: boolean;
+  recordingCaptureClientLog: boolean;
+  recordingCaptureClientAction: boolean;
+  recordingCaptureServerLog: boolean;
+  recordingCaptureNetworkLog: boolean;
+}
+
+/**
  * Input for creating a link
  */
 export interface CreateLinkInput {
@@ -318,6 +344,90 @@ export class LinkRepository {
       .innerJoin(user, eq(workspaceMembers.userId, user.id))
       .innerJoin(domains, eq(links.domainId, domains.domainId))
       .where(and(eq(links.linkId, linkId), eq(links.isDeleted, false)))
+      .limit(1);
+
+    return result || null;
+  }
+
+  /**
+   * Lean list query for MCP — selects only the columns the MCP response
+   * schema needs, plus the domain capture flags required by
+   * `LinkService.generateLinkURL`. No `linkType` / `linkProvider*` columns,
+   * no JSONB hydration.
+   */
+  async findByWorkspaceIdPaginatedForMcp(
+    workspaceId: string,
+    limit: number,
+    offset: number,
+    filters?: LinkFilters,
+    sort?: LinkSortOptions
+  ): Promise<McpLinkRow[]> {
+    const whereConditions = this.buildWhereConditions(workspaceId, filters);
+    const orderBy = this.buildOrderBy(sort);
+
+    return this.db
+      .select({
+        linkId: links.linkId,
+        linkTitle: links.linkTitle,
+        linkReusable: links.linkReusable,
+        createdAt: links.createdAt,
+        projectId: links.projectId,
+        projectTitle: projects.projectTitle,
+        creatorName: user.name,
+        domainId: domains.domainId,
+        domainUrl: domains.domainUrl,
+        domainStatus: domains.domainStatus,
+        recordingHideSensitive: domains.recordingHideSensitive,
+        recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureClientAction: domains.recordingCaptureClientAction,
+        recordingCaptureServerLog: domains.recordingCaptureServerLog,
+        recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
+      })
+      .from(links)
+      .innerJoin(projects, eq(links.projectId, projects.projectId))
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.workspaceMemberId))
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
+      .where(whereConditions)
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /**
+   * Lean by-id query for MCP — same column set as the list variant.
+   */
+  async findByIdWithDetailsForMcp(linkId: string, workspaceId: string): Promise<McpLinkRow | null> {
+    const [result] = await this.db
+      .select({
+        linkId: links.linkId,
+        linkTitle: links.linkTitle,
+        linkReusable: links.linkReusable,
+        createdAt: links.createdAt,
+        projectId: links.projectId,
+        projectTitle: projects.projectTitle,
+        creatorName: user.name,
+        domainId: domains.domainId,
+        domainUrl: domains.domainUrl,
+        domainStatus: domains.domainStatus,
+        recordingHideSensitive: domains.recordingHideSensitive,
+        recordingCaptureClientLog: domains.recordingCaptureClientLog,
+        recordingCaptureClientAction: domains.recordingCaptureClientAction,
+        recordingCaptureServerLog: domains.recordingCaptureServerLog,
+        recordingCaptureNetworkLog: domains.recordingCaptureNetworkLog,
+      })
+      .from(links)
+      .innerJoin(projects, eq(links.projectId, projects.projectId))
+      .innerJoin(workspaceMembers, eq(links.createdBy, workspaceMembers.workspaceMemberId))
+      .innerJoin(user, eq(workspaceMembers.userId, user.id))
+      .innerJoin(domains, eq(links.domainId, domains.domainId))
+      .where(
+        and(
+          eq(links.linkId, linkId),
+          eq(links.workspaceId, workspaceId),
+          eq(links.isDeleted, false)
+        )
+      )
       .limit(1);
 
     return result || null;

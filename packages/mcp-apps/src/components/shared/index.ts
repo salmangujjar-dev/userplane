@@ -1,5 +1,6 @@
 export { Avatar } from './avatar';
 export { Badge } from './badge';
+export { DetailTabButton } from './detail-tab-button';
 export { EmptyState } from './empty-state';
 export { FilterPill } from './filter-pill';
 export { InfoRow } from './info-row';

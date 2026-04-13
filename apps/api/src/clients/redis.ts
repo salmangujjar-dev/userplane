@@ -41,8 +41,16 @@ export const cacheService = new CacheService({
 
 /**
  * Rate limiter instance
+ *
+ * MCP tier limits come from env (`MCP_RATE_LIMIT_PER_*`) so Claude Desktop /
+ * ChatGPT shared-egress traffic can be sized without a code change. Other
+ * tiers keep their compile-time fallback defaults from `TIER_CONFIGS`.
  */
-export const rateLimiter = new RateLimiter(redis, env.rateLimit.enabled);
+export const rateLimiter = new RateLimiter(redis, env.rateLimit.enabled, {
+  mcp: { limit: env.mcp.rateLimit.perIpPerMinute },
+  mcp_user_minute: { limit: env.mcp.rateLimit.perUserPerMinute },
+  mcp_user_day: { limit: env.mcp.rateLimit.perUserPerDay },
+});
 
 // Log initialization status
 if (redis) {

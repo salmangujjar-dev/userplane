@@ -1,9 +1,41 @@
 import { type ClassValue, clsx } from 'clsx';
+import { useCallback, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 /** Tailwind class merge utility (matches @userplane/ui's cn). */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Stateful Set with a stable toggle callback — used by tab filter pills.
+ * Adding a key that's present removes it; adding a missing key inserts it.
+ */
+export function useToggleSet<T>(): readonly [Set<T>, (value: T) => void] {
+  const [set, setSet] = useState<Set<T>>(new Set());
+  const toggle = useCallback((value: T) => {
+    setSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }, []);
+  return [set, toggle];
+}
+
+/**
+ * JSON.stringify that never throws. Returns `String(value)` if the value is
+ * circular, contains BigInt, or is otherwise not serializable.
+ */
+export function safeStringify(value: unknown, space?: number): string {
+  if (typeof value === 'string') return value;
+  if (value === null || value === undefined) return String(value);
+  try {
+    return JSON.stringify(value, null, space);
+  } catch {
+    return String(value);
+  }
 }
 
 /** Format milliseconds as M:SS (e.g. 3:07). */

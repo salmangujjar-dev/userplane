@@ -12,6 +12,18 @@ import type { CreateProjectInput, Transaction } from '@/api/types';
 export type ProjectSortField = 'created_at' | 'project_title';
 export type SortDirection = 'asc' | 'desc';
 
+/**
+ * Lean project row for MCP. Drops `workspaceId`, `isDeleted`, `createdAt`,
+ * `updatedAt`, `deletedAt` vs the full projects row — only the fields the
+ * MCP response surfaces.
+ */
+export interface McpProjectRow {
+  projectId: string;
+  projectTitle: string;
+  isDefault: boolean;
+  recordingRetentionDays: number;
+}
+
 export class ProjectRepository {
   constructor(private db: DbClient) {}
 
@@ -151,6 +163,60 @@ export class ProjectRepository {
       .orderBy(orderFn(sortColumn))
       .limit(limit)
       .offset(offset);
+  }
+
+  /**
+   * Find projects in workspace with pagination — MCP variant.
+   * Selects only the four columns surfaced in the lean MCP response.
+   */
+  async findByWorkspacePaginatedForMcp(
+    workspaceId: string,
+    limit: number,
+    offset: number,
+    sortBy: ProjectSortField = 'created_at',
+    sortDirection: SortDirection = 'desc'
+  ): Promise<McpProjectRow[]> {
+    const sortColumn = sortBy === 'project_title' ? projects.projectTitle : projects.createdAt;
+    const orderFn = sortDirection === 'asc' ? asc : desc;
+
+    return this.db
+      .select({
+        projectId: projects.projectId,
+        projectTitle: projects.projectTitle,
+        isDefault: projects.isDefault,
+        recordingRetentionDays: projects.recordingRetentionDays,
+      })
+      .from(projects)
+      .where(and(eq(projects.workspaceId, workspaceId), eq(projects.isDeleted, false)))
+      .orderBy(orderFn(sortColumn))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  /**
+   * Find project by ID scoped to workspace — MCP variant.
+   * Four-column SELECT. `workspaceId` is used only as a filter to enforce
+   * that the caller is actually a member of the owning workspace.
+   */
+  async findByIdForMcp(projectId: string, workspaceId: string): Promise<McpProjectRow | null> {
+    const [project] = await this.db
+      .select({
+        projectId: projects.projectId,
+        projectTitle: projects.projectTitle,
+        isDefault: projects.isDefault,
+        recordingRetentionDays: projects.recordingRetentionDays,
+      })
+      .from(projects)
+      .where(
+        and(
+          eq(projects.projectId, projectId),
+          eq(projects.workspaceId, workspaceId),
+          eq(projects.isDeleted, false)
+        )
+      )
+      .limit(1);
+
+    return project || null;
   }
 
   /**

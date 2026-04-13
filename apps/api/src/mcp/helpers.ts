@@ -13,10 +13,42 @@ export async function requireWorkspaceMember(deps: McpDeps, userId: string, work
   return { workspace, member };
 }
 
-/** Wrap a value as MCP text content (pretty-printed for readability) */
+/**
+ * MCP variant of `requireWorkspaceMember`. Uses the lean `getByIdForMcp`
+ * workspace lookup (three columns) instead of the full dashboard row.
+ * Returns the lean row the MCP transformers already expect.
+ */
+export async function requireWorkspaceMemberForMcp(
+  deps: McpDeps,
+  userId: string,
+  workspaceId: string
+) {
+  const workspace = await deps.workspaceService.getByIdForMcp(workspaceId);
+  const member = await deps.workspaceMemberService.getMembershipForAuth(
+    userId,
+    workspace.workspaceId
+  );
+  if (!member) {
+    throw new Error('You are not a member of this workspace.');
+  }
+  return { workspace, member };
+}
+
+/**
+ * Wrap a value as an MCP tool result carrying both `content` and `structuredContent`.
+ *
+ * OpenAI's Apps SDK treats `structuredContent` as the canonical widget data channel —
+ * omitting it causes ChatGPT's MCP Apps bridge to reshape the payload and widgets end
+ * up with malformed data. Providing it directly keeps Claude and ChatGPT consistent.
+ */
 export function textResult(data: unknown) {
+  const structured =
+    typeof data === 'object' && data !== null && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : { value: data };
   return {
     content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }],
+    structuredContent: structured,
   };
 }
 

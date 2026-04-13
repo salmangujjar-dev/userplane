@@ -17,6 +17,7 @@ export function ShowRecording({ app, data }: ShowRecordingProps) {
       {/* Video player — top section */}
       <div>
         <VideoPlayer
+          app={app}
           thumbnailDataUri={data.thumbnailDataUri}
           dashboardUrl={data.dashboardUrl}
           durationMs={recording.recordingDurationMs}

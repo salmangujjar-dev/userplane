@@ -22,6 +22,7 @@ const EMPTY_MARKERS: VideoMarker[] = [];
 interface StreamControlsProps {
   player: Player | null;
   markers?: VideoMarker[];
+  onMarkerClick?: (marker: VideoMarker) => void;
   onFullscreen?: () => void;
   duration?: number;
   hasStarted?: boolean;
@@ -32,6 +33,7 @@ interface StreamControlsProps {
 const StreamControls: React.FC<StreamControlsProps> = ({
   player,
   markers = EMPTY_MARKERS,
+  onMarkerClick,
   onFullscreen,
   duration: videoDuration = 0,
   hasStarted = false,
@@ -82,6 +84,7 @@ const StreamControls: React.FC<StreamControlsProps> = ({
             duration={playerState.duration}
             markers={markers}
             onSeek={playerActions.seek}
+            onMarkerClick={onMarkerClick}
           />
 
           {/* Control buttons */}

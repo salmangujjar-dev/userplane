@@ -492,6 +492,76 @@ export class LinkService {
   }
 
   /**
+   * MCP variant of `getByWorkspaceIdPaginated` — calls the lean repo method
+   * and maps each row through `generateLinkURL` so the same URL logic the
+   * dashboard uses is shared. Returns rows with a `linkURL` field attached.
+   */
+  async getByWorkspaceIdPaginatedForMcp(
+    workspaceId: string,
+    page: number = 1,
+    perPage: number = DEFAULT_PER_PAGE,
+    filters?: LinkFilters,
+    sort?: LinkSortOptions
+  ) {
+    const total = await this.deps.linkRepo.countByWorkspace(workspaceId, filters);
+    const offset = (page - 1) * perPage;
+    const rows = await this.deps.linkRepo.findByWorkspaceIdPaginatedForMcp(
+      workspaceId,
+      perPage,
+      offset,
+      filters,
+      sort ?? { field: 'created_at', direction: 'desc' }
+    );
+
+    const links = rows.map((row) => ({
+      ...row,
+      linkURL: this.generateLinkURL(
+        row.linkId,
+        workspaceId,
+        row.domainUrl,
+        row.domainStatus,
+        row.recordingHideSensitive,
+        row.recordingCaptureClientLog,
+        row.recordingCaptureClientAction,
+        row.recordingCaptureServerLog,
+        row.recordingCaptureNetworkLog
+      ),
+    }));
+
+    return { links, total };
+  }
+
+  /**
+   * MCP variant of `getById` — lean detail SELECT + `linkURL` composition.
+   */
+  async getByIdForMcp(linkId: string, workspaceId: string) {
+    const row = await this.deps.linkRepo.findByIdWithDetailsForMcp(linkId, workspaceId);
+
+    if (!row) {
+      const isSoftDeleted = await this.deps.linkRepo.isSoftDeleted(linkId);
+      if (isSoftDeleted === true) {
+        throw linkError.LINK_GONE();
+      }
+      throw linkError.LINK_NOT_FOUND();
+    }
+
+    return {
+      ...row,
+      linkURL: this.generateLinkURL(
+        row.linkId,
+        workspaceId,
+        row.domainUrl,
+        row.domainStatus,
+        row.recordingHideSensitive,
+        row.recordingCaptureClientLog,
+        row.recordingCaptureClientAction,
+        row.recordingCaptureServerLog,
+        row.recordingCaptureNetworkLog
+      ),
+    };
+  }
+
+  /**
    * Update a link
    * Validates ownership before updating
    * Throws LINK_NOT_FOUND if link doesn't exist

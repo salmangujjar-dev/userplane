@@ -52,7 +52,13 @@ export function registerShowResourceAppTools(server: McpServer, deps: McpDeps, u
   // userplane_show_rec_console
   // -----------------------------------------------------------------------
   {
-    const { title, description, inputSchema, annotations } = userplaneShowRecConsole;
+    const {
+      title,
+      description,
+      inputSchema,
+      annotations,
+      _meta: contractMeta,
+    } = userplaneShowRecConsole;
     registerAppTool(
       server,
       userplaneShowRecConsole.name,
@@ -61,7 +67,10 @@ export function registerShowResourceAppTools(server: McpServer, deps: McpDeps, u
         description,
         inputSchema,
         annotations,
-        _meta: { ui: { resourceUri: APP_RESOURCE_URIS.console } },
+        _meta: {
+          ...contractMeta,
+          ui: { resourceUri: APP_RESOURCE_URIS.console },
+        },
       },
       async ({ workspaceId, recordingId }) =>
         handleFocusedTool(workspaceId, recordingId, 'consoleLog')
@@ -72,7 +81,13 @@ export function registerShowResourceAppTools(server: McpServer, deps: McpDeps, u
   // userplane_show_rec_network
   // -----------------------------------------------------------------------
   {
-    const { title, description, inputSchema, annotations } = userplaneShowRecNetwork;
+    const {
+      title,
+      description,
+      inputSchema,
+      annotations,
+      _meta: contractMeta,
+    } = userplaneShowRecNetwork;
     registerAppTool(
       server,
       userplaneShowRecNetwork.name,
@@ -81,7 +96,10 @@ export function registerShowResourceAppTools(server: McpServer, deps: McpDeps, u
         description,
         inputSchema,
         annotations,
-        _meta: { ui: { resourceUri: APP_RESOURCE_URIS.network } },
+        _meta: {
+          ...contractMeta,
+          ui: { resourceUri: APP_RESOURCE_URIS.network },
+        },
       },
       async ({ workspaceId, recordingId }) =>
         handleFocusedTool(workspaceId, recordingId, 'networkLog')
@@ -92,7 +110,13 @@ export function registerShowResourceAppTools(server: McpServer, deps: McpDeps, u
   // userplane_show_rec_actions
   // -----------------------------------------------------------------------
   {
-    const { title, description, inputSchema, annotations } = userplaneShowRecActions;
+    const {
+      title,
+      description,
+      inputSchema,
+      annotations,
+      _meta: contractMeta,
+    } = userplaneShowRecActions;
     registerAppTool(
       server,
       userplaneShowRecActions.name,
@@ -101,7 +125,10 @@ export function registerShowResourceAppTools(server: McpServer, deps: McpDeps, u
         description,
         inputSchema,
         annotations,
-        _meta: { ui: { resourceUri: APP_RESOURCE_URIS.actions } },
+        _meta: {
+          ...contractMeta,
+          ui: { resourceUri: APP_RESOURCE_URIS.actions },
+        },
       },
       async ({ workspaceId, recordingId }) => handleFocusedTool(workspaceId, recordingId, 'action')
     );

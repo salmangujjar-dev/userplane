@@ -140,22 +140,66 @@ https://api.userplane.io/mcp
   </Tab>
   <Tab title="ChatGPT">
     <Steps>
-      <Step title="Open settings">
+      <Step title="Open Settings">
         Open **Settings** in ChatGPT.
+
+        <Frame caption="ChatGPT settings">
+          <img src="/media/mcp/chatgpt/oauth/settings.png" />
+        </Frame>
+
       </Step>
-      <Step title="Navigate to connectors">
-        Go to the **Connectors** section and select **Add connector**.
+      <Step title="Enable Developer Mode">
+        Under **Connectors**, enable **Developer mode**. This is required to register custom MCP servers.
+
+        <Frame caption="Enable Developer mode in ChatGPT">
+          <img src="/media/mcp/chatgpt/oauth/developer-mode.png" />
+        </Frame>
+
+        <Note>
+          Developer mode is required to add custom MCP connectors. See [OpenAI's Developer Mode guide](https://developers.openai.com/api/docs/guides/developer-mode) for details.
+        </Note>
+
       </Step>
-      <Step title="Enter server details">
+      <Step title="Open Connectors">
+        Return to **Connectors** and select **Create**. With Developer mode enabled, the custom connector form becomes available.
+
+        <Frame caption="Connectors with no custom servers yet">
+          <img src="/media/mcp/chatgpt/oauth/connectors-empty.png" />
+        </Frame>
+
+      </Step>
+      <Step title="Add the Userplane MCP server">
         Enter a name (e.g., `userplane`) and the MCP server URL:
+
         ```
         https://api.userplane.io/mcp
         ```
+
+        Select **Create** to register the connector.
+
+        <Frame caption="Add the Userplane MCP server URL">
+          <img src="/media/mcp/chatgpt/oauth/add-mcp-url.png" />
+        </Frame>
+
       </Step>
       <Step title="Authorize">
-        On first use, ChatGPT opens a browser window for Userplane sign-in. Log in and approve access.
+        On first use, ChatGPT opens a browser window for Userplane sign-in. Log in with your credentials and click **Allow** on the consent screen.
+
+        <Frame caption="Authorize the Userplane connector">
+          <img src="/media/mcp/chatgpt/oauth/consent-screen.png" />
+        </Frame>
+
+      </Step>
+      <Step title="Start using it">
+        The Userplane connector appears under your enabled apps in ChatGPT. Start a new conversation and reference a recording URL or ask the agent to list your workspaces.
+
+        <Frame caption="Userplane connector ready in ChatGPT">
+          <img src="/media/mcp/chatgpt/oauth/post-connect.png" />
+        </Frame>
+
       </Step>
     </Steps>
+
   </Tab>
 </Tabs>
 
@@ -166,8 +210,8 @@ https://api.userplane.io/mcp
     Ask your agent to list your workspaces:
 
     <CodeGroup>
-    ```text Prompt
-    List my Userplane workspaces.
+    ```text
+    Prompt: List my Userplane workspaces.
     ```
     </CodeGroup>
 
@@ -178,24 +222,33 @@ https://api.userplane.io/mcp
     Copy a recording URL from the [Userplane dashboard](https://dash.userplane.io) and paste it into your AI client. The agent extracts the workspace and recording IDs from the URL and fetches the session data.
 
     <CodeGroup>
-    ```text Prompt
-    Here's a recording from a customer reporting a checkout issue:
+    ```text
+    Prompt: Here's a recording from a customer reporting a checkout issue:
     https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
     What's causing the problem?
     ```
     </CodeGroup>
 
-    <Frame caption="Root cause analysis in Claude">
-      <img src="/media/mcp/claude/tools/root-cause-analysis.png" />
-    </Frame>
+    <Tabs>
+      <Tab title="Claude">
+        <Frame caption="Root cause analysis in Claude">
+          <img src="/media/mcp/claude/tools/root-cause-analysis.png" />
+        </Frame>
+      </Tab>
+      <Tab title="ChatGPT">
+        <Frame caption="Root cause analysis in ChatGPT">
+          <img src="/media/mcp/chatgpt/tools/root-cause-analysis.png" />
+        </Frame>
+      </Tab>
+    </Tabs>
 
   </Step>
   <Step title="Explore interactive viewers">
     Ask your agent to show a recording. In Claude and ChatGPT, this opens an interactive viewer with video playback, console logs, network requests, and user actions.
 
     <CodeGroup>
-    ```text Prompt
-    Show me the full recording for {recordingId} in workspace {workspaceId}.
+    ```text
+    Prompt: Show me the full recording for {recordingId} in workspace {workspaceId}.
     ```
     </CodeGroup>
 
@@ -208,8 +261,8 @@ https://api.userplane.io/mcp
     Ask your agent to create a recording link for a customer issue.
 
     <CodeGroup>
-    ```text Prompt
-    Create a recording link for domain {domainId} in workspace {workspaceId}. Reference it as {ticketId}.
+    ```text
+    Prompt: Create a recording link for domain {domainId} in workspace {workspaceId}. Reference it as {ticketId}.
     ```
     </CodeGroup>
 
@@ -237,6 +290,6 @@ https://api.userplane.io/mcp
 
 - [Model Context Protocol](/integrations/mcp) — overview of the Userplane MCP server.
 - [Recording Tools](/integrations/mcp-tools-recordings) — tools for listing, inspecting, and analyzing recordings.
-- [Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
+- [Recording Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
 - [MCP Apps](/integrations/mcp-apps) — rich viewers rendered inside your AI client.
 - [Authentication](/integrations/mcp-authentication) — OAuth 2.1 flow and permissions.
