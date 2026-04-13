@@ -198,23 +198,23 @@ See [Resource Viewers](/integrations/mcp-apps-resources) for details.
 ## Example prompts
 
 <CodeGroup>
-  ```text Prompt List the 5 most recent recordings in workspace {workspaceId}. For each one, tell me
-  who submitted it, which project it belongs to, and when it was created. ```
+  ```text Prompt: List the 5 most recent recordings in workspace {workspaceId}. For each one, tell
+  me who submitted it, which project it belongs to, and when it was created. ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt A customer just submitted a recording in the Billing project. Pull up the latest
+  ```text Prompt: A customer just submitted a recording in the Billing project. Pull up the latest
   recording and tell me what went wrong. ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Here's a recording from a customer who can't complete checkout:
+  ```text Prompt: Here's a recording from a customer who can't complete checkout:
   https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
   What's causing the issue? ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Give me a full root cause analysis of this recording. Check the console for
+  ```text Prompt: Give me a full root cause analysis of this recording. Check the console for
   JavaScript errors, the network requests for failed API calls, and the user actions for anything
   unusual. Summarize what happened and what likely caused the issue. https://dash.userplane.io/
   {workspaceId}/recordings/{recordingId}
@@ -222,20 +222,20 @@ See [Resource Viewers](/integrations/mcp-apps-resources) for details.
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Show me the console logs for this recording. Are there any JavaScript errors or
+  ```text Prompt: Show me the console logs for this recording. Are there any JavaScript errors or
   unhandled exceptions? https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
   ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Check the network requests in this recording. Are there any 500 errors, 404s, or
+  ```text Prompt: Check the network requests in this recording. Are there any 500 errors, 404s, or
   requests that took longer than 3 seconds? https://dash.userplane.io/{workspaceId}/recordings/
   {recordingId}
   ```
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt Walk me through what the user did in this recording. What pages did they visit,
+  ```text Prompt: Walk me through what the user did in this recording. What pages did they visit,
   what did they click, and where did things break? https://dash.userplane.io/{workspaceId}
   /recordings/{recordingId}
   ```
@@ -248,7 +248,7 @@ See [Resource Viewers](/integrations/mcp-apps-resources) for details.
 
 ## Related articles
 
-- [Additional Tools](/integrations/mcp-tools-workspace) — tools for profiles, workspaces, and projects.
-- [Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
+- [Workspace Tools](/integrations/mcp-tools-workspace) — tools for profiles, workspaces, and projects.
+- [Recording Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
 - [Recording Viewer](/integrations/mcp-apps-recording) — interactive viewer for full recording playback.
 - [Resource Viewers](/integrations/mcp-apps-resources) — focused viewers for console, network, and action data.
