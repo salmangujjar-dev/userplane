@@ -1,54 +1,59 @@
 # Userplane for Raycast
 
-A Raycast extension for Userplane. Create recording links, browse your recordings and links, and open the Userplane dashboard from the macOS menu bar.
+> Create Userplane recording links, browse recordings, and jump into the Userplane dashboard — all without leaving Raycast.
+
+Userplane helps your support team request screen recordings from customers in seconds. The Raycast extension puts every core Userplane workflow behind a keystroke: create a recording link, paste it into Intercom, Zendesk, or Slack, and review the recording — console logs, network activity, user actions — from the same place you launch the rest of your day.
+
+## What you can do
+
+- **Create a recording link** in two keystrokes, copied to your clipboard and ready to send.
+- **Browse recordings** in a thumbnail grid with creator, duration, and expiry indicators.
+- **Browse recording links** with filters by creator, project, and domain.
+- **Jump into the dashboard** for playback, console logs, network activity, and the Issue Analyzer.
+- **Menu bar access** so every command is one click away.
+
+## Getting started
+
+1. Create an API key at [dash.userplane.io/\_/account?tab=developers](https://dash.userplane.io/_/account?tab=developers).
+2. Run any Userplane command in Raycast.
+3. Paste your key into the **API Key** preference when prompted.
+
+Your key is stored in the macOS keychain by Raycast.
 
 ## Commands
 
-- **Create Recording Link** — pick a workspace (auto-hidden when you only have one), project, and domain; optionally tag the link with a reference; submit copies the URL to the clipboard. `⌘↵` creates the link and opens it in the browser. Remembers the last workspace/domain/project you used.
-- **Browse Links** — list recording links in the current workspace. `⌘F` opens a filter form (creators, projects, domains, sort by, direction). `⌘⇧F` clears filters. Filter state is cached per workspace. Per-item actions: Copy Link URL, Open Link, View Recordings for This Link (`⌘R`), Switch Workspace, View All in Dashboard.
-- **Browse Recordings** — a thumbnail grid of workspace recordings with creator, duration, and relative-time subtitles. Recordings nearing expiry get a clock accessory. `⌘F` opens a filter form (creators, projects, links, sort by, direction). `⌘⇧F` resets filters. Filter state is cached per workspace. Per-item actions: Open in Dashboard, Copy Dashboard URL (`⌘C`), Switch Workspace, View All in Dashboard.
-- **Userplane Menu Bar** — a tiny menu-bar launcher that fast-paths you into Create Recording Link, Browse Recordings, Browse Recording Links, and Open Dashboard, plus an Extension Preferences shortcut.
+### Create Recording Link
 
-Every command also exposes a **Userplane** action section with Open Dashboard (`⌘D`), View My Recordings (`⌘⇧R`), Change API Key (`⌘⇧K`), and Advanced Options (`⌘⇧A`).
+Pick a workspace, project, and domain, add an optional reference (ticket number, customer ID, anything), and submit. The link is copied to your clipboard. `⌘↵` creates the link and opens it in your browser in one step. The extension remembers your last workspace, project, and domain so the next link is one keystroke faster.
 
-## Setup
+### Browse Recordings
 
-1. Create an API key at [dash.userplane.io/\_/account?tab=developers](https://dash.userplane.io/_/account?tab=developers).
-2. Open Raycast → search any Userplane command.
-3. Paste the key into the **API Key** preference (stored in the macOS keychain).
-4. For self-hosted or staging deployments, override **API Host** (`apiBaseUrl`, defaults to `api.userplane.io`) and **Dashboard Host** (`dashBaseUrl`, defaults to `dash.userplane.io`). Both accept a bare host or a full `https://` URL. Every "Open in Dashboard" action respects the dashboard override.
+Thumbnail grid of every recording in the current workspace. Filter by creator, project, or link (`⌘F`). Sort by newest or longest (`⌘⇧F` to reset). Recordings nearing expiry are flagged with a clock icon. `⌘C` copies the dashboard URL.
 
-## Local development
+### Browse Links
 
-```sh
-cd apps/raycast
-bun install
-bun run dev
-```
+Every recording link in the current workspace. Filter by creator, project, or domain (`⌘F`, `⌘⇧F` to reset). Copy a link URL, open it in the browser, or jump to the recordings it captured (`⌘R`).
 
-`bun run dev` runs `ray develop`, opening the extension in your local Raycast with hot reload. Before committing:
+### Show Menu Bar
 
-```sh
-bun run typecheck
-bun run lint
-bun run build
-```
+One-click access to every command plus the dashboard, from the macOS menu bar.
 
-Or from the repo root:
+Every command exposes a Userplane action section with Open Dashboard (`⌘D`), View My Recordings (`⌘⇧R`), Change API Key (`⌘⇧K`), and Advanced Options (`⌘⇧A`).
 
-```sh
-make raycast:typecheck
-make raycast:lint
-make raycast:build
-```
+## Self-hosted and staging deployments
 
-## Publishing to the Raycast Store
+Override **API Host** (`apiBaseUrl`, default `api.userplane.io`) and **Dashboard Host** (`dashBaseUrl`, default `dash.userplane.io`) in Extension Preferences. Both accept bare hosts or full `https://` URLs. Every "Open in Dashboard" action respects the dashboard override.
 
-```sh
-cd apps/raycast
-bun run lint
-bun run build
-bun run publish
-```
+## Learn more
 
-The extension is intentionally self-contained — no `@userplane/*` workspace dependencies — so `ray publish` produces a valid Store submission without bundling any private packages. The API client and contract types live in `src/api/` and are hand-written mirrors of the corresponding schemas in `packages/contract/src/schemas/`.
+- [Userplane docs](https://docs.userplane.io)
+- [Quickstart](https://docs.userplane.io/quickstart)
+- [For support agents](https://docs.userplane.io/getting-started/for-support-agents)
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for local development, build, and publish instructions.
+
+## License
+
+MIT — see [LICENSE](./LICENSE).

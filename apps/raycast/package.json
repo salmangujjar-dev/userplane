@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "userplane",
   "title": "Userplane",
-  "description": "Create Userplane recording links from Raycast.",
+  "description": "Create Userplane recording links, browse recordings and recording links, and open the Userplane dashboard — all from Raycast.",
   "icon": "icon.png",
   "author": "wizenheimer",
   "categories": [
@@ -10,33 +10,34 @@
     "Productivity"
   ],
   "license": "MIT",
-  "private": true,
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wizenheimer/userplane.git",
+    "directory": "apps/raycast"
+  },
   "commands": [
     {
       "name": "create-link",
       "title": "Create Recording Link",
-      "subtitle": "Userplane",
       "description": "Create a recording link for a workspace domain and copy it to the clipboard.",
       "mode": "view"
     },
     {
       "name": "list-recordings",
       "title": "Browse Recordings",
-      "subtitle": "Userplane",
       "description": "Browse recordings with thumbnails, filters, and sorting.",
       "mode": "view"
     },
     {
       "name": "list-links",
       "title": "Browse Links",
-      "subtitle": "Userplane",
       "description": "Browse recording links with filters and sorting.",
       "mode": "view"
     },
     {
       "name": "menu-bar",
-      "title": "Userplane Menu Bar",
-      "subtitle": "Userplane",
+      "title": "Show Menu Bar",
       "description": "Quick access to Userplane from the macOS menu bar.",
       "mode": "menu-bar"
     }
@@ -67,8 +68,8 @@
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.84.0",
-    "@raycast/utils": "^1.18.0"
+    "@raycast/api": "^1.104.12",
+    "@raycast/utils": "^2.2.3"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^1.0.11",
