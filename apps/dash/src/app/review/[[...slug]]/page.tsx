@@ -286,7 +286,7 @@ function SignUpForm({ onSuccess }: { onSuccess: (email: string) => void }) {
   );
 }
 
-export default function ReviewChromePage() {
+export default function ReviewPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 

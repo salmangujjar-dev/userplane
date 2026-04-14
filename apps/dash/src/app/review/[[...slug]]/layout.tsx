@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ReviewChromeLayout({ children }: { children: React.ReactNode }) {
+export default function ReviewLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

@@ -103,6 +103,8 @@ apps/api/localhost
 !apps/home/src/content/**/*.md
 !apps/docs/**/*.md
 !apps/docs/**/*.mdx
+!apps/raycast/**/*.md
+!dumps/**/*.md
 
 
 
