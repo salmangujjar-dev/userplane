@@ -42,9 +42,15 @@ export const publicApiContract = {
     get: publicApi.getWorkspace,
     inviteUrl: publicApi.getInviteUrl,
   },
+  domains: {
+    list: publicApi.listDomains,
+  },
   projects: {
     list: publicApi.listProjects,
     getById: publicApi.getProjectById,
+  },
+  members: {
+    list: publicApi.listMembers,
   },
 };
 

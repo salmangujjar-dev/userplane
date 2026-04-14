@@ -37,8 +37,12 @@ import {
   UpdateLinkSchema,
   WorkspaceByIdDataSchema,
   WorkspaceByIdSchema,
+  WorkspaceDomainsDataSchema,
+  WorkspaceDomainsQuerySchema,
   WorkspaceErrors,
   WorkspacesListDataSchema,
+  WorkspaceTeamDataSchema,
+  WorkspaceTeamQuerySchema,
 } from '../schemas';
 import { PublicApiErrors } from './errors';
 import { MeDataSchema } from './schemas';
@@ -356,6 +360,26 @@ export const getInviteUrl = oc
   .output(ApiResponseSchema(InviteUrlDataSchema));
 
 // =============================================================================
+// Domains (read-only)
+// =============================================================================
+
+export const listDomains = oc
+  .route({
+    method: 'GET',
+    path: '/public/workspace/{workspaceId}/domains',
+    inputStructure: 'detailed',
+    summary: 'List domains',
+    description: 'Retrieve paginated list of workspace domains',
+    tags: ['Public API - Domains'],
+  })
+  .errors({
+    ...publicErrors,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+  })
+  .input(WorkspaceDomainsQuerySchema)
+  .output(ApiResponseSchema(WorkspaceDomainsDataSchema));
+
+// =============================================================================
 // Projects (read-only)
 // =============================================================================
 
@@ -391,3 +415,23 @@ export const getProjectById = oc
   })
   .input(ProjectByIdSchema)
   .output(ApiResponseSchema(ProjectByIdDataSchema));
+
+// =============================================================================
+// Members (read-only)
+// =============================================================================
+
+export const listMembers = oc
+  .route({
+    method: 'GET',
+    path: '/public/workspace/{workspaceId}/members',
+    inputStructure: 'detailed',
+    summary: 'List workspace members',
+    description: 'Retrieve paginated list of workspace team members',
+    tags: ['Public API - Members'],
+  })
+  .errors({
+    ...publicErrors,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+  })
+  .input(WorkspaceTeamQuerySchema)
+  .output(ApiResponseSchema(WorkspaceTeamDataSchema));
