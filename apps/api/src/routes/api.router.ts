@@ -189,6 +189,7 @@ const publicApiProcedures = createPublicApiProcedures({
   workspaceService,
   workspaceMemberService,
   projectService,
+  domainService,
   inviteService,
   userService,
   workspaceRepo,

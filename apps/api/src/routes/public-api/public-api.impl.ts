@@ -17,6 +17,7 @@ import type { LinkRepository } from '@/api/repositories/links.repository';
 import type { RecordingRepository } from '@/api/repositories/recordings.repository';
 import type { WorkspaceRepository } from '@/api/repositories/workspaces.repository';
 import type { ApiKeyService } from '@/api/services/api-key.service';
+import type { DomainService } from '@/api/services/domain.service';
 import type { InviteService } from '@/api/services/invite.service';
 import type { LinkService } from '@/api/services/link.service';
 import type { ProjectService } from '@/api/services/project.service';
@@ -40,6 +41,7 @@ export interface PublicApiDeps {
   workspaceService: WorkspaceService;
   workspaceMemberService: WorkspaceMemberService;
   projectService: ProjectService;
+  domainService: DomainService;
   inviteService: InviteService;
   userService: UserService;
   workspaceRepo: WorkspaceRepository;
@@ -85,9 +87,15 @@ export const createPublicApiProcedures = (deps: PublicApiDeps) => {
       get: getWorkspaceImpl(deps.workspaceService, apiKeyAuth),
       inviteUrl: getInviteUrlImpl(deps.inviteService, apiKeyAuth),
     },
+    domains: {
+      list: listDomainsImpl(deps.domainService, apiKeyAuth),
+    },
     projects: {
       list: listProjectsImpl(deps.projectService, apiKeyAuth),
       getById: getProjectByIdImpl(deps.projectService, apiKeyAuth),
+    },
+    members: {
+      list: listMembersImpl(deps.workspaceMemberService, apiKeyAuth),
     },
   };
 };
@@ -446,6 +454,33 @@ const getInviteUrlImpl = (inviteService: InviteService, apiKeyAuth: ApiKeyMiddle
     });
 
 // =============================================================================
+// Domains
+// =============================================================================
+
+const listDomainsImpl = (domainService: DomainService, apiKeyAuth: ApiKeyMiddleware) =>
+  base.publicApi.domains.list
+    .use(apiKeyAuth, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const page = input.query.page || 1;
+      const perPage = input.query.per_page || 5;
+      const { domains, total } = await domainService.getByWorkspaceIdPaginated(
+        input.params.workspaceId,
+        page,
+        perPage,
+        input.query.sort_by || 'created_at',
+        input.query.sort_direction || 'desc'
+      );
+      return {
+        message: 'Domains retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          domains,
+          pagination: createPaginationMeta(page, perPage, total),
+        },
+      };
+    });
+
+// =============================================================================
 // Projects
 // =============================================================================
 
@@ -478,5 +513,39 @@ const getProjectByIdImpl = (projectService: ProjectService, apiKeyAuth: ApiKeyMi
       return {
         message: 'Project retrieved successfully',
         data: { workspaceId: input.params.workspaceId, project },
+      };
+    });
+
+// =============================================================================
+// Members
+// =============================================================================
+
+const listMembersImpl = (
+  workspaceMemberService: WorkspaceMemberService,
+  apiKeyAuth: ApiKeyMiddleware
+) =>
+  base.publicApi.members.list
+    .use(apiKeyAuth, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const page = input.query.page || 1;
+      const perPage = input.query.per_page || 5;
+      const { members, total } = await workspaceMemberService.getTeamMembers(
+        input.params.workspaceId,
+        page,
+        perPage
+      );
+      const workspaceMembers = members.map((member) => ({
+        workspaceMemberId: member.workspaceMemberId,
+        memberName: member.userName,
+        memberEmail: member.userEmail,
+        workspaceRole: member.role,
+      }));
+      return {
+        message: 'Workspace members retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          workspaceMembers,
+          pagination: createPaginationMeta(page, perPage, total),
+        },
       };
     });
