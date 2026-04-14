@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:extras dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix generate\:openapi clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build extension\:dev extension\:build extension\:build\:prod extension\:zip extension\:zip\:prod extension\:storybook extension\:storybook\:build assets\:optimize assets\:optimize\:dry-run assets\:optimize\:dir i d b l f t c
+.PHONY: help install dev dev\:extras dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix generate\:openapi clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build extension\:dev extension\:build extension\:build\:prod extension\:zip extension\:zip\:prod extension\:storybook extension\:storybook\:build raycast\:dev raycast\:build raycast\:lint raycast\:lint\:fix raycast\:typecheck raycast\:publish assets\:optimize assets\:optimize\:dry-run assets\:optimize\:dir i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -90,6 +90,15 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)extension:submit:dry$(WHITE)          ║$(RESET) Dry-run submission (authenticate without uploading)                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)extension:storybook$(WHITE)           ║$(RESET) Run Storybook for Chrome extension (port 6012)                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)extension:storybook:build$(WHITE)     ║$(RESET) Build Storybook for Chrome extension                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)RAYCAST$(WHITE)                                                                                           ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)raycast:dev$(WHITE)                   ║$(RESET) Start Raycast extension dev server (ray develop, hot reload)      $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)raycast:build$(WHITE)                 ║$(RESET) Build Raycast extension (ray build)                               $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)raycast:lint$(WHITE)                  ║$(RESET) Lint Raycast extension (ray lint)                                 $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)raycast:lint:fix$(WHITE)              ║$(RESET) Lint and auto-fix Raycast extension                               $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)raycast:typecheck$(WHITE)             ║$(RESET) Type check Raycast extension                                      $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)raycast:publish$(WHITE)               ║$(RESET) Publish Raycast extension to the Raycast Store                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)CODE QUALITY$(WHITE)                                                                                      ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -511,6 +520,35 @@ extension\:storybook\:build: ## Build Storybook for Chrome extension
 	@echo "$(BLUE)Building Storybook for Chrome extension...$(RESET)"
 	@cd apps/extension && bun run build-storybook
 	@echo "$(GREEN)Storybook for Chrome extension built!$(RESET)"
+
+# ─── Raycast ────────────────────────────────────────────────────────────────
+
+raycast\:dev: ## Start Raycast extension dev server (ray develop, hot reload)
+	@echo "$(MAGENTA)Starting Raycast extension dev server...$(RESET)"
+	@cd apps/raycast && bun run dev
+
+raycast\:build: ## Build Raycast extension (ray build)
+	@echo "$(BLUE)Building Raycast extension...$(RESET)"
+	@cd apps/raycast && bun run build
+	@echo "$(GREEN)Raycast extension built!$(RESET)"
+
+raycast\:lint: ## Lint Raycast extension (ray lint)
+	@echo "$(BLUE)Linting Raycast extension...$(RESET)"
+	@cd apps/raycast && bun run lint
+
+raycast\:lint\:fix: ## Lint and auto-fix Raycast extension
+	@echo "$(BLUE)Linting and fixing Raycast extension...$(RESET)"
+	@cd apps/raycast && bun run fix-lint
+
+raycast\:typecheck: ## Type check Raycast extension
+	@echo "$(BLUE)Type checking Raycast extension...$(RESET)"
+	@cd apps/raycast && bun run typecheck
+	@echo "$(GREEN)Raycast extension type check passed!$(RESET)"
+
+raycast\:publish: ## Publish Raycast extension to the Raycast Store
+	@echo "$(BLUE)Publishing Raycast extension...$(RESET)"
+	@cd apps/raycast && bun run publish
+	@echo "$(GREEN)Raycast extension publish flow complete!$(RESET)"
 
 # Assets commands
 assets\:upload: ## Upload assets to R2 CDN (dev)
