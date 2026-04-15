@@ -52,6 +52,7 @@ export const publicApiContract = {
   members: {
     list: publicApi.listMembers,
   },
+  search: publicApi.searchWorkspace,
 };
 
 /**

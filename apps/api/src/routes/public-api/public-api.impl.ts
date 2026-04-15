@@ -4,7 +4,14 @@
  * Delegates to existing services — zero business logic duplication.
  */
 
-import { linkError, recordingError } from '@userplane/contract';
+import {
+  type DomainStatus,
+  linkError,
+  type LinkType,
+  recordingError,
+  type RetentionDays,
+  type WorkspaceRole,
+} from '@userplane/contract';
 
 import {
   type ApiKeyContext,
@@ -97,6 +104,7 @@ export const createPublicApiProcedures = (deps: PublicApiDeps) => {
     members: {
       list: listMembersImpl(deps.workspaceMemberService, apiKeyAuth),
     },
+    search: searchWorkspaceImpl(deps.workspaceService, apiKeyAuth),
   };
 };
 
@@ -548,4 +556,119 @@ const listMembersImpl = (
           pagination: createPaginationMeta(page, perPage, total),
         },
       };
+    });
+
+// =============================================================================
+// Search
+// =============================================================================
+
+const searchWorkspaceImpl = (workspaceService: WorkspaceService, apiKeyAuth: ApiKeyMiddleware) =>
+  base.publicApi.search
+    .use(apiKeyAuth, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const rawResults = await workspaceService.search(
+        input.params.workspaceId,
+        input.query.q,
+        input.query.type,
+        input.query.limit
+      );
+
+      const message = 'Search results retrieved successfully';
+
+      switch (input.query.type) {
+        case 'members': {
+          const rows = rawResults as {
+            workspaceMemberId: string;
+            role: string;
+            userName: string;
+            userEmail: string;
+          }[];
+          return {
+            message,
+            data: {
+              type: 'members' as const,
+              results: rows.map((m) => ({
+                workspaceMemberId: m.workspaceMemberId,
+                memberName: m.userName,
+                memberEmail: m.userEmail,
+                workspaceRole: m.role as WorkspaceRole,
+              })),
+            },
+          };
+        }
+        case 'projects': {
+          const rows = rawResults as {
+            projectId: string;
+            projectTitle: string;
+            isDefault: boolean;
+            recordingRetentionDays: RetentionDays;
+            createdAt: Date;
+            updatedAt: Date;
+          }[];
+          return {
+            message,
+            data: {
+              type: 'projects' as const,
+              results: rows.map((p) => ({
+                projectId: p.projectId,
+                projectTitle: p.projectTitle,
+                isDefault: p.isDefault,
+                recordingRetentionDays: p.recordingRetentionDays,
+                createdAt: p.createdAt,
+                updatedAt: p.updatedAt,
+              })),
+            },
+          };
+        }
+        case 'domains': {
+          const rows = rawResults as {
+            domainId: string;
+            domainUrl: string;
+            domainStatus: string;
+            createdAt: Date;
+            updatedAt: Date;
+          }[];
+          return {
+            message,
+            data: {
+              type: 'domains' as const,
+              results: rows.map((d) => ({
+                domainId: d.domainId,
+                domainUrl: d.domainUrl,
+                domainStatus: d.domainStatus as DomainStatus,
+                createdAt: d.createdAt,
+                updatedAt: d.updatedAt,
+              })),
+            },
+          };
+        }
+        case 'links': {
+          const rows = rawResults as {
+            linkId: string;
+            linkTitle: string | null;
+            linkType: string;
+            createdAt: Date;
+            projectId: string;
+            projectTitle: string;
+            domainId: string;
+            domainUrl: string;
+          }[];
+          return {
+            message,
+            data: {
+              type: 'links' as const,
+              results: rows.map((l) => ({
+                linkId: l.linkId,
+                linkTitle: l.linkTitle,
+                linkType: l.linkType as LinkType,
+                createdAt: l.createdAt,
+                projectId: l.projectId,
+                projectTitle: l.projectTitle,
+                domainId: l.domainId,
+                domainUrl: l.domainUrl,
+              })),
+            },
+          };
+        }
+      }
     });

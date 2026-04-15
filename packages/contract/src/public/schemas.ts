@@ -6,6 +6,10 @@
 
 import { z } from 'zod';
 
+import { DomainIdSchema, LinkIdSchema, LinkTypeSchema, ProjectIdSchema } from '../schemas/common';
+import { ProjectItemSchema } from '../schemas/project';
+import { DomainItemSchema, WorkspaceMemberSchema } from '../schemas/workspace';
+
 /**
  * API key limits
  */
@@ -114,6 +118,45 @@ export const MeDataSchema = z.object({
 });
 
 // =============================================================================
+// Workspace search schemas
+// =============================================================================
+
+/**
+ * Link search result shape.
+ * Slimmer than LinkItemSchema: the FTS query returns a flat projection without
+ * linkURL/linkMeta or nested project/creator/domain objects.
+ */
+export const PublicSearchLinkSchema = z.object({
+  linkId: LinkIdSchema,
+  linkTitle: z.string().nullable(),
+  linkType: LinkTypeSchema,
+  createdAt: z.coerce.date(),
+  projectId: ProjectIdSchema,
+  projectTitle: z.string(),
+  domainId: DomainIdSchema,
+  domainUrl: z.string(),
+});
+
+export const PublicWorkspaceSearchDataSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('members'),
+    results: z.array(WorkspaceMemberSchema),
+  }),
+  z.object({
+    type: z.literal('projects'),
+    results: z.array(ProjectItemSchema),
+  }),
+  z.object({
+    type: z.literal('domains'),
+    results: z.array(DomainItemSchema),
+  }),
+  z.object({
+    type: z.literal('links'),
+    results: z.array(PublicSearchLinkSchema),
+  }),
+]);
+
+// =============================================================================
 // Type exports
 // =============================================================================
 
@@ -122,3 +165,4 @@ export type ApiKeyData = z.infer<typeof ApiKeyDataSchema>;
 export type ApiKeyListData = z.infer<typeof ApiKeyListDataSchema>;
 export type ApiKeyCreateData = z.infer<typeof ApiKeyCreateDataSchema>;
 export type MeData = z.infer<typeof MeDataSchema>;
+export type PublicWorkspaceSearchData = z.infer<typeof PublicWorkspaceSearchDataSchema>;

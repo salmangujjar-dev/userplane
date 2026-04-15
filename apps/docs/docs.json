@@ -309,6 +309,11 @@
               "api/recordings/delete-recording",
               "api/recordings/get-recording-resources"
             ]
+          },
+          {
+            "group": "Search",
+            "icon": "magnifying-glass",
+            "pages": ["api/search/search-workspace"]
           }
         ]
       },

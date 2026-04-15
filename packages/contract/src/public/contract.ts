@@ -40,12 +40,13 @@ import {
   WorkspaceDomainsDataSchema,
   WorkspaceDomainsQuerySchema,
   WorkspaceErrors,
+  WorkspaceSearchQuerySchema,
   WorkspacesListDataSchema,
   WorkspaceTeamDataSchema,
   WorkspaceTeamQuerySchema,
 } from '../schemas';
 import { PublicApiErrors } from './errors';
-import { MeDataSchema } from './schemas';
+import { MeDataSchema, PublicWorkspaceSearchDataSchema } from './schemas';
 
 // =============================================================================
 // Common public API errors (included on every endpoint)
@@ -435,3 +436,27 @@ export const listMembers = oc
   })
   .input(WorkspaceTeamQuerySchema)
   .output(ApiResponseSchema(WorkspaceTeamDataSchema));
+
+// =============================================================================
+// Search
+// =============================================================================
+
+export const searchWorkspace = oc
+  .route({
+    method: 'GET',
+    path: '/public/workspace/{workspaceId}/search',
+    inputStructure: 'detailed',
+    summary: 'Search workspace',
+    description: 'Search across workspace members, projects, domains, and links',
+    tags: ['Public API - Search'],
+  })
+  .errors({
+    ...publicErrors,
+    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
+    WORKSPACE_SEARCH_TERM_REQUIRED: WorkspaceErrors.WORKSPACE_SEARCH_TERM_REQUIRED,
+    WORKSPACE_SEARCH_TYPE_INVALID: WorkspaceErrors.WORKSPACE_SEARCH_TYPE_INVALID,
+    WORKSPACE_SEARCH_UNAVAILABLE: WorkspaceErrors.WORKSPACE_SEARCH_UNAVAILABLE,
+  })
+  .input(WorkspaceSearchQuerySchema)
+  .output(ApiResponseSchema(PublicWorkspaceSearchDataSchema));
