@@ -91,13 +91,16 @@ async function callApi<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!response.ok) {
-    const errObj = (parsed ?? {}) as { code?: string; message?: string };
-    const code = errObj.code;
+    const errObj = (parsed ?? {}) as { error?: string; message?: string };
+    const code = errObj.error;
     const message = errObj.message || `Request failed with status ${response.status}`;
     throw new ApiError(response.status, message, code);
   }
 
-  return parsed as T;
+  if (!parsed || typeof parsed !== 'object' || !('data' in parsed)) {
+    throw new ApiError(response.status, 'Malformed API response');
+  }
+  return (parsed as { data: T }).data;
 }
 
 export interface ListWorkspacesQuery {

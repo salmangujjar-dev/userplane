@@ -27,14 +27,6 @@ export function CommonActions({ workspaceId, currentWorkspaceMemberId }: CommonA
         shortcut={{ modifiers: ['cmd', 'shift'], key: 'r' }}
       />
       <Action
-        title="Change Api Key"
-        icon={Icon.Key}
-        shortcut={{ modifiers: ['cmd', 'shift'], key: 'k' }}
-        onAction={() => {
-          void openExtensionPreferences();
-        }}
-      />
-      <Action
         title="Advanced Options"
         icon={Icon.Gear}
         shortcut={{ modifiers: ['cmd', 'shift'], key: 'a' }}

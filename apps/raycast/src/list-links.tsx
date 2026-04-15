@@ -102,7 +102,11 @@ export default function ListLinksCommand() {
   }
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Filter links…">
+    <List
+      isLoading={isLoading}
+      filtering={false}
+      searchBarPlaceholder="Recent links · search in dashboard"
+    >
       <List.EmptyView
         icon={Icon.Link}
         title={isLoading ? 'Loading links…' : 'No links'}
