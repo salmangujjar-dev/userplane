@@ -116,7 +116,8 @@ export default function ListRecordingsCommand() {
       inset={Grid.Inset.Small}
       aspectRatio="16/9"
       fit={Grid.Fit.Fill}
-      searchBarPlaceholder="Filter recordings…"
+      filtering={false}
+      searchBarPlaceholder="Recent recordings · search in dashboard"
     >
       <Grid.EmptyView
         icon={Icon.Video}

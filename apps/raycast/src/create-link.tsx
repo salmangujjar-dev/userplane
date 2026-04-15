@@ -10,7 +10,7 @@ import {
   showToast,
   useNavigation,
 } from '@raycast/api';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { api } from './api/client';
 import { reportApiError } from './api/errors';
@@ -21,8 +21,8 @@ import { useProjects } from './hooks/use-projects';
 import { useWorkspaces } from './hooks/use-workspaces';
 
 const LAST_WORKSPACE_KEY = 'userplane:lastWorkspaceId';
-const LAST_DOMAIN_KEY = 'userplane:lastDomainId';
-const LAST_PROJECT_KEY = 'userplane:lastProjectId';
+const lastDomainKey = (workspaceId: string) => `userplane:lastDomainId:${workspaceId}`;
+const lastProjectKey = (workspaceId: string) => `userplane:lastProjectId:${workspaceId}`;
 
 interface FormValues {
   reference: string;
@@ -55,38 +55,51 @@ export default function CreateLinkCommand() {
   }, [workspaces.data, workspaceId]);
 
   useEffect(() => {
+    if (workspaceId) void LocalStorage.setItem(LAST_WORKSPACE_KEY, workspaceId);
+  }, [workspaceId]);
+
+  const bootstrappedDomainForWs = useRef<string | null>(null);
+  useEffect(() => {
     const list = domains.data?.domains;
-    if (!list || list.length === 0) {
+    if (!list) return;
+    if (!workspaceId) return;
+    if (list.length === 0) {
       setDomainId('');
       return;
     }
+    if (bootstrappedDomainForWs.current === workspaceId) return;
+    bootstrappedDomainForWs.current = workspaceId;
     void (async () => {
-      const stored = await LocalStorage.getItem<string>(LAST_DOMAIN_KEY);
+      const stored = await LocalStorage.getItem<string>(lastDomainKey(workspaceId));
       if (stored && list.some((d) => d.domainId === stored)) {
         setDomainId(stored);
-      } else if (!domainId || !list.some((d) => d.domainId === domainId)) {
+      } else {
         setDomainId(list[0].domainId);
       }
     })();
-  }, [domains.data, domainId]);
+  }, [domains.data, workspaceId]);
 
+  const bootstrappedProjectForWs = useRef<string | null>(null);
   useEffect(() => {
     const list = projects.data?.projects;
-    if (!list || list.length === 0) {
+    if (!list) return;
+    if (!workspaceId) return;
+    if (list.length === 0) {
       setProjectId('');
       return;
     }
+    if (bootstrappedProjectForWs.current === workspaceId) return;
+    bootstrappedProjectForWs.current = workspaceId;
     void (async () => {
-      const stored = await LocalStorage.getItem<string>(LAST_PROJECT_KEY);
+      const stored = await LocalStorage.getItem<string>(lastProjectKey(workspaceId));
       if (stored && list.some((p) => p.projectId === stored)) {
         setProjectId(stored);
         return;
       }
-      if (projectId && list.some((p) => p.projectId === projectId)) return;
       const preferred = list.find((p) => p.isDefault) ?? list[0];
       setProjectId(preferred.projectId);
     })();
-  }, [projects.data, projectId]);
+  }, [projects.data, workspaceId]);
 
   const isLoading = workspaces.isLoading || domains.isLoading || projects.isLoading || submitting;
   const workspaceItems = workspaces.data?.workspaces ?? [];
@@ -126,9 +139,9 @@ export default function CreateLinkCommand() {
       const url = link.linkURL;
       await Clipboard.copy(url);
       await LocalStorage.setItem(LAST_WORKSPACE_KEY, workspaceId);
-      await LocalStorage.setItem(LAST_DOMAIN_KEY, domainId);
+      await LocalStorage.setItem(lastDomainKey(workspaceId), domainId);
       if (projectId) {
-        await LocalStorage.setItem(LAST_PROJECT_KEY, projectId);
+        await LocalStorage.setItem(lastProjectKey(workspaceId), projectId);
       }
 
       toast.style = Toast.Style.Success;
