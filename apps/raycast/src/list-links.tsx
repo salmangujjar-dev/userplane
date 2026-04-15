@@ -15,7 +15,7 @@ import type { LinkSortField, LinksQuery, ListLinksFilters, SortDirection } from 
 import { CommonActions } from './components/common-actions';
 import { useLinks } from './hooks/use-links';
 import { useWorkspaces } from './hooks/use-workspaces';
-import { DEFAULT_FILTERS, FiltersForm } from './list-links-filters';
+import { DEFAULT_FILTERS, FiltersScreen } from './list-links-filters';
 import { dashLinkRecordingsUrl, dashLinksUrl } from './utils/dash-urls';
 import { formatRelativeTime } from './utils/format';
 
@@ -102,11 +102,7 @@ export default function ListLinksCommand() {
   }
 
   return (
-    <List
-      isLoading={isLoading}
-      filtering={false}
-      searchBarPlaceholder="Recent links · search in dashboard"
-    >
+    <List isLoading={isLoading} filtering={false}>
       <List.EmptyView
         icon={Icon.Link}
         title={isLoading ? 'Loading links…' : 'No links'}
@@ -124,7 +120,7 @@ export default function ListLinksCommand() {
                 title="Filter & Sort…"
                 icon={Icon.Filter}
                 target={
-                  <FiltersForm
+                  <FiltersScreen
                     workspaceId={workspaceId}
                     value={filters}
                     currentMemberId={currentMemberId}
@@ -196,7 +192,7 @@ export default function ListLinksCommand() {
                       icon={Icon.Filter}
                       shortcut={{ modifiers: ['cmd'], key: 'f' }}
                       target={
-                        <FiltersForm
+                        <FiltersScreen
                           workspaceId={workspaceId}
                           value={filters}
                           currentMemberId={currentMemberId}

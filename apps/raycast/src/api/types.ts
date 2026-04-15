@@ -208,3 +208,28 @@ export interface ListLinksFilters {
   sortBy: LinkSortField;
   sortDirection: SortDirection;
 }
+
+export type SearchType = 'members' | 'projects' | 'domains' | 'links';
+
+export interface PublicSearchLink {
+  linkId: string;
+  linkTitle: string | null;
+  linkType: LinkType;
+  createdAt: string;
+  projectId: string;
+  projectTitle: string;
+  domainId: string;
+  domainUrl: string;
+}
+
+export type WorkspaceSearchResult =
+  | { type: 'members'; results: Member[] }
+  | { type: 'projects'; results: Project[] }
+  | { type: 'domains'; results: Domain[] }
+  | { type: 'links'; results: PublicSearchLink[] };
+
+export interface WorkspaceSearchQuery {
+  q: string;
+  type: SearchType;
+  limit?: number;
+}

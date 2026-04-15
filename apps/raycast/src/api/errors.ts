@@ -65,6 +65,22 @@ const TOASTS: Record<string, ToastDetails> = {
     title: 'Service unavailable',
     message: 'Userplane is temporarily unreachable. Try again shortly.',
   },
+  REQUEST_TIMEOUT: {
+    title: 'Request timed out',
+    message: 'Check your connection and try again.',
+  },
+  WORKSPACE_SEARCH_TERM_REQUIRED: {
+    title: 'Search term required',
+    message: 'Type at least one character to search.',
+  },
+  WORKSPACE_SEARCH_TYPE_INVALID: {
+    title: 'Invalid search type',
+    message: 'Unexpected search scope. Please retry.',
+  },
+  WORKSPACE_SEARCH_UNAVAILABLE: {
+    title: 'Search temporarily unavailable',
+    message: 'Workspace search is offline. Try again shortly.',
+  },
 };
 
 export async function reportApiError(error: unknown): Promise<void> {
@@ -89,6 +105,7 @@ function resolveToast(error: unknown): ToastDetails {
     if (error.code && TOASTS[error.code]) return TOASTS[error.code];
     if (error.status === 401) return TOASTS.API_KEY_INVALID;
     if (error.status === 403) return TOASTS.NOT_A_MEMBER;
+    if (error.status === 408) return TOASTS.REQUEST_TIMEOUT;
     if (error.status === 429) return TOASTS.RATE_LIMITED;
     if (error.status === 503) return TOASTS.SERVICE_UNAVAILABLE;
     return {
