@@ -1,0 +1,39 @@
+---
+title: Search Workspace
+description: Search across workspace members, projects, domains, and links
+openapi: GET /public/workspace/{workspaceId}/search
+---
+
+Find a specific recording link, project, domain, or teammate inside a workspace by name. Use this endpoint to power typeahead pickers, quick-jump UIs, or any flow where a user types a few characters to locate a resource.
+
+Pass the resource kind as `type` and the search text as `q`. Each type uses the matching strategy best suited for its data:
+
+- `links` — Postgres full-text search with prefix matching, ranked by relevance
+- `members` — case-insensitive match on member name
+- `projects` — case-insensitive match on project title
+- `domains` — case-insensitive match on domain URL
+
+The response is a discriminated union keyed on `type`, so `data.type` tells you which shape `data.results` has.
+
+## Errors
+
+| Error code                       | Status | Description                                  |
+| -------------------------------- | ------ | -------------------------------------------- |
+| `WORKSPACE_NOT_FOUND`            | 404    | Workspace does not exist                     |
+| `WORKSPACE_GONE`                 | 410    | Workspace has been deleted                   |
+| `WORKSPACE_SEARCH_TERM_REQUIRED` | 400    | `q` is empty after trimming                  |
+| `WORKSPACE_SEARCH_TYPE_INVALID`  | 400    | `type` is not one of the four allowed values |
+| `WORKSPACE_SEARCH_UNAVAILABLE`   | 500    | Search backend is temporarily unavailable    |
+
+Also returns [common authentication errors](/api/error-handling#authentication-errors).
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="List Links" icon="link" href="/api/links/list-links">
+    Paginate through all links in a workspace
+  </Card>
+  <Card title="List Projects" icon="folder" href="/api/projects/list-projects">
+    Paginate through all projects in a workspace
+  </Card>
+</CardGroup>
