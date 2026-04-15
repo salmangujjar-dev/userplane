@@ -10,6 +10,8 @@ import type {
   ProjectsListData,
   RecordingsListData,
   RecordingsQuery,
+  WorkspaceSearchQuery,
+  WorkspaceSearchResult,
   WorkspacesListData,
 } from './types';
 
@@ -20,6 +22,9 @@ interface Preferences {
 }
 
 const DEFAULT_API_HOST = 'api.userplane.io';
+const REQUEST_TIMEOUT_MS = 30_000;
+// Keep in sync with package.json#version
+const EXTENSION_VERSION = '0.1.0';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -47,16 +52,21 @@ function getApiConfig() {
   };
 }
 
+// Array params use bracket notation (`key[0]=v&key[1]=v`) to match the server's
+// oRPC OpenAPIHandler, which parses query strings with StandardBracketNotationSerializer.
+// Plain repeated `key=v&key=v` reaches the server as a single string and fails the
+// `z.array(...)` schema with a 400.
+// Ref: @orpc/openapi-client/dist/shared/openapi-client.t9fCAe3x.mjs (StandardBracketNotationSerializer.stringifyPath)
 function serializeQuery(query: object | undefined): string {
   if (!query) return '';
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query as Record<string, unknown>)) {
     if (value === undefined || value === null) continue;
     if (Array.isArray(value)) {
-      for (const item of value) {
-        if (item === undefined || item === null) continue;
-        params.append(key, String(item));
-      }
+      value.forEach((item, i) => {
+        if (item === undefined || item === null) return;
+        params.append(`${key}[${i}]`, String(item));
+      });
     } else {
       params.append(key, String(value));
     }
@@ -69,16 +79,30 @@ async function callApi<T>(path: string, options: RequestOptions = {}): Promise<T
   const { baseUrl, apiKey } = getApiConfig();
   const url = `${baseUrl}${path}${serializeQuery(options.query)}`;
 
-  const response = await fetch(url, {
-    method: options.method ?? 'GET',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'User-Agent': 'userplane-raycast/0.1.0',
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: options.method ?? 'GET',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'User-Agent': `userplane-raycast/${EXTENSION_VERSION}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiError(408, 'Request timed out', 'REQUEST_TIMEOUT');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const text = await response.text();
   let parsed: unknown = undefined;
@@ -174,5 +198,8 @@ export const api = {
     list(workspaceId: string, query: ListRecordingsRequestQuery = {}) {
       return callApi<RecordingsListData>(`/public/workspace/${workspaceId}/recordings`, { query });
     },
+  },
+  search(workspaceId: string, query: WorkspaceSearchQuery) {
+    return callApi<WorkspaceSearchResult>(`/public/workspace/${workspaceId}/search`, { query });
   },
 };

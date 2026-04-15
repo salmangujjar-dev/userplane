@@ -26,6 +26,9 @@ export default function UserplaneMenuBar() {
   const openPrefs = useCallback(() => {
     void openExtensionPreferences();
   }, []);
+  const contactSupport = useCallback(() => {
+    void open('mailto:support@userplane.io');
+  }, []);
 
   return (
     <MenuBarExtra icon={{ source: 'icon.png' }} tooltip="Userplane">
@@ -45,6 +48,7 @@ export default function UserplaneMenuBar() {
 
       <MenuBarExtra.Section>
         <MenuBarExtra.Item title="Open Dashboard" icon={Icon.Globe} onAction={openDashboard} />
+        <MenuBarExtra.Item title="Contact Support" icon={Icon.Envelope} onAction={contactSupport} />
         <MenuBarExtra.Item title="Extension Preferences" icon={Icon.Gear} onAction={openPrefs} />
       </MenuBarExtra.Section>
     </MenuBarExtra>

@@ -5,9 +5,18 @@
   "description": "Create Userplane recording links, browse recordings and recording links, and open the Userplane dashboard — all from Raycast.",
   "icon": "icon.png",
   "author": "wizenheimer",
+  "version": "0.1.0",
   "categories": [
     "Developer Tools",
     "Productivity"
+  ],
+  "keywords": [
+    "session replay",
+    "screen recording",
+    "debugging",
+    "support",
+    "bug reports",
+    "customer support"
   ],
   "license": "MIT",
   "private": false,

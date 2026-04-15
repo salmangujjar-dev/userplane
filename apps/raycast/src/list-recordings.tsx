@@ -20,7 +20,7 @@ import type {
 import { CommonActions } from './components/common-actions';
 import { useRecordings } from './hooks/use-recordings';
 import { useWorkspaces } from './hooks/use-workspaces';
-import { DEFAULT_FILTERS, FiltersForm } from './list-recordings-filters';
+import { DEFAULT_FILTERS, FiltersScreen } from './list-recordings-filters';
 import { dashRecordingPlaybackUrl, dashRecordingsUrl } from './utils/dash-urls';
 import { formatDuration, formatRelativeTime, isExpiringSoon } from './utils/format';
 
@@ -117,7 +117,6 @@ export default function ListRecordingsCommand() {
       aspectRatio="16/9"
       fit={Grid.Fit.Fill}
       filtering={false}
-      searchBarPlaceholder="Recent recordings · search in dashboard"
     >
       <Grid.EmptyView
         icon={Icon.Video}
@@ -136,7 +135,7 @@ export default function ListRecordingsCommand() {
                 title="Filter & Sort…"
                 icon={Icon.Filter}
                 target={
-                  <FiltersForm
+                  <FiltersScreen
                     workspaceId={workspaceId}
                     value={filters}
                     currentMemberId={currentMemberId}
@@ -205,7 +204,7 @@ export default function ListRecordingsCommand() {
                       icon={Icon.Filter}
                       shortcut={{ modifiers: ['cmd'], key: 'f' }}
                       target={
-                        <FiltersForm
+                        <FiltersScreen
                           workspaceId={workspaceId}
                           value={filters}
                           currentMemberId={currentMemberId}

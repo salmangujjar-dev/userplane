@@ -6,3 +6,5 @@ export const PAGINATION_LIMITS = {
   members: 10,
   recordings: 8,
 } as const;
+
+export const SEARCH_LIMIT = 20;
