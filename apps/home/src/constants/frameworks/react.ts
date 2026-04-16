@@ -23,7 +23,7 @@ export const reactConfig = defineFramework({
   seo: {
     title: 'Userplane for React | Screen Recordings with Console Logs',
     description:
-      'Console logs, network activity, and session info — captured from your React app. Works with Vite, CRA, and custom setups.',
+      'Every React recording ships with console logs, network activity, and session context. Works with Vite, CRA, and custom setups.',
     keywords:
       'react screen recording, react session replay, react console logs, react debugging, vite screen recording, userplane react',
   },

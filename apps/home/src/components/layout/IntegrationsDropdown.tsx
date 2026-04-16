@@ -122,7 +122,7 @@ export default function IntegrationsDropdown({
 
               <a
                 href={integrationsHref}
-                className="mt-4 inline-flex items-center gap-1 text-[13px] font-medium text-foreground hover:underline"
+                className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
               >
                 View all <ChevronRight className="size-3.5" />
               </a>
@@ -170,14 +170,14 @@ export default function IntegrationsDropdown({
                 </h3>
               </a>
 
-              <p className="mb-3 line-clamp-2 text-[14px] leading-relaxed text-muted-foreground">
+              <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                 {active.description}
               </p>
 
               <div className="flex items-center gap-4 pt-2">
                 <a
                   href={active.pageHref}
-                  className="inline-flex items-center gap-1 text-[13px] font-medium text-foreground hover:underline"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
                 >
                   Learn more <ChevronRight className="size-3.5" />
                 </a>
@@ -185,7 +185,7 @@ export default function IntegrationsDropdown({
                   href={active.docsHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:underline"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:underline"
                 >
                   Docs <ChevronRight className="size-3.5" />
                 </a>
@@ -203,7 +203,7 @@ export default function IntegrationsDropdown({
                 {frameworksHref && (
                   <a
                     href={frameworksHref}
-                    className="inline-flex items-center gap-1 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
                   >
                     View all <ChevronRight className="size-3" />
                   </a>
@@ -217,7 +217,7 @@ export default function IntegrationsDropdown({
                     onMouseEnter={() => setActiveSlug(item.slug)}
                     onFocus={() => setActiveSlug(item.slug)}
                     className={cn(
-                      'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] transition-colors',
+                      'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors',
                       activeSlug === item.slug
                         ? 'bg-muted font-medium text-foreground'
                         : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'

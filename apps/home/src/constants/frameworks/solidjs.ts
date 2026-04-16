@@ -23,7 +23,7 @@ export const solidjsConfig = defineFramework({
   seo: {
     title: 'Userplane for SolidJS | Screen Recordings with Console Logs',
     description:
-      'Capture console logs, network requests, and session data from your SolidJS app. Works with SolidStart SSR and Vite-based setups.',
+      'Resolve support issues with screen recordings. Every recording carries console logs, network data, and session context.',
     keywords:
       'solidjs screen recording, solid session replay, solidjs console logs, solidjs debugging, solidstart screen recording, signals session replay, userplane solidjs',
   },

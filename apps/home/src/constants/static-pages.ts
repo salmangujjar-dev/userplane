@@ -47,7 +47,7 @@ export const STATIC_PAGE_REGISTRY = {
     seo: {
       title: 'Userplane — Resolve Support Tickets Faster with One-Click Screen Recordings',
       description:
-        'Request screen recordings with console logs, network data, and session data. Resolve tickets 60% faster. Works with Intercom, Zendesk, Slack — start free.',
+        'Get screen recordings with console logs, network data, and session context. Resolve tickets 60% faster with Intercom, Zendesk, Slack.',
       keywords:
         'screen recording, customer support screen recording, one click screen recording, customer debugging tool, userplane, support team tools, bug reproduction, console logs capture, intercom screen recording, zendesk screen recording',
     },
@@ -129,7 +129,7 @@ export const STATIC_PAGE_REGISTRY = {
     seo: {
       title: 'Privacy Policy',
       description:
-        "Userplane's privacy policy. Learn how we collect, use, and protect your data when using our screen recording and customer support tools.",
+        "Userplane's privacy policy. How we collect, use, and protect your data across our screen recording and customer support tools.",
       keywords:
         'userplane privacy policy, data protection, screen recording privacy, customer data security, GDPR, CCPA',
     },
@@ -213,7 +213,7 @@ export const STATIC_PAGE_REGISTRY = {
     seo: {
       title: 'Userplane for Your Framework | Screen Recordings with Console Logs',
       description:
-        'Capture console logs, network requests, and session details from Next.js, React, Remix, Vue, Angular, Svelte, Nuxt, Astro, SolidJS, Django, Ruby on Rails, and more.',
+        'Screen recordings with console logs, network data, and session activity for Next.js, React, Vue, Angular, Django, Rails, and more.',
       keywords:
         'screen recording sdk, session replay frameworks, nextjs screen recording, react session replay, remix screen recording, remix session replay, vue screen recording, angular debugging, svelte session capture, solidjs screen recording, django session replay, rails screen recording, userplane',
     },
@@ -231,7 +231,7 @@ export const STATIC_PAGE_REGISTRY = {
       title:
         'Userplane for Your Team | Screen Recordings with Console Logs, Network Requests, and Session Data',
       description:
-        'Userplane gives every team full visibility into customer issues. Screen recordings with console logs, network data, and session metadata.',
+        'Full customer context for every team that touches support. Screen recordings with console logs, network data, and session activity.',
       keywords:
         'userplane, screen recording, session replay, support tools, developer tools, customer success, console logs, network data',
     },

@@ -23,7 +23,7 @@ export const boltConfig = defineFramework({
   seo: {
     title: 'Userplane for Bolt | Screen Recordings for Bolt.new Apps',
     description:
-      'Add screen recordings to your Bolt.new app with a single prompt. Console logs, network data, and session data capture — no code editing required.',
+      'Fix bugs from your Bolt-built apps. Request recordings with console logs, network data, and session activity.',
     keywords:
       'bolt screen recording, bolt.new session replay, bolt console logs, ai builder screen recording, bolt debugging, userplane bolt',
   },

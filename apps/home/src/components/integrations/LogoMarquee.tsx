@@ -14,7 +14,7 @@ export default function LogoMarquee({ label, logos }: LogoMarqueeProps) {
   return (
     <section className="py-8 sm:py-10">
       <div className="mx-auto flex max-w-7xl flex-col items-start gap-4 p-4 sm:flex-row sm:items-center sm:gap-8">
-        <p className="shrink-0 whitespace-nowrap text-[13px] text-muted-foreground">{label}</p>
+        <p className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">{label}</p>
         <div className="w-full flex-1 overflow-hidden">
           <div className="flex animate-infinite-scroll items-center">
             {doubled.map((logo, i) => (

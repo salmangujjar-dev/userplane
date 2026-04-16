@@ -24,7 +24,7 @@ export const astroConfig = defineFramework({
   seo: {
     title: 'Userplane for Astro | Screen Recordings with Console Logs',
     description:
-      'Console logs, network requests, and session details from your Astro site. Captures across React, Vue, and Svelte islands.',
+      'Every Astro recording ships with console logs, network data, and session activity captured across React, Vue, and Svelte islands.',
     keywords:
       'astro screen recording, astro session replay, astro console logs, astro debugging, astro islands screen recording, userplane astro',
   },

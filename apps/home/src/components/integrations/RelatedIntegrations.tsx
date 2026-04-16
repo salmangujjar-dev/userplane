@@ -32,8 +32,8 @@ export default function RelatedIntegrations({ integrations }: RelatedIntegration
                 </span>
                 <ChevronRight className="size-3 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
               </div>
-              <p className="mb-1.5 text-[15px] font-medium text-foreground">{config.name}</p>
-              <p className="line-clamp-3 text-[13px] leading-relaxed text-muted-foreground">
+              <p className="mb-1.5 text-base font-medium text-foreground">{config.name}</p>
+              <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
                 {config.seo.description}
               </p>
             </a>
@@ -43,7 +43,7 @@ export default function RelatedIntegrations({ integrations }: RelatedIntegration
         {/* See all link */}
         <a
           href="/integrations"
-          className="mt-10 inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:underline sm:mt-14"
+          className="mt-10 inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:underline sm:mt-14"
         >
           View all integrations <ChevronRight className="size-3.5" />
         </a>

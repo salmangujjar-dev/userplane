@@ -23,7 +23,7 @@ export const vueConfig = defineFramework({
   seo: {
     title: 'Userplane for Vue | Screen Recordings with Console Logs',
     description:
-      'Capture console logs, network requests, and session data from your Vue app. Compatible with Vue 3 and Vue Router.',
+      'Every Vue recording ships with console logs, network data, and session activity across Vue 3 components and Vue Router transitions.',
     keywords:
       'vue screen recording, vue session replay, vue console logs, vue debugging, vue 3 screen recording, vue router session replay, userplane vue',
   },

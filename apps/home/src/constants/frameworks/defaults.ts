@@ -48,7 +48,7 @@ export function defineFramework(overrides: RequiredOverrides & OptionalOverrides
     gradient,
     seo: {
       title: `Userplane for ${name} | Screen Recordings with Console Logs and Session Info`,
-      description: `Capture console logs, network requests, and session info from your ${name} application. One-click screen recordings for debugging and support.`,
+      description: `Resolve ${name} bugs from the recording, not the ticket. Console logs, network data, and full session context on every capture.`,
       keywords: `${name.toLowerCase()} screen recording, ${name.toLowerCase()} session replay, ${name.toLowerCase()} console logs, ${name.toLowerCase()} debugging, userplane ${name.toLowerCase()}, screen recording sdk`,
     },
     jsonLd: {

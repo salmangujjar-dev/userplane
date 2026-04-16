@@ -116,14 +116,14 @@ export default function RoleBrowser({ roles }: RoleBrowserProps) {
                   </a>
 
                   {/* Description */}
-                  <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+                  <p className="max-w-2xl text-base md:text-lg leading-relaxed text-muted-foreground">
                     {item.description}
                   </p>
 
                   {/* Learn more */}
                   <a
                     href={item.pageHref}
-                    className="mb-6 mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-foreground hover:underline"
+                    className="mb-6 mt-2 inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
                   >
                     Learn more <ChevronRight className="size-3.5" />
                   </a>
@@ -173,10 +173,8 @@ export default function RoleBrowser({ roles }: RoleBrowserProps) {
                             </span>
                             <ChevronRight className="size-3 text-muted-foreground transition-transform group-hover/res:translate-x-0.5" />
                           </div>
-                          <p className="mb-1 text-[14px] font-medium text-foreground">
-                            {res.title}
-                          </p>
-                          <p className="line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
+                          <p className="mb-1 text-base font-medium text-foreground">{res.title}</p>
+                          <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                             {res.description}
                           </p>
                         </a>
@@ -188,7 +186,7 @@ export default function RoleBrowser({ roles }: RoleBrowserProps) {
                   <div className="mt-6 flex items-center gap-4">
                     <a
                       href={item.pageHref}
-                      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:underline"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:underline"
                     >
                       Learn more <ChevronRight className="size-3.5" />
                     </a>
@@ -196,7 +194,7 @@ export default function RoleBrowser({ roles }: RoleBrowserProps) {
                       href={item.docsHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:underline"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:underline"
                     >
                       Docs <ChevronRight className="size-3.5" />
                     </a>

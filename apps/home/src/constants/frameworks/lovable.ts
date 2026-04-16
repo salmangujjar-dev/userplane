@@ -23,7 +23,7 @@ export const lovableConfig = defineFramework({
   seo: {
     title: 'Userplane for Lovable | Screen Recordings for Lovable Apps',
     description:
-      'Add screen recordings to production-deployed Lovable apps. Console logs, network data, and session details — captured from every deployed build.',
+      'Every Lovable recording comes with console logs, network data, session activity and more',
     keywords:
       'lovable screen recording, lovable session replay, lovable console logs, lovable debugging, ai app builder screen recording, userplane lovable',
   },

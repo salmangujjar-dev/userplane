@@ -24,7 +24,7 @@ export const webConfig = defineFramework({
   seo: {
     title: 'Userplane for Web | Screen Recordings with Console Logs',
     description:
-      'Console logs, network requests, and session activity from any website. One script tag. No framework, no build step, no dependencies.',
+      'Skip asking for the repro steps. One script tag delivers recordings with console logs, network data, and session activity.',
     keywords:
       'web screen recording, website session replay, html screen recording, javascript session replay, static site screen recording, userplane web',
   },

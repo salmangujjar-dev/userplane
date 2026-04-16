@@ -23,7 +23,7 @@ export const remixConfig = defineFramework({
   seo: {
     title: 'Userplane for Remix | Screen Recordings with Console Logs',
     description:
-      'Capture console logs, network requests, and session data from your Remix app. Works with loaders, actions, and nested routes.',
+      'Skip the repro steps on Remix bugs. Recordings carry console logs, network data, and session context across loaders and nested routes.',
     keywords:
       'remix screen recording, remix session replay, remix console logs, remix debugging, remix loaders screen recording, nested routes session replay, userplane remix',
   },

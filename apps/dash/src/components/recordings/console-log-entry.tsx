@@ -1,32 +1,13 @@
 import { Table, TableBody, TableCell, TableRow } from '@userplane/ui/components/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@userplane/ui/components/tabs';
 import { cn } from '@userplane/ui/lib/utils';
-import {
-  AlertCircle,
-  AlertTriangle,
-  Bug,
-  ChevronRight,
-  Info,
-  MessageSquare,
-  Play,
-  X,
-} from 'lucide-react';
+import { AlertCircle, AlertTriangle, Bug, Info, MessageSquare, Play, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import type { RecordingConsoleLog, SerializedValue } from './console-log-types';
 import { formatSerializedValue } from './console-log-types';
 import { useRecordingPlayerSeek } from './recording-player-context';
 import { getRecordingTime } from './recording-time-utils';
-
-function isExpandableValue(value: SerializedValue): boolean {
-  if (value === null || typeof value !== 'object') return false;
-  if (
-    'type' in value &&
-    (value.type === 'element' || value.type === 'function' || value.type === 'error')
-  )
-    return false;
-  return true;
-}
 
 function formatDetailValue(value: SerializedValue): string {
   if (value === null) return 'null';
@@ -47,50 +28,9 @@ function formatDetailValue(value: SerializedValue): string {
   return String(value);
 }
 
-interface LogValueDisplayProps {
-  value: SerializedValue;
-  isObjectExpanded: boolean;
-  onToggleExpand: () => void;
-}
-
-function LogValueDisplay({ value, isObjectExpanded, onToggleExpand }: LogValueDisplayProps) {
-  const canExpand = isExpandableValue(value);
-  const color = 'text-foreground';
+function LogValueDisplay({ value }: { value: SerializedValue }) {
   const formatted = formatSerializedValue(value);
-
-  if (canExpand) {
-    return (
-      <span className="inline-flex items-start">
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleExpand();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.stopPropagation();
-              e.preventDefault();
-              onToggleExpand();
-            }
-          }}
-          className="hover:bg-muted/50 rounded px-0.5 cursor-pointer"
-        >
-          <ChevronRight
-            className={`h-3 w-3 transition-transform inline-block ${isObjectExpanded ? 'rotate-90' : ''}`}
-          />
-        </span>
-        <span className={color}>{formatted}</span>
-      </span>
-    );
-  }
-
-  if (typeof value === 'string') {
-    return <span className={color}>&quot;{formatted}&quot;</span>;
-  }
-
-  return <span className={color}>{formatted}</span>;
+  return <span className="text-foreground">{formatted}</span>;
 }
 
 interface LevelIconProps {
@@ -222,7 +162,6 @@ interface ConsoleLogEntryProps {
 
 export function ConsoleLogEntry({ log, recordingStartTime, isFocused }: ConsoleLogEntryProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const [isObjectExpanded, setIsObjectExpanded] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
 
   const recordingTime = getRecordingTime(log.timestamp, recordingStartTime);
@@ -242,38 +181,32 @@ export function ConsoleLogEntry({ log, recordingStartTime, isFocused }: ConsoleL
     <div
       ref={rowRef}
       className={cn(
-        'border-b border-border/50 transition-colors duration-700',
+        'transition-colors duration-700',
         isFocused && 'bg-yellow-100/80 dark:bg-yellow-500/15'
       )}
     >
       <button
         onClick={() => setShowDetails(!showDetails)}
-        className={`w-full flex items-start gap-2 px-3 py-1.5 text-xs hover:bg-muted/50 text-left ${showDetails ? 'bg-muted/30' : ''}`}
+        className={`w-full flex items-center gap-3 px-3 py-2 text-xs hover:bg-muted/50 text-left border-b border-border/50 ${showDetails ? 'bg-muted/30' : ''}`}
       >
-        <ChevronRight
-          className={`h-3 w-3 shrink-0 mt-0.5 transition-transform text-muted-foreground ${showDetails ? 'rotate-90' : ''}`}
-        />
-        <span className="text-muted-foreground shrink-0 mt-0.5 tabular-nums w-12">
-          {recordingTime}
-        </span>
-        <div className="shrink-0 mt-0.5">
+        <span className="text-muted-foreground shrink-0 tabular-nums w-12">{recordingTime}</span>
+
+        <div className="shrink-0">
           <LevelIcon type={log.type} />
         </div>
 
-        <div className="flex-1">
-          <div className="flex items-start gap-1 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <div className="truncate">
             {log.args.map((arg, pos) => (
               <span key={`arg-${pos}`}>
-                <LogValueDisplay
-                  value={arg}
-                  isObjectExpanded={isObjectExpanded}
-                  onToggleExpand={() => setIsObjectExpanded(!isObjectExpanded)}
-                />
-                {pos < log.args.length - 1 && <span className="text-muted-foreground"> </span>}
+                <LogValueDisplay value={arg} />
+                {pos < log.args.length - 1 && ' '}
               </span>
             ))}
           </div>
         </div>
+
+        <div className="w-28 text-right shrink-0 truncate text-muted-foreground">{log.url}</div>
       </button>
 
       {showDetails && (
