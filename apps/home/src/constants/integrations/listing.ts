@@ -35,8 +35,7 @@ export const LISTING_HERO: {
     ],
   },
   description: [
-    'Send a link and get full session replay — logs, network requests, and more.',
-    'Works seamlessly with any help desk, ticketing system or internal tool.',
+    'Send a link and get full session replay — logs, network requests, and more. Works seamlessly with any ticketing system.',
   ],
   primaryCTA: {
     text: 'Get started',

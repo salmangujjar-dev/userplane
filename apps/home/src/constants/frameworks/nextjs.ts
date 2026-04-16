@@ -40,8 +40,7 @@ export const nextjsConfig = defineFramework({
       ],
     },
     description: [
-      'Every recording ships with console logs, errors, and network data.',
-      'Works with App Router and Server Components.',
+      'Every recording ships with console logs, errors, and network data. Works with App Router and Server Components.',
     ],
     preview: {
       src: getFrameworkHeroUrl('microsites/frameworks/nextjs/hero.png'),

@@ -25,18 +25,20 @@ export const supportEngineersConfig = defineRole({
     title:
       'Userplane for Support Engineers | Console Logs, Network Data, and Repro Steps with Every Ticket',
     description:
-      'Diagnose escalations without reproducing them. Each recording carries console logs, network data, session activity, and user steps.',
+      'Diagnose escalations without back and forth. Each recording carries console logs, network data, session activity, and user steps.',
     keywords:
       'support engineer tools, bug report context, repro steps, console logs support, engineer-ready tickets, clean handoffs, userplane',
   },
   hero: {
     headline: {
       lines: ['Get to the root cause', 'on the first look'],
-      highlights: [{ wordIndex: 3, color: 'blue' }],
+      highlights: [
+        { wordIndex: 3, color: 'blue' },
+        { wordIndex: 4, color: 'blue' },
+      ],
     },
     description: [
-      'Console logs, network data, repro steps, and a full session snapshot.',
-      'Get everything you need to diagnose the issue.',
+      'Console logs, network data, repro steps, and a full session snapshot. Get everything you need to diagnose the issue.',
     ],
     preview: {
       src: getRoleHeroUrl('microsites/roles/support-engineers/hero.png'),
@@ -50,12 +52,12 @@ export const supportEngineersConfig = defineRole({
       number: '01',
       title: 'Trace issues to the source',
       description:
-        'Console errors, request snapshots, and session data — attached to every recording. Get to root cause without reconstructing the issue manually.',
+        'Console errors, request snapshots, and session data — attached to every recording. Get to the root cause without reconstructing the issue manually.',
       tagline: 'Root cause, not guesswork',
       capabilities: [
         'Console logs and error traces',
         'Network request snapshot',
-        'Application state and user context',
+        'Runtime state and user context',
         'Step-by-step action trail',
       ],
       image: getRoleFeatureUrl(
@@ -71,9 +73,9 @@ export const supportEngineersConfig = defineRole({
       tagline: 'Skip the back-and-forth',
       capabilities: [
         'Reproduce any issue instantly',
-        'Get full session and network context',
-        'Diagnose problems on the first pass',
-        'Step-by-step timeline of user actions',
+        'Get complete session context',
+        'Diagnose issues on the first pass',
+        'Step-by-step timeline of actions',
       ],
       image: getRoleFeatureUrl(
         'microsites/roles/support-engineers/support-engineers-repro-session.png'
@@ -89,7 +91,7 @@ export const supportEngineersConfig = defineRole({
       capabilities: [
         'Shareable recording links',
         'Logs and metadata attached',
-        'Works with Intercom, Zendesk, Slack',
+        'Designed for quick resolutions',
         'Engineer-ready from day one',
       ],
       image: getRoleFeatureUrl(

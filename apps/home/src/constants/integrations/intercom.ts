@@ -60,7 +60,7 @@ export const intercomConfig = defineIntegration({
       number: '01',
       title: 'Built for Intercom',
       description:
-        'Userplane brings screen recordings into Intercom Messenger, so your team can see exactly what went wrong and resolve issues faster. Send one-click recording links that work anywhere. No apps, installs, or extensions required.',
+        'Userplane brings screen recordings into Intercom Messenger, so your team can see exactly what went wrong and resolve issues faster. Send one-click recording links that work anywhere.',
       tagline: 'Native Intercom integration',
       capabilities: [
         'Request recordings without leaving Messenger',

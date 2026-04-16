@@ -29,11 +29,11 @@ export const angularConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Identify and fix Angular issues', 'with screen recordings'],
-      highlights: [{ wordIndex: 3, color: 'red' }],
+      lines: ['Resolve Angular issues', 'with screen recordings'],
+      highlights: [{ wordIndex: 1, color: 'red' }],
       icons: [
         {
-          wordIndex: 3,
+          wordIndex: 1,
           src: getFrameworkIconUrl('frameworks/angular.svg'),
           alt: 'Angular',
         },
@@ -61,7 +61,7 @@ export const angularConfig = defineFramework({
         'Link-based recording',
         'Full session replay',
         'No downloads required',
-        'Works with standalone & NgModules',
+        'Works with Angular JS',
       ],
       image: getFrameworkFeatureUrl('microsites/frameworks/angular/angular-recording-link.png'),
       learnMoreHref: DOCS_FRAMEWORK_ANGULAR,

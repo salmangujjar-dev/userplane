@@ -29,7 +29,7 @@ export const djangoConfig = defineFramework({
   },
   hero: {
     headline: {
-      lines: ['Identify Django issues', 'with screen recordings'],
+      lines: ['Identify Django issues with screen recordings'],
       highlights: [{ wordIndex: 1, color: 'green' }],
       icons: [
         {
@@ -40,8 +40,7 @@ export const djangoConfig = defineFramework({
       ],
     },
     description: [
-      'Add screen recordings to your Django app with a single script tag.',
-      'Works with template inheritance, login_required, and Django middleware.',
+      'Capture screen recordings with a single script tag. Each recording includes logs, requests, and session context.',
     ],
     preview: {
       src: getFrameworkHeroUrl('microsites/frameworks/django/hero.png'),

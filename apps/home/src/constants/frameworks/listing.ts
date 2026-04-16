@@ -32,8 +32,7 @@ export const LISTING_HERO: {
     ],
   },
   description: [
-    'Console logs, network data, and session details from any stack.',
-    'Drop-in SDK for Next.js, React, Vue, Svelte, and more.',
+    'Capture console logs, network data, and session details from any app. Drop-in SDK for Next.js, React, Vue, and more.',
   ],
   primaryCTA: {
     text: 'Get Started',

@@ -43,8 +43,7 @@ export const chromeExtensionConfig = defineIntegration({
       ],
     },
     description: [
-      'Create and share recording links right within Chrome.',
-      'Give your support team the context they need to close tickets faster.',
+      'Share recording links right within Chrome. Capture logs, network activity, and user context to speed up ticket resolution.',
     ],
     preview: {
       src: getHeroUrl('microsites/integrations/chrome-extension/hero.png'),
@@ -61,13 +60,13 @@ export const chromeExtensionConfig = defineIntegration({
       number: '01',
       title: 'Send a link. Get a recording.',
       description:
-        'The Userplane extension lives in your Chrome toolbar, letting you create and share recording links from any page. Click to generate a link and send it to your customer. No integration or setup required.',
+        'Userplane lives in your Chrome toolbar. Create and send recording links from any page. No integration required.',
       tagline: 'Zero-friction recording',
       capabilities: [
-        'One-click recording links for your customers',
-        'Works across any help desk, CRM, or internal tool',
-        'No integration, setup or admin needed',
-        'A browser extension that just works out of the box',
+        'Instantly create recording links',
+        'Works across any site or web app',
+        'No setup or integration required',
+        'Always available in your browser',
       ],
       image: getFeatureUrl(
         'microsites/integrations/chrome-extension/chrome-extension-recording-link.png'
@@ -78,13 +77,13 @@ export const chromeExtensionConfig = defineIntegration({
       number: '02',
       title: 'Automatic technical context',
       description:
-        'Every recording link captures console logs, network activity, and session details for your support team to resolve issues faster. Your team gets a complete technical snapshot — without asking customers for details.',
+        'Every recording link includes logs, network activity, and session data—so your team can debug faster without asking customers for more details.',
       tagline: 'Built for debugging',
       capabilities: [
-        'Capture console output and error traces',
-        'Analyze network requests and session activity',
-        'Access application state and environment details',
-        "Follow the customer's journey step by step",
+        'Collect console output and logs',
+        'Full network trace for each issue',
+        'Session details always included',
+        'Follow user steps from start to end',
       ],
       image: getFeatureUrl(
         'microsites/integrations/chrome-extension/chrome-extension-console-logs.png'
@@ -95,13 +94,13 @@ export const chromeExtensionConfig = defineIntegration({
       number: '03',
       title: 'Secure and private',
       description:
-        'Userplane protects your customers by default. Sensitive data never leaves the browser. Control what gets recorded, and stay compliant while building trust with your customers.',
+        'Userplane protects your customers by default. Control what gets recorded, and stay compliant without additional effort.',
       tagline: 'Built for compliance',
       capabilities: [
-        'Blur and mask confidential fields automatically',
-        'Define element-level redaction and masking rules',
-        'Give users control with built-in consent flows',
-        'Meet GDPR and CCPA without any extra work',
+        'Mask confidential data fields',
+        'Define element level redaction',
+        'Built in consent flows for users',
+        'Comply with GDPR and CCPA',
       ],
       image: getFeatureUrl(
         'microsites/integrations/chrome-extension/chrome-extension-data-redaction.png'

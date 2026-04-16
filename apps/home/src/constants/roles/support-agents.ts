@@ -37,8 +37,7 @@ export const supportAgentsConfig = defineRole({
       ],
     },
     description: [
-      'Request screen recordings with console logs, network data, and user steps.',
-      'See exactly what went wrong and resolve it on the first contact.',
+      'Request screen recordings with console logs and session data. See exactly what went wrong and resolve it on the first contact.',
     ],
     preview: {
       src: getRoleHeroUrl('microsites/roles/support-agents/hero.png'),
@@ -55,10 +54,10 @@ export const supportAgentsConfig = defineRole({
         'See the exact steps that led to the issue. Every click, scroll, and moment leading up to the problem. Get the full sequence — from first action to point of failure, delivered to you.',
       tagline: 'See the issue, not a description of it',
       capabilities: [
-        'Capture every click and interaction',
+        'Skip straight to the root cause',
         'Follow step-by-step replay',
-        'Get full sequence, not a snapshot',
-        'Understand hard-to-describe issues',
+        'Capture every click and interaction',
+        'Understand every customer issue',
       ],
       image: getRoleFeatureUrl('microsites/roles/support-agents/support-agents-user-actions.png'),
       learnMoreHref: DOCS_HELPDESK_SETUP,
@@ -67,7 +66,7 @@ export const supportAgentsConfig = defineRole({
       number: '02',
       title: 'Get to the root cause',
       description:
-        'Every recording includes console errors, network requests, browser metadata, and a step-by-step action trail. So you can triage issues with complete context upfront. No follow-ups needed.',
+        'Every recording includes console errors, network requests and a step-by-step action trail. So you can triage issues with complete context upfront. No additional follow-ups needed.',
       tagline: 'Everything you need to triage',
       capabilities: [
         'Console logs and error traces',
@@ -85,10 +84,10 @@ export const supportAgentsConfig = defineRole({
         'Userplane fits into your existing support workflow. Request and review recordings from the sidebar, shortcuts, and macros — without leaving Intercom, Zendesk, or Slack.',
       tagline: 'Works where you already work',
       capabilities: [
-        'Intercom, Zendesk, and Slack integrations',
-        'Includes support for macros and shortcuts',
-        'No context switching required',
-        'No new tools to learn',
+        'Works with Intercom and Zendesk',
+        'Support Slack Messenger natively',
+        'Built into your current workflow',
+        'Zero learning curve for teams',
       ],
       image: getRoleFeatureUrl(
         'microsites/roles/support-agents/support-agents-helpdesk-recording.png'
