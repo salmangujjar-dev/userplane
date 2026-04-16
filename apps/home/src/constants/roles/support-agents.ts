@@ -24,7 +24,7 @@ export const supportAgentsConfig = defineRole({
   seo: {
     title: 'Userplane for Support Agents | Understand Customer Issues on First Contact',
     description:
-      'Request screen recordings with console logs, network data, and user steps directly from your help desk. Uncover root cause and resolve tickets on the first contact.',
+      'Close support tickets on first contact. Every recording lands with console logs, network data, and exact user steps.',
     keywords:
       'support agent tools, screen recording support, help desk screen recording, intercom screen recording, zendesk screen recording, resolve tickets faster, userplane',
   },

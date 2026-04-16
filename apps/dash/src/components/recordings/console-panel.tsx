@@ -33,12 +33,6 @@ const mockLogs: RecordingConsoleLog[] = [
     ['at fetchData (api.js:45:12)', 'at loadUser (user.js:23:8)', 'at init (app.js:12:4)']
   ),
   createMockConsoleLog(
-    baseTime + 5332,
-    'log',
-    [{ user: 'john', id: 123, active: true }],
-    'data.js'
-  ),
-  createMockConsoleLog(
     baseTime + 6665,
     'debug',
     ['Component mounted: UserProfile'],
@@ -125,6 +119,132 @@ const mockLogs: RecordingConsoleLog[] = [
     'eval.js'
   ),
   createMockConsoleLog(baseTime + 31000, 'log', [[1, 2, 3, 4, 5]], 'data.js'),
+  createMockConsoleLog(baseTime + 33200, 'info', ['Background sync started'], 'sync.js'),
+  createMockConsoleLog(
+    baseTime + 35400,
+    'debug',
+    ['Revalidating cache key: dashboard.widgets'],
+    'cache.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 37600,
+    'warning',
+    ['Retrying request after timeout: /api/metrics'],
+    'network.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 39800,
+    'log',
+    [{ route: '/settings/profile', method: 'GET', durationMs: 128 }],
+    'router.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 42000,
+    'info',
+    ['Feature flag loaded: new-onboarding'],
+    'flags.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 44200,
+    'error',
+    ['Unhandled promise rejection: Request aborted'],
+    'requests.js',
+    ['at loadMetrics (requests.js:87:14)', 'at async initDashboard (dashboard.js:31:5)']
+  ),
+  createMockConsoleLog(baseTime + 46400, 'debug', ['Heartbeat acknowledged'], 'socket.js'),
+  createMockConsoleLog(
+    baseTime + 48600,
+    'log',
+    [{ action: 'expand-panel', panelId: 'console', source: 'keyboard-shortcut' }],
+    'ui-events.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 50800,
+    'warning',
+    ['Long task detected: script evaluation exceeded 120ms'],
+    'performance.js'
+  ),
+  createMockConsoleLog(baseTime + 53000, 'info', ['IndexedDB write complete'], 'storage.js'),
+  createMockConsoleLog(baseTime + 55200, 'debug', ['Polling interval updated to 5s'], 'polling.js'),
+  createMockConsoleLog(
+    baseTime + 57400,
+    'error',
+    ['SyntaxError: Unexpected token "<" in JSON at position 0'],
+    'json-parser.js',
+    ['at parseResponse (json-parser.js:19:11)', 'at fetchConfig (config.js:42:9)']
+  ),
+  createMockConsoleLog(baseTime + 59600, 'log', ['Preparing analytics payload'], 'analytics.js'),
+  createMockConsoleLog(baseTime + 61800, 'info', ['Upload progress: 45%'], 'uploader.js'),
+  createMockConsoleLog(
+    baseTime + 64000,
+    'warning',
+    ['Service worker update available'],
+    'service-worker.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 66200,
+    'debug',
+    ['Applying optimistic update for ticket #1042'],
+    'store.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 68400,
+    'log',
+    [{ breadcrumbs: ['home', 'projects', 'alpha'], current: 'recordings' }],
+    'breadcrumbs.js'
+  ),
+  createMockConsoleLog(baseTime + 70600, 'info', ['Session refreshed successfully'], 'session.js'),
+  createMockConsoleLog(
+    baseTime + 72800,
+    'error',
+    ['QuotaExceededError: Failed to execute "setItem" on "Storage"'],
+    'storage.js',
+    ['at persistDraft (storage.js:58:18)', 'at onAutoSave (editor.js:210:7)']
+  ),
+  createMockConsoleLog(
+    baseTime + 75000,
+    'debug',
+    ['Render cycle completed in 11ms'],
+    'render-profiler.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 77200,
+    'warning',
+    ['Third-party script blocked by content security policy'],
+    'csp.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 79400,
+    'log',
+    ['Executing cleanup routine before navigation'],
+    'lifecycle.js'
+  ),
+  createMockConsoleLog(baseTime + 81600, 'info', ['Draft saved to remote backup'], 'backup.js'),
+  createMockConsoleLog(
+    baseTime + 83800,
+    'error',
+    ['DOMException: The operation is insecure'],
+    'security.js',
+    ['at requestClipboardPermission (security.js:14:10)', 'at onPaste (editor.js:131:13)']
+  ),
+  createMockConsoleLog(
+    baseTime + 86000,
+    'debug',
+    ['Tab visibility changed: hidden -> visible'],
+    'visibility.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 88200,
+    'log',
+    [{ experiment: 'search-v2', bucket: 'B', enabled: true }],
+    'experiments.js'
+  ),
+  createMockConsoleLog(
+    baseTime + 90000,
+    'info',
+    ['Console replay reached 90s mark'],
+    'timeline.js'
+  ),
 ];
 
 const CONSOLE_FILTERS: { value: LogLevel; label: string; icon: LucideIcon; iconClass: string }[] = [
@@ -262,6 +382,13 @@ export function ConsolePanel({
             );
           })}
         </div>
+      </div>
+
+      <div className="flex items-center gap-3 px-3 py-2 text-[10px] font-medium text-muted-foreground border-b bg-muted/30">
+        <div className="w-12 shrink-0">Time</div>
+        <div className="w-4 shrink-0" />
+        <div className="flex-1">Log</div>
+        <div className="w-28 text-right shrink-0">Source</div>
       </div>
 
       <div className="flex-1 overflow-y-auto font-mono">

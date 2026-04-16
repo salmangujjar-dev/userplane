@@ -23,15 +23,15 @@ export default function FeatureShowcase({ features }: FeatureShowcaseProps) {
                 <h3 className="mt-3 mb-4 font-dm-sans text-[clamp(24px,4vw,36px)] font-medium leading-tight tracking-[-0.02em] text-foreground">
                   {feature.title}
                 </h3>
-                <p className="mb-6 text-[13px] leading-relaxed text-muted-foreground sm:mb-8">
+                <p className="mb-6 text-base leading-relaxed text-muted-foreground sm:mb-8">
                   {feature.description}
                 </p>
 
-                <p className="mb-3 text-[13px] font-semibold text-foreground">{feature.tagline}</p>
+                <p className="mb-3 text-sm font-semibold text-foreground">{feature.tagline}</p>
                 <hr className="mb-3 border-border/10" />
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
                   {feature.capabilities.map((cap) => (
-                    <span key={cap} className="text-[13px] text-muted-foreground">
+                    <span key={cap} className="text-sm text-muted-foreground">
                       {cap}
                     </span>
                   ))}
@@ -40,7 +40,7 @@ export default function FeatureShowcase({ features }: FeatureShowcaseProps) {
                 {feature.learnMoreHref && (
                   <a
                     href={feature.learnMoreHref}
-                    className="mt-6 inline-flex items-center gap-1 text-[13px] font-medium text-foreground hover:underline"
+                    className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
                   >
                     Learn more <ChevronRight className="size-3.5" />
                   </a>

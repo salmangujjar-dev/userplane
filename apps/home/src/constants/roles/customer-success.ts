@@ -23,7 +23,7 @@ export const customerSuccessConfig = defineRole({
   seo: {
     title: 'Userplane for Customer Success | Resolve Issues Customers Struggle to Describe',
     description:
-      "Screen recordings with console logs, network data, and session metadata. Capture what customers can't put into words.",
+      'Understand harder to describe issues. Every recording carries console logs, network data, and full session context.',
     keywords:
       'customer success tools, screen recording customer success, resolve issues faster, technical context, session replay, csm tools, userplane',
   },

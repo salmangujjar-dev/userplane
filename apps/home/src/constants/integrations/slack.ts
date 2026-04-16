@@ -26,7 +26,7 @@ export const slackConfig = defineIntegration({
   seo: {
     title: 'Slack Screen Recording Integration | Userplane',
     description:
-      'Request and receive screen recordings within Slack. Capture console logs, network requests, and session replays. No context switch needed.',
+      'Triage customer bugs within Slack. Every screen recording carries console logs, network data, and session activity.',
     keywords:
       'slack screen recording, slack bug reporting, slack customer support recording, slack integration, screen recording slack, userplane slack, slack support tool, slack issue reporting',
   },

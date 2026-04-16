@@ -24,7 +24,7 @@ export const railsConfig = defineFramework({
   seo: {
     title: 'Userplane for Ruby on Rails | Screen Recordings with Console Logs',
     description:
-      'Add screen recordings to your Rails app. One script tag in your application layout. Compatible with Turbo, Devise, and Rails middleware.',
+      'Fix Rails bugs from the screen recording. Console logs, network data, and session activity available across Turbo and Devise.',
     keywords:
       'ruby on rails screen recording, rails session replay, rails console logs, rails debugging, erb template screen recording, turbo session replay, devise screen recording, userplane rails',
   },

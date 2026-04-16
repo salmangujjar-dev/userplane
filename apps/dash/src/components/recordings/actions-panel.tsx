@@ -36,6 +36,21 @@ const mockActions: RecordingActionLog[] = [
     url: 'https://app.example.com/dashboard',
     title: 'Dashboard',
   }),
+  createMockActionLog(baseTime + 800, {
+    action: 'tab_activated',
+    tabId: 'tab-1',
+  }),
+  createMockActionLog(baseTime + 1300, {
+    action: 'recorder-pause',
+  }),
+  createMockActionLog(baseTime + 1700, {
+    action: 'recorder-resume',
+  }),
+  createMockActionLog(baseTime + 2100, {
+    action: 'tab_switch',
+    from: 'tab-1',
+    to: 'tab-2',
+  }),
   createMockActionLog(baseTime + 2500, {
     action: 'click',
     url: 'https://app.example.com/dashboard',
@@ -105,6 +120,127 @@ const mockActions: RecordingActionLog[] = [
   createMockActionLog(baseTime + 35000, {
     action: 'page_unload',
     url: 'https://app.example.com/dashboard',
+  }),
+  createMockActionLog(baseTime + 37200, {
+    action: 'init_page',
+    url: 'https://app.example.com/projects',
+    title: 'Projects',
+  }),
+  createMockActionLog(baseTime + 39400, {
+    action: 'click',
+    url: 'https://app.example.com/projects',
+    info: { tagName: 'INPUT', id: 'project-search', classList: ['search', 'input'] },
+  }),
+  createMockActionLog(baseTime + 41600, {
+    action: 'click',
+    url: 'https://app.example.com/projects',
+    info: { tagName: 'BUTTON', id: 'open-project-alpha', classList: ['project-card', 'open'] },
+  }),
+  createMockActionLog(baseTime + 43800, {
+    action: 'spa_route',
+    from: '/projects',
+    to: '/projects/alpha',
+    triggeredBy: 'pushState',
+  }),
+  createMockActionLog(baseTime + 46000, {
+    action: 'click',
+    url: 'https://app.example.com/projects/alpha',
+    info: { tagName: 'BUTTON', id: 'new-ticket', classList: ['primary', 'small'] },
+  }),
+  createMockActionLog(baseTime + 48200, {
+    action: 'tab_switch',
+    from: 'tab-2',
+    to: 'tab-3',
+  }),
+  createMockActionLog(baseTime + 50400, {
+    action: 'tab_deactivated',
+    tabId: 'tab-3',
+  }),
+  createMockActionLog(baseTime + 52600, {
+    action: 'tab_activated',
+    tabId: 'tab-3',
+  }),
+  createMockActionLog(baseTime + 54800, {
+    action: 'recorder-pause',
+  }),
+  createMockActionLog(baseTime + 57000, {
+    action: 'recorder-resume',
+  }),
+  createMockActionLog(baseTime + 59200, {
+    action: 'navigate',
+    from: 'https://app.example.com/projects/alpha',
+    to: 'https://app.example.com/projects/alpha/settings',
+    method: 'pushState',
+  }),
+  createMockActionLog(baseTime + 61400, {
+    action: 'click',
+    url: 'https://app.example.com/projects/alpha/settings',
+    info: { tagName: 'INPUT', id: 'notify-toggle', classList: ['switch'] },
+  }),
+  createMockActionLog(baseTime + 63600, {
+    action: 'click',
+    url: 'https://app.example.com/projects/alpha/settings',
+    info: { tagName: 'BUTTON', id: 'save-settings', classList: ['primary'] },
+  }),
+  createMockActionLog(baseTime + 65800, {
+    action: 'spa_route',
+    from: '/projects/alpha/settings',
+    to: '/projects/alpha/activity',
+    triggeredBy: 'replaceState',
+  }),
+  createMockActionLog(baseTime + 68000, {
+    action: 'click',
+    url: 'https://app.example.com/projects/alpha/activity',
+    info: { tagName: 'A', id: 'activity-item-42', classList: ['activity-link'] },
+  }),
+  createMockActionLog(baseTime + 70200, {
+    action: 'navigate',
+    from: 'https://app.example.com/projects/alpha/activity',
+    to: 'https://app.example.com/help',
+    method: 'link',
+  }),
+  createMockActionLog(baseTime + 72400, {
+    action: 'click',
+    url: 'https://app.example.com/help',
+    info: { tagName: 'BUTTON', id: 'open-chat', classList: ['support', 'cta'] },
+  }),
+  createMockActionLog(baseTime + 74600, {
+    action: 'tab_switch',
+    from: 'tab-3',
+    to: 'tab-1',
+  }),
+  createMockActionLog(baseTime + 76800, {
+    action: 'spa_route',
+    from: '/help',
+    to: '/dashboard',
+    triggeredBy: 'popState',
+  }),
+  createMockActionLog(baseTime + 79000, {
+    action: 'click',
+    url: 'https://app.example.com/dashboard',
+    info: { tagName: 'BUTTON', id: 'refresh-metrics', classList: ['ghost'] },
+  }),
+  createMockActionLog(baseTime + 81200, {
+    action: 'tab_deactivated',
+    tabId: 'tab-1',
+  }),
+  createMockActionLog(baseTime + 83400, {
+    action: 'tab_activated',
+    tabId: 'tab-1',
+  }),
+  createMockActionLog(baseTime + 85600, {
+    action: 'click',
+    url: 'https://app.example.com/dashboard',
+    info: { tagName: 'BUTTON', id: 'open-profile-menu', classList: ['avatar', 'menu-trigger'] },
+  }),
+  createMockActionLog(baseTime + 87800, {
+    action: 'page_unload',
+    url: 'https://app.example.com/dashboard',
+  }),
+  createMockActionLog(baseTime + 90000, {
+    action: 'init_page',
+    url: 'https://app.example.com/login',
+    title: 'Sign In',
   }),
 ];
 

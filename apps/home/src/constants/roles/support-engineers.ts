@@ -25,7 +25,7 @@ export const supportEngineersConfig = defineRole({
     title:
       'Userplane for Support Engineers | Console Logs, Network Data, and Repro Steps with Every Ticket',
     description:
-      'Console logs, network data, repro steps, and full session details. Complete context from first contact — no chasing customers for details.',
+      'Diagnose escalations without reproducing them. Each recording carries console logs, network data, session activity, and user steps.',
     keywords:
       'support engineer tools, bug report context, repro steps, console logs support, engineer-ready tickets, clean handoffs, userplane',
   },

@@ -46,8 +46,8 @@ export default function ResourceLinks({ label, headline, links, footerLinks }: R
                   </span>
                   <ChevronRight className="size-3 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                 </div>
-                <p className="mb-1.5 text-[15px] font-medium text-foreground">{link.title}</p>
-                <p className="line-clamp-3 text-[13px] leading-relaxed text-muted-foreground">
+                <p className="mb-1.5 text-base font-medium text-foreground">{link.title}</p>
+                <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
                   {link.description}
                 </p>
               </a>
@@ -63,7 +63,7 @@ export default function ResourceLinks({ label, headline, links, footerLinks }: R
                 key={link.text}
                 href={link.href}
                 {...(link.external && { target: '_blank', rel: 'noopener noreferrer' })}
-                className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:underline"
               >
                 {link.text} <ChevronRight className="size-3.5" />
               </a>

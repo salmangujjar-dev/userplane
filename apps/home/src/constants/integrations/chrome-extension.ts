@@ -26,7 +26,7 @@ export const chromeExtensionConfig = defineIntegration({
   seo: {
     title: 'Chrome Extension for Requesting Screen Recordings | Userplane',
     description:
-      'Send recording links to customers right from Chrome. Get back replays with console logs, network traces, and session data for your support team to resolve issues faster.',
+      'Resolve customer bugs without leaving Chrome. Send a recording link; the replay returns with console, network, and session activity.',
     keywords:
       'chrome extension screen recording, browser screen recording, chrome screen capture, screen recording extension, userplane, chrome devtools recording, browser capture tool',
   },

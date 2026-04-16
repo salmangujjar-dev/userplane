@@ -23,7 +23,7 @@ export const svelteConfig = defineFramework({
   seo: {
     title: 'Userplane for Svelte | Screen Recordings with Console Logs',
     description:
-      'Capture console logs, network requests, and session data from your Svelte app. Compatible with SvelteKit routing and server hooks.',
+      'Debug SvelteKit bugs from the recording. Get console logs, network, and session context across server hooks and routes.',
     keywords:
       'svelte screen recording, sveltekit session replay, svelte console logs, svelte debugging, sveltekit screen recording, server hooks session replay, userplane svelte',
   },

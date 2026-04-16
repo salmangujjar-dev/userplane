@@ -155,7 +155,7 @@ export default function Hero({
               })}
             </h1>
 
-            <p className="text-[15px] leading-[1.6] text-muted-foreground">
+            <p className="text-base md:text-lg leading-relaxed text-muted-foreground">
               {description.map((line, i) => (
                 <span key={i}>
                   {i > 0 && <br />}
@@ -198,7 +198,7 @@ export default function Hero({
                   decoding="async"
                   className="size-8 object-contain"
                 />
-                <span className="text-[13px] leading-tight text-muted-foreground">
+                <span className="text-sm leading-tight text-muted-foreground">
                   Available in the
                   <br />
                   <span className="font-medium text-foreground">{marketplace.label}</span>

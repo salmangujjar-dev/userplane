@@ -23,7 +23,7 @@ export const emergentConfig = defineFramework({
   seo: {
     title: 'Userplane for Emergent | Screen Recordings for AI-Generated Apps',
     description:
-      'Add screen recordings to your Emergent apps. Console logs, network data, and session activity — captured from every app your AI builds.',
+      'Fix bugs from Emergent-built apps. Get console logs, network data, and session activity with every recording',
     keywords:
       'emergent screen recording, emergent session replay, ai generated app debugging, emergent console logs, vibe coding screen recording, userplane emergent',
   },

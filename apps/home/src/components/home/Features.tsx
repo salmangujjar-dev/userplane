@@ -28,8 +28,8 @@ function FeatureCard({ image, imageMobile, imageAlt, title, description }: Featu
         </div>
       </div>
       <div className="flex-none px-6 pb-6">
-        <h3 className="text-base font-medium leading-6 text-zinc-900 mb-2">{title}</h3>
-        <p className="text-sm text-zinc-600 leading-5">{description}</p>
+        <h3 className="text-base font-medium leading-6 text-foreground mb-2">{title}</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
       </div>
     </div>
   );

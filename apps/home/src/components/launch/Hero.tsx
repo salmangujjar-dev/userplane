@@ -153,7 +153,7 @@ export default function LaunchHero({
               })}
             </h1>
 
-            <p className="text-[15px] leading-[1.6] text-muted-foreground">
+            <p className="text-base md:text-lg leading-relaxed text-muted-foreground">
               {description.map((line, i) => (
                 <span key={i}>
                   {i > 0 && <br />}

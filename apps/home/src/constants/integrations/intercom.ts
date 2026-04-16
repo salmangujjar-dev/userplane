@@ -25,7 +25,7 @@ export const intercomConfig = defineIntegration({
   seo: {
     title: 'Intercom Screen Recording Integration | Userplane',
     description:
-      'Request screen recordings without leaving Intercom. Capture console logs, network requests, and session replays to understand and resolve support issues faster.',
+      'Resolve Intercom tickets without back-and-forth. Recordings carry console logs, network data, and session activity.',
     keywords:
       'intercom screen recording, intercom integration, intercom messenger app, intercom support tool, intercom bug reporting, screen recording intercom, userplane intercom, customer support screen recording',
   },

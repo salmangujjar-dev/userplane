@@ -25,7 +25,7 @@ export const engineeringConfig = defineRole({
   seo: {
     title: 'Userplane for Engineering Teams | Debug Customer Issues with Screen Recordings',
     description:
-      'Screen recordings with console logs, network data, and session metadata. Engineering teams get full reproduction context without the back and forth with support. Drop-in SDK for React, Next.js, Vue, Angular, and more.',
+      'Reproduce support issues with screen recordings. Console logs, network data, and session activity on every capture.',
     keywords:
       'engineering screen recording, session replay sdk, console logs sdk, react screen recording, next.js screen recording, vue screen recording, angular screen recording, userplane sdk',
   },

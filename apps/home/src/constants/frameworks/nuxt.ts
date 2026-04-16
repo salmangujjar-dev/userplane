@@ -23,7 +23,7 @@ export const nuxtConfig = defineFramework({
   seo: {
     title: 'Userplane for Nuxt | Screen Recordings with Console Logs',
     description:
-      'Console logs, network requests, and session info from your Nuxt app. SSR-safe. Works with Nuxt 3 runtime config.',
+      'Resolve NuxtJS support issues. SSR-safe recordings with console logs, network data, and Nuxt 3 session context.',
     keywords:
       'nuxt screen recording, nuxt session replay, nuxt console logs, nuxt debugging, nuxt 3 screen recording, userplane nuxt',
   },

@@ -62,7 +62,7 @@ export function defineIntegration(
     shortName,
     seo: {
       title: `${name} Integration | Userplane - Screen Recordings for ${name}`,
-      description: `Request and receive screen recordings without leaving ${name}. Capture console logs, network requests, and session data attached to every conversation.`,
+      description: `Resolve ${name} tickets on first contact. Recordings carry console logs, network data, and session activity in-conversation.`,
       keywords: `${name.toLowerCase()} screen recording, ${name.toLowerCase()} integration, screen recording for ${name.toLowerCase()}, ${name.toLowerCase()} support tool, userplane, customer support, bug reporting`,
     },
     jsonLd: {

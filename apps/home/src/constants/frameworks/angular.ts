@@ -23,7 +23,7 @@ export const angularConfig = defineFramework({
   seo: {
     title: 'Userplane for Angular | Screen Recordings with Console Logs',
     description:
-      'Console logs, network requests, and session activity from your Angular app. Works with standalone components and NgModules.',
+      'Resolve Angular bugs from screen recordings. Get console logs, network data, and session activity from standalone components.',
     keywords:
       'angular screen recording, angular session replay, angular console logs, angular debugging, standalone components screen recording, ngmodule session replay, userplane angular',
   },

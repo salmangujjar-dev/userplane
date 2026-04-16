@@ -22,14 +22,14 @@ function PricingFeatureItem({ text, included, subFeatures }: PlanFeatureHighligh
             />
           </svg>
         </div>
-        <h3 className="text-xl font-semibold text-gray-900">{text}</h3>
+        <h3 className="text-xl font-semibold text-foreground">{text}</h3>
       </div>
       <div>
         {subFeatures && subFeatures.length > 0 && (
           <ul className="space-y-2">
             {subFeatures.map((subFeature: PlanFeatureHighlight) => (
               <li key={subFeature.text} className="flex items-start">
-                <span className="text-base text-gray-600">{subFeature.text}</span>
+                <span className="text-base text-muted-foreground">{subFeature.text}</span>
               </li>
             ))}
           </ul>
@@ -170,7 +170,7 @@ export default function Pricing() {
 
         {/* What's Included Section */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 tracking-wider mb-8">
+          <h3 className="text-sm font-semibold text-muted-foreground tracking-wider mb-8">
             What&apos;s Included
           </h3>
           <div className="space-y-8">

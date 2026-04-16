@@ -52,7 +52,7 @@ export function defineRole(overrides: RequiredOverrides & OptionalOverrides): Ro
     shortName,
     seo: {
       title: `Userplane for ${name} | Screen Recordings with Full Technical Context`,
-      description: `Userplane helps ${name.toLowerCase()} resolve issues faster with screen recordings, console logs, network data, and session metadata.`,
+      description: `Resolve customer issues faster for ${name.toLowerCase()}. Recordings ship with console logs, network data, and full session activity.`,
       keywords: `userplane ${name.toLowerCase()}, screen recording ${name.toLowerCase()}, ${name.toLowerCase()} tools, support screen recording, session replay`,
     },
     jsonLd: {
