@@ -38,7 +38,7 @@ export const engineeringConfig = defineRole({
       ],
     },
     description: [
-      'Capture console logs, network activity, and session metadata with screen recordings. Works with React, Next.js, Vue, Angular, and more.',
+      'Capture console logs, network activity, and session metadata with screen recordings. Works with React, Vue and more.',
     ],
     preview: {
       src: getRoleHeroUrl('microsites/roles/engineering/hero.png'),
@@ -81,7 +81,7 @@ export const engineeringConfig = defineRole({
       number: '03',
       title: 'Native to your support stack',
       description:
-        'Every recording lives alongside the support conversation — deep-linked to the ticket in Intercom or Zendesk, routed to your issue tracker, and accessible from Slack. Full context, right where your team expects it.',
+        'Every recording lives alongside the support conversation — deep-linked to the ticket in Intercom or Zendesk and accessible from Slack. Designed for fast technical support teams.',
       tagline: 'Fits where you already work',
       capabilities: [
         'Embedded into Intercom',

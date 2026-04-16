@@ -40,7 +40,7 @@ export const reactConfig = defineFramework({
       ],
     },
     description: [
-      'Replay the full user session with logs, errors, and network data.',
+      'Replay the user recordings with logs, errors, and network data.',
       'Works with Vite, CRA, and custom setups.',
     ],
     preview: {

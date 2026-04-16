@@ -34,8 +34,7 @@ export const webConfig = defineFramework({
       highlights: [{ wordIndex: 1, color: 'blue' }],
     },
     description: [
-      'Console logs, network requests, and session activity from any website.',
-      'One script tag. No framework, no build step, no dependencies.',
+      'Capture console logs, network requests, and session activity from any app. One script tag. No frameworks needed.',
     ],
     preview: {
       src: getFrameworkHeroUrl('microsites/frameworks/web/hero.png'),

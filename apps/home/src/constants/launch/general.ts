@@ -82,7 +82,7 @@ export const LAUNCH_FEATURES: FeatureData[] = [
     number: '01',
     title: 'Recording, logs, and errors',
     description:
-      'Share a recording link with your customer. Every recording includes the technical context behind the issue—logs, network activity, and user actions—so your team can quickly understand and resolve problems.',
+      'Share a recording link and get logs, network, and user steps—so your team can debug and resolve issues faster',
     tagline: 'Everything in one replay',
     capabilities: [
       'Surface console logs & errors',
@@ -97,7 +97,7 @@ export const LAUNCH_FEATURES: FeatureData[] = [
     number: '02',
     title: 'Built into your help desk',
     description:
-      'Userplane lives inside Slack, Intercom, and Zendesk. Request recordings from the conversation thread and receive replays without switching tabs. Your team stays where the conversation already lives.',
+      'Userplane lives inside Slack, Intercom, and Zendesk. Request recordings and receive replays — no context switch required.',
     tagline: 'Native integrations',
     capabilities: [
       'Slack slash commands & mentions',
@@ -112,7 +112,7 @@ export const LAUNCH_FEATURES: FeatureData[] = [
     number: '03',
     title: 'Privacy-first by design',
     description:
-      'Sensitive data is automatically blurred and redacted before recordings leave the browser. Your customers stay in control of what gets captured, and your team stays compliant without extra work.',
+      "Compliant by default. Define what's recorded, exclude sensitive data, and give your team clean, usable context.",
     tagline: 'Built for trust & compliance',
     capabilities: [
       'Automatic PII redaction',

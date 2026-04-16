@@ -37,7 +37,7 @@ export const customerSuccessConfig = defineRole({
     },
     description: [
       'Screen recordings with console logs and session details.',
-      "Capture what customers can't put into words.",
+      'Capture harder to describe support issues.',
     ],
     preview: {
       src: getRoleHeroUrl('microsites/roles/customer-success/hero.png'),

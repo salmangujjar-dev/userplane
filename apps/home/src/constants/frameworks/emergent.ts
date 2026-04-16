@@ -37,7 +37,7 @@ export const emergentConfig = defineFramework({
       icons: [],
     },
     description: [
-      'Add screen recordings to your Emergent applications with a prompt.',
+      'Request screen recordings from your Emergent apps.',
       'Console logs, network data, and errors captured automatically.',
     ],
     preview: {
@@ -52,7 +52,7 @@ export const emergentConfig = defineFramework({
       number: '01',
       title: 'Prompt-driven installation',
       description:
-        'Describe the integration in your Emergent conversation. The AI adds the recording script to your generated app. No manual code changes required.',
+        'Install Userplane with a single prompt. Start capturing recordings with logs and context instantly — no additional setup required.',
       tagline: 'AI handles the setup',
       capabilities: [
         'Conversational setup',
@@ -67,7 +67,7 @@ export const emergentConfig = defineFramework({
       number: '02',
       title: 'Full technical context',
       description:
-        'Console errors, network activity, browser metadata, and user steps — captured from every AI-generated page. Debug generated code with full production context.',
+        'See logs, network, and user steps for every issue—so your team can resolve in-app support requests faster.',
       tagline: 'Debug generated code',
       capabilities: [
         'Console errors and stack traces',

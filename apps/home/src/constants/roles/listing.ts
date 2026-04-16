@@ -33,8 +33,7 @@ export const LISTING_HERO: {
     ],
   },
   description: [
-    'Request screen recordings with logs, network requests, and session data.',
-    'Resolve issues on first contact. Skip the back-and-forth.',
+    'Request screen recordings with logs, network requests, and session data. Resolve issues on first contact.',
   ],
   primaryCTA: {
     text: 'Get Started',

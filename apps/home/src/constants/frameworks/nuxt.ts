@@ -40,8 +40,8 @@ export const nuxtConfig = defineFramework({
       ],
     },
     description: [
-      'SSR and client-side sessions captured with full context.',
-      'Works with Nuxt 3 runtime config.',
+      'SSR and client-side issues captured with logs,',
+      'network requests and session data.',
     ],
     preview: {
       src: getFrameworkHeroUrl('microsites/frameworks/nuxt/hero.png'),

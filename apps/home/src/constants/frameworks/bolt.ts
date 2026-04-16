@@ -37,8 +37,7 @@ export const boltConfig = defineFramework({
       icons: [],
     },
     description: [
-      'Add screen recordings to your Bolt.new app with a single prompt.',
-      'Console logs, network data, and session data — no code editing required.',
+      'Request screen recordings from your Bolt apps. Request console logs, network data, and session data.',
     ],
     preview: {
       src: getFrameworkHeroUrl('microsites/frameworks/bolt/hero.png'),
@@ -52,7 +51,7 @@ export const boltConfig = defineFramework({
       number: '01',
       title: 'Paste a prompt, done',
       description:
-        'Copy a prompt into Bolt and Userplane is installed. No manual code edits, no package installs. Customers record from a link — you get the full replay.',
+        'Copy a prompt into Bolt and Userplane is installed. No manual code edits, no package installs or build setup needed.',
       tagline: 'Prompt-driven setup',
       capabilities: [
         'One-prompt installation',

@@ -41,8 +41,8 @@ export const lovableConfig = defineFramework({
       ],
     },
     description: [
-      'One prompt to add recordings to your deployed Lovable app.',
-      'Console logs, network data, and session details from every build.',
+      'One prompt to capture recordings from your Lovable app.',
+      'Get logs and session details for every support issue.',
     ],
     preview: {
       src: getFrameworkHeroUrl('microsites/frameworks/lovable/hero.png'),
@@ -86,7 +86,7 @@ export const lovableConfig = defineFramework({
       number: '03',
       title: 'Data stays private',
       description:
-        'Sensitive fields are masked client-side before recordings are transmitted. Configure blur targets via prompt. GDPR and CCPA compliant.',
+        'Sensitive fields are masked client-side before recordings are transmitted. Configure blur targets via prompt. GDPR and CCPA compliant out of the box.',
       tagline: 'Masked before capture',
       capabilities: [
         'Client-side field masking',
