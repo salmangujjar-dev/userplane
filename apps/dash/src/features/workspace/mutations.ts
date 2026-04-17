@@ -820,8 +820,6 @@ const MAX_LOGO_SIZE_BYTES = FILE_SIZE_LIMITS.MAX_LOGO_SIZE;
  * Uploads file to R2 storage and returns the full CDN URL
  */
 export function useUploadWorkspaceLogo(workspaceId: string | null) {
-  const queryClient = useQueryClient();
-
   return useMutation<LogoUploadData, Error, File>({
     mutationFn: async (file: File) => {
       if (!workspaceId) {
@@ -853,12 +851,6 @@ export function useUploadWorkspaceLogo(workspaceId: string | null) {
       const data = (await response.json()) as LogoUploadResponse;
       return { url: data.data.url };
     },
-    onSuccess: () => {
-      if (workspaceId) {
-        queryClient.invalidateQueries({ queryKey: workspaceKeys.preferences(workspaceId) });
-      }
-    },
-    // Toast handling moved to component using toast.promise
   });
 }
 
