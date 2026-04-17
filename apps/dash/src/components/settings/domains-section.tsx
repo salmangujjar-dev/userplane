@@ -96,19 +96,7 @@ export function DomainsSection() {
   const createDomainMutation = useCreateDomain(workspaceId);
   const updateDomainMutation = useUpdateDomain(workspaceId);
   const deleteDomainMutation = useDeleteDomain(workspaceId);
-  const updateDomainPreferencesMutation = useUpdateDomainPreferences(
-    workspaceId,
-    (domainId, settings) => {
-      // Update configuring domain if it matches
-      if (state.configuringDomain?.domainId === domainId) {
-        actions.updateConfigureSettings(settings);
-      }
-      // Update verifying domain settings if it matches
-      if (state.verifyingDomain?.id === domainId) {
-        actions.updateVerifyingSettings(settings);
-      }
-    }
-  );
+  const updateDomainPreferencesMutation = useUpdateDomainPreferences(workspaceId);
 
   // ========== Create Domain Handlers ==========
   const handleCreateDomain = useCallback(
@@ -232,12 +220,19 @@ export function DomainsSection() {
   const handleSaveVerificationSettings = useCallback(
     (settings: DomainRecordingPreferences) => {
       if (!state.verifyingDomain) return;
-      updateDomainPreferencesMutation.mutate({
-        domainId: state.verifyingDomain.id,
-        settings,
-      });
+      const previousSettings = state.verifyingDomainSettings;
+      actions.updateVerifyingSettings(settings);
+      updateDomainPreferencesMutation.mutate(
+        { domainId: state.verifyingDomain.id, settings },
+        {
+          onError: () => actions.updateVerifyingSettings(previousSettings),
+          onSuccess: (result) => {
+            if (!result.success) actions.updateVerifyingSettings(previousSettings);
+          },
+        }
+      );
     },
-    [state.verifyingDomain, updateDomainPreferencesMutation]
+    [state.verifyingDomain, state.verifyingDomainSettings, actions, updateDomainPreferencesMutation]
   );
 
   // ========== Edit Domain Handlers ==========
@@ -256,12 +251,20 @@ export function DomainsSection() {
   const handleSaveConfigureSettings = useCallback(
     (settings: DomainRecordingPreferences) => {
       if (!state.configuringDomain) return;
-      updateDomainPreferencesMutation.mutate({
-        domainId: state.configuringDomain.domainId,
-        settings,
-      });
+      const previousSettings =
+        state.configuringDomain.settings ?? DEFAULT_DOMAIN_RECORDING_PREFERENCES;
+      actions.updateConfigureSettings(settings);
+      updateDomainPreferencesMutation.mutate(
+        { domainId: state.configuringDomain.domainId, settings },
+        {
+          onError: () => actions.updateConfigureSettings(previousSettings),
+          onSuccess: (result) => {
+            if (!result.success) actions.updateConfigureSettings(previousSettings);
+          },
+        }
+      );
     },
-    [state.configuringDomain, updateDomainPreferencesMutation]
+    [state.configuringDomain, actions, updateDomainPreferencesMutation]
   );
 
   const handleVerifyFromConfigure = useCallback(() => {

@@ -9,6 +9,7 @@ import type { DbClient } from '@userplane/db';
 import type { DodoPayments } from '@userplane/payments/client';
 import { isDisposableEmail, isDisposableEmailDomain } from '@userplane/shared';
 
+import { getAssetsStorage } from '@/api/clients/storage';
 import { getDefaultRecordingPreferences } from '@/api/constants/defaults';
 import { generateInviteToken, generateRecordingId, generateWorkspaceId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
@@ -383,9 +384,33 @@ export class WorkspaceService {
     // Enforce feature gates on the update
     await this.enforcePreferenceGates(workspaceId, updates);
 
+    // Capture the previous logo URL so we can clean up R2 after a replace.
+    // Only read when the update actually touches the logo field.
+    const previousLogoUrl =
+      updates.recordingCompanyLogoPath !== undefined
+        ? ((await this.deps.workspaceRepo.findPreferencesById(workspaceId))
+            ?.recordingCompanyLogoPath ?? null)
+        : null;
+
     const updated = await this.deps.workspaceRepo.updatePreferences(workspaceId, updates, options);
     if (!updated) {
       throw workspaceError.WORKSPACE_NOT_FOUND();
+    }
+
+    // Best-effort cleanup of the previous logo when the path changes.
+    // Unique R2 keys mean every save would otherwise orphan the prior object.
+    if (previousLogoUrl && previousLogoUrl !== updated.recordingCompanyLogoPath) {
+      const assetsStorage = getAssetsStorage();
+      const oldKey = assetsStorage.extractKeyFromUrl(previousLogoUrl);
+      // Hard prefix-check: never delete outside this workspace's logo namespace
+      if (oldKey?.startsWith(`workspaces/${workspaceId}/logo`)) {
+        assetsStorage.delete(oldKey).catch((err) => {
+          logger.warn(
+            { err, workspaceId, oldKey },
+            'Failed to delete previous workspace logo from R2'
+          );
+        });
+      }
     }
 
     // Invalidate workspace recording preferences cache - O(1) operation
