@@ -20,7 +20,7 @@ import {
 } from '@/features/workspace';
 import { useDebouncedToggle } from '@/hooks/use-debounced-toggle';
 import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
-import { showPromise } from '@/lib/toasts';
+import { handleUnknownError } from '@/lib/errors';
 import { useWorkspaceId } from '@/stores/workspace';
 
 import { RecordingLinkPreview } from './recording-link-preview';
@@ -224,7 +224,7 @@ function AppearanceActionButtons({
           Cancel
         </Button>
         <Button onClick={onUpdate} disabled={isSaving} tabIndex={hasChanges ? 0 : -1}>
-          {isSaving ? 'Saving...' : 'Update'}
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update'}
         </Button>
       </div>
     </div>
@@ -262,80 +262,124 @@ export function RecordingLinkSection() {
     primaryColor: '#000000',
   });
 
+  // Logo file staged locally; uploaded to R2 only when the user clicks Update.
+  // Decoupled from formState so a stale persisted CDN URL stays the source of
+  // truth for "what's saved" until the upload + preferences mutation succeed.
+  const [pendingLogo, setPendingLogo] = useState<{ file: File; previewUrl: string } | null>(null);
+
   // Track if toggle should sync from server
   const shouldSyncToggleRef = useRef(true);
 
-  // Initialize form with API data
-  useEffect(() => {
-    if (preferences) {
-      // Only sync toggle when allowed (initial load or after error)
-      if (shouldSyncToggleRef.current) {
-        setCustomizeRecordingLink(preferences.recordingCustomizeLink);
-        shouldSyncToggleRef.current = false;
-      }
-      // Always sync other fields
-      setFormState({
-        workspaceImage: preferences.recordingCompanyLogoPath,
-        workspaceName: preferences.recordingCompanyName || '',
-        headerText: preferences.recordingHeader || '',
-        footnoteText: preferences.recordingFootnote || '',
-        primaryColor: preferences.recordingPrimaryColor || '#000000',
-      });
-    }
-  }, [preferences, setCustomizeRecordingLink]);
+  // Track whether formState has been seeded from preferences at least once.
+  // The first seed must always run; later seeds respect `!hasChanges` so
+  // background refetches can't clobber unsaved edits.
+  const hasSeededRef = useRef(false);
 
   const updateAppearanceMutation = useUpdateAppearance(workspaceId);
   const uploadLogoMutation = useUploadWorkspaceLogo(workspaceId);
 
+  const displayLogoUrl = pendingLogo?.previewUrl ?? formState.workspaceImage;
+  const isSaving = updateAppearanceMutation.isPending || uploadLogoMutation.isPending;
+
   // Check if form has changes (excluding toggle, which auto-saves)
-  // Note: workspaceImage is now a CDN URL, not base64
   const hasChanges = useMemo(() => {
     if (!preferences) return false;
 
     return (
+      pendingLogo !== null ||
       formState.workspaceName !== (preferences.recordingCompanyName || '') ||
       formState.headerText !== (preferences.recordingHeader || '') ||
       formState.footnoteText !== (preferences.recordingFootnote || '') ||
       formState.primaryColor !== (preferences.recordingPrimaryColor || '#000000') ||
       formState.workspaceImage !== preferences.recordingCompanyLogoPath
     );
-  }, [preferences, formState]);
+  }, [preferences, formState, pendingLogo]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const promise = uploadLogoMutation.mutateAsync(file);
-      showPromise(promise, {
-        loading: 'Uploading logo...',
-        success: 'Logo uploaded successfully',
-        error: 'Failed to upload logo',
-      });
-      const result = await promise;
-      setFormState((prev) => ({ ...prev, workspaceImage: result.url }));
-    } catch {
-      // Error already handled by toast.promise
-    } finally {
-      // Reset file input so the same file can be selected again
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+  // Seed form from API data, but skip the resync if the user has unsaved edits
+  // so background refetches (window focus, invalidations) don't blow them away.
+  useEffect(() => {
+    if (preferences) {
+      if (shouldSyncToggleRef.current) {
+        setCustomizeRecordingLink(preferences.recordingCustomizeLink);
+        shouldSyncToggleRef.current = false;
+      }
+      if (!hasSeededRef.current || !hasChanges) {
+        setFormState({
+          workspaceImage: preferences.recordingCompanyLogoPath,
+          workspaceName: preferences.recordingCompanyName || '',
+          headerText: preferences.recordingHeader || '',
+          footnoteText: preferences.recordingFootnote || '',
+          primaryColor: preferences.recordingPrimaryColor || '#000000',
+        });
+        hasSeededRef.current = true;
       }
     }
-  };
+  }, [preferences, hasChanges, setCustomizeRecordingLink]);
 
-  const handleUpdate = () => {
-    updateAppearanceMutation.mutate({
-      recordingCompanyName: formState.workspaceName || null,
-      recordingCompanyLogoPath: formState.workspaceImage,
-      recordingHeader: formState.headerText || null,
-      recordingFootnote: formState.footnoteText || null,
-      recordingPrimaryColor: formState.primaryColor,
+  // Revoke any blob URL we hold when the staged logo is replaced or the
+  // component unmounts. Prevents memory leaks across repeated re-picks.
+  useEffect(() => {
+    return () => {
+      if (pendingLogo) {
+        URL.revokeObjectURL(pendingLogo.previewUrl);
+      }
+    };
+  }, [pendingLogo]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (fileInputRef.current) {
+      // Reset so picking the same filename again still fires onChange
+      fileInputRef.current.value = '';
+    }
+    if (!file) return;
+
+    setPendingLogo((prev) => {
+      if (prev) URL.revokeObjectURL(prev.previewUrl);
+      return { file, previewUrl: URL.createObjectURL(file) };
     });
   };
 
+  const handleUpdate = async () => {
+    let logoUrl = formState.workspaceImage;
+    const stagedLogo = pendingLogo;
+
+    if (stagedLogo) {
+      try {
+        const result = await uploadLogoMutation.mutateAsync(stagedLogo.file);
+        logoUrl = result.url;
+      } catch (error) {
+        handleUnknownError(error, 'Failed to upload logo');
+        return;
+      }
+    }
+
+    updateAppearanceMutation.mutate(
+      {
+        recordingCompanyName: formState.workspaceName || null,
+        recordingCompanyLogoPath: logoUrl,
+        recordingHeader: formState.headerText || null,
+        recordingFootnote: formState.footnoteText || null,
+        recordingPrimaryColor: formState.primaryColor,
+      },
+      {
+        onSuccess: (result) => {
+          if (!result.success) return;
+          if (stagedLogo) {
+            URL.revokeObjectURL(stagedLogo.previewUrl);
+            setPendingLogo(null);
+            setFormState((prev) => ({ ...prev, workspaceImage: logoUrl }));
+          }
+        },
+      }
+    );
+  };
+
   const handleCancel = () => {
-    // Reset form to original values
+    if (pendingLogo) {
+      URL.revokeObjectURL(pendingLogo.previewUrl);
+      setPendingLogo(null);
+    }
     if (preferences) {
       setCustomizeRecordingLink(preferences.recordingCustomizeLink);
       setFormState({
@@ -389,7 +433,7 @@ export function RecordingLinkSection() {
           <RecordingLinkPreview
             customizeRecordingLink={customizeRecordingLink}
             headerText={formState.headerText}
-            workspaceImage={formState.workspaceImage}
+            workspaceImage={displayLogoUrl}
             workspaceName={formState.workspaceName}
             footnoteText={formState.footnoteText}
             primaryColor={formState.primaryColor}
@@ -410,7 +454,7 @@ export function RecordingLinkSection() {
                 <div className="p-6 rounded-xl border bg-card">
                   <div className="flex gap-6">
                     <LogoUploadField
-                      workspaceImage={formState.workspaceImage}
+                      workspaceImage={displayLogoUrl}
                       isUploading={uploadLogoMutation.isPending}
                       onUploadClick={() => fileInputRef.current?.click()}
                     />
@@ -433,7 +477,7 @@ export function RecordingLinkSection() {
                   />
                   <AppearanceActionButtons
                     hasChanges={hasChanges}
-                    isSaving={updateAppearanceMutation.isPending}
+                    isSaving={isSaving}
                     onCancel={handleCancel}
                     onUpdate={handleUpdate}
                   />
