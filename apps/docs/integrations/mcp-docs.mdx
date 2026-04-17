@@ -1,13 +1,19 @@
 ---
-title: Model Context Protocol
+title: Documentation MCP
 description: Connect AI tools like Claude, Cursor, and VS Code directly to Userplane documentation via MCP
 ---
 
-Userplane's MCP server gives AI tools like Claude, Cursor, Goose, and ChatGPT direct access to your documentation — so they can search it inline while generating responses, rather than relying on web search.
+<Note>
+  This is the **documentation** MCP server — for AI tools to search Userplane docs inline while you
+  integrate the SDK. To connect AI agents to your workspace for recording analysis and debugging,
+  see [Userplane MCP](/integrations/mcp-workspace) instead.
+</Note>
+
+Userplane's Documentation MCP server gives AI tools like Claude, Cursor, Goose, and ChatGPT direct access to the Userplane docs — so they can search them inline while generating responses, rather than relying on web search.
 
 ## Connect to your AI tool
 
-Your Userplane MCP server is available at:
+The Documentation MCP server is available at:
 
 ```
 https://docs.userplane.io/mcp
@@ -23,7 +29,7 @@ https://docs.userplane.io/mcp
         Select **Add custom connector**.
       </Step>
       <Step title="Enter server details">
-        Enter a name (e.g., `userplane`) and the MCP server URL:
+        Enter a name (e.g., `userplane-docs`) and the MCP server URL:
         ```
         https://docs.userplane.io/mcp
         ```
@@ -38,7 +44,7 @@ https://docs.userplane.io/mcp
     Run the following command in your terminal:
 
     ```bash
-    claude mcp add --transport http userplane https://docs.userplane.io/mcp
+    claude mcp add --transport http userplane-docs https://docs.userplane.io/mcp
     ```
 
     Verify the connection:
@@ -47,7 +53,7 @@ https://docs.userplane.io/mcp
     claude mcp list
     ```
 
-    The `userplane` server should appear in the list.
+    The `userplane-docs` server should appear in the list.
 
     <Note>
       See the [Claude Code documentation](https://code.claude.com/docs/en/mcp#installing-mcp-servers) for more details.
@@ -68,7 +74,7 @@ https://docs.userplane.io/mcp
         ```json
         {
           "mcpServers": {
-            "userplane": {
+            "userplane-docs": {
               "url": "https://docs.userplane.io/mcp"
             }
           }
@@ -76,7 +82,7 @@ https://docs.userplane.io/mcp
         ```
       </Step>
       <Step title="Test the connection">
-        In Cursor's chat, ask _"What tools do you have available?"_ — Cursor should list the Userplane MCP server.
+        In Cursor's chat, ask _"What tools do you have available?"_ — Cursor should list the Userplane Documentation MCP server.
       </Step>
     </Steps>
 
@@ -96,7 +102,7 @@ https://docs.userplane.io/mcp
         ```json
         {
           "servers": {
-            "userplane": {
+            "userplane-docs": {
               "type": "http",
               "url": "https://docs.userplane.io/mcp"
             }
@@ -132,13 +138,8 @@ To protect availability, Userplane applies the following rate limits to MCP requ
 | Per user (IP address)  | 5,000 requests / hour |
 | Per documentation site | 1,000 requests / hour |
 
-<Note>
-  To connect AI agents to your Userplane workspace for debugging and root cause analysis, see the
-  [Core API MCP server](/integrations/mcp).
-</Note>
-
 ## Related articles
 
-- [Core API MCP Server](/integrations/mcp) — connect AI agents to your workspace for debugging and root cause analysis.
+- [Userplane MCP](/integrations/mcp-workspace) — connect AI agents to your workspace for debugging and root cause analysis.
 - [Agent Skills](/developer/agent-skills) — install Userplane Agent Skills for SDK integration guidance.
 - [Installation](/developer/installation) — install the Userplane SDK in your app.

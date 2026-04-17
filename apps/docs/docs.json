@@ -58,6 +58,10 @@
     {
       "source": "/integrations/agent-skills",
       "destination": "/developer/agent-skills"
+    },
+    {
+      "source": "/developer/mcp",
+      "destination": "/integrations/mcp-docs"
     }
   ],
   "navigation": {
@@ -200,7 +204,7 @@
           {
             "group": "AI Agents",
             "icon": "robot",
-            "pages": ["developer/agent-skills", "developer/mcp"]
+            "pages": ["developer/agent-skills"]
           },
           {
             "group": "SDK Reference",
@@ -374,25 +378,32 @@
             "icon": "robot",
             "pages": [
               "integrations/mcp",
-              "integrations/mcp-getting-started",
               {
-                "group": "MCP Apps",
+                "group": "Userplane MCP",
                 "pages": [
-                  "integrations/mcp-apps",
-                  "integrations/mcp-apps-recording",
-                  "integrations/mcp-apps-resources"
+                  "integrations/mcp-workspace",
+                  "integrations/mcp-getting-started",
+                  {
+                    "group": "MCP Apps",
+                    "pages": [
+                      "integrations/mcp-apps",
+                      "integrations/mcp-apps-recording",
+                      "integrations/mcp-apps-resources"
+                    ]
+                  },
+                  {
+                    "group": "MCP Tools",
+                    "pages": [
+                      "integrations/mcp-tools-recordings",
+                      "integrations/mcp-tools-links",
+                      "integrations/mcp-tools-domains",
+                      "integrations/mcp-tools-workspace"
+                    ]
+                  },
+                  "integrations/mcp-authentication"
                 ]
               },
-              {
-                "group": "MCP Tools",
-                "pages": [
-                  "integrations/mcp-tools-recordings",
-                  "integrations/mcp-tools-links",
-                  "integrations/mcp-tools-domains",
-                  "integrations/mcp-tools-workspace"
-                ]
-              },
-              "integrations/mcp-authentication"
+              "integrations/mcp-docs"
             ]
           }
         ]

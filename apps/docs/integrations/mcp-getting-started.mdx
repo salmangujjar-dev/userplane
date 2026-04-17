@@ -1,9 +1,14 @@
 ---
 title: Getting Started
-description: Connect your AI client to the Userplane MCP server and start analyzing recordings
+description: Connect your AI client to Userplane MCP and start analyzing recordings
 ---
 
-Connect your AI client to the Userplane MCP server. Authentication is handled automatically via OAuth 2.1 — your client will prompt you to sign in on first use. No API keys required.
+Connect your AI client to Userplane MCP (the workspace server at `api.userplane.io/mcp`). Authentication is handled automatically via OAuth 2.1 — your client will prompt you to sign in on first use. No API keys required.
+
+<Note>
+  Looking to search Userplane documentation from your AI tool instead? See [Documentation
+  MCP](/integrations/mcp-docs).
+</Note>
 
 ## Server URL
 
@@ -211,7 +216,7 @@ https://api.userplane.io/mcp
 
     <CodeGroup>
     ```text
-    Prompt: List my Userplane workspaces.
+    List my Userplane workspaces.
     ```
     </CodeGroup>
 
@@ -223,7 +228,7 @@ https://api.userplane.io/mcp
 
     <CodeGroup>
     ```text
-    Prompt: Here's a recording from a customer reporting a checkout issue:
+    Here's a recording from a customer reporting a checkout issue:
     https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
     What's causing the problem?
     ```
@@ -248,7 +253,7 @@ https://api.userplane.io/mcp
 
     <CodeGroup>
     ```text
-    Prompt: Show me the full recording for {recordingId} in workspace {workspaceId}.
+    Show me the full recording for {recordingId} in workspace {workspaceId}.
     ```
     </CodeGroup>
 
@@ -262,7 +267,7 @@ https://api.userplane.io/mcp
 
     <CodeGroup>
     ```text
-    Prompt: Create a recording link for domain {domainId} in workspace {workspaceId}. Reference it as {ticketId}.
+    Create a recording link for domain {domainId} in workspace {workspaceId}. Reference it as {ticketId}.
     ```
     </CodeGroup>
 
@@ -288,7 +293,7 @@ https://api.userplane.io/mcp
 
 ## Related articles
 
-- [Model Context Protocol](/integrations/mcp) — overview of the Userplane MCP server.
+- [Userplane MCP](/integrations/mcp-workspace) — overview of the workspace MCP server.
 - [Recording Tools](/integrations/mcp-tools-recordings) — tools for listing, inspecting, and analyzing recordings.
 - [Recording Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
 - [MCP Apps](/integrations/mcp-apps) — rich viewers rendered inside your AI client.
