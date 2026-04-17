@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@userplane/ui/components/dropdown-menu';
 import { SearchInput } from '@userplane/ui/components/search-input';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,
@@ -374,9 +375,7 @@ export function ActionsPanel({
 
       <div className="flex-1 overflow-y-auto font-mono">
         {isLoading ? (
-          <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-            Loading user actions...
-          </div>
+          <ActionEntrySkeleton />
         ) : isEmpty ? (
           <ActionsPanelEmptyState />
         ) : filteredActions.length === 0 ? (
@@ -393,6 +392,37 @@ export function ActionsPanel({
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+const SKELETON_ACTION_ROWS: Array<{ label: string; target: string }> = [
+  { label: '60%', target: '40%' },
+  { label: '45%', target: '55%' },
+  { label: '70%', target: '35%' },
+  { label: '50%', target: '45%' },
+  { label: '65%', target: '50%' },
+  { label: '55%', target: '40%' },
+  { label: '75%', target: '45%' },
+  { label: '50%', target: '55%' },
+];
+
+function ActionEntrySkeleton() {
+  return (
+    <div>
+      {SKELETON_ACTION_ROWS.map((row, i) => (
+        <div
+          key={`action-skel-${i}`}
+          className="flex items-center gap-3 px-3 py-2 border-b border-border/40"
+        >
+          <Skeleton className="h-3 w-10 shrink-0" />
+          <Skeleton className="h-3.5 w-3.5 shrink-0 rounded" />
+          <div className="flex-1 flex flex-col gap-1">
+            <Skeleton className="h-3" style={{ width: row.label }} />
+            <Skeleton className="h-2.5" style={{ width: row.target }} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
