@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@userplane/ui/components/dropdown-menu';
 import { SearchInput } from '@userplane/ui/components/search-input';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import type { LucideIcon } from 'lucide-react';
 import { AlertCircle, AlertTriangle, Bug, Filter, Info, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -393,9 +394,7 @@ export function ConsolePanel({
 
       <div className="flex-1 overflow-y-auto font-mono">
         {isLoading ? (
-          <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-            Loading console logs...
-          </div>
+          <ConsoleLogSkeleton />
         ) : isEmpty ? (
           <ConsolePanelEmptyState />
         ) : filteredLogs.length === 0 ? (
@@ -413,6 +412,28 @@ export function ConsolePanel({
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+const SKELETON_LOG_WIDTHS = ['70%', '55%', '80%', '45%', '65%', '75%', '50%', '60%'];
+
+function ConsoleLogSkeleton() {
+  return (
+    <div>
+      {SKELETON_LOG_WIDTHS.map((width, i) => (
+        <div
+          key={`console-skel-${i}`}
+          className="flex items-center gap-3 px-3 py-2 border-b border-border/40"
+        >
+          <Skeleton className="h-3 w-10 shrink-0" />
+          <Skeleton className="h-3.5 w-3.5 shrink-0 rounded" />
+          <div className="flex-1">
+            <Skeleton className="h-3" style={{ width }} />
+          </div>
+          <Skeleton className="h-3 w-24 shrink-0" />
+        </div>
+      ))}
     </div>
   );
 }

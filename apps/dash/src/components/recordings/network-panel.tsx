@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@userplane/ui/components/dropdown-menu';
 import { SearchInput } from '@userplane/ui/components/search-input';
+import { Skeleton } from '@userplane/ui/components/skeleton';
 import type { LucideIcon } from 'lucide-react';
 import {
   Cable,
@@ -615,9 +616,7 @@ export function NetworkPanel({
 
       <div className="flex-1 overflow-y-auto font-mono">
         {isLoading ? (
-          <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-            Loading network activity...
-          </div>
+          <NetworkEntrySkeleton />
         ) : isEmpty ? (
           <NetworkPanelEmptyState />
         ) : filteredRequests.length === 0 ? (
@@ -635,6 +634,43 @@ export function NetworkPanel({
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+const SKELETON_NETWORK_ROWS: Array<{ name: string; domain: string }> = [
+  { name: '65%', domain: '40%' },
+  { name: '50%', domain: '55%' },
+  { name: '75%', domain: '35%' },
+  { name: '45%', domain: '50%' },
+  { name: '60%', domain: '45%' },
+  { name: '70%', domain: '40%' },
+  { name: '55%', domain: '50%' },
+  { name: '80%', domain: '35%' },
+];
+
+function NetworkEntrySkeleton() {
+  return (
+    <div>
+      {SKELETON_NETWORK_ROWS.map((row, i) => (
+        <div
+          key={`network-skel-${i}`}
+          className="flex items-center gap-3 px-3 py-2 border-b border-border/40"
+        >
+          <Skeleton className="h-3 w-10 shrink-0" />
+          <Skeleton className="h-3.5 w-3.5 shrink-0 rounded" />
+          <div className="flex-1 flex flex-col gap-1">
+            <Skeleton className="h-3" style={{ width: row.name }} />
+            <Skeleton className="h-2.5" style={{ width: row.domain }} />
+          </div>
+          <div className="w-12 flex justify-center shrink-0">
+            <Skeleton className="h-3 w-8" />
+          </div>
+          <div className="w-20 flex justify-end shrink-0">
+            <Skeleton className="h-3 w-12" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
