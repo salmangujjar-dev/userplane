@@ -21,6 +21,7 @@ import * as z from 'zod';
 
 import { AuthIcons } from '@/components/auth/auth-icons';
 import { AuthFooter, AuthHeader, AuthLayout } from '@/components/auth/auth-shell';
+import { MailProviderButtons } from '@/components/auth/mail-provider-buttons';
 import { useAuth } from '@/hooks';
 import {
   showAuthenticationFailedToast,
@@ -160,7 +161,7 @@ function MagicLinkSentView({ email, onTryAgain }: { email: string; onTryAgain: (
         }
       />
 
-      <div className="min-h-[74px]" />
+      <MailProviderButtons />
     </AuthLayout>
   );
 }

@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:extras dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix generate\:openapi clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build extension\:dev extension\:build extension\:build\:prod extension\:zip extension\:zip\:prod extension\:storybook extension\:storybook\:build raycast\:dev raycast\:build raycast\:lint raycast\:lint\:fix raycast\:typecheck raycast\:prepublish raycast\:publish assets\:optimize assets\:optimize\:dry-run assets\:optimize\:dir i d b l f t c
+.PHONY: help install dev dev\:extras dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:recorder dev\:sdk dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:recorder build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix generate\:openapi clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build extension\:dev extension\:build extension\:build\:prod extension\:zip extension\:zip\:prod extension\:storybook extension\:storybook\:build raycast\:dev raycast\:build raycast\:lint raycast\:lint\:fix raycast\:typecheck raycast\:prepublish raycast\:publish assets\:optimize assets\:optimize\:dry-run assets\:optimize\:dir i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -65,6 +65,8 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:home$(WHITE)                      ║$(RESET) Run home app only                                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:docs$(WHITE)                      ║$(RESET) Run docs app only (Mintlify)                                      $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:extension$(WHITE)                 ║$(RESET) Run Chrome extension in dev mode (WXT, port 3010)                  $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:recorder$(WHITE)                  ║$(RESET) Run recorder app only (Next.js, port 4322)                        $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)dev:sdk$(WHITE)                       ║$(RESET) Run SDK toolchain + recorder/dash/api/ramp (focused)              $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -74,6 +76,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)build:share$(WHITE)                   ║$(RESET) Build Share URL shortener only                                    $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:home$(WHITE)                    ║$(RESET) Build home app only                                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)build:ramp$(WHITE)                    ║$(RESET) Build Ramp app only                                                $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)build:recorder$(WHITE)                ║$(RESET) Build recorder app only                                           $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)package:zendesk$(WHITE)               ║$(RESET) Package Zendesk manifest .zip (dev)                                $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)preview:home$(WHITE)                  ║$(RESET) Preview home production build (Cloudflare)                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)deploy:home$(WHITE)                   ║$(RESET) Deploy home app (preview)                                         $(WHITE)║$(RESET)"
@@ -258,6 +261,29 @@ dev\:extension: ## Run Chrome extension in dev mode (WXT, port 3010)
 	@echo "$(MAGENTA)Starting Chrome extension (WXT dev, port 3010)...$(RESET)"
 	@cd apps/extension && bun run dev
 
+dev\:recorder: ## Run recorder app only
+	@echo "$(MAGENTA)Starting Recorder app (Next.js on port 4322)...$(RESET)"
+	@cd apps/recorder && bun dev
+
+dev\:sdk: ## Run SDK toolchain + consuming apps (focused for SDK development)
+	@echo "$(MAGENTA)Starting SDK dev environment (sdk + recorder + dash + api + ramp)...$(RESET)"
+	@bunx turbo dev \
+		--filter=@userplane/sdk \
+		--filter=@userplane/blurr \
+		--filter=@userplane/postbridge \
+		--filter=@userplane/contract \
+		--filter=@userplane/logger \
+		--filter=@userplane/console-logger \
+		--filter=@userplane/metadata \
+		--filter=@userplane/client \
+		--filter=@userplane/shared \
+		--filter=@userplane/storage \
+		--filter=recorder \
+		--filter=dash \
+		--filter=api \
+		--filter=ramp \
+		--concurrency=30
+
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
 	@bun run build
@@ -287,6 +313,11 @@ build\:ramp: ## Build Ramp app only
 	@echo "$(BLUE)Building Ramp app...$(RESET)"
 	@cd apps/ramp && bun run build
 	@echo "$(GREEN)Ramp app built!$(RESET)"
+
+build\:recorder: ## Build recorder app only
+	@echo "$(BLUE)Building Recorder app...$(RESET)"
+	@cd apps/recorder && bun run build
+	@echo "$(GREEN)Recorder app built!$(RESET)"
 
 build\:extension: ## Build Chrome extension
 	@echo "$(BLUE)Building Chrome extension...$(RESET)"
