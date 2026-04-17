@@ -1,0 +1,78 @@
+---
+title: Userplane MCP
+description: Connect AI agents to your Userplane workspace for debugging intelligence and root cause analysis
+---
+
+<Note>
+  This is the **workspace** MCP server — for debugging recordings and managing Userplane resources
+  from your AI client. To search Userplane documentation from your AI tool while integrating the
+  SDK, see [Documentation MCP](/integrations/mcp-docs) instead.
+</Note>
+
+Your team's AI tools can connect directly to Userplane via the Model Context Protocol. Paste a recording URL, ask what went wrong, and get root cause analysis — console errors, failing requests, user actions — without leaving your AI client.
+
+## Server URL
+
+```
+https://api.userplane.io/mcp
+```
+
+## What agents can do
+
+<CardGroup cols={2}>
+  <Card title="Analyze recordings" icon="magnifying-glass">
+    Surface console errors, network failures, and user actions from any recording. Identify root
+    causes through natural language.
+  </Card>
+  <Card title="Interactive viewers" icon="display">
+    Video playback, filterable console log viewers, network request inspectors, and user action
+    timelines — rendered inside your AI client.
+  </Card>
+  <Card title="Manage recording links" icon="link">
+    Create, share, and track recording links for customer issues. Attach references, set
+    reusability, and assign to projects.
+  </Card>
+  <Card title="Access workspace data" icon="folder-open">
+    List recordings, browse projects, and check workspace details across your organization.
+  </Card>
+</CardGroup>
+
+## Quick example
+
+Paste a recording URL from the Userplane dashboard and ask your agent what went wrong:
+
+<CodeGroup>
+
+```text
+Here's a recording from a customer who can't complete checkout — https://dash.userplane.io/{workspaceId}/recordings/{recordingId}. What's causing the issue?
+```
+
+</CodeGroup>
+
+The agent extracts the workspace and recording IDs from the URL, retrieves console logs, network requests, and user actions, and returns a root cause analysis — all within the conversation.
+
+<Frame caption="Root cause analysis in Claude">
+  <img src="/media/mcp/claude/tools/root-cause-analysis-detail.png" />
+</Frame>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Getting started" icon="rocket" href="/integrations/mcp-getting-started">
+    Connect your AI client and start analyzing recordings
+  </Card>
+  <Card title="MCP Apps" icon="display" href="/integrations/mcp-apps">
+    Rich viewers for recordings, logs, and network data
+  </Card>
+  <Card title="Recording Tools" icon="video" href="/integrations/mcp-tools-recordings">
+    Tools for listing, inspecting, and analyzing recordings
+  </Card>
+</CardGroup>
+
+## Related articles
+
+- [Getting Started](/integrations/mcp-getting-started) — connect your AI client and start analyzing recordings.
+- [Recording Tools](/integrations/mcp-tools-recordings) — tools for listing, inspecting, and analyzing recordings.
+- [Interactive Apps](/integrations/mcp-apps) — rich viewers for recordings, logs, and network data.
+- [Authentication](/integrations/mcp-authentication) — OAuth 2.1 flow and permissions.
+- [Documentation MCP](/integrations/mcp-docs) — search Userplane documentation from your AI tool.

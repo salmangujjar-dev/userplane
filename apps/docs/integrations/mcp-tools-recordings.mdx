@@ -183,47 +183,59 @@ See [Resource Viewers](/integrations/mcp-apps-resources) for details.
 ## Example prompts
 
 <CodeGroup>
-  ```text Prompt: List the 5 most recent recordings in workspace {workspaceId}. For each one, tell
-  me who submitted it, which project it belongs to, and when it was created. ```
+
+```text
+List the 5 most recent recordings in workspace {workspaceId}. For each one, tell me who submitted it, which project it belongs to, and when it was created.
+```
+
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt: A customer just submitted a recording in the Billing project. Pull up the latest
-  recording and tell me what went wrong. ```
+
+```text
+A customer just submitted a recording in the Billing project. Pull up the latest recording and tell me what went wrong.
+```
+
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt: Here's a recording from a customer who can't complete checkout:
-  https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
-  What's causing the issue? ```
+
+```text
+Here's a recording from a customer who can't complete checkout: https://dash.userplane.io/{workspaceId}/recordings/{recordingId} — what's causing the issue?
+```
+
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt: Give me a full root cause analysis of this recording. Check the console for
-  JavaScript errors, the network requests for failed API calls, and the user actions for anything
-  unusual. Summarize what happened and what likely caused the issue. https://dash.userplane.io/
-  {workspaceId}/recordings/{recordingId}
-  ```
+
+```text
+Give me a full root cause analysis of this recording. Check the console for JavaScript errors, the network requests for failed API calls, and the user actions for anything unusual. Summarize what happened and what likely caused the issue. https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
+```
+
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt: Show me the console logs for this recording. Are there any JavaScript errors or
-  unhandled exceptions? https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
-  ```
+
+```text
+Show me the console logs for this recording. Are there any JavaScript errors or unhandled exceptions? https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
+```
+
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt: Check the network requests in this recording. Are there any 500 errors, 404s, or
-  requests that took longer than 3 seconds? https://dash.userplane.io/{workspaceId}/recordings/
-  {recordingId}
-  ```
+
+```text
+Check the network requests in this recording. Are there any 500 errors, 404s, or requests that took longer than 3 seconds? https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
+```
+
 </CodeGroup>
 
 <CodeGroup>
-  ```text Prompt: Walk me through what the user did in this recording. What pages did they visit,
-  what did they click, and where did things break? https://dash.userplane.io/{workspaceId}
-  /recordings/{recordingId}
-  ```
+
+```text
+Walk me through what the user did in this recording. What pages did they visit, what did they click, and where did things break? https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
+```
+
 </CodeGroup>
 
 <Note>

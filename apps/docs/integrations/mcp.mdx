@@ -1,74 +1,44 @@
 ---
 title: Model Context Protocol
-description: Connect AI agents to your Userplane workspace for debugging intelligence and root cause analysis
+description: Two Userplane MCP servers — one connects AI agents to your workspace for debugging, the other lets AI tools search Userplane docs
 ---
 
-Your team's AI tools can connect directly to Userplane via the Model Context Protocol. Paste a recording URL, ask what went wrong, and get root cause analysis — console errors, failing requests, user actions — without leaving your AI client.
-
-## Server URL
-
-```
-https://api.userplane.io/mcp
-```
-
-## What agents can do
+Userplane exposes two Model Context Protocol servers. Pick the one that matches what you want your AI tool to do.
 
 <CardGroup cols={2}>
-  <Card title="Analyze recordings" icon="magnifying-glass">
-    Surface console errors, network failures, and user actions from any recording. Identify root
-    causes through natural language.
+  <Card title="Userplane MCP" icon="magnifying-glass" href="/integrations/mcp-workspace">
+    Analyze recordings, manage links, and browse workspace data from Claude, Cursor, VS Code, or
+    ChatGPT. OAuth-authenticated.
   </Card>
-  <Card title="Interactive viewers" icon="display">
-    Video playback, filterable console log viewers, network request inspectors, and user action
-    timelines — rendered inside your AI client.
-  </Card>
-  <Card title="Manage recording links" icon="link">
-    Create, share, and track recording links for customer issues. Attach references, set
-    reusability, and assign to projects.
-  </Card>
-  <Card title="Access workspace data" icon="folder-open">
-    List recordings, browse projects, and check workspace details across your organization.
+  <Card title="Documentation MCP" icon="book" href="/integrations/mcp-docs">
+    Let your AI tool search Userplane docs inline while you integrate the SDK. Public — no
+    authentication required.
   </Card>
 </CardGroup>
 
-## Quick example
+## Which one do I want?
 
-Paste a recording URL from the Userplane dashboard and ask your agent what went wrong:
+|                    | Userplane MCP                                                        | Documentation MCP                                  |
+| ------------------ | -------------------------------------------------------------------- | -------------------------------------------------- |
+| **Server URL**     | `https://api.userplane.io/mcp`                                       | `https://docs.userplane.io/mcp`                    |
+| **Who it's for**   | Support engineers and developers debugging customer issues           | Developers integrating the Userplane SDK           |
+| **What it does**   | Analyzes recordings, manages links and domains, reads workspace data | Searches the Userplane documentation               |
+| **Authentication** | OAuth 2.1 (sign in with your Userplane account)                      | None — public                                      |
+| **Example prompt** | _"What caused the checkout error in recording X?"_                   | _"How do I install the Userplane SDK in Next.js?"_ |
 
-<CodeGroup>
-  ```text Prompt: Here's a recording from a customer who can't complete checkout:
-  https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
-  What's causing the issue? ```
-</CodeGroup>
-
-The agent extracts the workspace and recording IDs from the URL, retrieves console logs, network requests, and user actions, and returns a root cause analysis — all within the conversation.
-
-<Frame caption="Root cause analysis in Claude">
-  <img src="/media/mcp/claude/tools/root-cause-analysis-detail.png" />
-</Frame>
+<Note>
+  Most customers want **Userplane MCP** — it's what unlocks recording analysis, link management, and
+  workspace access inside your AI client. Documentation MCP is purpose-built for the moment you're
+  wiring the SDK into your app and want inline answers from the docs.
+</Note>
 
 ## Next steps
 
-<CardGroup cols={3}>
-  <Card title="Getting started" icon="rocket" href="/integrations/mcp-getting-started">
-    Connect your AI client and start analyzing recordings
+<CardGroup cols={2}>
+  <Card title="Set up Userplane MCP" icon="rocket" href="/integrations/mcp-getting-started">
+    Connect your AI client to the workspace server and analyze your first recording
   </Card>
-  <Card title="MCP Apps" icon="display" href="/integrations/mcp-apps">
-    Rich viewers for recordings, logs, and network data
-  </Card>
-  <Card title="Recording Tools" icon="video" href="/integrations/mcp-tools-recordings">
-    Tools for listing, inspecting, and analyzing recordings
+  <Card title="Set up Documentation MCP" icon="book" href="/integrations/mcp-docs">
+    Point your AI tool at the docs server for SDK and framework guidance
   </Card>
 </CardGroup>
-
-<Note>
-  Looking to search Userplane documentation from your AI tool during SDK integration? See the [Docs
-  MCP server](/developer/mcp).
-</Note>
-
-## Related articles
-
-- [Getting Started](/integrations/mcp-getting-started) — connect your AI client and start analyzing recordings.
-- [Recording Tools](/integrations/mcp-tools-recordings) — tools for listing, inspecting, and analyzing recordings.
-- [Interactive Apps](/integrations/mcp-apps) — rich viewers for recordings, logs, and network data.
-- [Authentication](/integrations/mcp-authentication) — OAuth 2.1 flow and permissions.
