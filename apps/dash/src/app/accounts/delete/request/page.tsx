@@ -12,6 +12,7 @@ import { useState } from 'react';
 
 import { authClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
+import { MailProviderButtons } from '@/components/auth/mail-provider-buttons';
 import { useAccount } from '@/features/account';
 import { useWorkspaceCount } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
@@ -50,6 +51,7 @@ function RequestDeleteSuccess({ email }: { email: string }) {
             </p>
           </div>
         </div>
+        <MailProviderButtons />
       </div>
     </div>
   );

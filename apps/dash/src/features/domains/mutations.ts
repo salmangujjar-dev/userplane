@@ -241,10 +241,7 @@ export function useDeleteDomain(workspaceId: string | null) {
   });
 }
 
-export function useUpdateDomainPreferences(
-  workspaceId: string | null,
-  onPreferencesUpdate?: (domainId: string, settings: DomainRecordingPreferences) => void
-) {
+export function useUpdateDomainPreferences(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -253,13 +250,7 @@ export function useUpdateDomainPreferences(
     { domainId: string; settings: DomainRecordingPreferences },
     { previousQueries: QuerySnapshot<DomainsQueryData> }
   >({
-    mutationFn: async ({
-      domainId,
-      settings,
-    }: {
-      domainId: string;
-      settings: DomainRecordingPreferences;
-    }) => {
+    mutationFn: async ({ domainId, settings }) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.workspace.domains.preferences.update({
         params: { workspaceId, domainId },
@@ -267,55 +258,25 @@ export function useUpdateDomainPreferences(
       });
       return handleSafeResult(error, response?.data ?? null);
     },
-    onMutate: async ({
-      domainId,
-      settings,
-    }: {
-      domainId: string;
-      settings: DomainRecordingPreferences;
-    }) => {
+    onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: domainKeys.lists() });
-
-      // Snapshot ALL matching queries for rollback
       const previousQueries: QuerySnapshot<DomainsQueryData> =
         queryClient.getQueriesData<DomainsQueryData>({
           queryKey: domainKeys.lists(),
         });
-
-      if (onPreferencesUpdate) {
-        onPreferencesUpdate(domainId, settings);
-      }
-
       return { previousQueries };
     },
-    onSuccess: async (result, variables, context) => {
+    onSuccess: (result, _variables, context) => {
       if (!result.success) {
-        // Rollback all queries
         context?.previousQueries?.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
         showApiErrorToast(result.error);
         return;
       }
-
       showSettingsSavedToast('domain-settings', 'Domain settings updated successfully');
-
-      if (workspaceId) {
-        try {
-          const [error, response] = await apiClient.workspace.domains.preferences.get({
-            params: { workspaceId, domainId: variables.domainId },
-          });
-
-          if (!error && onPreferencesUpdate) {
-            onPreferencesUpdate(variables.domainId, response.data);
-          }
-        } catch {
-          // Ignore refetch errors
-        }
-      }
     },
-    onError: (error: unknown, variables, context) => {
-      // Rollback all queries
+    onError: (error: unknown, _variables, context) => {
       context?.previousQueries?.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });

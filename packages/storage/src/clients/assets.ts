@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { BaseStorageClient } from '../base';
 import {
   buildTransformUrl,
@@ -80,12 +82,28 @@ export class AssetsStorageClient extends BaseStorageClient {
 
   async putWorkspaceLogo(workspaceId: string, body: Buffer | Uint8Array, contentType: string) {
     const ext = this.getExtension(contentType);
-    return this.put(`workspaces/${workspaceId}/logo.${ext}`, body, contentType);
+    const token = randomUUID().slice(0, 8);
+    return this.put(`workspaces/${workspaceId}/logo-${token}.${ext}`, body, contentType);
   }
 
   async putAvatar(userId: string, body: Buffer | Uint8Array, contentType: string) {
     const ext = this.getExtension(contentType);
-    return this.put(`avatars/${userId}.${ext}`, body, contentType);
+    const token = randomUUID().slice(0, 8);
+    return this.put(`avatars/${userId}-${token}.${ext}`, body, contentType);
+  }
+
+  /**
+   * Extract the R2 object key from a stored asset URL.
+   * Handles both raw CDN URLs (`${domain}/${key}`) and Cloudflare image-transform
+   * URLs that embed the same `${domain}/${key}` segment after the transform options.
+   * Returns null if the URL doesn't appear to belong to this client.
+   */
+  extractKeyFromUrl(url: string): string | null {
+    if (!this.domain) return null;
+    const marker = `${this.domain}/`;
+    const idx = url.lastIndexOf(marker);
+    if (idx === -1) return null;
+    return url.slice(idx + marker.length);
   }
 
   // Public CDN URL - takes stored path from DB, prefixes with domain

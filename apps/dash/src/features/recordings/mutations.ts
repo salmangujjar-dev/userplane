@@ -9,12 +9,14 @@ import {
 } from '@/lib/errors';
 import { showDeletedToast, showShareRecordingToast, showUpdatedToast } from '@/lib/toasts';
 import type { DeleteResponse, QueryData, QuerySnapshot } from '@/types';
+import type { RecordingDetail } from '@/types';
 
 import { workspaceKeys } from '../workspace/query-keys';
 import type { RecordingsData } from './queries';
 import { recordingKeys } from './query-keys';
 
 type RecordingsQueryData = QueryData<RecordingsData>;
+type RecordingDetailQueryData = QueryData<RecordingDetail>;
 
 export function useDeleteRecording(workspaceId: string | null, onDeleteSuccess?: () => void) {
   const queryClient = useQueryClient();
@@ -98,8 +100,17 @@ interface UpdateRecordingExpiryInput {
 export function useUpdateRecordingExpiry(workspaceId: string | null) {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ recordingId, expiresAt }: UpdateRecordingExpiryInput) => {
+  return useMutation<
+    SafeResult<{ workspaceId: string; recordingId: string; expiresAt: Date | null }>,
+    Error,
+    UpdateRecordingExpiryInput,
+    {
+      previousLists: QuerySnapshot<RecordingsQueryData>;
+      previousDetail: RecordingDetailQueryData | undefined;
+      detailKey: ReturnType<typeof recordingKeys.detail>;
+    }
+  >({
+    mutationFn: async ({ recordingId, expiresAt }) => {
       if (!workspaceId) throw new Error('No workspace ID');
       const [error, response] = await apiClient.recording.update({
         params: { workspaceId, recordingId },
@@ -107,14 +118,62 @@ export function useUpdateRecordingExpiry(workspaceId: string | null) {
       });
       return handleSafeResult(error, response?.data ?? null);
     },
-    onSuccess: (result) => {
+    onMutate: async ({ recordingId, expiresAt }) => {
+      const detailKey = recordingKeys.detail(workspaceId ?? '', recordingId);
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: recordingKeys.lists() }),
+        queryClient.cancelQueries({ queryKey: detailKey }),
+      ]);
+
+      const previousLists: QuerySnapshot<RecordingsQueryData> =
+        queryClient.getQueriesData<RecordingsQueryData>({
+          queryKey: recordingKeys.lists(),
+        });
+      const previousDetail = queryClient.getQueryData<RecordingDetailQueryData>(detailKey);
+
+      queryClient.setQueriesData<RecordingsQueryData>(
+        { queryKey: recordingKeys.lists() },
+        (old) => {
+          if (!old?.success) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              recordings: old.data.recordings.map((r) =>
+                r.recordingId === recordingId ? { ...r, expiresAt } : r
+              ),
+            },
+          };
+        }
+      );
+
+      queryClient.setQueryData<RecordingDetailQueryData>(detailKey, (old) => {
+        if (!old?.success) return old;
+        return { ...old, data: { ...old.data, expiresAt } };
+      });
+
+      return { previousLists, previousDetail, detailKey };
+    },
+    onSuccess: (result, _variables, context) => {
       if (!result.success) {
+        context?.previousLists?.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+        if (context?.detailKey) {
+          queryClient.setQueryData(context.detailKey, context.previousDetail);
+        }
         showApiErrorToast(result.error);
         return;
       }
       showUpdatedToast('Recording expiration', 'New expiration has been set');
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, _variables, context) => {
+      context?.previousLists?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      if (context?.detailKey) {
+        queryClient.setQueryData(context.detailKey, context.previousDetail);
+      }
       handleUnknownError(error, 'Failed to update recording expiration');
     },
     onSettled: (_, __, { recordingId }) => {
