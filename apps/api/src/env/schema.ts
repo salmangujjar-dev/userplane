@@ -276,6 +276,8 @@ export const mcpEnvSchema = z.object({
   MCP_RATE_LIMIT_PER_USER_PER_MINUTE: integerWithDefault(120),
   /** Post-auth per-user day window. */
   MCP_RATE_LIMIT_PER_USER_PER_DAY: integerWithDefault(10000),
+  /** Domain verification token for OpenAI/ChatGPT MCP App submission. */
+  OPENAI_VERIFICATION_TOKEN: z.string().optional().default(''),
 });
 
 /** Admin env vars schema */
@@ -445,6 +447,7 @@ export const mcpConfigSchema = z.object({
     perUserPerMinute: z.number(),
     perUserPerDay: z.number(),
   }),
+  openaiVerificationToken: z.string(),
 });
 
 /** Redis configuration schema */
