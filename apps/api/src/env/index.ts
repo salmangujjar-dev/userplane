@@ -280,6 +280,7 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
         perUserPerMinute: raw.MCP_RATE_LIMIT_PER_USER_PER_MINUTE,
         perUserPerDay: raw.MCP_RATE_LIMIT_PER_USER_PER_DAY,
       },
+      openaiVerificationToken: raw.OPENAI_VERIFICATION_TOKEN,
     },
   };
 }

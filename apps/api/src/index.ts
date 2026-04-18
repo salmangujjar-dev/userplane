@@ -290,6 +290,13 @@ app.get('/.well-known/oauth-authorization-server', (c) => authServerMetadataHand
 
 app.get('/.well-known/openid-configuration', (c) => openIdConfigHandler(c.req.raw));
 
+// OpenAI domain verification for ChatGPT MCP App submission
+if (env.mcp.openaiVerificationToken) {
+  app.get('/.well-known/openai-apps-challenge', (c) =>
+    c.text(env.mcp.openaiVerificationToken, 200, { 'Cache-Control': 'public, max-age=3600' })
+  );
+}
+
 // OAuth 2.1 DCR workaround — force public client registration
 // Claude Desktop (and other MCP clients) send token_endpoint_auth_method: "client_secret_post",
 // but Better Auth's oauth-provider rejects unauthenticated confidential DCR with 401.
