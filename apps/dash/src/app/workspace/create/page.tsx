@@ -31,7 +31,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { type DefinedError, handleSafeResult, showApiErrorToast } from '@/lib/errors';
 import { mediaClient } from '@/lib/media';
 import { showConnectionFailedToast } from '@/lib/toasts';
-import { ZENDESK_MARKETPLACE_APP_URL } from '@/lib/zendesk-install';
+import { ZENDESK_MARKETPLACE_APP_URL, ZENDESK_MARKETPLACE_LIVE } from '@/lib/zendesk-install';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -290,7 +290,11 @@ function ProviderSelectFlow() {
 
   const handleConnect = async () => {
     if (selectedProvider === 'zendesk') {
-      window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank');
+      if (ZENDESK_MARKETPLACE_LIVE) {
+        window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank');
+      } else {
+        router.push('/workspace/create?flow=direct');
+      }
       return;
     }
 
