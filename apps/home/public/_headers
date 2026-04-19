@@ -1,0 +1,13 @@
+# Cloudflare Pages custom headers
+# https://developers.cloudflare.com/pages/configuration/headers/
+#
+# RFC 8288 Link headers for agent discovery.
+
+/
+  Link: </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"
+  Link: <https://docs.userplane.io/openapi.json>; rel="service-desc"; type="application/json"
+  Link: <https://docs.userplane.io/api/introduction>; rel="service-doc"
+  Link: </llms.txt>; rel="describedby"; type="text/plain"
+
+/*
+  Vary: Accept

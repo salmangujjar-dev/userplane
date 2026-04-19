@@ -15,6 +15,8 @@ export const LLMS_LINKS: LlmsLink[] = [
   { label: 'Pricing', url: 'https://userplane.io/pricing.md' },
   { label: 'FAQ', url: 'https://userplane.io/faq.md' },
   { label: 'Documentation', url: 'https://docs.userplane.io' },
+  { label: 'API Catalog', url: 'https://userplane.io/.well-known/api-catalog' },
+  { label: 'OpenAPI Spec', url: 'https://docs.userplane.io/openapi.json' },
   { label: 'Docs for LLMs', url: 'https://docs.userplane.io/llms.txt' },
   { label: 'Blog', url: 'https://userplane.io/blog' },
   { label: 'Help Center', url: 'https://userplane.io/help' },
