@@ -370,6 +370,15 @@
                   "integrations/chrome-extension-settings"
                 ]
               },
+              {
+                "group": "Raycast",
+                "pages": [
+                  "integrations/raycast",
+                  "integrations/raycast-create-links",
+                  "integrations/raycast-recordings",
+                  "integrations/raycast-links"
+                ]
+              },
               "integrations/other-helpdesks"
             ]
           },
