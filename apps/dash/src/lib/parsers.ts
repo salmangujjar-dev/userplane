@@ -14,6 +14,15 @@ export const tabParser = createParser({
   serialize: (value) => value,
 });
 
+const AUTH_MODE_VALUES = ['quick', 'magic-link'] as const;
+
+export type AuthMode = (typeof AUTH_MODE_VALUES)[number];
+
+export const authModeParser = createParser<AuthMode>({
+  parse: (value) => (AUTH_MODE_VALUES.includes(value as AuthMode) ? (value as AuthMode) : null),
+  serialize: (value) => value,
+}).withDefault('quick');
+
 const SETTINGS_TAB_VALUES = [
   'general',
   'team',

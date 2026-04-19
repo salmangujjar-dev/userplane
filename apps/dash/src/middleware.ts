@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { env } from '@/env';
+import { getSafeRedirectPath } from '@/lib/redirect';
 
 const logger = createClientLogger('middleware', { level: 'debug' });
 
@@ -59,7 +60,7 @@ export function middleware(request: NextRequest) {
     }
 
     const redirectTo = request.nextUrl.searchParams.get('redirect_to');
-    const destination = redirectTo || '/';
+    const destination = getSafeRedirectPath(redirectTo);
     logger.info({ path, redirectTo: destination }, 'Redirecting authenticated user from auth page');
     return NextResponse.redirect(new URL(destination, request.url));
   }

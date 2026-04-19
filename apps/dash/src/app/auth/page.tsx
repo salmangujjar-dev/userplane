@@ -9,20 +9,17 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@userplane/ui/components/input-group';
-import Logo from '@userplane/ui/components/logo';
-import { Skeleton } from '@userplane/ui/components/skeleton';
 import { ArrowRight, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useQueryState } from 'nuqs';
 import posthog from 'posthog-js';
-import { Suspense, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import * as z from 'zod';
 
-import { AuthIcons } from '@/components/auth/auth-icons';
 import { AuthFooter, AuthHeader, AuthLayout } from '@/components/auth/auth-shell';
 import { MailProviderButtons } from '@/components/auth/mail-provider-buttons';
 import { useAuth } from '@/hooks';
+import { type AuthMode, authModeParser } from '@/lib/parsers';
 import {
   showAuthenticationFailedToast,
   showMagicLinkFailedToast,
@@ -126,15 +123,18 @@ function MagicLinkForm({
   );
 }
 
-function AuthToggle({ useMagicLink, onToggle }: { useMagicLink: boolean; onToggle: () => void }) {
+function AuthToggle({ authMode, onToggle }: { authMode: AuthMode; onToggle: () => void }) {
   return (
     <div className="absolute bottom-24 lg:bottom-6 left-1/2 -translate-x-1/2 z-20">
-      <button
-        onClick={onToggle}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >
-        {useMagicLink ? 'Continue with Google' : 'Continue with Magic Link'}
-      </button>
+      {authMode === 'magic-link' ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Continue with Google
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -168,11 +168,10 @@ function MagicLinkSentView({ email, onTryAgain }: { email: string; onTryAgain: (
 
 function AuthPageContent() {
   const [isLoading, setIsLoading] = useState(false);
-  const [useMagicLink, setUseMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [sentEmail, setSentEmail] = useState('');
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirect_to');
+  const [authMode, setAuthMode] = useQueryState('mode', authModeParser);
+  const [redirectTo] = useQueryState('redirect_to');
   const { signInWithGoogle, signInWithMagicLink } = useAuth();
 
   const form = useForm<MagicLinkFormData>({
@@ -182,6 +181,29 @@ function AuthPageContent() {
     },
     mode: 'onTouched',
   });
+
+  const resetMagicLinkState = () => {
+    setMagicLinkSent(false);
+    setSentEmail('');
+    form.reset();
+  };
+
+  useEffect(() => {
+    if (authMode === 'quick') {
+      setMagicLinkSent(false);
+      setSentEmail('');
+      form.reset();
+    }
+  }, [authMode, form]);
+
+  const handleAuthModeChange = (nextMode: AuthMode) => {
+    if (nextMode === authMode) {
+      return;
+    }
+
+    resetMagicLinkState();
+    void setAuthMode(nextMode);
+  };
 
   const handleGoogleSignIn = async () => {
     try {
@@ -230,9 +252,7 @@ function AuthPageContent() {
   };
 
   const handleTryAgain = () => {
-    setMagicLinkSent(false);
-    setSentEmail('');
-    form.reset();
+    resetMagicLinkState();
   };
 
   if (magicLinkSent) {
@@ -242,14 +262,17 @@ function AuthPageContent() {
   return (
     <AuthLayout
       bottomContent={
-        <AuthToggle useMagicLink={useMagicLink} onToggle={() => setUseMagicLink(!useMagicLink)} />
+        <AuthToggle
+          authMode={authMode}
+          onToggle={() => handleAuthModeChange(authMode === 'magic-link' ? 'quick' : 'magic-link')}
+        />
       }
     >
       <AuthHeader subtitle="Quick auth and you're in" />
 
       <div className="space-y-6">
         <div className="min-h-[74px]">
-          {useMagicLink ? (
+          {authMode === 'magic-link' ? (
             <MagicLinkForm form={form} onSubmit={handleMagicLinkSignIn} isLoading={isLoading} />
           ) : (
             <GoogleSignInButton onClick={handleGoogleSignIn} isLoading={isLoading} />
@@ -262,30 +285,6 @@ function AuthPageContent() {
   );
 }
 
-function AuthPageSkeleton() {
-  return (
-    <div className="relative flex min-h-svh items-center justify-center px-6 py-12 bg-background overflow-hidden">
-      <AuthIcons />
-      <div className="w-full max-w-md space-y-10 relative z-10">
-        <div className="flex flex-col items-center gap-3">
-          <Link href="/">
-            <Logo />
-          </Link>
-          <Skeleton className="h-4 w-48" />
-        </div>
-        <div className="space-y-6">
-          <Skeleton className="h-14 w-full rounded-md" />
-        </div>
-        <Skeleton className="h-10 w-80 mx-auto" />
-      </div>
-    </div>
-  );
-}
-
 export default function AuthPage() {
-  return (
-    <Suspense fallback={<AuthPageSkeleton />}>
-      <AuthPageContent />
-    </Suspense>
-  );
+  return <AuthPageContent />;
 }
