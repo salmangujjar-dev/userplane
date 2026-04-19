@@ -20,6 +20,18 @@ export {
   oauthProviderOpenIdConfigMetadata,
 } from '@better-auth/oauth-provider';
 
+// MCP OAuth scopes shared by the auth server and API discovery routes.
+// `offline_access` is intentionally omitted from Protected Resource Metadata
+// because it is an auth-server concern, not a resource-specific one.
+export const MCP_AUTH_SERVER_SCOPES = [
+  'openid',
+  'profile',
+  'email',
+  'offline_access',
+  'mcp:tools',
+] as const;
+export const MCP_PROTECTED_RESOURCE_SCOPES = ['openid', 'profile', 'email', 'mcp:tools'] as const;
+
 // Export roles for server use only
 export { adminRole, csmRole, userRole } from './permissions';
 
@@ -194,7 +206,7 @@ export function createAuth(config: AuthConfig) {
               loginPage: config.mcp.loginPage,
               consentPage: config.mcp.consentPage,
               validAudiences: [config.mcp.resourceServerUrl],
-              scopes: ['openid', 'profile', 'email', 'offline_access', 'mcp:tools'],
+              scopes: [...MCP_AUTH_SERVER_SCOPES],
               allowDynamicClientRegistration: true,
               allowUnauthenticatedClientRegistration: true,
             }),
