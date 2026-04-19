@@ -1,0 +1,81 @@
+---
+title: Raycast Create Recording Links
+description: Create recording links from Raycast with workspace, project, and domain selection
+---
+
+The **Create Recording Link** command generates a recording link, copies it to your clipboard, and optionally opens it in your browser. The form remembers your last-used workspace, project, and domain so repeat usage is fast.
+
+## Creating a link
+
+<Steps>
+  <Step title="Open the command">
+    Open Raycast and search for **Create Recording Link**, or select it from the [menu bar](/integrations/raycast).
+  </Step>
+  <Step title="Select a workspace">
+    If you belong to multiple workspaces, choose one from the **Workspace** dropdown. If you have only one workspace, it is shown as a label and cannot be changed.
+  </Step>
+  <Step title="Select a project and domain">
+    Choose a **Project** and **Domain** from the dropdowns. The form auto-selects the default project (if one exists) and the last-used domain for this workspace.
+  </Step>
+  <Step title="Add a reference (optional)">
+    Enter an optional **Reference** — a ticket number, customer ID, URL, or any note you want attached to the link.
+  </Step>
+  <Step title="Set reusable or single-use">
+    Toggle **Reusable link** on if the link should support multiple recording sessions. Leave it off for a single-use link that expires after one recording.
+  </Step>
+  <Step title="Submit the form">
+    Press **Enter** to create the link and copy it to your clipboard. Press **Cmd+Enter** to create, copy, and open the link in your browser.
+
+    <Frame caption="Create Recording Link form with workspace, project, and domain selection">
+      <img src="/media/raycast/create-link.png" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+## Form fields
+
+| Field         | Required | Default behavior                                                              |
+| ------------- | -------- | ----------------------------------------------------------------------------- |
+| **Workspace** | Yes      | Auto-selects your last-used workspace. Falls back to your first workspace.    |
+| **Project**   | Yes      | Auto-selects the default project, then last-used, then the first project.     |
+| **Domain**    | Yes      | Auto-selects your last-used domain for this workspace, then the first domain. |
+| **Reference** | No       | Free text. Appears as metadata on the link and its recordings.                |
+| **Reusable**  | No       | Off by default. When on, the link can record multiple sessions.               |
+
+## After creation
+
+After submitting, a success screen appears with the link details:
+
+- **Link URL** — truncated for display, with the full URL already on your clipboard.
+- **Metadata** — link type (reusable or single-use), domain, project, workspace, and reference.
+- **Creation info** — timestamp and creator.
+
+From the success screen, you can:
+
+| Action                   | Shortcut | What it does                                           |
+| ------------------------ | -------- | ------------------------------------------------------ |
+| **Copy Link URL**        | —        | Copies the link URL to your clipboard again            |
+| **Create Another Link**  | `Cmd+N`  | Returns to the Create Recording Link form              |
+| **Open Link in Browser** | —        | Opens the recording link in your default browser       |
+| **View Recordings**      | `Cmd+R`  | Opens the dashboard filtered to this link's recordings |
+| **View Links**           | —        | Opens the dashboard links list                         |
+
+## Smart defaults
+
+The extension persists your selections to speed up repeat usage:
+
+- **Workspace** — your last-used workspace is restored on next launch. If it's no longer available, the first workspace is selected.
+- **Project** — per workspace, the extension remembers your last-selected project. On first use in a workspace, the default project is selected.
+- **Domain** — per workspace, the extension remembers your last-selected domain. On first use, the first domain is selected.
+
+These defaults persist across Raycast sessions and are stored per workspace, so switching workspaces restores the correct project and domain.
+
+## Related articles
+
+- [Raycast Extension](/integrations/raycast) — installation, setup, and menu bar.
+- [Raycast Browse Recordings](/integrations/raycast-recordings) — view recordings received from your links.
+- [Raycast Browse Links](/integrations/raycast-links) — browse and manage recording links.
+- [Requesting a Recording](/recording/requesting) — creating links from the Userplane dashboard.
+- [Reusable Links](/recording-links/reusable) — how reusable links work.
+- [Link Metadata](/recording-links/link-metadata) — reference fields and metadata on links.
