@@ -1,0 +1,61 @@
+---
+title: privacy-agent
+description: The subagent that scans a repo for PII exposure, missing blur attributes, and CSP gaps
+---
+
+Powers the [/userplane:privacy](/integrations/claude-code-privacy) command. Strictly read-only — reports findings but never modifies files.
+
+## Tools
+
+| Tool | Purpose               |
+| ---- | --------------------- |
+| Read | Read project files    |
+| Glob | Find files by pattern |
+| Grep | Search file contents  |
+
+No Bash, Edit, or Write access.
+
+## Skills loaded
+
+- `userplane-sensitive-data` — `data-userplane-blur`, meta tag blur, third-party tool compatibility
+- `userplane-cdn` — CSP directives, frame-src requirements
+- `userplane-metadata-sdk` — `setUser()` / `setMetadata()` API for validating payload content
+
+## Workflow
+
+Runs four scans and reports findings ranked by severity:
+
+### 1. Blur coverage
+
+Greps for PII-adjacent elements and checks for `data-userplane-blur`:
+
+- `<input type="password">`, `<input type="email">`
+- Elements with names/ids matching `ssn`, `dob`, `tax`, `passport`, `card`, `cvv`, `iban`
+- Common PII containers: `.pii`, `.sensitive`, elements near "Full name", "Address", "Phone"
+
+Flags any match without the blur attribute.
+
+### 2. Metadata PII
+
+Finds every `setMetadata()` / `setUser()` call and checks payloads for raw PII — email, phone, address, government IDs, card numbers. Stable pseudonymous IDs (`user_123`) are allowed.
+
+### 3. CSP frame-src gaps
+
+Locates the CSP header config (Next.js headers, Nuxt route rules, `_headers`, `vercel.json`, `netlify.toml`, express middleware) and verifies that every third-party embed in use (Stripe, Auth0, Clerk, Intercom) has its domain in `frame-src` / `connect-src`. Flags missing Userplane domains.
+
+### 4. Inline handler leaks
+
+Greps for inline `onClick`, `onSubmit` handlers and template expressions that render PII from state into visible DOM text nodes without a blur wrapper.
+
+## Hard rules
+
+- Read-only. No Edit, Write, or Bash.
+- Every finding includes file:line and a concrete diff.
+- Does not flag already-blurred elements — checks wrapping ancestors.
+- Stable pseudonymous IDs in `setUser` are fine — only flags actual PII.
+
+## Related articles
+
+- [/userplane:privacy](/integrations/claude-code-privacy) — the command that invokes this agent.
+- [Sensitive Data Redaction](/developer/sensitive-data-redaction) — configure blur and redaction in the SDK.
+- [audit-agent](/integrations/claude-code-audit-agent) — for overall install verification (separate from privacy).

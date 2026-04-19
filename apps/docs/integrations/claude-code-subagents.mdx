@@ -1,0 +1,38 @@
+---
+title: Subagents
+description: Four isolated subagents that power the plugin's slash commands — each with scoped tools and a single job
+---
+
+Each [slash command](/integrations/claude-code-commands) delegates to exactly one subagent. Subagents run in isolated context windows with their own tool permissions — no shared state, no cross-calling.
+
+## Architecture
+
+| Command                | Subagent        | Tools                               | Can write files |
+| ---------------------- | --------------- | ----------------------------------- | --------------- |
+| `/userplane:integrate` | integrate-agent | Read, Glob, Grep, Bash, Edit, Write | Yes             |
+| `/userplane:audit`     | audit-agent     | Read, Glob, Grep, Bash (read-only)  | No              |
+| `/userplane:debug`     | debug-agent     | Workspace MCP tools, Read, Grep     | No              |
+| `/userplane:privacy`   | privacy-agent   | Read, Glob, Grep                    | No              |
+
+Only the integrate-agent can write files. Only the debug-agent can access recording data.
+
+<CardGroup cols={2}>
+  <Card title="integrate-agent" icon="plus" href="/integrations/claude-code-integrate-agent">
+    Writes the full Userplane install for your framework
+  </Card>
+  <Card title="audit-agent" icon="clipboard-check" href="/integrations/claude-code-audit-agent">
+    Read-only verification against the framework skill
+  </Card>
+  <Card title="debug-agent" icon="bug" href="/integrations/claude-code-debug-agent">
+    Fetches and correlates recording session data via MCP
+  </Card>
+  <Card title="privacy-agent" icon="shield-halved" href="/integrations/claude-code-privacy-agent">
+    Scans the repo for PII exposure in recordings
+  </Card>
+</CardGroup>
+
+## Related articles
+
+- [Commands](/integrations/claude-code-commands) — the slash commands that invoke these subagents.
+- [Skills](/integrations/claude-code-skills) — the knowledge layer subagents load for each task.
+- [MCP Servers](/integrations/claude-code-mcp) — the workspace server the debug-agent connects to.

@@ -1,0 +1,73 @@
+---
+title: MCP Servers
+description: The two Userplane MCP servers bundled with the Claude Code plugin — workspace and documentation
+---
+
+The plugin auto-loads both Userplane MCP servers. No manual configuration needed — they register when you install the plugin and authenticate via OAuth on first use.
+
+## Bundled servers
+
+| Server                | URL                             | Authentication | Purpose                                       |
+| --------------------- | ------------------------------- | -------------- | --------------------------------------------- |
+| `userplane-workspace` | `https://api.userplane.io/mcp`  | OAuth 2.1      | Recordings, links, projects, domains, viewers |
+| `userplane-docs`      | `https://docs.userplane.io/mcp` | None (public)  | Userplane documentation search                |
+
+## Workspace MCP
+
+The workspace server gives the [debug-agent](/integrations/claude-code-debug-agent) access to recording data — console logs, network requests, user actions — for root cause analysis. It's also available directly in conversation for ad-hoc queries.
+
+### Available tools
+
+<CardGroup cols={2}>
+  <Card title="Recording Tools" icon="video" href="/integrations/mcp-tools-recordings">
+    List recordings, fetch session data, open interactive viewers
+  </Card>
+  <Card title="Link Tools" icon="link" href="/integrations/mcp-tools-links">
+    Create, list, and update recording links
+  </Card>
+  <Card title="Domain Tools" icon="globe" href="/integrations/mcp-tools-domains">
+    List and inspect verified domains
+  </Card>
+  <Card title="Workspace Tools" icon="building" href="/integrations/mcp-tools-workspace">
+    Profiles, workspaces, and projects
+  </Card>
+</CardGroup>
+
+### Interactive viewers
+
+In AI clients that support [MCP Apps](/integrations/mcp-apps), the workspace server renders rich viewers:
+
+- [Recording Viewer](/integrations/mcp-apps-recording) — video playback with synchronized console, network, and action tabs
+- [Resource Viewers](/integrations/mcp-apps-resources) — focused viewers for console logs, network requests, and user actions
+
+### Authentication
+
+On the first tool call, Claude Code opens a browser window for Userplane sign-in. You authorize with your workspace account, and tokens are stored locally. See [MCP Authentication](/integrations/mcp-authentication) for details on the OAuth 2.1 flow, permissions, and token management.
+
+<Tip>
+  If authentication fails or tokens expire, run `/mcp` to view server status and re-authenticate.
+</Tip>
+
+## Documentation MCP
+
+The documentation server lets your agent search Userplane docs inline. It's public — no authentication required.
+
+Useful when integrating the SDK and you need answers from the docs without leaving the conversation. See [Documentation MCP](/integrations/mcp-docs) for setup details, rate limits, and comparison with web search.
+
+## Verifying the servers
+
+After installing the plugin, run:
+
+```
+/mcp
+```
+
+You should see both `userplane-workspace` and `userplane-docs` in the server list.
+
+## Related articles
+
+- [Model Context Protocol](/integrations/mcp) — overview of both Userplane MCP servers.
+- [Userplane MCP](/integrations/mcp-workspace) — detailed workspace server documentation.
+- [MCP Getting Started](/integrations/mcp-getting-started) — manual MCP setup for any AI client.
+- [MCP Authentication](/integrations/mcp-authentication) — OAuth 2.1 flow and permissions.
+- [Documentation MCP](/integrations/mcp-docs) — the public documentation search server.

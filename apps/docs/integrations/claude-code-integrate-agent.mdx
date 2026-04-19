@@ -1,0 +1,49 @@
+---
+title: integrate-agent
+description: The subagent that detects your framework and writes a complete Userplane integration
+---
+
+Powers the [/userplane:integrate](/integrations/claude-code-integrate) command. This is the only subagent with write access — it creates files, edits configs, and wires environment variables.
+
+## Tools
+
+| Tool  | Purpose                                       |
+| ----- | --------------------------------------------- |
+| Read  | Read project files                            |
+| Glob  | Find files by pattern                         |
+| Grep  | Search file contents                          |
+| Bash  | Run shell commands (e.g., check node version) |
+| Edit  | Modify existing files                         |
+| Write | Create new files                              |
+
+## Skills loaded
+
+The detected `userplane-{framework}` skill, plus:
+
+- `userplane-best-practices` — cross-cutting install and SDK guidance
+- `userplane-cdn` — script placement, CSP directives, redirect handling
+- `userplane-web-sdk` — `initialize()` API and recording state
+- `userplane-metadata-sdk` — `setUser()` / `setMetadata()` API
+
+## Workflow
+
+1. Reads `package.json` to detect the framework.
+2. Loads the matching framework skill as the source of truth.
+3. Checks for an existing Userplane install — aborts if found.
+4. Asks for the write key if not already in the environment.
+5. Creates the provider file and registers it at the app root.
+6. Wires the environment variable (`.env.local` or framework equivalent).
+7. Adds CSP headers when the framework has a headers config.
+8. Reports a summary of files changed and the next step.
+
+## Hard rules
+
+- Does not invent API shapes — only writes what the skill documents.
+- Does not duplicate existing providers — searches before creating.
+- Does not skip CSP guidance for frameworks with a headers config.
+- Stops if Userplane is already installed and directs to `/userplane:audit`.
+
+## Related articles
+
+- [/userplane:integrate](/integrations/claude-code-integrate) — the command that invokes this agent.
+- [Skills Catalog](/integrations/claude-code-skills) — the framework skills this agent loads.

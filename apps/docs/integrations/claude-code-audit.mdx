@@ -1,0 +1,80 @@
+---
+title: /userplane:audit
+description: Verify an existing Userplane install with a read-only PASS/FAIL checklist
+---
+
+Verifies an existing Userplane integration against the matching framework skill. Produces a PASS/FAIL checklist with file:line citations and a concrete diff for every failure.
+
+## Usage
+
+```text
+/userplane:audit
+```
+
+No arguments required. The agent detects the framework and loads the matching skill as ground truth.
+
+<Note>
+  Read-only. The audit agent never edits files — every FAIL includes a diff you can apply yourself.
+</Note>
+
+## What it checks
+
+| Category                  | What the agent verifies                                               |
+| ------------------------- | --------------------------------------------------------------------- |
+| **Provider wiring**       | Provider or init call present at the framework-correct location       |
+| **Script placement**      | CDN script in the correct position (head/body) per framework guidance |
+| **SSR hazards**           | No browser-only SDK calls on the server render path                   |
+| **setUser / setMetadata** | Called after auth, with non-PII fields                                |
+| **CSP headers**           | Userplane domains and third-party iframe hosts in the CSP config      |
+| **Env vars**              | Consistent across dev / prod configs                                  |
+
+## Output format
+
+```
+PASS/FAIL summary: 4 pass, 2 fail
+
+PASS  Provider wiring — src/app/providers.tsx:12
+PASS  Script placement — src/app/layout.tsx:8
+FAIL  SSR hazard — src/components/Dashboard.tsx:45
+      SDK call to initialize() outside a browser guard
+      - initialize({ writeKey: process.env.NEXT_PUBLIC_USERPLANE_WRITE_KEY })
+      + if (typeof window !== 'undefined') { initialize({ ... }) }
+FAIL  CSP headers — next.config.js:18
+      Missing frame-src for userplane.io
+      - frame-src 'self'
+      + frame-src 'self' *.userplane.io
+PASS  setUser call — src/hooks/useAuth.ts:32
+PASS  Env vars — .env.local, .env.production
+```
+
+## Example prompts
+
+<CodeGroup>
+
+```text
+/userplane:audit
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+Check if my Userplane install is correct. I'm worried about SSR issues — we just migrated to the App Router.
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+Audit my Userplane setup. We're seeing a blank iframe in production but it works in dev.
+```
+
+</CodeGroup>
+
+## Related articles
+
+- [/userplane:integrate](/integrations/claude-code-integrate) — run integrate first if Userplane isn't installed yet.
+- [/userplane:privacy](/integrations/claude-code-privacy) — audit privacy posture separately.
+- [audit-agent](/integrations/claude-code-audit-agent) — the subagent that powers this command.

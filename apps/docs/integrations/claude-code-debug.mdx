@@ -1,0 +1,95 @@
+---
+title: /userplane:debug
+description: Root-cause a Userplane recording by correlating console logs, network requests, and user actions
+---
+
+Accepts a recording ID or a natural-language description, fetches session data via the [workspace MCP server](/integrations/mcp-workspace), and produces a correlated timeline with a root cause analysis.
+
+## Usage
+
+```text
+/userplane:debug <recording-id>
+```
+
+```text
+/userplane:debug <description>
+```
+
+## How it resolves recordings
+
+**By recording ID** — resolves the workspace automatically and fetches the recording directly.
+
+```text
+/userplane:debug rec_01HX2KYN
+```
+
+**By description** — searches recordings by user, project, or time range, narrows to 1–3 candidates, and confirms with you before fetching session data.
+
+```text
+/userplane:debug "Sarah's checkout failure yesterday"
+```
+
+## What it produces
+
+1. **Summary** — one sentence describing the issue.
+2. **Timeline** — interleaved user actions, console errors, and network failures ordered by timestamp.
+3. **Root cause** — the specific failure point with quoted evidence from console or network data.
+4. **Fix** — a concrete code change when the repo is accessible, or a description of what to investigate.
+
+<Info>
+  Requires workspace MCP authentication. If you haven't authenticated yet, Claude Code opens a
+  browser for OAuth sign-in on the first call.
+</Info>
+
+## Example prompts
+
+<CodeGroup>
+
+```text
+Here's a recording from a customer who can't complete checkout — https://dash.userplane.io/{workspaceId}/recordings/{recordingId}. What's causing the issue?
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+A customer reported a blank screen after login. Pull up the latest recording in the Auth project and check the console for errors.
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+/userplane:debug "the payment form crash from this morning"
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+Debug this recording. Focus on network requests — the customer said the page loaded but nothing saved. https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+Walk me through what the user did in this recording. What pages did they visit, what did they click, and where did things break? https://dash.userplane.io/{workspaceId}/recordings/{recordingId}
+```
+
+</CodeGroup>
+
+<Note>
+  Replace `{workspaceId}` and `{recordingId}` with values from your Userplane dashboard URL bar.
+</Note>
+
+## Related articles
+
+- [debug-agent](/integrations/claude-code-debug-agent) — the subagent that powers this command.
+- [MCP Servers](/integrations/claude-code-mcp) — the workspace MCP server this command uses.
+- [Recording Tools](/integrations/mcp-tools-recordings) — the underlying MCP tools for recording data.
+- [MCP Apps](/integrations/mcp-apps) — interactive viewers for recordings, console, network, and actions.

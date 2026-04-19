@@ -1,0 +1,117 @@
+---
+title: Skills
+description: 14 Userplane skills that give AI agents built-in knowledge for framework integration, SDK usage, and privacy configuration
+---
+
+The plugin includes 14 skills — the knowledge layer that [commands](/integrations/claude-code-commands) and [subagents](/integrations/claude-code-subagents) rely on. Skills also activate directly from natural-language prompts.
+
+## How skills load
+
+| Level            | When loaded                   | What it contains                       |
+| ---------------- | ----------------------------- | -------------------------------------- |
+| **Metadata**     | Always (at startup)           | Skill name and description             |
+| **Instructions** | When triggered by your prompt | Full SKILL.md content                  |
+| **Resources**    | As needed by instructions     | Bundled reference files, code examples |
+
+The agent only loads what's relevant. Multiple skills load in parallel when a task spans topics.
+
+## Framework integration skills
+
+| Skill                      | Framework            | Integration pattern                |
+| -------------------------- | -------------------- | ---------------------------------- |
+| `userplane-react`          | React (Vite)         | Provider component in `useEffect`  |
+| `userplane-nextjs`         | Next.js (App Router) | `'use client'` provider component  |
+| `userplane-vue`            | Vue 3 (Vite)         | Vue plugin                         |
+| `userplane-angular`        | Angular 17+          | `APP_INITIALIZER`                  |
+| `userplane-nuxt`           | Nuxt 3               | `.client.ts` browser-only plugin   |
+| `userplane-astro`          | Astro                | Client-side `<script>` blocks      |
+| `userplane-sveltekit`      | SvelteKit            | `onMount` in root `+layout.svelte` |
+| `userplane-tanstack-start` | TanStack Start       | Search-param schema + provider     |
+| `userplane-static-html`    | Static HTML          | CDN script tags, no build step     |
+
+Each skill covers the full integration: CDN quick start, npm SDK, URL parameter preservation, sensitive data, metadata, SSR safety, environment variables, and troubleshooting.
+
+## SDK and reference skills
+
+| Skill                      | Covers                                                              |
+| -------------------------- | ------------------------------------------------------------------- |
+| `userplane-web-sdk`        | `initialize()`, `open()`, `unmount()`, recording state, session IDs |
+| `userplane-metadata-sdk`   | `set()`, `metadata()`, `clearMetadata()`, URL parameter metadata    |
+| `userplane-cdn`            | Script placement, CSP directives, redirect handling                 |
+| `userplane-sensitive-data` | `data-userplane-blur`, meta tag blur, third-party compatibility     |
+| `userplane-best-practices` | Cross-cutting install, SDK, metadata, and privacy guidance          |
+
+## Example prompts
+
+<CodeGroup>
+
+```text
+Add Userplane to this SvelteKit app. Use the npm package, not the CDN.
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+What arguments does initialize() accept? I want to pass a custom session ID and disable auto-open.
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+We use Stripe Elements for payment and Auth0 for login. What CSP headers do I need for Userplane to work alongside them?
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+How do I attach the logged-in user's ID to recordings without exposing their email address?
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+The Userplane iframe is blank in production but works in dev. What's likely wrong?
+```
+
+</CodeGroup>
+
+## Framework detection
+
+The `/userplane:integrate` and `/userplane:audit` commands auto-detect the framework by reading `package.json`.
+
+| Dependency                            | Skill loaded               |
+| ------------------------------------- | -------------------------- |
+| `next`                                | `userplane-nextjs`         |
+| `nuxt`                                | `userplane-nuxt`           |
+| `@angular/core`                       | `userplane-angular`        |
+| `vue` (without nuxt)                  | `userplane-vue`            |
+| `@sveltejs/kit`                       | `userplane-sveltekit`      |
+| `astro`                               | `userplane-astro`          |
+| `@tanstack/react-start`               | `userplane-tanstack-start` |
+| `react` (with vite, no metaframework) | `userplane-react`          |
+| Top-level `index.html`, no bundler    | `userplane-static-html`    |
+
+## Compatibility
+
+Skills follow the open [Agent Skills](https://agentskills.io) standard. They work with Claude Code (via plugin), Cursor, Windsurf, and any agent that supports the standard.
+
+<Note>
+  [Commands](/integrations/claude-code-commands) and
+  [subagents](/integrations/claude-code-subagents) are Claude Code plugin features. In other agents,
+  skills activate through natural-language prompts.
+</Note>
+
+## Related articles
+
+- [Commands](/integrations/claude-code-commands) — the slash commands that use these skills.
+- [Subagents](/integrations/claude-code-subagents) — how each subagent loads skills.
+- [Agent Skills](/developer/agent-skills) — install skills via the Skills CLI for other agents.
+- [Framework Guides](/frameworks/react) — human-readable integration guides.

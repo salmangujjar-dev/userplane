@@ -1,0 +1,70 @@
+---
+title: Claude Code Plugin
+description: Install, audit, debug, and privacy-proof Userplane from Claude Code with purpose-built commands and framework skills
+---
+
+The Userplane plugin for Claude Code gives your agent built-in expertise for working with Userplane screen recording. Install the SDK, audit an existing setup, debug a customer's recording, or scan for privacy issues — all from slash commands that know your framework.
+
+## What you get
+
+<CardGroup cols={2}>
+  <Card title="4 Slash Commands" icon="terminal" href="/integrations/claude-code-commands">
+    Integrate, audit, debug, and privacy-proof Userplane installs
+  </Card>
+  <Card title="14 Framework Skills" icon="code" href="/integrations/claude-code-skills">
+    Integration knowledge for 9 frameworks and 5 SDK reference topics
+  </Card>
+  <Card title="Purpose-Built Subagents" icon="robot" href="/integrations/claude-code-subagents">
+    Isolated agents with scoped tool permissions per command
+  </Card>
+  <Card title="2 MCP Servers" icon="plug" href="/integrations/claude-code-mcp">
+    Workspace and documentation servers, auto-loaded by the plugin
+  </Card>
+</CardGroup>
+
+## Quick install
+
+```bash
+# Register the marketplace (one-time)
+/plugin marketplace add userplanehq/userplane-agent
+
+# Install the plugin
+/plugin install userplane@userplane-marketplace
+```
+
+<Tip>
+  Not using Claude Code? Install skills via the Skills CLI instead — see [Agent
+  Skills](/developer/agent-skills).
+</Tip>
+
+## How it fits together
+
+| Component              | What it does                                                  | When it runs                            |
+| ---------------------- | ------------------------------------------------------------- | --------------------------------------- |
+| **Skills** (14)        | Framework-specific integration knowledge and SDK reference    | Auto-loaded when your prompt matches    |
+| `/userplane:integrate` | Detects framework, writes the full install                    | On demand                               |
+| `/userplane:audit`     | Read-only PASS/FAIL checklist against the framework skill     | On demand                               |
+| `/userplane:debug`     | Root-causes a recording via console, network, and action data | On demand                               |
+| `/userplane:privacy`   | Scans for PII leaks, missing blur attrs, and CSP gaps         | On demand                               |
+| **Workspace MCP**      | Recordings, links, projects, domains, interactive viewers     | Used by `/userplane:debug` and directly |
+| **Docs MCP**           | Searches Userplane documentation                              | Used by skills and directly             |
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Getting Started" icon="rocket" href="/integrations/claude-code-getting-started">
+    Install and verify the plugin
+  </Card>
+  <Card title="Commands" icon="terminal" href="/integrations/claude-code-commands">
+    All four slash commands
+  </Card>
+  <Card title="Skills" icon="book" href="/integrations/claude-code-skills">
+    The 14 skills and how they load
+  </Card>
+</CardGroup>
+
+## Related articles
+
+- [Model Context Protocol](/integrations/mcp) — overview of both Userplane MCP servers.
+- [Agent Skills](/developer/agent-skills) — install skills via the Skills CLI for Cursor, Windsurf, and other agents.
+- [Developer Installation](/developer/installation) — install the Userplane SDK manually.

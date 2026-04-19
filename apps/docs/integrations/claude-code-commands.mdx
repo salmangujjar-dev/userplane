@@ -1,0 +1,34 @@
+---
+title: Commands
+description: Four slash commands for integrating, auditing, debugging, and privacy-proofing Userplane installs
+---
+
+The plugin registers four slash commands. Each delegates to a purpose-built [subagent](/integrations/claude-code-subagents) with scoped tool permissions.
+
+| Command                       | Job                       | Output                          |
+| ----------------------------- | ------------------------- | ------------------------------- |
+| `/userplane:integrate`        | Add Userplane to this app | File edits + summary            |
+| `/userplane:audit`            | Verify my install         | PASS/FAIL checklist with diffs  |
+| `/userplane:debug <id\|desc>` | Root-cause a recording    | Timeline + root cause + fix     |
+| `/userplane:privacy`          | Check privacy posture     | Severity-ranked findings report |
+
+<CardGroup cols={2}>
+  <Card title="/userplane:integrate" icon="plus" href="/integrations/claude-code-integrate">
+    Detect framework, write the full install
+  </Card>
+  <Card title="/userplane:audit" icon="clipboard-check" href="/integrations/claude-code-audit">
+    Read-only verification of an existing install
+  </Card>
+  <Card title="/userplane:debug" icon="bug" href="/integrations/claude-code-debug">
+    Root-cause a recording via MCP
+  </Card>
+  <Card title="/userplane:privacy" icon="shield-halved" href="/integrations/claude-code-privacy">
+    Scan for PII leaks, blur gaps, CSP issues
+  </Card>
+</CardGroup>
+
+## Related articles
+
+- [Subagents](/integrations/claude-code-subagents) — how each command's agent works internally.
+- [Skills](/integrations/claude-code-skills) — the knowledge layer commands rely on.
+- [MCP Servers](/integrations/claude-code-mcp) — the workspace and documentation servers.
