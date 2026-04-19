@@ -12,6 +12,7 @@ import {
 import { createRateLimitMiddleware, getClientIP, rateLimitMiddlewares } from '@userplane/cache';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { serveStatic } from 'hono/bun';
 import { cors } from 'hono/cors';
 import { logger as honoLogger } from 'hono/logger';
@@ -211,6 +212,33 @@ app.use(
 );
 
 app.use('*', prettyJSON());
+
+// Single conditional dispatch: two separate bodyLimit registrations won't work because
+// Hono runs all matching middleware in order — the strict one would reject what the permissive one allows.
+const bodyLimitOnError = (c: Context) =>
+  c.json(
+    { error: 'PAYLOAD_TOO_LARGE', message: 'Request body exceeds the allowed size limit' },
+    413
+  );
+
+const defaultBodyLimitMiddleware = bodyLimit({
+  maxSize: env.bodyLimit.maxSizeBytes,
+  onError: bodyLimitOnError,
+});
+
+const largeBodyLimitMiddleware = bodyLimit({
+  maxSize: env.bodyLimit.maxSizeLargeBytes,
+  onError: bodyLimitOnError,
+});
+
+app.use('*', (c, next) => {
+  const path = c.req.path;
+  const limit =
+    path === '/api/inngest' || (path.startsWith('/api/v1/workspace/') && path.endsWith('/logo'))
+      ? largeBodyLimitMiddleware
+      : defaultBodyLimitMiddleware;
+  return limit(c, next);
+});
 
 // Rate limiting middleware - after CORS, before routes
 // Public endpoints rate limiting (IP-based)

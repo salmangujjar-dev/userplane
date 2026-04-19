@@ -4,6 +4,13 @@
  */
 
 export const PublicApiErrors = {
+  // Validation errors
+  BAD_REQUEST: {
+    status: 400,
+    message:
+      'Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling',
+  },
+
   // Authentication errors
   API_KEY_REQUIRED: {
     status: 401,
