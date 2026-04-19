@@ -8,6 +8,7 @@ import { z } from 'zod';
 import {
   AUTH,
   BILLING,
+  BODY_LIMIT,
   CACHE,
   CORS,
   DEV_SECRETS,
@@ -190,6 +191,12 @@ export const rateLimitEnvSchema = z.object({
   RATE_LIMIT_ENABLED: booleanWithDefault(RATE_LIMIT.ENABLED),
 });
 
+/** Body limit env vars schema */
+export const bodyLimitEnvSchema = z.object({
+  BODY_LIMIT_MAX_SIZE_BYTES: integerWithDefault(BODY_LIMIT.MAX_SIZE_BYTES),
+  BODY_LIMIT_MAX_SIZE_LARGE_BYTES: integerWithDefault(BODY_LIMIT.MAX_SIZE_LARGE_BYTES),
+});
+
 /** Redis env vars schema */
 export const redisEnvSchema = z.object({
   UPSTASH_REDIS_REST_URL: requiredUrl('UPSTASH_REDIS_REST_URL'),
@@ -303,6 +310,7 @@ export const rawEnvSchema = serverEnvSchema
   .merge(supportEnvSchema)
   .merge(emailEnvSchema)
   .merge(rateLimitEnvSchema)
+  .merge(bodyLimitEnvSchema)
   .merge(redisEnvSchema)
   .merge(cacheEnvSchema)
   .merge(inngestEnvSchema)
@@ -440,6 +448,12 @@ export const rateLimitConfigSchema = z.object({
   enabled: z.boolean(),
 });
 
+/** Body limit configuration schema */
+export const bodyLimitConfigSchema = z.object({
+  maxSizeBytes: z.number(),
+  maxSizeLargeBytes: z.number(),
+});
+
 /** MCP rate limit configuration schema */
 export const mcpConfigSchema = z.object({
   rateLimit: z.object({
@@ -547,6 +561,7 @@ export const envConfigSchema = z.object({
   support: supportConfigSchema,
   email: emailConfigSchema,
   rateLimit: rateLimitConfigSchema,
+  bodyLimit: bodyLimitConfigSchema,
   redis: redisConfigSchema,
   cache: cacheConfigSchema,
   inngest: inngestConfigSchema,
@@ -578,6 +593,7 @@ export type SupportConfig = z.infer<typeof supportConfigSchema>;
 export type EmailInboxes = z.infer<typeof emailInboxesSchema>;
 export type EmailConfig = z.infer<typeof emailConfigSchema>;
 export type RateLimitConfig = z.infer<typeof rateLimitConfigSchema>;
+export type BodyLimitConfig = z.infer<typeof bodyLimitConfigSchema>;
 export type RedisConfig = z.infer<typeof redisConfigSchema>;
 export type CacheConfig = z.infer<typeof cacheConfigSchema>;
 export type InngestConfig = z.infer<typeof inngestConfigSchema>;

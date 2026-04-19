@@ -53,6 +53,7 @@ import { MeDataSchema, PublicWorkspaceSearchDataSchema } from './schemas';
 // =============================================================================
 
 const publicErrors = {
+  BAD_REQUEST: PublicApiErrors.BAD_REQUEST,
   API_KEY_REQUIRED: PublicApiErrors.API_KEY_REQUIRED,
   API_KEY_INVALID: PublicApiErrors.API_KEY_INVALID,
   API_KEY_EXPIRED: PublicApiErrors.API_KEY_EXPIRED,
@@ -60,6 +61,8 @@ const publicErrors = {
   NOT_A_MEMBER: PublicApiErrors.NOT_A_MEMBER,
   RATE_LIMITED: PublicApiErrors.RATE_LIMITED,
   SERVICE_UNAVAILABLE: PublicApiErrors.SERVICE_UNAVAILABLE,
+  WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
+  WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
 };
 
 // =============================================================================
@@ -91,6 +94,8 @@ export const createLink = oc
   .errors({
     ...publicErrors,
     LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
+    LINK_GONE: LinkErrors.LINK_GONE,
+    LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
     LINK_DEFAULT_PROJECT_NOT_FOUND: LinkErrors.LINK_DEFAULT_PROJECT_NOT_FOUND,
     LINK_PROJECT_DELETED: LinkErrors.LINK_PROJECT_DELETED,
     LINK_CREATE_FAILED: LinkErrors.LINK_CREATE_FAILED,
@@ -112,6 +117,7 @@ export const getLinkById = oc
     ...publicErrors,
     LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
     LINK_GONE: LinkErrors.LINK_GONE,
+    LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
   })
   .input(LinkByIdSchema)
   .output(ApiResponseSchema(LinkGetDataSchema));
@@ -129,6 +135,7 @@ export const updateLink = oc
     ...publicErrors,
     LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
     LINK_GONE: LinkErrors.LINK_GONE,
+    LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
     LINK_UPDATE_FAILED: LinkErrors.LINK_UPDATE_FAILED,
   })
   .input(UpdateLinkSchema)
@@ -147,6 +154,7 @@ export const deleteLink = oc
     ...publicErrors,
     LINK_NOT_FOUND: LinkErrors.LINK_NOT_FOUND,
     LINK_GONE: LinkErrors.LINK_GONE,
+    LINK_WORKSPACE_MISMATCH: LinkErrors.LINK_WORKSPACE_MISMATCH,
     LINK_DELETE_FORBIDDEN: LinkErrors.LINK_DELETE_FORBIDDEN,
     LINK_DELETE_FAILED: LinkErrors.LINK_DELETE_FAILED,
   })
@@ -337,10 +345,7 @@ export const getWorkspace = oc
     description: 'Retrieve workspace details',
     tags: ['Public API - Workspace'],
   })
-  .errors({
-    ...publicErrors,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-  })
+  .errors({ ...publicErrors })
   .input(WorkspaceByIdSchema)
   .output(ApiResponseSchema(WorkspaceByIdDataSchema));
 
@@ -353,10 +358,7 @@ export const getInviteUrl = oc
     description: 'Retrieve workspace invite URL',
     tags: ['Public API - Workspace'],
   })
-  .errors({
-    ...publicErrors,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-  })
+  .errors({ ...publicErrors })
   .input(WorkspaceByIdSchema)
   .output(ApiResponseSchema(InviteUrlDataSchema));
 
@@ -373,10 +375,7 @@ export const listDomains = oc
     description: 'Retrieve paginated list of workspace domains',
     tags: ['Public API - Domains'],
   })
-  .errors({
-    ...publicErrors,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-  })
+  .errors({ ...publicErrors })
   .input(WorkspaceDomainsQuerySchema)
   .output(ApiResponseSchema(WorkspaceDomainsDataSchema));
 
@@ -430,10 +429,7 @@ export const listMembers = oc
     description: 'Retrieve paginated list of workspace team members',
     tags: ['Public API - Members'],
   })
-  .errors({
-    ...publicErrors,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-  })
+  .errors({ ...publicErrors })
   .input(WorkspaceTeamQuerySchema)
   .output(ApiResponseSchema(WorkspaceTeamDataSchema));
 
@@ -452,8 +448,6 @@ export const searchWorkspace = oc
   })
   .errors({
     ...publicErrors,
-    WORKSPACE_NOT_FOUND: WorkspaceErrors.WORKSPACE_NOT_FOUND,
-    WORKSPACE_GONE: WorkspaceErrors.WORKSPACE_GONE,
     WORKSPACE_SEARCH_TERM_REQUIRED: WorkspaceErrors.WORKSPACE_SEARCH_TERM_REQUIRED,
     WORKSPACE_SEARCH_TYPE_INVALID: WorkspaceErrors.WORKSPACE_SEARCH_TYPE_INVALID,
     WORKSPACE_SEARCH_UNAVAILABLE: WorkspaceErrors.WORKSPACE_SEARCH_UNAVAILABLE,

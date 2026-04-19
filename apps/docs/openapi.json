@@ -116,6 +116,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -247,6 +297,106 @@
                         "message": {
                           "type": "string",
                           "default": "The API key owner is not a member of this workspace. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "410",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
                         },
                         "data": {}
                       },
@@ -523,6 +673,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -654,6 +854,106 @@
                         "message": {
                           "type": "string",
                           "default": "The API key owner is not a member of this workspace. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "410",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
                         },
                         "data": {}
                       },
@@ -1184,6 +1484,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -1315,6 +1665,106 @@
                         "message": {
                           "type": "string",
                           "default": "The API key owner is not a member of this workspace. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "410",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
                         },
                         "data": {}
                       },
@@ -1693,6 +2143,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -1836,6 +2336,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "LINK_WORKSPACE_MISMATCH"
+                        },
+                        "status": {
+                          "const": 403
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Link does not belong to this workspace"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "PLAN_LIMIT_EXCEEDED"
                         },
                         "status": {
@@ -1879,6 +2399,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -1949,6 +2489,46 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "LINK_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Link has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -2366,6 +2946,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -2506,6 +3136,26 @@
                       "type": "object",
                       "properties": {
                         "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "LINK_WORKSPACE_MISMATCH"
+                        },
+                        "status": {
+                          "const": 403
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Link does not belong to this workspace"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
                           "const": false
                         },
                         "code": {
@@ -2532,6 +3182,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -2582,6 +3252,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -3036,6 +3726,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -3176,6 +3916,26 @@
                       "type": "object",
                       "properties": {
                         "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "LINK_WORKSPACE_MISMATCH"
+                        },
+                        "status": {
+                          "const": 403
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Link does not belong to this workspace"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
                           "const": false
                         },
                         "code": {
@@ -3202,6 +3962,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -3252,6 +4032,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -3506,6 +4306,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -3649,6 +4499,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "LINK_WORKSPACE_MISMATCH"
+                        },
+                        "status": {
+                          "const": 403
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Link does not belong to this workspace"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "LINK_DELETE_FORBIDDEN"
                         },
                         "status": {
@@ -3699,6 +4569,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "LINK_NOT_FOUND"
                         },
                         "status": {
@@ -3742,6 +4632,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -4190,6 +5100,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -4321,6 +5281,106 @@
                         "message": {
                           "type": "string",
                           "default": "The API key owner is not a member of this workspace. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "410",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
                         },
                         "data": {}
                       },
@@ -4754,6 +5814,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -4927,6 +6037,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "RECORDING_NOT_FOUND"
                         },
                         "status": {
@@ -4970,6 +6100,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -5170,6 +6320,56 @@
                   },
                   "required": ["message", "data"],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
                 }
               }
             }
@@ -5387,6 +6587,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "RECORDING_NOT_FOUND"
                         },
                         "status": {
@@ -5430,6 +6650,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -5765,6 +7005,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -5938,6 +7228,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "RECORDING_NOT_FOUND"
                         },
                         "status": {
@@ -5981,6 +7291,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -6266,6 +7596,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -6439,6 +7819,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "RECORDING_NOT_FOUND"
                         },
                         "status": {
@@ -6482,6 +7882,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -6767,6 +8187,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -6940,6 +8410,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "RECORDING_NOT_FOUND"
                         },
                         "status": {
@@ -6983,6 +8473,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -7268,6 +8778,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -7441,6 +9001,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "RECORDING_NOT_FOUND"
                         },
                         "status": {
@@ -7484,6 +9064,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -7769,6 +9369,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -7942,6 +9592,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "RECORDING_NOT_FOUND"
                         },
                         "status": {
@@ -7985,6 +9655,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -8190,6 +9880,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -8371,6 +10111,56 @@
                         "message": {
                           "type": "string",
                           "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "410",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
                         },
                         "data": {}
                       },
@@ -8552,6 +10342,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -8733,6 +10573,56 @@
                         "message": {
                           "type": "string",
                           "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "410",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
                         },
                         "data": {}
                       },
@@ -9020,6 +10910,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -9201,6 +11141,56 @@
                         "message": {
                           "type": "string",
                           "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "410",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
                         },
                         "data": {}
                       },
@@ -9493,6 +11483,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -9644,6 +11684,106 @@
                         "message": {
                           "type": "string",
                           "default": "Insufficient permissions"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "410",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
                         },
                         "data": {}
                       },
@@ -9862,6 +12002,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -10035,6 +12225,26 @@
                           "const": true
                         },
                         "code": {
+                          "const": "WORKSPACE_NOT_FOUND"
+                        },
+                        "status": {
+                          "const": 404
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
                           "const": "PROJECT_NOT_FOUND"
                         },
                         "status": {
@@ -10078,6 +12288,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {
@@ -10358,6 +12588,56 @@
               }
             }
           },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "401": {
             "description": "401",
             "content": {
@@ -10539,6 +12819,56 @@
                         "message": {
                           "type": "string",
                           "default": "Workspace not found"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": false
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "number"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "410",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "WORKSPACE_GONE"
+                        },
+                        "status": {
+                          "const": 410
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Workspace has been deleted"
                         },
                         "data": {}
                       },
@@ -10942,6 +13272,26 @@
               "application/json": {
                 "schema": {
                   "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "defined": {
+                          "const": true
+                        },
+                        "code": {
+                          "const": "BAD_REQUEST"
+                        },
+                        "status": {
+                          "const": 400
+                        },
+                        "message": {
+                          "type": "string",
+                          "default": "Invalid request parameters. Check the request body and query parameters. See https://docs.userplane.io/api/error-handling"
+                        },
+                        "data": {}
+                      },
+                      "required": ["defined", "code", "status", "message"]
+                    },
                     {
                       "type": "object",
                       "properties": {

@@ -147,6 +147,17 @@ export const RATE_LIMIT = {
 } as const;
 
 // =============================================================================
+// Body Limit Defaults
+// =============================================================================
+
+export const BODY_LIMIT = {
+  /** Global default body size limit: 1MB */
+  MAX_SIZE_BYTES: 1 * 1024 * 1024,
+  /** Override for routes accepting large payloads (logo upload, inngest): 15MB */
+  MAX_SIZE_LARGE_BYTES: 15 * 1024 * 1024,
+} as const;
+
+// =============================================================================
 // Cache Defaults
 // =============================================================================
 

@@ -13,6 +13,7 @@ import {
   type AdminConfig,
   type AuthConfig,
   type BillingConfig,
+  type BodyLimitConfig,
   type BucketCredentials,
   type CacheConfig,
   type CorsConfig,
@@ -46,6 +47,7 @@ export type {
   AdminConfig,
   AuthConfig,
   BillingConfig,
+  BodyLimitConfig,
   BucketCredentials,
   CacheConfig,
   CorsConfig,
@@ -209,6 +211,10 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     },
     rateLimit: {
       enabled: raw.RATE_LIMIT_ENABLED,
+    },
+    bodyLimit: {
+      maxSizeBytes: raw.BODY_LIMIT_MAX_SIZE_BYTES,
+      maxSizeLargeBytes: raw.BODY_LIMIT_MAX_SIZE_LARGE_BYTES,
     },
     redis: {
       url: raw.UPSTASH_REDIS_REST_URL,
@@ -556,6 +562,10 @@ export function logConfig(): void {
       },
       rateLimit: {
         enabled: env.rateLimit.enabled,
+      },
+      bodyLimit: {
+        maxSizeBytes: env.bodyLimit.maxSizeBytes,
+        maxSizeLargeBytes: env.bodyLimit.maxSizeLargeBytes,
       },
       mcp: {
         rateLimit: {
