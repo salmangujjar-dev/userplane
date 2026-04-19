@@ -7,8 +7,11 @@ import { registerAppResource, RESOURCE_MIME_TYPE } from '@modelcontextprotocol/e
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import { env } from '@/api/env';
+import { createLogger } from '@/api/lib/logger';
 
 import type { McpHost } from './host-detection';
+
+const logger = createLogger('mcp');
 import type { McpRequestContext } from './types';
 
 /** Load a built single-file HTML from the @userplane/mcp-apps dist folder. */
@@ -18,7 +21,7 @@ function loadAppHtml(appName: string): string | null {
     const pkgDir = dirname(fileURLToPath(pkgPath));
     return readFileSync(join(pkgDir, 'dist', appName, 'index.html'), 'utf-8');
   } catch {
-    console.warn(`[mcp-apps] Failed to load ${appName} HTML — MCP App UI will be unavailable.`);
+    logger.warn({ appName }, 'Failed to load MCP App HTML — UI will be unavailable');
     return null;
   }
 }
