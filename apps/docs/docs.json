@@ -358,6 +358,13 @@
                   "integrations/slack-notifications"
                 ]
               },
+              "integrations/other-helpdesks"
+            ]
+          },
+          {
+            "group": "Extensions & Plugins",
+            "icon": "puzzle-piece",
+            "pages": [
               {
                 "group": "Chrome Extension",
                 "pages": [
@@ -379,7 +386,35 @@
                   "integrations/raycast-links"
                 ]
               },
-              "integrations/other-helpdesks"
+              {
+                "group": "Claude Code",
+                "pages": [
+                  "integrations/claude-code",
+                  "integrations/claude-code-getting-started",
+                  {
+                    "group": "Commands",
+                    "pages": [
+                      "integrations/claude-code-commands",
+                      "integrations/claude-code-integrate",
+                      "integrations/claude-code-audit",
+                      "integrations/claude-code-debug",
+                      "integrations/claude-code-privacy"
+                    ]
+                  },
+                  {
+                    "group": "Subagents",
+                    "pages": [
+                      "integrations/claude-code-subagents",
+                      "integrations/claude-code-integrate-agent",
+                      "integrations/claude-code-audit-agent",
+                      "integrations/claude-code-debug-agent",
+                      "integrations/claude-code-privacy-agent"
+                    ]
+                  },
+                  "integrations/claude-code-skills",
+                  "integrations/claude-code-mcp"
+                ]
+              }
             ]
           },
           {

@@ -1,0 +1,76 @@
+---
+title: /userplane:integrate
+description: Detect the framework in your repo and write a complete Userplane integration
+---
+
+Detects your framework from `package.json`, loads the matching [skill](/integrations/claude-code-skills), and writes the integration as real file edits — provider component, script tag, environment variables, and CSP headers.
+
+## Usage
+
+```text
+/userplane:integrate
+```
+
+No arguments required. The agent reads `package.json` to identify the framework.
+
+## What it does
+
+1. **Detects the framework** from `package.json` dependencies.
+2. **Loads the matching skill** as the source of truth for the integration pattern.
+3. **Asks for your write key** if not already in the environment.
+4. **Writes the integration** — creates the provider file, registers it at the app root, wires the env var, adds CSP headers.
+5. **Reports** a summary of files changed and the next step.
+
+<Tip>
+  If Userplane is already installed, the agent stops and tells you to run
+  [/userplane:audit](/integrations/claude-code-audit) instead.
+</Tip>
+
+## Framework detection
+
+| Dependency in `package.json`          | Detected framework | Skill loaded               |
+| ------------------------------------- | ------------------ | -------------------------- |
+| `next`                                | Next.js            | `userplane-nextjs`         |
+| `nuxt`                                | Nuxt 3             | `userplane-nuxt`           |
+| `@angular/core`                       | Angular            | `userplane-angular`        |
+| `vue` (without nuxt)                  | Vue 3              | `userplane-vue`            |
+| `@sveltejs/kit`                       | SvelteKit          | `userplane-sveltekit`      |
+| `astro`                               | Astro              | `userplane-astro`          |
+| `@tanstack/react-start`               | TanStack Start     | `userplane-tanstack-start` |
+| `react` (with vite, no metaframework) | React (Vite)       | `userplane-react`          |
+| Top-level `index.html`, no bundler    | Static HTML        | `userplane-static-html`    |
+
+If the framework can't be determined, the agent asks before proceeding.
+
+## Example prompts
+
+<CodeGroup>
+
+```text
+/userplane:integrate
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+Add Userplane screen recording to this project. I want the CDN install, not the npm package.
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+Set up Userplane in this Next.js app. My write key is in NEXT_PUBLIC_USERPLANE_WRITE_KEY.
+```
+
+</CodeGroup>
+
+## Related articles
+
+- [/userplane:audit](/integrations/claude-code-audit) — verify an existing install after integration.
+- [integrate-agent](/integrations/claude-code-integrate-agent) — the subagent that powers this command.
+- [Skills Catalog](/integrations/claude-code-skills) — the 14 framework and SDK skills.
+- [Framework Guides](/frameworks/react) — human-readable integration guides.

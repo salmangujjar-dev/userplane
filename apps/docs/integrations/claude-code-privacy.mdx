@@ -1,0 +1,88 @@
+---
+title: /userplane:privacy
+description: Scan a repo for PII leaks, missing blur attributes, and CSP gaps in the Userplane integration
+---
+
+Scans the repo for privacy issues in the Userplane integration. Produces a severity-ranked report (High / Medium / Low) with file:line citations and concrete diffs.
+
+## Usage
+
+```text
+/userplane:privacy
+```
+
+No arguments required. The agent scans the entire repo.
+
+<Note>
+  Read-only. The privacy agent never edits files — every finding includes a diff you can apply
+  yourself.
+</Note>
+
+## What it scans
+
+| Scan                     | What the agent looks for                                                                      |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| **Blur coverage**        | PII-adjacent inputs (`password`, `email`, `ssn`, `card`, `cvv`) missing `data-userplane-blur` |
+| **Metadata PII**         | Raw PII in `setMetadata` / `setUser` calls (email, phone, address, government IDs)            |
+| **CSP frame-src gaps**   | Third-party embeds (Stripe, Auth0, Clerk) missing from `frame-src` / `connect-src`            |
+| **Inline handler leaks** | Inline `onClick` / `onSubmit` handlers rendering PII to the DOM without blur                  |
+
+## Output format
+
+```
+Summary: 3 issues (1 high, 2 medium)
+Top fix: Add data-userplane-blur to the SSN input in src/components/ProfileForm.tsx
+
+## High
+- src/components/ProfileForm.tsx:28 — <input name="ssn"> missing blur attribute
+  + <input name="ssn" data-userplane-blur />
+
+## Medium
+- src/hooks/useAuth.ts:45 — setUser passes raw email address
+  - setUser({ email: user.email, name: user.name })
+  + setUser({ id: user.id, name: user.name })
+
+- next.config.js:22 — CSP missing frame-src for Stripe
+  - frame-src 'self' *.userplane.io
+  + frame-src 'self' *.userplane.io *.stripe.com
+```
+
+## Example prompts
+
+<CodeGroup>
+
+```text
+/userplane:privacy
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+We're preparing for a SOC 2 audit. Check if our Userplane integration leaks any PII into recordings.
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+Scan the checkout flow for privacy issues. We use Stripe Elements and want to make sure card details are blurred.
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+Are there any setMetadata calls that pass raw email addresses? We should only be sending user IDs.
+```
+
+</CodeGroup>
+
+## Related articles
+
+- [privacy-agent](/integrations/claude-code-privacy-agent) — the subagent that powers this command.
+- [/userplane:audit](/integrations/claude-code-audit) — verify the overall install correctness.
+- [Sensitive Data Redaction](/developer/sensitive-data-redaction) — configure blur and redaction in the SDK.

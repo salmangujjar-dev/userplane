@@ -1,0 +1,53 @@
+---
+title: audit-agent
+description: The subagent that verifies an existing Userplane integration with a read-only checklist
+---
+
+Powers the [/userplane:audit](/integrations/claude-code-audit) command. Strictly read-only — produces a PASS/FAIL checklist but never modifies files.
+
+## Tools
+
+| Tool | Purpose                                       |
+| ---- | --------------------------------------------- |
+| Read | Read project files                            |
+| Glob | Find files by pattern                         |
+| Grep | Search file contents                          |
+| Bash | Run shell commands (read-only — no mutations) |
+
+No Edit or Write access.
+
+## Skills loaded
+
+The detected `userplane-{framework}` skill (used as ground truth), plus:
+
+- `userplane-best-practices` — cross-cutting install and SDK guidance
+- `userplane-cdn` — script placement, CSP directives
+- `userplane-web-sdk` — `initialize()` API reference
+- `userplane-metadata-sdk` — `setUser()` / `setMetadata()` API reference
+
+## Workflow
+
+1. Detects the framework from `package.json`.
+2. Loads the matching skill as ground truth for a correct install.
+3. Checks each category against the skill's expected pattern:
+   - Provider wiring at the framework-correct location
+   - Script placement (head/body)
+   - SSR hazards — browser-only calls on the server path
+   - `setUser` / `setMetadata` usage — called after auth, non-PII fields
+   - CSP headers — Userplane domains and third-party iframe hosts
+   - Environment variable consistency across dev / prod
+4. Emits PASS or FAIL with a file:line citation for each item.
+5. Attaches a concrete diff for every FAIL.
+6. Summarizes the overall count and the single most important fix.
+
+## Hard rules
+
+- Read-only. Never calls Edit, Write, or mutating Bash.
+- Cites file:line for every claim.
+- Does not flag stylistic issues — only correctness per the skill.
+- Stops if Userplane is not installed and directs to `/userplane:integrate`.
+
+## Related articles
+
+- [/userplane:audit](/integrations/claude-code-audit) — the command that invokes this agent.
+- [integrate-agent](/integrations/claude-code-integrate-agent) — the agent that writes the initial install.

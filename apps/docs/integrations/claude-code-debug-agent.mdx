@@ -1,0 +1,65 @@
+---
+title: debug-agent
+description: The subagent that root-causes recordings by fetching console, network, and action data via MCP
+---
+
+Powers the [/userplane:debug](/integrations/claude-code-debug) command. The only subagent with access to the [workspace MCP server](/integrations/mcp-workspace) — it fetches recording data, builds a correlated timeline, and identifies root causes.
+
+## Tools
+
+### MCP tools
+
+| Tool                        | Purpose                                       |
+| --------------------------- | --------------------------------------------- |
+| `userplane_list_workspaces` | Resolve workspace for the recording           |
+| `userplane_list_projects`   | Resolve project when named in a description   |
+| `userplane_list_recordings` | Search recordings by filters                  |
+| `userplane_get_rec_info`    | Recording metadata (status, duration, expiry) |
+| `userplane_get_rec_console` | Browser console logs                          |
+| `userplane_get_rec_network` | Network requests and responses                |
+| `userplane_get_rec_actions` | User interactions (clicks, navigations)       |
+| `userplane_show_recording`  | Interactive recording viewer                  |
+| `userplane_get_link`        | Recording link details                        |
+| `userplane_get_profile`     | Authenticated user profile                    |
+
+### Code tools
+
+| Tool | Purpose                                             |
+| ---- | --------------------------------------------------- |
+| Read | Read repo files for code cross-referencing          |
+| Grep | Search code for functions mentioned in stack traces |
+
+## Skills loaded
+
+- `userplane-web-sdk` — SDK API for interpreting recording behavior
+- `userplane-metadata-sdk` — metadata API for understanding session context
+
+## Workflow
+
+**Phase 1 — Resolve:**
+
+- **Recording ID input**: calls `userplane_list_workspaces` to resolve the workspace, then `userplane_get_rec_info` to confirm the recording exists.
+- **Description input**: searches via `userplane_list_recordings` with inferred filters (`created_by`, `project_id`, `link_id`), narrows to 1–3 candidates, confirms with the user.
+
+**Phase 2 — Analyze:**
+
+1. Fetches recording info — status, duration, link, project, expiry.
+2. Fetches console logs, network requests, and user actions in parallel.
+3. Builds a correlated timeline — interleaves events by timestamp.
+4. Identifies the failure point — quotes the exact console line or network row.
+5. Cross-references with repo code via Read / Grep when accessible.
+6. Reports: **Summary** → **Timeline** → **Root cause** → **Fix**.
+
+## Hard rules
+
+- Never fetches session data before confirming which recording.
+- Fetches console, network, and actions in parallel but filters to the failure window.
+- Does not speculate beyond evidence — "unclear from the recording" is valid.
+- Respects `expiresAt` — reports expired recordings and stops.
+
+## Related articles
+
+- [/userplane:debug](/integrations/claude-code-debug) — the command that invokes this agent.
+- [MCP Servers](/integrations/claude-code-mcp) — the bundled workspace MCP server.
+- [Recording Tools](/integrations/mcp-tools-recordings) — reference for the recording MCP tools.
+- [MCP Apps](/integrations/mcp-apps) — interactive viewers the agent can render.
