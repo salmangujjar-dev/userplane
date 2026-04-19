@@ -1,5 +1,6 @@
 import { authClient } from '@/client/auth';
 import { env } from '@/env';
+import { getSafeRedirectPath } from '@/lib/redirect';
 
 export interface SignUpWithEmailParams {
   email: string;
@@ -27,6 +28,8 @@ export interface SendVerificationEmailParams {
 
 // Base URL for auth callbacks - use configured dashboard URL for consistency
 const dashboardUrl = env.dashboard.url;
+const getDashboardCallbackUrl = (redirectTo?: string) =>
+  `${dashboardUrl}${getSafeRedirectPath(redirectTo)}`;
 
 /**
  * Custom hook for authentication operations
@@ -46,7 +49,7 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async (redirectTo?: string) => {
-    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
+    const callbackURL = getDashboardCallbackUrl(redirectTo);
 
     await authClient.signIn.social({
       provider: 'google',
@@ -58,7 +61,7 @@ export function useAuth() {
    * Sign up with email and password
    */
   const signUpWithEmail = async ({ email, password, name, redirectTo }: SignUpWithEmailParams) => {
-    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
+    const callbackURL = getDashboardCallbackUrl(redirectTo);
 
     return await authClient.signUp.email({
       email,
@@ -77,7 +80,7 @@ export function useAuth() {
     rememberMe = true,
     redirectTo,
   }: SignInWithEmailParams) => {
-    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
+    const callbackURL = getDashboardCallbackUrl(redirectTo);
 
     return await authClient.signIn.email({
       email,
@@ -91,7 +94,7 @@ export function useAuth() {
    * Sign in with magic link (passwordless)
    */
   const signInWithMagicLink = async ({ email, redirectTo }: SignInWithMagicLinkParams) => {
-    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
+    const callbackURL = getDashboardCallbackUrl(redirectTo);
 
     return await authClient.signIn.magicLink({
       email,
@@ -103,7 +106,7 @@ export function useAuth() {
    * Link Google account to current user
    */
   const linkGoogle = async (redirectTo?: string) => {
-    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
+    const callbackURL = getDashboardCallbackUrl(redirectTo);
 
     await authClient.linkSocial({
       provider: 'google',
@@ -115,7 +118,7 @@ export function useAuth() {
    * Send verification email to user
    */
   const sendVerificationEmail = async ({ email, redirectTo }: SendVerificationEmailParams) => {
-    const callbackURL = redirectTo ? `${dashboardUrl}${redirectTo}` : `${dashboardUrl}/`;
+    const callbackURL = getDashboardCallbackUrl(redirectTo);
 
     return await authClient.sendVerificationEmail({
       email,
