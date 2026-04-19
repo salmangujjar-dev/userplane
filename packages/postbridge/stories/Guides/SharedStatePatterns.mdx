@@ -326,7 +326,7 @@ const schema = {
 | Aspect              | 1:1 Pattern (host/guest)    | 1:N Pattern (cross-tab)             |
 | ------------------- | --------------------------- | ----------------------------------- |
 | **Use Case**        | iframe/worker communication | SharedWorker multi-tab sync         |
-| **Writers**         | 1:1 (host ↔ guest)         | N:N (all tabs)                      |
+| **Writers**         | 1:1 (host ↔ guest)          | N:N (all tabs)                      |
 | **Mutations**       | Safe (single writer)        | Race conditions possible            |
 | **State sync**      | Bidirectional               | Broadcast to all                    |
 | **Recommended for** | Bidirectional RPC           | Event broadcasting, read-only state |

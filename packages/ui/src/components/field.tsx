@@ -41,8 +41,7 @@ const fieldLegendVariants = cva('', {
 });
 
 interface FieldLegendProps
-  extends React.ComponentProps<'legend'>,
-    VariantProps<typeof fieldLegendVariants> {}
+  extends React.ComponentProps<'legend'>, VariantProps<typeof fieldLegendVariants> {}
 
 function FieldLegend({ className, variant, ...props }: FieldLegendProps) {
   return (

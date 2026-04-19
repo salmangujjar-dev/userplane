@@ -72,6 +72,9 @@ import {
 
 const app = new Hono();
 
+const MCP_AUTH_SERVER_SCOPES = ['openid', 'profile', 'email', 'offline_access', 'mcp:tools'];
+const MCP_PROTECTED_RESOURCE_SCOPES = ['openid', 'profile', 'email', 'mcp:tools'];
+
 const openAPIHandler = new OpenAPIHandler(apiRouter, {
   interceptors: [
     onError((error) => {
@@ -262,7 +265,7 @@ app.post('/api/webhooks/billing', billingWebhookRoute);
 const protectedResourceMetadata = {
   resource: `${env.auth.url}/mcp`,
   authorization_servers: [`${env.auth.url}/api/auth`],
-  scopes_supported: ['openid', 'profile', 'email', 'mcp:tools'],
+  scopes_supported: [...MCP_PROTECTED_RESOURCE_SCOPES],
   bearer_methods_supported: ['header'],
 } as const;
 
@@ -301,12 +304,18 @@ if (env.mcp.openaiVerificationToken) {
 // Claude Desktop (and other MCP clients) send token_endpoint_auth_method: "client_secret_post",
 // but Better Auth's oauth-provider rejects unauthenticated confidential DCR with 401.
 // MCP clients are always public (PKCE-protected, no stored secrets), so rewrite to "none".
+// We also widen dynamically-registered MCP clients to the full auth-server scope set.
+// Some clients discover resource scopes first, register without `offline_access`, then later
+// append `offline_access` during authorize to obtain refresh tokens per SEP-2207 guidance.
+// If we preserve the narrower client metadata, Better Auth rejects the later authorize request
+// with `invalid_scope`, even though the auth server itself supports refresh tokens.
 // Tracked upstream: https://github.com/better-auth/better-auth/issues/8588
 app.post('/api/auth/oauth2/register', async (c) => {
   const body = await c.req.json();
   if (body.token_endpoint_auth_method !== 'none') {
     body.token_endpoint_auth_method = 'none';
   }
+  body.scope = MCP_AUTH_SERVER_SCOPES.join(' ');
   return auth.handler(
     new Request(c.req.raw.url, {
       method: 'POST',

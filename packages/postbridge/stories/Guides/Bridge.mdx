@@ -968,13 +968,13 @@ const connB = await bridge.connect(schema, {
 
 ## 🆚 Bridge vs PostBridge RPC
 
-| Feature       | PostBridge RPC              | Bridge                |
-| ------------- | --------------------------- | --------------------- |
-| Communication | 1:1 (host ↔ guest)         | 1:N (tab ↔ all tabs) |
-| Use Case      | Worker/iframe communication | Cross-tab sync        |
-| Execution     | Remote only                 | Local + broadcast     |
-| Context       | Host/Guest                  | Tabs (peers)          |
-| Worker Logic  | Business logic in worker    | Dumb relay worker     |
+| Feature       | PostBridge RPC              | Bridge               |
+| ------------- | --------------------------- | -------------------- |
+| Communication | 1:1 (host ↔ guest)          | 1:N (tab ↔ all tabs) |
+| Use Case      | Worker/iframe communication | Cross-tab sync       |
+| Execution     | Remote only                 | Local + broadcast    |
+| Context       | Host/Guest                  | Tabs (peers)         |
+| Worker Logic  | Business logic in worker    | Dumb relay worker    |
 
 ## ️ Limitations
 
