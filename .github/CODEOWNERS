@@ -1,0 +1,16 @@
+# CODEOWNERS
+
+## Global Ownership
+* @wizenheimer
+
+## Per-Directory Ownership (uncomment as team grows)
+# /apps/api/       @wizenheimer
+# /apps/dash/      @wizenheimer
+# /apps/home/      @wizenheimer
+# /apps/recorder/  @wizenheimer
+# /apps/extension/ @wizenheimer
+# /apps/mcp/       @wizenheimer
+# /apps/raycast/   @wizenheimer
+# /packages/sdk/   @wizenheimer
+# /packages/auth/  @wizenheimer
+# /packages/db/    @wizenheimer
