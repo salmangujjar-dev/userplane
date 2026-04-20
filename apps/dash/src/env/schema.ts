@@ -5,7 +5,7 @@
  */
 import { z } from 'zod';
 
-import { AUTH, DEV_URLS, DOCS_URL, POSTHOG, STORAGE } from './defaults';
+import { AUTH, DEV_URLS, DOCS_URL, POSTHOG, STORAGE, ZENDESK_MARKETPLACE } from './defaults';
 
 // =============================================================================
 // Parse Utilities
@@ -82,12 +82,19 @@ export const posthogEnvSchema = z.object({
   NEXT_PUBLIC_POSTHOG_HOST: stringWithDefault(POSTHOG.HOST),
 });
 
+/** Zendesk Marketplace env vars schema */
+export const zendeskMarketplaceEnvSchema = z.object({
+  NEXT_PUBLIC_ZENDESK_MARKETPLACE_APP_URL: urlWithDefault(ZENDESK_MARKETPLACE.APP_URL),
+  NEXT_PUBLIC_ZENDESK_MARKETPLACE_LIVE: booleanWithDefault(ZENDESK_MARKETPLACE.LIVE),
+});
+
 /** Combined raw environment variables schema */
 export const rawEnvSchema = appEnvSchema
   .merge(urlEnvSchema)
   .merge(authEnvSchema)
   .merge(storageEnvSchema)
-  .merge(posthogEnvSchema);
+  .merge(posthogEnvSchema)
+  .merge(zendeskMarketplaceEnvSchema);
 
 /** Raw parsed environment type */
 export type RawEnvConfig = z.infer<typeof rawEnvSchema>;
@@ -140,6 +147,14 @@ export const docsConfigSchema = z.object({
   url: z.string().url(),
 });
 
+/** Zendesk configuration schema */
+export const zendeskConfigSchema = z.object({
+  marketplace: z.object({
+    appUrl: z.string().url(),
+    live: z.boolean(),
+  }),
+});
+
 /** Complete environment configuration schema */
 export const envConfigSchema = z.object({
   appEnv: z.enum(['development', 'production']),
@@ -152,6 +167,7 @@ export const envConfigSchema = z.object({
   storage: storageConfigSchema,
   posthog: posthogConfigSchema,
   docs: docsConfigSchema,
+  zendesk: zendeskConfigSchema,
 });
 
 // =============================================================================
@@ -166,4 +182,5 @@ export type AuthConfig = z.infer<typeof authConfigSchema>;
 export type StorageConfig = z.infer<typeof storageConfigSchema>;
 export type PostHogConfig = z.infer<typeof posthogConfigSchema>;
 export type DocsConfig = z.infer<typeof docsConfigSchema>;
+export type ZendeskConfig = z.infer<typeof zendeskConfigSchema>;
 export type EnvConfig = z.infer<typeof envConfigSchema>;
