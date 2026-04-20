@@ -19,6 +19,7 @@ import {
   rawEnvSchema,
   type RecorderConfig,
   type StorageConfig,
+  type ZendeskConfig,
 } from './schema';
 
 // Re-export types for external use
@@ -32,6 +33,7 @@ export type {
   PostHogConfig,
   RecorderConfig,
   StorageConfig,
+  ZendeskConfig,
 };
 
 // =============================================================================
@@ -73,6 +75,10 @@ function getExplicitEnv(): Record<string, string | undefined> {
 
     // Support
     NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL,
+
+    // Zendesk Marketplace
+    NEXT_PUBLIC_ZENDESK_MARKETPLACE_APP_URL: process.env.NEXT_PUBLIC_ZENDESK_MARKETPLACE_APP_URL,
+    NEXT_PUBLIC_ZENDESK_MARKETPLACE_LIVE: process.env.NEXT_PUBLIC_ZENDESK_MARKETPLACE_LIVE,
   };
 }
 
@@ -140,6 +146,12 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     },
     docs: {
       url: raw.NEXT_PUBLIC_DOCS_URL,
+    },
+    zendesk: {
+      marketplace: {
+        appUrl: raw.NEXT_PUBLIC_ZENDESK_MARKETPLACE_APP_URL,
+        live: raw.NEXT_PUBLIC_ZENDESK_MARKETPLACE_LIVE,
+      },
     },
   };
 }

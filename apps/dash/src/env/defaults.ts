@@ -45,3 +45,13 @@ export const POSTHOG = {
 // =============================================================================
 
 export { DOCS_URL } from '@userplane/contract';
+
+// =============================================================================
+// Zendesk Marketplace Defaults
+// =============================================================================
+
+export const ZENDESK_MARKETPLACE = {
+  APP_URL:
+    'https://www.zendesk.com/marketplace/apps/support/1229987/screen-recording-by-userplane/',
+  LIVE: false,
+} as const;

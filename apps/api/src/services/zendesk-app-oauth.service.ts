@@ -46,6 +46,13 @@ export interface ZendeskAppOAuthServiceDeps {
 export class ZendeskAppOAuthService {
   constructor(private deps: ZendeskAppOAuthServiceDeps) {}
 
+  private async assertCanManageWorkspace(userId: string, workspaceId: string): Promise<void> {
+    const member = await this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
+    if (!member || (member.workspaceRole !== 'owner' && member.workspaceRole !== 'admin')) {
+      throw workspaceError.FORBIDDEN();
+    }
+  }
+
   private getStore(): OAuthStateStore {
     if (!this.deps.redis) {
       throw new Error('Redis is required for Zendesk app OAuth flow');
@@ -76,6 +83,8 @@ export class ZendeskAppOAuthService {
       appState,
       appClientId,
     } = params;
+
+    await this.assertCanManageWorkspace(userId, workspaceId);
 
     const existing = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
       workspaceId,
