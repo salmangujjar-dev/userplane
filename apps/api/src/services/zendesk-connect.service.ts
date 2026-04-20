@@ -44,6 +44,13 @@ export interface ZendeskConnectServiceDeps {
 export class ZendeskConnectService {
   constructor(private deps: ZendeskConnectServiceDeps) {}
 
+  private async assertCanManageWorkspace(userId: string, workspaceId: string): Promise<void> {
+    const member = await this.deps.memberRepo.findByUserAndWorkspace(userId, workspaceId);
+    if (!member || (member.workspaceRole !== 'owner' && member.workspaceRole !== 'admin')) {
+      throw workspaceError.FORBIDDEN();
+    }
+  }
+
   private getStore(): OAuthStateStore {
     if (!this.deps.redis) {
       throw new Error('Redis is required for OAuth connect flow');
@@ -67,6 +74,8 @@ export class ZendeskConnectService {
 
     // Check if workspace already has a Zendesk integration (skip if no workspace yet)
     if (workspaceId) {
+      await this.assertCanManageWorkspace(userId, workspaceId);
+
       const existing = await this.deps.integrationRepo.findByWorkspaceIdAndProvider(
         workspaceId,
         'zendesk'

@@ -15,6 +15,7 @@ import type { ZendeskTokenResponse, ZendeskUser } from '@/api/clients/zendesk';
 import { listAgents, setInstallationSettings } from '@/api/clients/zendesk';
 import { generateIntegrationId } from '@/api/lib/id';
 import { createLogger } from '@/api/lib/logger';
+import { getValidZendeskAccessToken } from '@/api/lib/zendesk-token';
 import { captureException } from '@/api/posthog';
 import type { IntegrationRepository } from '@/api/repositories/integrations.repository';
 import type { WorkspaceMemberRepository } from '@/api/repositories/workspace-members.repository';
@@ -214,10 +215,17 @@ export class ZendeskService {
       throw workspaceError.INTEGRATION_NOT_FOUND();
     }
 
-    const providerToken = integration.providerToken as { accessToken: string };
     const providerMeta = integration.providerMeta as { subdomain: string };
 
-    const agents = await listAgents(providerMeta.subdomain, providerToken.accessToken);
+    const accessToken = await getValidZendeskAccessToken(integration, {
+      integrationRepo: this.deps.integrationRepo,
+      cacheService: this.deps.cacheService,
+    });
+    if (!accessToken) {
+      return new Map();
+    }
+
+    const agents = await listAgents(providerMeta.subdomain, accessToken);
 
     const agentEmailMap = new Map<string, ZendeskUser>();
     for (const agent of agents) {

@@ -14,6 +14,19 @@ const logger = createLogger('zendesk-client');
 /** OAuth scopes requested from Zendesk: read all, write tickets + app installations */
 const ZENDESK_OAUTH_SCOPES = 'read tickets:write apps:write';
 
+const zendeskMarketplaceHeaders = {
+  'X-Zendesk-Marketplace-Name': env.zendesk.marketplace.name,
+  'X-Zendesk-Marketplace-Organization-Id': env.zendesk.marketplace.organizationId,
+  'X-Zendesk-Marketplace-App-Id': env.zendesk.marketplace.appId,
+} as const;
+
+function withMarketplaceHeaders(headers: Record<string, string> = {}): Record<string, string> {
+  return {
+    ...zendeskMarketplaceHeaders,
+    ...headers,
+  };
+}
+
 /**
  * Validate and normalize a Zendesk subdomain.
  * Subdomains must be alphanumeric with optional hyphens (not leading/trailing).
@@ -99,13 +112,14 @@ export async function exchangeCodeForToken(
   try {
     const response = await fetch(`https://${validatedSubdomain}.zendesk.com/oauth/tokens`, {
       method: 'POST',
-      headers: {
+      headers: withMarketplaceHeaders({
         'Content-Type': 'application/json',
-      },
+      }),
       body: JSON.stringify({
         grant_type: 'authorization_code',
         code,
         client_id: env.zendesk.clientId,
+        client_secret: env.zendesk.clientSecret || undefined,
         code_verifier: codeVerifier,
         redirect_uri: env.zendesk.redirectUri,
         scope: ZENDESK_OAUTH_SCOPES,
@@ -149,10 +163,10 @@ export async function addTicketComment(
       `https://${validatedSubdomain}.zendesk.com/api/v2/tickets/${ticketId}.json`,
       {
         method: 'PUT',
-        headers: {
+        headers: withMarketplaceHeaders({
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify({
           ticket: {
             comment: {
@@ -208,10 +222,10 @@ export async function setInstallationSettings(
       `https://${validatedSubdomain}.zendesk.com/api/v2/apps/installations/${installationId}.json`,
       {
         method: 'PUT',
-        headers: {
+        headers: withMarketplaceHeaders({
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify({ settings }),
       }
     );
@@ -262,13 +276,14 @@ export async function refreshAccessToken(
   try {
     const response = await fetch(`https://${validatedSubdomain}.zendesk.com/oauth/tokens`, {
       method: 'POST',
-      headers: {
+      headers: withMarketplaceHeaders({
         'Content-Type': 'application/json',
-      },
+      }),
       body: JSON.stringify({
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
         client_id: env.zendesk.clientId,
+        client_secret: env.zendesk.clientSecret || undefined,
         scope: ZENDESK_OAUTH_SCOPES,
       }),
     });
@@ -354,10 +369,10 @@ export async function listAgents(subdomain: string, accessToken: string): Promis
 
     while (url && page < MAX_AGENT_PAGES) {
       const response = await fetch(url, {
-        headers: {
+        headers: withMarketplaceHeaders({
           Authorization: `Bearer ${accessToken}`,
           Accept: 'application/json',
-        },
+        }),
       });
 
       if (!response.ok) {
@@ -402,10 +417,10 @@ export async function getMe(
   const validatedSubdomain = validateSubdomain(subdomain);
   try {
     const response = await fetch(`https://${validatedSubdomain}.zendesk.com/api/v2/users/me.json`, {
-      headers: {
+      headers: withMarketplaceHeaders({
         Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
-      },
+      }),
     });
 
     if (!response.ok) {
