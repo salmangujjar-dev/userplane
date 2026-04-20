@@ -6,13 +6,29 @@
  * POST /api/v1/zendesk/app/token - Completes the app OAuth flow
  */
 
+import { ORPCError } from '@orpc/server';
 import type { Context } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
 import { auth } from '@/api/clients/auth';
 import { createLogger } from '@/api/lib/logger';
 import type { ZendeskAppOAuthService } from '@/api/services/zendesk-app-oauth.service';
 
 const logger = createLogger('zendesk-app-oauth-handler');
+
+function getErrorResponse(
+  error: unknown,
+  fallback: string
+): { message: string; status: ContentfulStatusCode } {
+  if (error instanceof ORPCError) {
+    return { message: error.message, status: error.status as ContentfulStatusCode };
+  }
+
+  return {
+    message: error instanceof Error ? error.message : fallback,
+    status: 400,
+  };
+}
 
 async function getSessionUserId(c: Context): Promise<string | null> {
   const sessionData = await auth.api.getSession({
@@ -53,9 +69,9 @@ export function createAppOAuthInitiateHandler(service: ZendeskAppOAuthService) {
 
       return c.json({ success: true, data: result });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to initiate OAuth';
+      const { message, status } = getErrorResponse(error, 'Failed to initiate OAuth');
       logger.error({ error }, 'App OAuth initiation failed');
-      return c.json({ error: message }, 400);
+      return c.json({ error: message }, status);
     }
   };
 }
@@ -87,9 +103,9 @@ export function createAppOAuthCompleteHandler(service: ZendeskAppOAuthService) {
 
       return c.json({ success: true, data: result });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to complete OAuth';
+      const { message, status } = getErrorResponse(error, 'Failed to complete OAuth');
       logger.error({ error }, 'App OAuth completion failed');
-      return c.json({ error: message }, 400);
+      return c.json({ error: message }, status);
     }
   };
 }

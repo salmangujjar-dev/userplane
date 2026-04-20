@@ -143,6 +143,11 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
       clientSecret: raw.ZENDESK_CLIENT_SECRET,
       redirectUri: raw.ZENDESK_REDIRECT_URI,
       jwtSecret: raw.ZENDESK_JWT_SECRET,
+      marketplace: {
+        name: raw.ZENDESK_MARKETPLACE_NAME,
+        organizationId: raw.ZENDESK_MARKETPLACE_ORGANIZATION_ID,
+        appId: raw.ZENDESK_MARKETPLACE_APP_ID,
+      },
     },
     slack: {
       clientId: raw.SLACK_CLIENT_ID,

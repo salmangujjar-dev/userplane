@@ -24,6 +24,7 @@ import {
   STORAGE,
   SUPPORT,
   TOKEN_EXPIRY,
+  ZENDESK_MARKETPLACE,
 } from './defaults';
 import {
   booleanWithDefault,
@@ -97,6 +98,10 @@ export const zendeskEnvSchema = z.object({
   ZENDESK_REDIRECT_URI: urlWithDefault(`${DEV_URLS.DASH}${AUTH.ZENDESK_REDIRECT_PATH}`),
   /** Shared secret for Zendesk App JWT auth (HS256). Set as Zendesk secure setting during OAuth. */
   ZENDESK_JWT_SECRET: z.string().optional().default('zendesk-jwt-secret-dev-only'),
+  /** Marketplace headers required for external Zendesk API requests */
+  ZENDESK_MARKETPLACE_NAME: stringWithDefault(ZENDESK_MARKETPLACE.NAME),
+  ZENDESK_MARKETPLACE_ORGANIZATION_ID: stringWithDefault(ZENDESK_MARKETPLACE.ORGANIZATION_ID),
+  ZENDESK_MARKETPLACE_APP_ID: stringWithDefault(ZENDESK_MARKETPLACE.APP_ID),
 });
 
 /**
@@ -546,6 +551,11 @@ export const envConfigSchema = z.object({
   intercom: oauthConfigSchema,
   zendesk: oauthConfigSchema.extend({
     jwtSecret: z.string(),
+    marketplace: z.object({
+      name: z.string(),
+      organizationId: z.string(),
+      appId: z.string(),
+    }),
   }),
   slack: oauthConfigSchema.extend({
     signingSecret: z.string(),

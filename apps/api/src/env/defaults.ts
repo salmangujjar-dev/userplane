@@ -69,6 +69,12 @@ export const AUTH = {
   SLACK_REDIRECT_PATH: '/callback/slack',
 } as const;
 
+export const ZENDESK_MARKETPLACE = {
+  NAME: 'Screen Recording by Userplane',
+  ORGANIZATION_ID: '7562',
+  APP_ID: '1229987',
+} as const;
+
 // =============================================================================
 // CORS Defaults
 // =============================================================================
