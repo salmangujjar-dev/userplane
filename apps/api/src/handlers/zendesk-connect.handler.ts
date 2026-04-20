@@ -6,13 +6,29 @@
  * POST /api/v1/zendesk/connect/complete - Authenticated, completes the connect OAuth flow
  */
 
+import { ORPCError } from '@orpc/server';
 import type { Context } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
 import { auth } from '@/api/clients/auth';
 import { createLogger } from '@/api/lib/logger';
 import type { ZendeskConnectService } from '@/api/services/zendesk-connect.service';
 
 const logger = createLogger('zendesk-connect-handler');
+
+function getErrorResponse(
+  error: unknown,
+  fallback: string
+): { message: string; status: ContentfulStatusCode } {
+  if (error instanceof ORPCError) {
+    return { message: error.message, status: error.status as ContentfulStatusCode };
+  }
+
+  return {
+    message: error instanceof Error ? error.message : fallback,
+    status: 400,
+  };
+}
 
 /**
  * Extract authenticated userId from Better Auth session cookies.
@@ -55,9 +71,9 @@ export function createConnectInitiateHandler(service: ZendeskConnectService) {
 
       return c.json({ success: true, data: result });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to initiate OAuth';
+      const { message, status } = getErrorResponse(error, 'Failed to initiate OAuth');
       logger.error({ error }, 'Connect initiation failed');
-      return c.json({ error: message }, 400);
+      return c.json({ error: message }, status);
     }
   };
 }
@@ -91,9 +107,9 @@ export function createConnectCompleteHandler(service: ZendeskConnectService) {
 
       return c.json({ success: true, data: result });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to complete OAuth';
+      const { message, status } = getErrorResponse(error, 'Failed to complete OAuth');
       logger.error({ error }, 'Connect completion failed');
-      return c.json({ error: message }, 400);
+      return c.json({ error: message }, status);
     }
   };
 }
