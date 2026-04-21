@@ -2,10 +2,10 @@
 import HomepageLayout from '../layouts/HomepageLayout.astro';
 import JsonLd from '../components/seo/JsonLd.astro';
 import Hero from '../components/home/Hero';
-import Spotlight from '../components/home/Spotlight';
+import Spotlight from '../components/home/Spotlight.astro';
 import Pricing from '../components/home/Pricing';
 import Features from '../components/home/Features';
-import FAQ from '../components/shared/FAQ';
+import FAQ from '../components/home/FAQ.astro';
 import CTA from '../components/home/CTA';
 import { SPOTLIGHT_IMAGE } from '../constants/home/spotlight';
 import { FAQ_ITEMS } from '../constants/home/faq';
@@ -92,10 +92,10 @@ const faqLd = {
   <JsonLd data={faqLd} />
   <main class="flex flex-col items-center">
     <Hero />
-    <Spotlight client:visible />
+    <Spotlight />
     <Features />
     <Pricing />
-    <FAQ client:idle />
+    <FAQ />
     <CTA />
   </main>
 </HomepageLayout>

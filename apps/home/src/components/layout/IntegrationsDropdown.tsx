@@ -2,6 +2,8 @@ import { cn } from '@userplane/ui/lib/utils';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { docsLabel, learnMoreLabel, viewAllLabel } from '@/lib/seo/link-labels';
+
 export interface DropdownEntry {
   slug: string;
   name: string;
@@ -122,9 +124,11 @@ export default function IntegrationsDropdown({
 
               <a
                 href={integrationsHref}
+                aria-label={viewAllLabel('integrations')}
                 className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
               >
-                View all <ChevronRight className="size-3.5" />
+                View all <span className="sr-only">integrations</span>
+                <ChevronRight className="size-3.5" />
               </a>
             </div>
 
@@ -177,17 +181,21 @@ export default function IntegrationsDropdown({
               <div className="flex items-center gap-4 pt-2">
                 <a
                   href={active.pageHref}
+                  aria-label={learnMoreLabel(`Userplane for ${active.name}`)}
                   className="inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
                 >
-                  Learn more <ChevronRight className="size-3.5" />
+                  Learn more <span className="sr-only">about Userplane for {active.name}</span>
+                  <ChevronRight className="size-3.5" />
                 </a>
                 <a
                   href={active.docsHref}
+                  aria-label={docsLabel(`Userplane for ${active.name}`)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:underline"
                 >
-                  Docs <ChevronRight className="size-3.5" />
+                  Docs <span className="sr-only">for Userplane for {active.name}</span>
+                  <ChevronRight className="size-3.5" />
                 </a>
               </div>
             </div>
@@ -203,9 +211,11 @@ export default function IntegrationsDropdown({
                 {frameworksHref && (
                   <a
                     href={frameworksHref}
+                    aria-label={viewAllLabel('frameworks')}
                     className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
                   >
-                    View all <ChevronRight className="size-3" />
+                    View all <span className="sr-only">frameworks</span>
+                    <ChevronRight className="size-3" />
                   </a>
                 )}
               </div>

@@ -6,7 +6,8 @@ import { NAV_LINKS } from '../../constants/navigation';
 import { getOgImagePath } from '../../lib/og/sources';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog');
+  const blogModules = import.meta.glob('../../content/blog/**/*.md');
+  const posts = Object.keys(blogModules).length > 0 ? await getCollection('blog') : [];
 
   return posts.map((post) => ({
     params: { slug: post.id.replace('.md', '') },
