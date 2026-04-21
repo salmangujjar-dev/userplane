@@ -30,3 +30,6 @@
 
 # Sitemap canonical alias
 /sitemap.xml      /sitemap-index.xml               301
+
+# Development-only OG image preview
+/og-preview       /                                  302

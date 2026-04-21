@@ -84,7 +84,8 @@ export async function enumerateOgSources(): Promise<OgSource[]> {
   }
 
   // Blog posts — empty collection today; wired for when posts land.
-  const posts = await getCollection('blog');
+  const blogModules = import.meta.glob('../../content/blog/**/*.md');
+  const posts = Object.keys(blogModules).length > 0 ? await getCollection('blog') : [];
   for (const post of posts) {
     sources.push({
       category: 'blog',

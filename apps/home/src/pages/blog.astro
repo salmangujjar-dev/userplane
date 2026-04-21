@@ -10,7 +10,8 @@ import { getOgImagePath } from '../lib/og/sources';
 const meta = STATIC_PAGE_REGISTRY.blog;
 
 // Get all blog posts from content collection
-const allPosts = await getCollection('blog');
+const blogModules = import.meta.glob('../content/blog/**/*.md');
+const allPosts = Object.keys(blogModules).length > 0 ? await getCollection('blog') : [];
 
 // Sort by date (newest first) and format for BlogPostList component
 const posts = allPosts

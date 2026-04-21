@@ -10,7 +10,7 @@ import { getMarketingUrl } from './urls';
  * Used in Logo component when href is provided
  */
 export const LOGO_LINK = {
-  ariaLabel: 'Go to Userplane homepage',
+  ariaLabel: 'Userplane',
 } as const;
 
 /**

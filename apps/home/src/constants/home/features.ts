@@ -31,10 +31,10 @@ export const FEATURES_HIGHLIGHTS: HighlightConfig[] = [
 export const FEATURES: Feature[] = [
   {
     image: mediaClient.getFeatureMediaUrl('features/one-click-screen-recordings.webp', {
-      transform: mergeTransformOptions('feature', { width: 1400 }),
+      transform: mergeTransformOptions('feature', { width: 700, quality: 70, dpr: undefined }),
     }),
     imageMobile: mediaClient.getFeatureMediaUrl('features/one-click-screen-recordings.webp', {
-      transform: mergeTransformOptions('feature', { width: 700 }),
+      transform: mergeTransformOptions('feature', { width: 480, quality: 70, dpr: undefined }),
     }),
     imageAlt: 'One click recordings',
     title: 'One click recordings',
@@ -43,10 +43,10 @@ export const FEATURES: Feature[] = [
   },
   {
     image: mediaClient.getFeatureMediaUrl('features/complete-issue-context.webp', {
-      transform: mergeTransformOptions('feature', { width: 1400 }),
+      transform: mergeTransformOptions('feature', { width: 700, quality: 70, dpr: undefined }),
     }),
     imageMobile: mediaClient.getFeatureMediaUrl('features/complete-issue-context.webp', {
-      transform: mergeTransformOptions('feature', { width: 700 }),
+      transform: mergeTransformOptions('feature', { width: 480, quality: 70, dpr: undefined }),
     }),
     imageAlt: 'Complete Issue Context',
     title: 'Complete Issue Context',
@@ -55,10 +55,10 @@ export const FEATURES: Feature[] = [
   },
   {
     image: mediaClient.getFeatureMediaUrl('features/native-integrations.webp', {
-      transform: mergeTransformOptions('feature', { width: 1400 }),
+      transform: mergeTransformOptions('feature', { width: 700, quality: 70, dpr: undefined }),
     }),
     imageMobile: mediaClient.getFeatureMediaUrl('features/native-integrations.webp', {
-      transform: mergeTransformOptions('feature', { width: 700 }),
+      transform: mergeTransformOptions('feature', { width: 480, quality: 70, dpr: undefined }),
     }),
     imageAlt: 'Native Intercom integration',
     title: 'Native Intercom integration',
@@ -67,10 +67,10 @@ export const FEATURES: Feature[] = [
   },
   {
     image: mediaClient.getFeatureMediaUrl('features/privacy-and-security.webp', {
-      transform: mergeTransformOptions('feature', { width: 1400 }),
+      transform: mergeTransformOptions('feature', { width: 700, quality: 70, dpr: undefined }),
     }),
     imageMobile: mediaClient.getFeatureMediaUrl('features/privacy-and-security.webp', {
-      transform: mergeTransformOptions('feature', { width: 700 }),
+      transform: mergeTransformOptions('feature', { width: 480, quality: 70, dpr: undefined }),
     }),
     imageAlt: 'Privacy and security controls',
     title: 'Privacy and security built-in',

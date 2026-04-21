@@ -4,6 +4,18 @@ const PREBUILT_MD: Record<string, string> = {
   '/faq': '/faq.md',
 };
 
+type PagesContext = {
+  request: Request;
+  env: {
+    ASSETS: {
+      fetch: typeof fetch;
+    };
+  };
+  next: () => Promise<Response>;
+};
+
+type PagesFunction = (context: PagesContext) => Response | Promise<Response>;
+
 function wantsMarkdown(request: Request): boolean {
   const accept = request.headers.get('Accept') || '';
   return accept.includes('text/markdown');

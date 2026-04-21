@@ -1,9 +1,19 @@
 ---
 const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY || '';
 const posthogHost = import.meta.env.PUBLIC_POSTHOG_HOST || 'https://i.userplane.io';
+
+const posthogConfig = {
+  api_host: posthogHost,
+  autocapture: false,
+  capture_dead_clicks: false,
+  rageclick: false,
+  disable_session_recording: true,
+  disable_surveys: true,
+  advanced_disable_flags: true,
+};
 ---
 
-<script is:inline define:vars={{ posthogKey, posthogHost }}>
+<script is:inline define:vars={{ posthogKey, posthogConfig }}>
   if (posthogKey) {
     !(function (t, e) {
       var o, n, p, r;
@@ -47,7 +57,7 @@ const posthogHost = import.meta.env.PUBLIC_POSTHOG_HOST || 'https://i.userplane.
         }),
         (e.__SV = 1));
     })(document, window.posthog || []);
-    const initPostHog = () => posthog.init(posthogKey, { api_host: posthogHost });
+    const initPostHog = () => posthog.init(posthogKey, posthogConfig);
     if ('requestIdleCallback' in window) {
       requestIdleCallback(initPostHog, { timeout: 2000 });
     } else {

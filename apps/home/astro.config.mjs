@@ -28,15 +28,18 @@ export default defineConfig({
     defaultStrategy: 'hover',
   },
   build: {
-    inlineStylesheets: 'auto',
+    inlineStylesheets: 'always',
   },
   integrations: [
     react(),
     sitemap({
-      filter: (page) => !page.includes('/404'),
+      filter: (page) => !page.includes('/404') && !page.includes('/og-preview'),
       serialize: (item) => {
-        item.lastmod = new Date().toISOString();
-        if (item.url.includes('/integrations/') || item.url.includes('/for/') || item.url.includes('/frameworks/')) {
+        if (
+          item.url.includes('/integrations/') ||
+          item.url.includes('/for/') ||
+          item.url.includes('/frameworks/')
+        ) {
           item.priority = 0.8;
         }
         return item;
@@ -50,6 +53,11 @@ export default defineConfig({
       entrypoint: './src/lib/cloudflare-image-service.ts',
     },
     // Allow images from CDN domains
-    domains: ['cdn.userplane.io', 'cdn-dev.userplane.io', 'assets.userplane.io', 'assets-dev.userplane.io'],
+    domains: [
+      'cdn.userplane.io',
+      'cdn-dev.userplane.io',
+      'assets.userplane.io',
+      'assets-dev.userplane.io',
+    ],
   },
 });

@@ -14,10 +14,10 @@ function FeatureCard({ image, imageMobile, imageAlt, title, description }: Featu
         <div className="relative aspect-video">
           <img
             src={image}
-            srcSet={`${imageMobile} 700w, ${image} 1400w`}
-            sizes="(max-width: 768px) 100vw, 50vw"
-            width={1400}
-            height={788}
+            srcSet={`${imageMobile} 480w, ${image} 700w`}
+            sizes="(max-width: 768px) calc(100vw - 96px), 596px"
+            width={700}
+            height={394}
             alt={imageAlt}
             className="w-full h-full object-cover object-top-left"
             draggable={false}

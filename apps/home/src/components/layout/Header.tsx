@@ -3,7 +3,7 @@ import Logo from '@userplane/ui/components/logo';
 import { AlignJustify, LogIn, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import { LOGO_LINK, NAV_LINKS } from '@/constants/navigation';
+import { NAV_LINKS } from '@/constants/navigation';
 import { SIGNUP_URL } from '@/constants/onboarding';
 import { buildUTM, withUTM } from '@/constants/utm';
 
@@ -101,7 +101,7 @@ export default function Header({
   return (
     <nav className="mx-auto mt-12 flex w-full max-w-7xl flex-wrap items-center justify-between gap-8 p-4 font-inter text-sm">
       <div className="flex flex-1 shrink-0 items-center justify-start gap-2">
-        <a href={NAV_LINKS.home} aria-label={LOGO_LINK.ariaLabel}>
+        <a href={NAV_LINKS.home}>
           <Logo />
         </a>
       </div>
@@ -173,7 +173,7 @@ export default function Header({
       {/* Mobile menu trigger */}
       <div className="flex items-center md:hidden">
         <Button
-          aria-label="open-sidebar"
+          aria-label="Open navigation menu"
           size="icon"
           variant="ghost"
           onClick={() => setMenuOpen(true)}
@@ -206,7 +206,12 @@ export default function Header({
           <div className="absolute inset-x-0 bottom-0 max-h-[80vh] rounded-t-lg border-t bg-background animate-in slide-in-from-bottom duration-300 ease-out">
             <div className="mx-auto mt-4 h-1.5 w-[100px] shrink-0 rounded-full bg-muted" />
             <div className="flex justify-end px-4 pt-2">
-              <Button aria-label="close-sidebar" size="icon" variant="ghost" onClick={closeMenu}>
+              <Button
+                aria-label="Close navigation menu"
+                size="icon"
+                variant="ghost"
+                onClick={closeMenu}
+              >
                 <X className="h-5 w-5" />
               </Button>
             </div>
