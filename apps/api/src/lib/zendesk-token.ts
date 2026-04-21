@@ -65,10 +65,19 @@ export async function getValidZendeskAccessToken(
     return accessToken;
   }
 
+  if (!result.data.refresh_token) {
+    logger.warn(
+      { integrationId: integration.id },
+      'Zendesk token refresh succeeded without a replacement refresh token'
+    );
+    await disconnectIntegration(integration, deps);
+    return null;
+  }
+
   const updatedToken = createProviderToken('zendesk', {
     accessToken: result.data.access_token,
     apiToken: token.apiToken,
-    refreshToken: result.data.refresh_token ?? refreshToken,
+    refreshToken: result.data.refresh_token,
     tokenExpiresAt: result.data.expires_in
       ? new Date(Date.now() + result.data.expires_in * 1000).toISOString()
       : undefined,

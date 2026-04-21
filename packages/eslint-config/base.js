@@ -36,6 +36,7 @@ export const config = [
       '**/dist/**',
       '**/.next/**',
       '**/.astro/**',
+      '**/.wrangler/**',
       '**/.cache/**',
       '**/build/**',
       '**/coverage/**',

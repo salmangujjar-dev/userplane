@@ -13,6 +13,8 @@ const logger = createLogger('zendesk-client');
 
 /** OAuth scopes requested from Zendesk: read all, write tickets + app installations */
 const ZENDESK_OAUTH_SCOPES = 'read tickets:write apps:write';
+const ZENDESK_ACCESS_TOKEN_EXPIRES_IN_SECONDS = 24 * 60 * 60;
+const ZENDESK_REFRESH_TOKEN_EXPIRES_IN_SECONDS = 89 * 24 * 60 * 60;
 
 const zendeskMarketplaceHeaders = {
   'X-Zendesk-Marketplace-Name': env.zendesk.marketplace.name,
@@ -123,6 +125,8 @@ export async function exchangeCodeForToken(
         code_verifier: codeVerifier,
         redirect_uri: env.zendesk.redirectUri,
         scope: ZENDESK_OAUTH_SCOPES,
+        expires_in: ZENDESK_ACCESS_TOKEN_EXPIRES_IN_SECONDS,
+        refresh_token_expires_in: ZENDESK_REFRESH_TOKEN_EXPIRES_IN_SECONDS,
       }),
     });
 
@@ -285,6 +289,8 @@ export async function refreshAccessToken(
         client_id: env.zendesk.clientId,
         client_secret: env.zendesk.clientSecret || undefined,
         scope: ZENDESK_OAUTH_SCOPES,
+        expires_in: ZENDESK_ACCESS_TOKEN_EXPIRES_IN_SECONDS,
+        refresh_token_expires_in: ZENDESK_REFRESH_TOKEN_EXPIRES_IN_SECONDS,
       }),
     });
 
