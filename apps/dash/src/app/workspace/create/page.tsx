@@ -29,9 +29,14 @@ import { useFirstWorkspaceDomain } from '@/features/domains';
 import { useCreateWorkspace, useInvitePolicy } from '@/features/workspace';
 import { useAuth } from '@/hooks/use-auth';
 import { type DefinedError, handleSafeResult, showApiErrorToast } from '@/lib/errors';
+import {
+  CHROME_EXTENSION_MARKETPLACE_APP_URL,
+  type IntegrationMarketplaceProvider,
+  isIntegrationMarketplaceProvider,
+  openIntegrationMarketplace,
+} from '@/lib/integration-marketplace';
 import { mediaClient } from '@/lib/media';
 import { showConnectionFailedToast } from '@/lib/toasts';
-import { ZENDESK_MARKETPLACE_APP_URL, ZENDESK_MARKETPLACE_LIVE } from '@/lib/zendesk-install';
 import { DomainUrlSchema } from '@/schemas';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -225,7 +230,7 @@ function PostCreationInviteView({
   );
 }
 
-type OnboardingProvider = 'intercom' | 'zendesk' | 'slack';
+type OnboardingProvider = 'intercom' | 'slack' | IntegrationMarketplaceProvider | 'chrome';
 
 // Provider selection card
 function ProviderCard({
@@ -276,9 +281,30 @@ const PROVIDER_LABELS: Record<OnboardingProvider, string> = {
   intercom: 'Intercom',
   zendesk: 'Zendesk',
   slack: 'Slack',
+  chrome: 'Chrome',
+  discord: 'Discord',
+  helpscout: 'Help Scout',
+  pylon: 'Pylon',
+  plain: 'Plain',
+  hubspot: 'HubSpot',
 };
 
-// Provider selector flow — lets users pick Intercom, Zendesk, or Slack before connecting
+const ONBOARDING_PROVIDERS = [
+  { provider: 'intercom', icon: 'integrations/intercom.webp' },
+  { provider: 'zendesk', icon: 'integrations/zendesk.webp' },
+  { provider: 'slack', icon: 'integrations/slack.webp' },
+  { provider: 'chrome', icon: 'integrations/chrome.webp' },
+  { provider: 'discord', icon: 'integrations/discord.webp' },
+  { provider: 'helpscout', icon: 'integrations/helpscout.webp' },
+  { provider: 'pylon', icon: 'integrations/pylon.webp' },
+  { provider: 'plain', icon: 'integrations/plain.webp' },
+  { provider: 'hubspot', icon: 'integrations/hubspot.webp' },
+] as const satisfies readonly {
+  provider: OnboardingProvider;
+  icon: IntegrationAssetKey;
+}[];
+
+// Provider selector flow — lets users pick an integration before connecting
 function ProviderSelectFlow() {
   const [selectedProvider, setSelectedProvider] = useState<OnboardingProvider>('intercom');
   const [isConnecting, setIsConnecting] = useState(false);
@@ -289,12 +315,15 @@ function ProviderSelectFlow() {
   const account = accountResult?.success ? accountResult.data : null;
 
   const handleConnect = async () => {
-    if (selectedProvider === 'zendesk') {
-      if (ZENDESK_MARKETPLACE_LIVE) {
-        window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank');
-      } else {
-        router.push('/workspace/create?flow=direct');
-      }
+    if (selectedProvider === 'chrome') {
+      window.open(CHROME_EXTENSION_MARKETPLACE_APP_URL, '_blank');
+      router.replace('/workspace/create?flow=direct');
+      return;
+    }
+
+    if (isIntegrationMarketplaceProvider(selectedProvider)) {
+      openIntegrationMarketplace(selectedProvider, { respectLive: true });
+      router.replace('/workspace/create?flow=direct');
       return;
     }
 
@@ -349,27 +378,16 @@ function ProviderSelectFlow() {
 
         <div className="space-y-6">
           <div className="grid grid-cols-3 gap-3">
-            <ProviderCard
-              provider="intercom"
-              icon="integrations/intercom.webp"
-              label="Intercom"
-              selected={selectedProvider === 'intercom'}
-              onSelect={setSelectedProvider}
-            />
-            <ProviderCard
-              provider="zendesk"
-              icon="integrations/zendesk.webp"
-              label="Zendesk"
-              selected={selectedProvider === 'zendesk'}
-              onSelect={setSelectedProvider}
-            />
-            <ProviderCard
-              provider="slack"
-              icon="integrations/slack.webp"
-              label="Slack"
-              selected={selectedProvider === 'slack'}
-              onSelect={setSelectedProvider}
-            />
+            {ONBOARDING_PROVIDERS.map((provider) => (
+              <ProviderCard
+                key={provider.provider}
+                provider={provider.provider}
+                icon={provider.icon}
+                label={PROVIDER_LABELS[provider.provider]}
+                selected={selectedProvider === provider.provider}
+                onSelect={setSelectedProvider}
+              />
+            ))}
           </div>
 
           <Button
@@ -544,7 +562,7 @@ export default function CreateWorkspacePage() {
  * Zendesk auth flow — shown when user arrives from the Zendesk app
  * with subdomain + installationId in the URL.
  * Asks for workspace URL, then kicks off OAuth which creates workspace + integration.
- * Without params (e.g. from /install/zendesk) → sends to marketplace.
+ * Without params (e.g. from /install/zendesk) → sends to marketplace and shows manual flow.
  */
 function ZendeskAuthFlow() {
   const searchParams = useSearchParams();
@@ -558,13 +576,14 @@ function ZendeskAuthFlow() {
   // Prerequisites met when we have subdomain + installationId (from Zendesk app)
   const hasPrereqs = !!subdomainParam && !!installationIdParam;
 
-  // If no prereqs, redirect to marketplace
+  // If no prereqs, open Marketplace and leave this tab on the manual flow.
   const hasRedirectedRef = useRef(false);
   useEffect(() => {
     if (hasPrereqs || hasRedirectedRef.current) return;
     hasRedirectedRef.current = true;
-    window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank');
-  }, [hasPrereqs]);
+    openIntegrationMarketplace('zendesk', { respectLive: true });
+    router.replace('/workspace/create?flow=direct');
+  }, [hasPrereqs, router]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -624,7 +643,7 @@ function ZendeskAuthFlow() {
             subtitle="Install the Userplane app from the Zendesk Marketplace, then connect from within a ticket."
           />
           <Button
-            onClick={() => window.open(ZENDESK_MARKETPLACE_APP_URL, '_blank')}
+            onClick={() => openIntegrationMarketplace('zendesk')}
             size="lg"
             className="w-full px-7 py-6"
           >

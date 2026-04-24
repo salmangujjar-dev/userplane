@@ -14,6 +14,7 @@ import {
   type DocsConfig,
   type EnvConfig,
   type HomeConfig,
+  type IntegrationMarketplaceConfig,
   type PostHogConfig,
   type RawEnvConfig,
   rawEnvSchema,
@@ -30,6 +31,7 @@ export type {
   DocsConfig,
   EnvConfig,
   HomeConfig,
+  IntegrationMarketplaceConfig,
   PostHogConfig,
   RecorderConfig,
   StorageConfig,
@@ -79,6 +81,19 @@ function getExplicitEnv(): Record<string, string | undefined> {
     // Zendesk Marketplace
     NEXT_PUBLIC_ZENDESK_MARKETPLACE_APP_URL: process.env.NEXT_PUBLIC_ZENDESK_MARKETPLACE_APP_URL,
     NEXT_PUBLIC_ZENDESK_MARKETPLACE_LIVE: process.env.NEXT_PUBLIC_ZENDESK_MARKETPLACE_LIVE,
+
+    // Placeholder integration marketplaces
+    NEXT_PUBLIC_DISCORD_MARKETPLACE_APP_URL: process.env.NEXT_PUBLIC_DISCORD_MARKETPLACE_APP_URL,
+    NEXT_PUBLIC_DISCORD_MARKETPLACE_LIVE: process.env.NEXT_PUBLIC_DISCORD_MARKETPLACE_LIVE,
+    NEXT_PUBLIC_HELPSCOUT_MARKETPLACE_APP_URL:
+      process.env.NEXT_PUBLIC_HELPSCOUT_MARKETPLACE_APP_URL,
+    NEXT_PUBLIC_HELPSCOUT_MARKETPLACE_LIVE: process.env.NEXT_PUBLIC_HELPSCOUT_MARKETPLACE_LIVE,
+    NEXT_PUBLIC_PYLON_MARKETPLACE_APP_URL: process.env.NEXT_PUBLIC_PYLON_MARKETPLACE_APP_URL,
+    NEXT_PUBLIC_PYLON_MARKETPLACE_LIVE: process.env.NEXT_PUBLIC_PYLON_MARKETPLACE_LIVE,
+    NEXT_PUBLIC_PLAIN_MARKETPLACE_APP_URL: process.env.NEXT_PUBLIC_PLAIN_MARKETPLACE_APP_URL,
+    NEXT_PUBLIC_PLAIN_MARKETPLACE_LIVE: process.env.NEXT_PUBLIC_PLAIN_MARKETPLACE_LIVE,
+    NEXT_PUBLIC_HUBSPOT_MARKETPLACE_APP_URL: process.env.NEXT_PUBLIC_HUBSPOT_MARKETPLACE_APP_URL,
+    NEXT_PUBLIC_HUBSPOT_MARKETPLACE_LIVE: process.env.NEXT_PUBLIC_HUBSPOT_MARKETPLACE_LIVE,
   };
 }
 
@@ -146,6 +161,32 @@ function transformEnvConfig(raw: RawEnvConfig): EnvConfig {
     },
     docs: {
       url: raw.NEXT_PUBLIC_DOCS_URL,
+    },
+    integrationMarketplaces: {
+      zendesk: {
+        appUrl: raw.NEXT_PUBLIC_ZENDESK_MARKETPLACE_APP_URL,
+        live: raw.NEXT_PUBLIC_ZENDESK_MARKETPLACE_LIVE,
+      },
+      discord: {
+        appUrl: raw.NEXT_PUBLIC_DISCORD_MARKETPLACE_APP_URL,
+        live: raw.NEXT_PUBLIC_DISCORD_MARKETPLACE_LIVE,
+      },
+      helpscout: {
+        appUrl: raw.NEXT_PUBLIC_HELPSCOUT_MARKETPLACE_APP_URL,
+        live: raw.NEXT_PUBLIC_HELPSCOUT_MARKETPLACE_LIVE,
+      },
+      pylon: {
+        appUrl: raw.NEXT_PUBLIC_PYLON_MARKETPLACE_APP_URL,
+        live: raw.NEXT_PUBLIC_PYLON_MARKETPLACE_LIVE,
+      },
+      plain: {
+        appUrl: raw.NEXT_PUBLIC_PLAIN_MARKETPLACE_APP_URL,
+        live: raw.NEXT_PUBLIC_PLAIN_MARKETPLACE_LIVE,
+      },
+      hubspot: {
+        appUrl: raw.NEXT_PUBLIC_HUBSPOT_MARKETPLACE_APP_URL,
+        live: raw.NEXT_PUBLIC_HUBSPOT_MARKETPLACE_LIVE,
+      },
     },
     zendesk: {
       marketplace: {
