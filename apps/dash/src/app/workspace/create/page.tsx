@@ -8,9 +8,9 @@ import { Label } from '@userplane/ui/components/label';
 import Logo from '@userplane/ui/components/logo';
 import { ArrowLeftRight, Check, ChevronDown, ChevronUp, Circle, Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useQueryState } from 'nuqs';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Control, Controller, FieldErrors, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -560,11 +560,19 @@ function SlackDirectFlow() {
   return <OAuthLoadingState provider="slack" />;
 }
 
+function CreateWorkspaceLoadingFallback() {
+  return <OAuthLoadingState />;
+}
+
 export default function CreateWorkspacePage() {
   const [flow] = useQueryState('flow', { defaultValue: 'intercom-inapp' });
 
   if (flow === 'zendesk') {
-    return <ZendeskAuthFlow />;
+    return (
+      <Suspense fallback={<CreateWorkspaceLoadingFallback />}>
+        <ZendeskAuthFlowContent />
+      </Suspense>
+    );
   }
 
   if (flow === 'intercom-marketplace') {
@@ -589,14 +597,13 @@ export default function CreateWorkspacePage() {
  * Asks for workspace URL, then kicks off OAuth which creates workspace + integration.
  * Without params (e.g. from /install/zendesk) → sends to marketplace and shows manual flow.
  */
-function ZendeskAuthFlow() {
-  const searchParams = useSearchParams();
+function ZendeskAuthFlowContent() {
   const router = useRouter();
   const { data: accountResult } = useAccount();
   const { signOut } = useAuth();
 
-  const subdomainParam = searchParams.get('subdomain') ?? '';
-  const installationIdParam = searchParams.get('installationId') ?? '';
+  const [subdomainParam] = useQueryState('subdomain', { defaultValue: '' });
+  const [installationIdParam] = useQueryState('installationId', { defaultValue: '' });
 
   // Prerequisites met when we have subdomain + installationId (from Zendesk app)
   const hasPrereqs = !!subdomainParam && !!installationIdParam;
