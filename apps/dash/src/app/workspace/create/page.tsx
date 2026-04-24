@@ -6,7 +6,7 @@ import type { IntegrationAssetKey } from '@userplane/storage/media';
 import { Button } from '@userplane/ui/components/button';
 import { Label } from '@userplane/ui/components/label';
 import Logo from '@userplane/ui/components/logo';
-import { ArrowLeftRight, Check, Circle, Loader2 } from 'lucide-react';
+import { ArrowLeftRight, Check, ChevronDown, ChevronUp, Circle, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryState } from 'nuqs';
@@ -87,7 +87,7 @@ function TokenLoadingState() {
 function PageHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <Logo />
+      <Logo showText={false} />
       <h1 className="text-xl font-medium text-foreground">{title}</h1>
       <p className="text-sm text-muted-foreground text-center">{subtitle}</p>
     </div>
@@ -304,15 +304,21 @@ const ONBOARDING_PROVIDERS = [
   icon: IntegrationAssetKey;
 }[];
 
+const VISIBLE_PROVIDER_COUNT = 3;
+
 // Provider selector flow — lets users pick an integration before connecting
 function ProviderSelectFlow() {
   const [selectedProvider, setSelectedProvider] = useState<OnboardingProvider>('intercom');
+  const [showAllProviders, setShowAllProviders] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const router = useRouter();
   const { data: accountResult } = useAccount();
   const { signOut } = useAuth();
 
   const account = accountResult?.success ? accountResult.data : null;
+  const visibleProviders = showAllProviders
+    ? ONBOARDING_PROVIDERS
+    : ONBOARDING_PROVIDERS.slice(0, VISIBLE_PROVIDER_COUNT);
 
   const handleConnect = async () => {
     if (selectedProvider === 'chrome') {
@@ -376,18 +382,37 @@ function ProviderSelectFlow() {
           subtitle="Connect your workspace to get started"
         />
 
-        <div className="space-y-6">
-          <div className="grid grid-cols-3 gap-3">
-            {ONBOARDING_PROVIDERS.map((provider) => (
-              <ProviderCard
-                key={provider.provider}
-                provider={provider.provider}
-                icon={provider.icon}
-                label={PROVIDER_LABELS[provider.provider]}
-                selected={selectedProvider === provider.provider}
-                onSelect={setSelectedProvider}
-              />
-            ))}
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              {visibleProviders.map((provider) => (
+                <ProviderCard
+                  key={provider.provider}
+                  provider={provider.provider}
+                  icon={provider.icon}
+                  label={PROVIDER_LABELS[provider.provider]}
+                  selected={selectedProvider === provider.provider}
+                  onSelect={setSelectedProvider}
+                />
+              ))}
+            </div>
+
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+                aria-label={showAllProviders ? 'Show fewer integrations' : 'Show more integrations'}
+                onClick={() => setShowAllProviders((current) => !current)}
+              >
+                {showAllProviders ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
 
           <Button
