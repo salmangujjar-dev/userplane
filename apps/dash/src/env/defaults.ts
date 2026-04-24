@@ -47,11 +47,38 @@ export const POSTHOG = {
 export { DOCS_URL } from '@userplane/contract';
 
 // =============================================================================
-// Zendesk Marketplace Defaults
+// Integration Marketplace Defaults
 // =============================================================================
 
-export const ZENDESK_MARKETPLACE = {
+export const CHROME_EXTENSION_MARKETPLACE = {
   APP_URL:
-    'https://www.zendesk.com/marketplace/apps/support/1229987/screen-recording-by-userplane/',
-  LIVE: true,
+    'https://chromewebstore.google.com/detail/request-screen-recording/bgmbeifpcfepegcjhjdbocjbecpfmakm',
+} as const;
+
+export const INTEGRATION_MARKETPLACE = {
+  ZENDESK: {
+    APP_URL:
+      'https://www.zendesk.com/marketplace/apps/support/1229987/screen-recording-by-userplane/',
+    LIVE: true,
+  },
+  DISCORD: {
+    APP_URL: CHROME_EXTENSION_MARKETPLACE.APP_URL,
+    LIVE: true,
+  },
+  HELPSCOUT: {
+    APP_URL: CHROME_EXTENSION_MARKETPLACE.APP_URL,
+    LIVE: true,
+  },
+  PYLON: {
+    APP_URL: CHROME_EXTENSION_MARKETPLACE.APP_URL,
+    LIVE: true,
+  },
+  PLAIN: {
+    APP_URL: CHROME_EXTENSION_MARKETPLACE.APP_URL,
+    LIVE: true,
+  },
+  HUBSPOT: {
+    APP_URL: CHROME_EXTENSION_MARKETPLACE.APP_URL,
+    LIVE: true,
+  },
 } as const;

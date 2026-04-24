@@ -5,7 +5,7 @@
  */
 import { z } from 'zod';
 
-import { AUTH, DEV_URLS, DOCS_URL, POSTHOG, STORAGE, ZENDESK_MARKETPLACE } from './defaults';
+import { AUTH, DEV_URLS, DOCS_URL, INTEGRATION_MARKETPLACE, POSTHOG, STORAGE } from './defaults';
 
 // =============================================================================
 // Parse Utilities
@@ -82,10 +82,24 @@ export const posthogEnvSchema = z.object({
   NEXT_PUBLIC_POSTHOG_HOST: stringWithDefault(POSTHOG.HOST),
 });
 
-/** Zendesk Marketplace env vars schema */
-export const zendeskMarketplaceEnvSchema = z.object({
-  NEXT_PUBLIC_ZENDESK_MARKETPLACE_APP_URL: urlWithDefault(ZENDESK_MARKETPLACE.APP_URL),
-  NEXT_PUBLIC_ZENDESK_MARKETPLACE_LIVE: booleanWithDefault(ZENDESK_MARKETPLACE.LIVE),
+/** Integration marketplace env vars schema */
+export const integrationMarketplaceEnvSchema = z.object({
+  NEXT_PUBLIC_ZENDESK_MARKETPLACE_APP_URL: urlWithDefault(INTEGRATION_MARKETPLACE.ZENDESK.APP_URL),
+  NEXT_PUBLIC_ZENDESK_MARKETPLACE_LIVE: booleanWithDefault(INTEGRATION_MARKETPLACE.ZENDESK.LIVE),
+  NEXT_PUBLIC_DISCORD_MARKETPLACE_APP_URL: urlWithDefault(INTEGRATION_MARKETPLACE.DISCORD.APP_URL),
+  NEXT_PUBLIC_DISCORD_MARKETPLACE_LIVE: booleanWithDefault(INTEGRATION_MARKETPLACE.DISCORD.LIVE),
+  NEXT_PUBLIC_HELPSCOUT_MARKETPLACE_APP_URL: urlWithDefault(
+    INTEGRATION_MARKETPLACE.HELPSCOUT.APP_URL
+  ),
+  NEXT_PUBLIC_HELPSCOUT_MARKETPLACE_LIVE: booleanWithDefault(
+    INTEGRATION_MARKETPLACE.HELPSCOUT.LIVE
+  ),
+  NEXT_PUBLIC_PYLON_MARKETPLACE_APP_URL: urlWithDefault(INTEGRATION_MARKETPLACE.PYLON.APP_URL),
+  NEXT_PUBLIC_PYLON_MARKETPLACE_LIVE: booleanWithDefault(INTEGRATION_MARKETPLACE.PYLON.LIVE),
+  NEXT_PUBLIC_PLAIN_MARKETPLACE_APP_URL: urlWithDefault(INTEGRATION_MARKETPLACE.PLAIN.APP_URL),
+  NEXT_PUBLIC_PLAIN_MARKETPLACE_LIVE: booleanWithDefault(INTEGRATION_MARKETPLACE.PLAIN.LIVE),
+  NEXT_PUBLIC_HUBSPOT_MARKETPLACE_APP_URL: urlWithDefault(INTEGRATION_MARKETPLACE.HUBSPOT.APP_URL),
+  NEXT_PUBLIC_HUBSPOT_MARKETPLACE_LIVE: booleanWithDefault(INTEGRATION_MARKETPLACE.HUBSPOT.LIVE),
 });
 
 /** Combined raw environment variables schema */
@@ -94,7 +108,7 @@ export const rawEnvSchema = appEnvSchema
   .merge(authEnvSchema)
   .merge(storageEnvSchema)
   .merge(posthogEnvSchema)
-  .merge(zendeskMarketplaceEnvSchema);
+  .merge(integrationMarketplaceEnvSchema);
 
 /** Raw parsed environment type */
 export type RawEnvConfig = z.infer<typeof rawEnvSchema>;
@@ -148,11 +162,24 @@ export const docsConfigSchema = z.object({
 });
 
 /** Zendesk configuration schema */
+const marketplaceProviderConfigSchema = z.object({
+  appUrl: z.string().url(),
+  live: z.boolean(),
+});
+
+/** Integration marketplace configuration schema */
+export const integrationMarketplaceConfigSchema = z.object({
+  zendesk: marketplaceProviderConfigSchema,
+  discord: marketplaceProviderConfigSchema,
+  helpscout: marketplaceProviderConfigSchema,
+  pylon: marketplaceProviderConfigSchema,
+  plain: marketplaceProviderConfigSchema,
+  hubspot: marketplaceProviderConfigSchema,
+});
+
+/** Zendesk configuration schema */
 export const zendeskConfigSchema = z.object({
-  marketplace: z.object({
-    appUrl: z.string().url(),
-    live: z.boolean(),
-  }),
+  marketplace: marketplaceProviderConfigSchema,
 });
 
 /** Complete environment configuration schema */
@@ -167,6 +194,7 @@ export const envConfigSchema = z.object({
   storage: storageConfigSchema,
   posthog: posthogConfigSchema,
   docs: docsConfigSchema,
+  integrationMarketplaces: integrationMarketplaceConfigSchema,
   zendesk: zendeskConfigSchema,
 });
 
@@ -182,5 +210,6 @@ export type AuthConfig = z.infer<typeof authConfigSchema>;
 export type StorageConfig = z.infer<typeof storageConfigSchema>;
 export type PostHogConfig = z.infer<typeof posthogConfigSchema>;
 export type DocsConfig = z.infer<typeof docsConfigSchema>;
+export type IntegrationMarketplaceConfig = z.infer<typeof integrationMarketplaceConfigSchema>;
 export type ZendeskConfig = z.infer<typeof zendeskConfigSchema>;
 export type EnvConfig = z.infer<typeof envConfigSchema>;
