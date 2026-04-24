@@ -105,6 +105,18 @@ const SETTINGS_INTEGRATIONS = [
   { id: 'hubspot', name: 'HubSpot', icon: 'integrations/hubspot.webp', category: 'helpdesks' },
   { id: 'crisp', name: 'Crisp', icon: 'integrations/crisp.webp', category: 'helpdesks' },
   {
+    id: 'jiraservicedesk',
+    name: 'Service Management',
+    icon: 'integrations/jiraservicedesk.webp',
+    category: 'helpdesks',
+  },
+  {
+    id: 'salesforce',
+    name: 'Service Cloud',
+    icon: 'integrations/salesforce.webp',
+    category: 'helpdesks',
+  },
+  {
     id: 'freshdesk',
     name: 'Freshdesk',
     icon: 'integrations/freshdesk.webp',
@@ -124,12 +136,6 @@ const SETTINGS_INTEGRATIONS = [
     category: 'helpdesks',
   },
   { id: 'hiver', name: 'Hiver', icon: 'integrations/hiver.webp', category: 'helpdesks' },
-  {
-    id: 'jiraservicedesk',
-    name: 'Jira Service Desk',
-    icon: 'integrations/jiraservicedesk.webp',
-    category: 'helpdesks',
-  },
   { id: 'zoho', name: 'Zoho', icon: 'integrations/zoho.webp', category: 'helpdesks' },
   { id: 'jira', name: 'Jira', icon: 'integrations/jira.webp', category: 'issue-trackers' },
   { id: 'linear', name: 'Linear', icon: 'integrations/linear.webp', category: 'issue-trackers' },
@@ -141,12 +147,6 @@ const SETTINGS_INTEGRATIONS = [
     category: 'issue-trackers',
   },
   { id: 'notion', name: 'Notion', icon: 'integrations/notion.webp', category: 'issue-trackers' },
-  {
-    id: 'salesforce',
-    name: 'Salesforce Service Cloud',
-    icon: 'integrations/salesforce.webp',
-    category: 'helpdesks',
-  },
   { id: 'sentry', name: 'Sentry', icon: 'integrations/sentry.webp', category: 'issue-trackers' },
 ] as const satisfies readonly SettingsIntegrationConfig[];
 
