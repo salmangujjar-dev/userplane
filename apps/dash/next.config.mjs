@@ -15,6 +15,29 @@ dotenv.config({ path: envFile, override: true });
 // Enable PostHog when: production build OR POSTHOG_PERSONAL_API_KEY is set (for source map uploads)
 const shouldUsePostHog = appEnv === 'production' || !!process.env.POSTHOG_PERSONAL_API_KEY;
 
+const securityHeaders = [
+  {
+    key: 'X-Content-Type-Options',
+    value: 'nosniff',
+  },
+  {
+    key: 'X-Frame-Options',
+    value: 'DENY',
+  },
+  {
+    key: 'Referrer-Policy',
+    value: 'strict-origin-when-cross-origin',
+  },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=()',
+  },
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload',
+  },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@userplane/ui"],
@@ -77,6 +100,10 @@ const nextConfig = {
   // Custom headers for specific routes
   async headers() {
     return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
       {
         // Zendesk iframe must be frameable by Zendesk
         source: '/zendesk/iframe',
