@@ -197,7 +197,6 @@ export default function RecordingsPage() {
                   recordingId={recording.recordingId}
                   createdBy={recording.creator.name}
                   createdAt={recording.createdAt}
-                  expiresAt={recording.expiresAt}
                   durationMs={recording.recordingDurationMs}
                   thumbnailUrl={recording.recordingThumbnail}
                 />

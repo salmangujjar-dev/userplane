@@ -179,14 +179,9 @@ export class CaptureBridgeConnection {
       },
     };
 
-    try {
-      this.connection = await host.connect(iframe, schema);
-      this.logger.debug({ connectionId: this.connection.id }, 'Connected to capture');
-      this.callbacks.onConnected?.();
-    } catch (error) {
-      this.logger.error({ err: error }, 'Failed to connect');
-      throw error;
-    }
+    this.connection = await host.connect(iframe, schema);
+    this.logger.debug({ connectionId: this.connection.id }, 'Connected to capture');
+    this.callbacks.onConnected?.();
   }
 
   /**
