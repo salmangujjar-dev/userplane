@@ -83,17 +83,24 @@ export const countWorkspacesImpl = (workspaceService: WorkspaceService) => {
  * Requires authentication
  * Plan is derived from subscription status, not stored on workspace
  */
-export const getWorkspaceByIdImpl = (workspaceService: WorkspaceService) => {
-  return authorizedRateLimited.workspace.getById.handler(async ({ input }) => {
-    const workspace = await workspaceService.getById(input.params.workspaceId);
+export const getWorkspaceByIdImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-    return {
-      message: 'Workspace retrieved successfully',
-      data: {
-        workspace,
-      },
-    };
-  });
+  return authorizedRateLimited.workspace.getById
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const workspace = await workspaceService.getById(input.params.workspaceId);
+
+      return {
+        message: 'Workspace retrieved successfully',
+        data: {
+          workspace,
+        },
+      };
+    });
 };
 
 /**
@@ -372,15 +379,22 @@ export const restoreWorkspaceImpl = (
  * GET /workspace/:id/preferences - Get workspace preferences
  * Requires authentication
  */
-export const getWorkspacePreferencesImpl = (workspaceService: WorkspaceService) => {
-  return authorizedRateLimited.workspace.preferences.get.handler(async ({ input }) => {
-    const preferences = await workspaceService.getPreferencesById(input.params.workspaceId);
+export const getWorkspacePreferencesImpl = (
+  workspaceService: WorkspaceService,
+  workspaceMemberService: WorkspaceMemberService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-    return {
-      message: 'Workspace preferences retrieved successfully',
-      data: { preferences },
-    };
-  });
+  return authorizedRateLimited.workspace.preferences.get
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const preferences = await workspaceService.getPreferencesById(input.params.workspaceId);
+
+      return {
+        message: 'Workspace preferences retrieved successfully',
+        data: { preferences },
+      };
+    });
 };
 
 /**
@@ -415,32 +429,39 @@ export const updateWorkspacePreferencesImpl = (
  * GET /workspace/:id/members - Get workspace members
  * Requires authentication
  */
-export const getWorkspaceMembersImpl = (workspaceMemberService: WorkspaceMemberService) => {
-  return authorizedRateLimited.workspace.members.list.handler(async ({ input }) => {
-    const page = input.query.page || 1;
-    const perPage = input.query.per_page || 5;
-    const { members, total } = await workspaceMemberService.getTeamMembers(
-      input.params.workspaceId,
-      page,
-      perPage
-    );
+export const getWorkspaceMembersImpl = (
+  workspaceMemberService: WorkspaceMemberService,
+  workspaceService: WorkspaceService
+) => {
+  const requireMember = createWorkspaceMiddleware(workspaceMemberService, workspaceService);
 
-    const teamMembers = members.map((member) => ({
-      workspaceMemberId: member.workspaceMemberId,
-      memberName: member.userName,
-      memberEmail: member.userEmail,
-      workspaceRole: member.role,
-    }));
+  return authorizedRateLimited.workspace.members.list
+    .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
+    .handler(async ({ input }) => {
+      const page = input.query.page || 1;
+      const perPage = input.query.per_page || 5;
+      const { members, total } = await workspaceMemberService.getTeamMembers(
+        input.params.workspaceId,
+        page,
+        perPage
+      );
 
-    return {
-      message: 'Workspace members retrieved successfully',
-      data: {
-        workspaceId: input.params.workspaceId,
-        workspaceMembers: teamMembers,
-        pagination: createPaginationMeta(page, perPage, total),
-      },
-    };
-  });
+      const teamMembers = members.map((member) => ({
+        workspaceMemberId: member.workspaceMemberId,
+        memberName: member.userName,
+        memberEmail: member.userEmail,
+        workspaceRole: member.role,
+      }));
+
+      return {
+        message: 'Workspace members retrieved successfully',
+        data: {
+          workspaceId: input.params.workspaceId,
+          workspaceMembers: teamMembers,
+          pagination: createPaginationMeta(page, perPage, total),
+        },
+      };
+    });
 };
 
 /**
@@ -2141,7 +2162,7 @@ export const createWorkspaceProcedures = (
   return {
     list: getAllWorkspacesImpl(workspaceService),
     count: countWorkspacesImpl(workspaceService),
-    getById: getWorkspaceByIdImpl(workspaceService),
+    getById: getWorkspaceByIdImpl(workspaceService, workspaceMemberService),
     getResourcesCount: getWorkspaceResourcesCountImpl(
       workspaceService,
       workspaceMemberService,
@@ -2159,12 +2180,12 @@ export const createWorkspaceProcedures = (
     suggest: suggestWorkspacesImpl(workspaceService),
     join: joinWorkspaceImpl(inviteService, emailService),
     preferences: {
-      get: getWorkspacePreferencesImpl(workspaceService),
+      get: getWorkspacePreferencesImpl(workspaceService, workspaceMemberService),
       update: updateWorkspacePreferencesImpl(workspaceService, workspaceMemberService),
     },
 
     members: {
-      list: getWorkspaceMembersImpl(workspaceMemberService),
+      list: getWorkspaceMembersImpl(workspaceMemberService, workspaceService),
       getMembership: getWorkspaceMembershipImpl(workspaceMemberService),
       updateRole: updateMemberRoleImpl(workspaceMemberService, workspaceService),
       remove: removeMemberImpl(workspaceMemberService, workspaceService),

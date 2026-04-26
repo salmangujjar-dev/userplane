@@ -137,6 +137,11 @@ export const updateProjectImpl = (
   return authorizedRateLimited.project.update
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
+      const existingProject = await projectService.getById(input.params.projectId);
+      if (existingProject.workspaceId !== input.params.workspaceId) {
+        throw projectError.PROJECT_WORKSPACE_MISMATCH();
+      }
+
       const updates: Partial<{
         projectTitle: string;
         isDefault: boolean;
@@ -183,6 +188,11 @@ export const replaceProjectImpl = (
   return authorizedRateLimited.project.replace
     .use(requireMember, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
+      const existingProject = await projectService.getById(input.params.projectId);
+      if (existingProject.workspaceId !== input.params.workspaceId) {
+        throw projectError.PROJECT_WORKSPACE_MISMATCH();
+      }
+
       const project = await projectService.updateProject(input.params.projectId, {
         projectTitle: input.body.projectTitle,
         isDefault: input.body.isDefault,
@@ -271,6 +281,9 @@ export const getProjectRestoreInfoImpl = (
     .use(workspaceRestoreMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const result = await projectService.getProjectRestoreInfo(input.params.projectId);
+      if (result.project.workspaceId !== input.params.workspaceId) {
+        throw projectError.PROJECT_WORKSPACE_MISMATCH();
+      }
 
       return {
         message: 'Project restore info retrieved successfully',
@@ -304,6 +317,11 @@ export const restoreProjectImpl = (
   return authorizedRateLimited.project.restore
     .use(workspaceRestoreMiddleware, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
+      const restoreInfo = await projectService.getProjectRestoreInfo(input.params.projectId);
+      if (restoreInfo.project.workspaceId !== input.params.workspaceId) {
+        throw projectError.PROJECT_WORKSPACE_MISMATCH();
+      }
+
       const result = await projectService.restoreProject(input.params.projectId);
 
       // Calculate days since deletion

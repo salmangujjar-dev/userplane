@@ -111,6 +111,7 @@ export const updateProject = oc
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
+    PROJECT_WORKSPACE_MISMATCH: ProjectErrors.PROJECT_WORKSPACE_MISMATCH,
     PROJECT_UPDATE_FAILED: ProjectErrors.PROJECT_UPDATE_FAILED,
     PLAN_FEATURE_UNAVAILABLE: BillingErrors.PLAN_FEATURE_UNAVAILABLE,
   })
@@ -135,6 +136,7 @@ export const replaceProject = oc
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
     PROJECT_GONE: ProjectErrors.PROJECT_GONE,
+    PROJECT_WORKSPACE_MISMATCH: ProjectErrors.PROJECT_WORKSPACE_MISMATCH,
     PROJECT_UPDATE_FAILED: ProjectErrors.PROJECT_UPDATE_FAILED,
   })
   .input(ReplaceProjectSchema)
@@ -184,6 +186,7 @@ export const getProjectRestoreInfo = oc
     UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
+    PROJECT_WORKSPACE_MISMATCH: ProjectErrors.PROJECT_WORKSPACE_MISMATCH,
   })
   .input(GetProjectRestoreInfoSchema)
   .output(ApiResponseSchema(ProjectRestoreInfoDataSchema));
@@ -205,6 +208,7 @@ export const restoreProject = oc
     UNAUTHORIZED: ProjectErrors.UNAUTHORIZED,
     FORBIDDEN: ProjectErrors.FORBIDDEN,
     PROJECT_NOT_FOUND: ProjectErrors.PROJECT_NOT_FOUND,
+    PROJECT_WORKSPACE_MISMATCH: ProjectErrors.PROJECT_WORKSPACE_MISMATCH,
     PROJECT_RESTORE_TIME_EXPIRED: ProjectErrors.PROJECT_RESTORE_TIME_EXPIRED,
     PROJECT_RESTORE_FAILED: ProjectErrors.PROJECT_RESTORE_FAILED,
   })

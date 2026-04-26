@@ -8,6 +8,7 @@ import {
   type DomainStatus,
   linkError,
   type LinkType,
+  projectError,
   recordingError,
   type RetentionDays,
   type WorkspaceRole,
@@ -518,6 +519,10 @@ const getProjectByIdImpl = (projectService: ProjectService, apiKeyAuth: ApiKeyMi
     .use(apiKeyAuth, (input) => ({ workspaceId: input.params.workspaceId }))
     .handler(async ({ input }) => {
       const project = await projectService.getById(input.params.projectId);
+      if (project.workspaceId !== input.params.workspaceId) {
+        throw projectError.PROJECT_NOT_FOUND();
+      }
+
       return {
         message: 'Project retrieved successfully',
         data: { workspaceId: input.params.workspaceId, project },
