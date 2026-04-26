@@ -98,7 +98,7 @@ export function ReceiptView({ merchant, amount, date, description, category }: R
   }, [merchant, amount, date]);
 
   return (
-    <div className="mx-auto max-w-xs rounded-lg bg-white p-6 font-mono text-xs text-neutral-800 shadow-inner border border-neutral-200">
+    <div className="receipt-data mx-auto max-w-xs rounded-lg bg-white p-6 font-mono text-xs text-neutral-800 shadow-inner border border-neutral-200">
       {/* Header */}
       <div className="text-center mb-4">
         <p className="text-sm font-bold uppercase tracking-wider">{merchant}</p>

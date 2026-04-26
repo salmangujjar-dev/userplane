@@ -14,7 +14,6 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "drizzle-kit": "^0.31.9",
@@ -41,7 +40,6 @@
   "dependencies": {
     "@better-auth/oauth-provider": "^1.6.2",
     "better-auth": "^1.6.2",
-    "better-sqlite3": "^12.6.2",
     "drizzle-orm": "^0.45.1",
     "prism-react-renderer": "^2.4.1"
   },

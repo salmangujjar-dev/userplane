@@ -118,11 +118,13 @@ export default function AnalyticsPage() {
           value={formatCurrency(analytics.totalSpend)}
           trend={{ value: `${analytics.vendors.length} vendors`, positive: true }}
           icon={<BarChart3Icon className="size-4" />}
+          valueClassName="financial-amount"
         />
         <MetricCard
           title="Average expense"
           value={formatCurrency(analytics.avgExpense)}
           icon={<ReceiptTextIcon className="size-4" />}
+          valueClassName="financial-amount"
         />
         <MetricCard
           title="Pending expenses"
@@ -213,7 +215,7 @@ export default function AnalyticsPage() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{budget.department}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="financial-amount text-xs text-muted-foreground">
                           {formatCurrency(budget.approvedSpend + budget.pendingSpend)} of{' '}
                           {formatCurrency(budget.monthlyBudget)}
                         </p>
@@ -268,12 +270,12 @@ export default function AnalyticsPage() {
                   <div key={vendor.merchant} className="space-y-1.5">
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{vendor.merchant}</p>
+                        <p className="vendor-name truncate font-medium">{vendor.merchant}</p>
                         <p className="text-xs text-muted-foreground">
                           {vendor.categoryName} · {vendor.transactionCount} charges
                         </p>
                       </div>
-                      <p className="font-medium tabular-nums">
+                      <p className="financial-amount font-medium tabular-nums">
                         {formatCurrency(vendor.totalSpend)}
                       </p>
                     </div>
@@ -304,7 +306,9 @@ export default function AnalyticsPage() {
                   <p className="truncate text-sm font-medium">{item.category.name}</p>
                   <p className="text-xs text-muted-foreground">{item.count} approved expenses</p>
                 </div>
-                <p className="text-sm font-medium tabular-nums">{formatCurrency(item.spend)}</p>
+                <p className="financial-amount text-sm font-medium tabular-nums">
+                  {formatCurrency(item.spend)}
+                </p>
               </div>
             ))}
           </CardPanel>

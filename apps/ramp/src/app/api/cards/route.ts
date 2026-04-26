@@ -23,7 +23,7 @@ export const GET = withFailureInjection(async () => {
     );
   }
 
-  const data = repo.getCards();
+  const data = await repo.getCards();
   log.debug({ count: data.length }, 'GET /api/cards response');
   return NextResponse.json({ success: true, data });
 });

@@ -26,7 +26,7 @@ export const GET = withFailureInjection(
       );
     }
 
-    const expense = repo.getExpense(id);
+    const expense = await repo.getExpense(id);
     if (!expense) {
       log.debug({ id }, 'GET /api/expenses/[id] not found');
       return NextResponse.json({ success: false, error: 'Expense not found' }, { status: 404 });
@@ -34,8 +34,8 @@ export const GET = withFailureInjection(
 
     const data = {
       ...expense,
-      employee: repo.getEmployee(expense.employeeId),
-      category: repo.getCategory(expense.categoryId),
+      employee: await repo.getEmployee(expense.employeeId),
+      category: await repo.getCategory(expense.categoryId),
     };
 
     return NextResponse.json({ success: true, data });
@@ -65,7 +65,7 @@ export const PUT = withFailureInjection(
 
     try {
       const body = await request.json();
-      const updated = repo.updateExpense(id, body);
+      const updated = await repo.updateExpense(id, body);
       if (!updated) {
         log.debug({ id }, 'PUT /api/expenses/[id] not found');
         return NextResponse.json({ success: false, error: 'Expense not found' }, { status: 404 });

@@ -36,7 +36,7 @@ import { useExpenses } from '@/hooks/useExpenses';
 import { deriveCardSummaries } from '@/lib/data/mock-finance';
 import type { CardStatus } from '@/lib/data/types';
 import { isFailureActive } from '@/lib/feature-flags';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
 const statusLabels: Record<string, string> = {
   all: 'All Statuses',
@@ -113,7 +113,11 @@ export default function CardsPage() {
         <SummaryTile label="Issued cards" value={cards.length.toString()} />
         <SummaryTile label="Active" value={activeCount.toString()} />
         <SummaryTile label="Needs review" value={(lockedCount + reviewCount).toString()} />
-        <SummaryTile label="Available credit" value={formatCurrency(availableCredit)} />
+        <SummaryTile
+          label="Available credit"
+          value={formatCurrency(availableCredit)}
+          valueClassName="financial-amount"
+        />
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -124,7 +128,7 @@ export default function CardsPage() {
               placeholder="Search cards..."
               value={search}
               onChange={(event) => setSearch((event.target as HTMLInputElement).value)}
-              className="pl-9"
+              className="sensitive-form-field pl-9"
             />
           </div>
           <Select value={status} onValueChange={(value) => setStatus(value as string)}>
@@ -191,7 +195,8 @@ export default function CardsPage() {
                     <div className="min-w-0">
                       <p className="employee-name truncate font-medium">{card.employee.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {card.employee.department} · {card.employee.email}
+                        {card.employee.department} ·{' '}
+                        <span className="employee-email">{card.employee.email}</span>
                       </p>
                     </div>
                   </TableCell>
@@ -205,7 +210,7 @@ export default function CardsPage() {
                           <span className="text-sm font-medium">{card.type}</span>
                           <CardStatusBadge status={card.status} />
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="card-data text-xs text-muted-foreground">
                           **** {card.lastFour} · Limit {formatCurrency(card.monthlyLimit)}
                         </p>
                       </div>
@@ -219,7 +224,9 @@ export default function CardsPage() {
                   <TableCell>
                     <div className="min-w-36 space-y-1.5">
                       <div className="flex items-center justify-between gap-3 text-xs">
-                        <span>{formatCurrency(card.spentThisMonth + card.pendingAmount)}</span>
+                        <span className="financial-amount">
+                          {formatCurrency(card.spentThisMonth + card.pendingAmount)}
+                        </span>
                         <span className="text-muted-foreground">{card.utilization}%</span>
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
@@ -232,8 +239,8 @@ export default function CardsPage() {
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <div className="min-w-0">
-                      <p className="truncate text-sm">{card.lastMerchant}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="merchant-name truncate text-sm">{card.lastMerchant}</p>
+                      <p className="sensitive-data text-xs text-muted-foreground">
                         {card.lastActivityDate ? formatDate(card.lastActivityDate) : 'No activity'}
                       </p>
                     </div>
@@ -272,11 +279,19 @@ function CardsChaosFailure(): never {
   throw new Error('Cards table failed to reconcile issuer controls.');
 }
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
+function SummaryTile({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
   return (
     <div className="rounded-lg border bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
+      <p className={cn('mt-1 text-xl font-semibold tabular-nums', valueClassName)}>{value}</p>
     </div>
   );
 }

@@ -14,13 +14,16 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "npx tsx src/lib/db/migrate.ts",
+    "db:import-local": "npx tsx src/lib/db/import-local.ts",
     "db:seed": "npx tsx src/lib/db/seed.ts",
-    "db:reset": "rm -f data/ramp.db data/ramp.db-wal data/ramp.db-shm && bun run db:migrate && bun run db:seed",
+    "db:reset": "TURSO_ALLOW_SEED_RESET=1 npx tsx src/lib/db/seed.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
     "@intercom/messenger-js-sdk": "^0.0.18",
+    "@libsql/client": "^0.17.3",
+    "@next/env": "16.1.6",
     "@userplane/common-logger": "*",
     "@userplane/sdk": "*",
     "boring-avatars": "^2.0.4",

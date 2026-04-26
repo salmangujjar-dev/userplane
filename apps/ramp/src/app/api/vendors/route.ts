@@ -23,7 +23,7 @@ export const GET = withFailureInjection(async () => {
     );
   }
 
-  const data = repo.getVendors();
+  const data = await repo.getVendors();
   log.debug({ count: data.length }, 'GET /api/vendors response');
   return NextResponse.json({ success: true, data });
 });

@@ -36,7 +36,7 @@ export const GET = withFailureInjection(async (request: NextRequest) => {
     );
   }
 
-  const { data: expenses, total } = repo.getExpenses({
+  const { data: expenses, total } = await repo.getExpenses({
     status,
     categoryId,
     employeeId,
@@ -48,11 +48,13 @@ export const GET = withFailureInjection(async (request: NextRequest) => {
   });
 
   // Populate relations
-  const data = expenses.map((expense) => ({
-    ...expense,
-    employee: repo.getEmployee(expense.employeeId),
-    category: repo.getCategory(expense.categoryId),
-  }));
+  const data = await Promise.all(
+    expenses.map(async (expense) => ({
+      ...expense,
+      employee: await repo.getEmployee(expense.employeeId),
+      category: await repo.getCategory(expense.categoryId),
+    }))
+  );
 
   log.debug({ count: data.length, total }, 'GET /api/expenses response');
 
@@ -87,7 +89,7 @@ export const POST = withFailureInjection(async (request: NextRequest) => {
       );
     }
 
-    const expense = repo.createExpense({
+    const expense = await repo.createExpense({
       employeeId,
       categoryId,
       amount: Number(amount),

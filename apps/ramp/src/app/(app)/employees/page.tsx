@@ -164,7 +164,11 @@ function EmployeesContent() {
     <div className="space-y-4 p-4 md:p-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryTile label="Visible employees" value={filtered.length.toString()} />
-        <SummaryTile label="Approved spend" value={formatCurrency(totalApproved)} />
+        <SummaryTile
+          label="Approved spend"
+          value={formatCurrency(totalApproved)}
+          valueClassName="financial-amount"
+        />
         <SummaryTile label="Pending items" value={totalPending.toString()} />
         <SummaryTile label="Receipt coverage" value={`${avgReceiptCoverage}%`} />
       </div>
@@ -177,7 +181,7 @@ function EmployeesContent() {
               placeholder="Search employees..."
               value={filters.search}
               onChange={(event) => setFilters({ search: (event.target as HTMLInputElement).value })}
-              className="pl-9"
+              className="sensitive-form-field pl-9"
             />
           </div>
           <Select
@@ -238,11 +242,19 @@ function EmployeesContent() {
   );
 }
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
+function SummaryTile({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
   return (
     <div className="rounded-lg border bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
+      <p className={cn('mt-1 text-xl font-semibold tabular-nums', valueClassName)}>{value}</p>
     </div>
   );
 }
@@ -272,14 +284,24 @@ function EmployeeCards({ employees }: { employees: EmployeeSpendSummary[] }) {
             </CardHeader>
             <CardPanel className="space-y-4 p-4">
               <div className="grid grid-cols-3 gap-3">
-                <Stat label="Approved" value={formatCurrency(employee.approvedSpend)} />
+                <Stat
+                  label="Approved"
+                  value={formatCurrency(employee.approvedSpend)}
+                  valueClassName="financial-amount"
+                />
                 <Stat label="Pending" value={employee.pendingCount.toString()} />
-                <Stat label="Average" value={formatCurrency(employee.avgExpense)} />
+                <Stat
+                  label="Average"
+                  value={formatCurrency(employee.avgExpense)}
+                  valueClassName="financial-amount"
+                />
               </div>
               <div className="flex items-center justify-between gap-3 border-t pt-3">
                 <div className="min-w-0">
-                  <p className="truncate text-xs text-muted-foreground">{employee.email}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="employee-email truncate text-xs text-muted-foreground">
+                    {employee.email}
+                  </p>
+                  <p className="sensitive-data mt-1 text-xs text-muted-foreground">
                     {employee.lastExpenseDate
                       ? `Last spend ${formatDate(employee.lastExpenseDate, 'MMM d')}`
                       : 'No spend yet'}
@@ -323,7 +345,9 @@ function EmployeesTable({ employees }: { employees: EmployeeSpendSummary[] }) {
                   />
                   <div className="min-w-0">
                     <p className="employee-name truncate font-medium">{employee.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{employee.email}</p>
+                    <p className="employee-email truncate text-xs text-muted-foreground">
+                      {employee.email}
+                    </p>
                   </div>
                 </div>
               </TableCell>
@@ -347,7 +371,7 @@ function EmployeesTable({ employees }: { employees: EmployeeSpendSummary[] }) {
                   {employee.pendingCount}
                 </Badge>
               </TableCell>
-              <TableCell className="hidden md:table-cell text-right text-muted-foreground">
+              <TableCell className="financial-amount hidden md:table-cell text-right text-muted-foreground">
                 {formatCurrency(employee.avgExpense)}
               </TableCell>
               <TableCell>
@@ -368,11 +392,21 @@ function EmployeesTable({ employees }: { employees: EmployeeSpendSummary[] }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
   return (
     <div className="min-w-0">
       <p className="truncate text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 truncate text-sm font-semibold tabular-nums">{value}</p>
+      <p className={cn('mt-1 truncate text-sm font-semibold tabular-nums', valueClassName)}>
+        {value}
+      </p>
     </div>
   );
 }

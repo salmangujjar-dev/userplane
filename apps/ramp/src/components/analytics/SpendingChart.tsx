@@ -68,7 +68,7 @@ export function SpendingChart({ expenses, days }: SpendingChartProps) {
   }, [expenses, days]);
 
   return (
-    <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+    <ChartContainer config={chartConfig} className="financial-amount min-h-[300px] w-full">
       <AreaChart data={data} accessibilityLayer>
         <defs>
           <linearGradient id="fillTotal" x1="0" y1="0" x2="0" y2="1">
@@ -95,7 +95,7 @@ export function SpendingChart({ expenses, days }: SpendingChartProps) {
             <ChartTooltipContent
               labelFormatter={(label) => label}
               formatter={(value) => (
-                <div className="flex min-w-[120px] items-center gap-2 text-xs">
+                <div className="financial-amount flex min-w-[120px] items-center gap-2 text-xs">
                   <div
                     className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
                     style={{ backgroundColor: 'var(--color-total)' }}

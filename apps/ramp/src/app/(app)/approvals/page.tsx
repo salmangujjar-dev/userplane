@@ -38,7 +38,7 @@ import { api } from '@/lib/api/client';
 import { log } from '@/lib/client-logger';
 import { deriveApprovalQueue, type RiskLevel } from '@/lib/data/mock-finance';
 import { isFailureActive } from '@/lib/feature-flags';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
 const riskLabels: Record<string, string> = {
   all: 'All Risk',
@@ -144,7 +144,11 @@ export default function ApprovalsPage() {
   return (
     <div className="space-y-4 p-4 md:p-6">
       <div className="grid gap-3 sm:grid-cols-3">
-        <SummaryTile label="Pending amount" value={formatCurrency(pendingAmount)} />
+        <SummaryTile
+          label="Pending amount"
+          value={formatCurrency(pendingAmount)}
+          valueClassName="financial-amount"
+        />
         <SummaryTile label="High-risk items" value={highRiskCount.toString()} />
         <SummaryTile label="Aging over 7d" value={agingCount.toString()} />
       </div>
@@ -157,7 +161,7 @@ export default function ApprovalsPage() {
               placeholder="Search approvals..."
               value={search}
               onChange={(event) => setSearch((event.target as HTMLInputElement).value)}
-              className="pl-9"
+              className="sensitive-form-field pl-9"
             />
           </div>
           <Select value={risk} onValueChange={(value) => setRisk(value as string)}>
@@ -231,12 +235,13 @@ export default function ApprovalsPage() {
                       <div className="min-w-0">
                         <Link
                           href={`/expenses/${expense.id}`}
-                          className="truncate font-medium hover:underline"
+                          className="merchant-name truncate font-medium hover:underline"
                         >
                           {expense.merchant}
                         </Link>
                         <p className="max-w-[260px] truncate text-xs text-muted-foreground">
-                          {expense.description} · {formatDate(expense.date)}
+                          <span className="expense-description">{expense.description}</span> ·{' '}
+                          <span className="sensitive-data">{formatDate(expense.date)}</span>
                         </p>
                       </div>
                     </TableCell>
@@ -312,11 +317,19 @@ function ApprovalsChaosFailure(): never {
   throw new Error('Approval queue renderer failed while reconciling pending expenses.');
 }
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
+function SummaryTile({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
   return (
     <div className="rounded-lg border bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
+      <p className={cn('mt-1 text-xl font-semibold tabular-nums', valueClassName)}>{value}</p>
     </div>
   );
 }

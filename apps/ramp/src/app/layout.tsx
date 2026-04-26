@@ -16,6 +16,21 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const USERPLANE_BLUR_SELECTORS = [
+  '.sensitive-data',
+  '.sensitive-form-field',
+  '.expense-amount',
+  '.financial-amount',
+  '.expense-description',
+  '.merchant-name',
+  '.vendor-name',
+  '.employee-name',
+  '.employee-email',
+  '.card-data',
+  '.receipt-data',
+  '.company-name',
+].join(', ');
+
 export const metadata: Metadata = {
   title: 'Ramp - Expense Management',
   description: 'Corporate spend, cards, approvals, vendors, and analytics in one Ramp workspace.',
@@ -41,8 +56,7 @@ export const metadata: Metadata = {
   other: {
     // Userplane configuration meta tags
     'userplane:workspace': 'ws_cyqt7SPbjszW',
-    'userplane:blur':
-      '.expense-amount, .expense-description, .employee-name, .employee-email, .company-name',
+    'userplane:blur': USERPLANE_BLUR_SELECTORS,
   },
 };
 

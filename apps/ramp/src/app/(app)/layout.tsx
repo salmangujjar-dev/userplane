@@ -6,19 +6,17 @@ import { IntercomProvider } from '@/components/providers/IntercomProvider';
 import { type UserIdentity, UserplaneProvider } from '@/components/providers/UserplaneProvider';
 import { ZendeskProvider } from '@/components/providers/ZendeskProvider';
 import { auth } from '@/lib/auth';
-import {
-  getOverridesMap,
-  getVariantOverridesMap,
-  loadAndApplyOverrides,
-} from '@/lib/feature-flag-service';
+import { loadAndApplyOverrides } from '@/lib/feature-flag-service';
 import { getVariantValue } from '@/lib/feature-flags';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  loadAndApplyOverrides();
-  const overrides = getOverridesMap();
-  const variantOverrides = getVariantOverridesMap();
-
-  const session = await auth.api.getSession({ headers: await headers() });
+  const sessionPromise = headers().then((requestHeaders) =>
+    auth.api.getSession({ headers: requestHeaders })
+  );
+  const [{ overrides, variantOverrides }, session] = await Promise.all([
+    loadAndApplyOverrides(),
+    sessionPromise,
+  ]);
 
   const workspaceId = process.env.NEXT_PUBLIC_USERPLANE_WORKSPACE_ID!;
   const intercomAppId = process.env.NEXT_PUBLIC_INTERCOM_APP_ID!;

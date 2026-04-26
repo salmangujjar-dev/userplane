@@ -24,7 +24,7 @@ export const GET = withFailureInjection(async () => {
     );
   }
 
-  const data = repo.getCategories();
+  const data = await repo.getCategories();
   log.debug({ count: data.length }, 'GET /api/categories response');
   return NextResponse.json({ success: true, data });
 });

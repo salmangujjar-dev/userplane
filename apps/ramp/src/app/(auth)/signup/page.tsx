@@ -67,6 +67,7 @@ export default function SignupPage() {
             placeholder="Your name"
             value={name}
             onChange={(e) => setName((e.target as HTMLInputElement).value)}
+            className="sensitive-form-field employee-name"
             required
             autoComplete="name"
           />
@@ -79,6 +80,7 @@ export default function SignupPage() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail((e.target as HTMLInputElement).value)}
+            className="sensitive-form-field employee-email"
             required
             autoComplete="email"
           />
@@ -91,6 +93,7 @@ export default function SignupPage() {
             placeholder="Create a password"
             value={password}
             onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
+            className="sensitive-form-field"
             required
             autoComplete="new-password"
           />

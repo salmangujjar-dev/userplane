@@ -20,7 +20,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  setOverride(flag as FeatureFlag, body.value);
+  await setOverride(flag as FeatureFlag, body.value);
   return NextResponse.json({ success: true, data: getRuntimeFlags() });
 }
 
@@ -31,6 +31,6 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     return NextResponse.json({ success: false, error: `Unknown flag: ${flag}` }, { status: 404 });
   }
 
-  clearOverride(flag as FeatureFlag);
+  await clearOverride(flag as FeatureFlag);
   return NextResponse.json({ success: true, data: getRuntimeFlags() });
 }

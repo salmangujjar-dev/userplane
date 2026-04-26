@@ -3,53 +3,53 @@ import { and, asc, count, desc, eq, like, or, sql } from 'drizzle-orm';
 import { db } from './client';
 import { cards, categories, departmentBudgets, employees, expenses, vendors } from './schema';
 
-export function getEmployees() {
+export async function getEmployees() {
   return db.select().from(employees).all();
 }
 
-export function getEmployee(id: string) {
-  return db.select().from(employees).where(eq(employees.id, id)).get() ?? null;
+export async function getEmployee(id: string) {
+  return (await db.select().from(employees).where(eq(employees.id, id)).get()) ?? null;
 }
 
-export function getCategories() {
+export async function getCategories() {
   return db.select().from(categories).all();
 }
 
-export function getCategory(id: string) {
-  return db.select().from(categories).where(eq(categories.id, id)).get() ?? null;
+export async function getCategory(id: string) {
+  return (await db.select().from(categories).where(eq(categories.id, id)).get()) ?? null;
 }
 
-export function getCards() {
-  return db
-    .select()
-    .from(cards)
-    .all()
-    .map((card) => ({
+export async function getCards() {
+  const rows = await db.select().from(cards).all();
+
+  return Promise.all(
+    rows.map(async (card) => ({
       ...card,
-      employee: getEmployee(card.employeeId)!,
-    }));
+      employee: (await getEmployee(card.employeeId))!,
+    }))
+  );
 }
 
-export function getVendors() {
-  return db
-    .select()
-    .from(vendors)
-    .all()
-    .map((vendor) => ({
+export async function getVendors() {
+  const rows = await db.select().from(vendors).all();
+
+  return Promise.all(
+    rows.map(async (vendor) => ({
       ...vendor,
-      category: getCategory(vendor.categoryId)!,
-    }));
+      category: (await getCategory(vendor.categoryId))!,
+    }))
+  );
 }
 
-export function getDepartmentBudgets() {
+export async function getDepartmentBudgets() {
   return db.select().from(departmentBudgets).all();
 }
 
-export function getExpense(id: string) {
-  return db.select().from(expenses).where(eq(expenses.id, id)).get() ?? null;
+export async function getExpense(id: string) {
+  return (await db.select().from(expenses).where(eq(expenses.id, id)).get()) ?? null;
 }
 
-export function createExpense(data: {
+export async function createExpense(data: {
   employeeId: string;
   categoryId: string;
   amount: number;
@@ -62,7 +62,8 @@ export function createExpense(data: {
   const id = `exp_${Date.now().toString(16)}`;
   const submittedAt = new Date().toISOString();
 
-  db.insert(expenses)
+  await db
+    .insert(expenses)
     .values({
       id,
       employeeId: data.employeeId,
@@ -78,10 +79,10 @@ export function createExpense(data: {
     })
     .run();
 
-  return getExpense(id)!;
+  return (await getExpense(id))!;
 }
 
-export function updateExpense(
+export async function updateExpense(
   id: string,
   data: Partial<{
     employeeId: string;
@@ -96,15 +97,15 @@ export function updateExpense(
     receiptUrl: string | null;
   }>
 ) {
-  const existing = getExpense(id);
+  const existing = await getExpense(id);
   if (!existing) return null;
 
-  db.update(expenses).set(data).where(eq(expenses.id, id)).run();
+  await db.update(expenses).set(data).where(eq(expenses.id, id)).run();
 
-  return getExpense(id)!;
+  return (await getExpense(id))!;
 }
 
-export function getExpenses(filters?: {
+export async function getExpenses(filters?: {
   status?: string;
   categoryId?: string;
   employeeId?: string;
@@ -143,7 +144,7 @@ export function getExpenses(filters?: {
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
   // Count query
-  const countResult = db.select({ total: count() }).from(expenses).where(where).get();
+  const countResult = await db.select({ total: count() }).from(expenses).where(where).get();
   const total = countResult?.total ?? 0;
 
   // Sort
@@ -185,7 +186,7 @@ export function getExpenses(filters?: {
     query = query.limit(pageSize).offset(page * pageSize);
   }
 
-  const data = query.all();
+  const data = await query.all();
 
   return { data, total };
 }

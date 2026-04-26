@@ -24,7 +24,7 @@ export const GET = withFailureInjection(async () => {
     );
   }
 
-  const data = repo.getEmployees();
+  const data = await repo.getEmployees();
   log.debug({ count: data.length }, 'GET /api/employees response');
   return NextResponse.json({ success: true, data });
 });
