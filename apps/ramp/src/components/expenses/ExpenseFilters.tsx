@@ -62,7 +62,7 @@ export function ExpenseFilters({
           placeholder="Search expenses..."
           value={search}
           onChange={(e) => onSearchChange((e.target as HTMLInputElement).value)}
-          className="pl-9"
+          className="sensitive-form-field pl-9"
         />
       </div>
 
@@ -97,7 +97,7 @@ export function ExpenseFilters({
       </Select>
 
       <Select value={employeeId} onValueChange={(val) => onEmployeeChange(val as string)}>
-        <SelectTrigger className="w-full sm:w-48">
+        <SelectTrigger className="sensitive-form-field w-full sm:w-48">
           <SelectValue placeholder="All Employees">
             {() => getEmployeeLabel(employeeId)}
           </SelectValue>
@@ -105,7 +105,7 @@ export function ExpenseFilters({
         <SelectPopup>
           <SelectItem value="all">All Employees</SelectItem>
           {employees.map((emp) => (
-            <SelectItem key={emp.id} value={emp.id}>
+            <SelectItem key={emp.id} value={emp.id} className="employee-name">
               {emp.name}
             </SelectItem>
           ))}

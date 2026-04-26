@@ -8,9 +8,18 @@ interface MetricCardProps {
   value: string;
   trend?: { value: string; positive: boolean };
   icon?: React.ReactNode;
+  valueClassName?: string;
+  trendClassName?: string;
 }
 
-export function MetricCard({ title, value, trend, icon }: MetricCardProps) {
+export function MetricCard({
+  title,
+  value,
+  trend,
+  icon,
+  valueClassName,
+  trendClassName,
+}: MetricCardProps) {
   return (
     <Card className="gap-0 rounded-lg py-0">
       <CardPanel className="p-4">
@@ -22,12 +31,13 @@ export function MetricCard({ title, value, trend, icon }: MetricCardProps) {
             </div>
           )}
         </div>
-        <p className="mt-1 text-2xl font-bold tracking-tight">{value}</p>
+        <p className={cn('mt-1 text-2xl font-bold tracking-tight', valueClassName)}>{value}</p>
         {trend && (
           <p
             className={cn(
               'mt-2 flex items-center gap-1 text-xs',
-              trend.positive ? 'text-success-foreground' : 'text-destructive-foreground'
+              trend.positive ? 'text-success-foreground' : 'text-destructive-foreground',
+              trendClassName
             )}
           >
             {trend.positive ? (

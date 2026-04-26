@@ -36,7 +36,7 @@ import { useExpenses } from '@/hooks/useExpenses';
 import { useVendors } from '@/hooks/useVendors';
 import { deriveVendorSummaries } from '@/lib/data/mock-finance';
 import { isFailureActive } from '@/lib/feature-flags';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
 const signalLabels: Record<string, string> = {
   all: 'All Signals',
@@ -98,7 +98,11 @@ export default function VendorsPage() {
   return (
     <div className="space-y-4 p-4 md:p-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryTile label="Visible spend" value={formatCurrency(totalSpend)} />
+        <SummaryTile
+          label="Visible spend"
+          value={formatCurrency(totalSpend)}
+          valueClassName="financial-amount"
+        />
         <SummaryTile label="Vendors" value={filtered.length.toString()} />
         <SummaryTile label="Recurring" value={recurringCount.toString()} />
         <SummaryTile label="Review signals" value={reviewCount.toString()} />
@@ -112,7 +116,7 @@ export default function VendorsPage() {
               placeholder="Search vendors..."
               value={search}
               onChange={(event) => setSearch((event.target as HTMLInputElement).value)}
-              className="pl-9"
+              className="sensitive-form-field pl-9"
             />
           </div>
           <Select value={categoryId} onValueChange={(value) => setCategoryId(value as string)}>
@@ -183,10 +187,12 @@ export default function VendorsPage() {
                 <TableRow key={vendor.merchant}>
                   <TableCell>
                     <div className="min-w-0">
-                      <p className="truncate font-medium">{vendor.merchant}</p>
+                      <p className="vendor-name truncate font-medium">{vendor.merchant}</p>
                       <p className="truncate text-xs text-muted-foreground">
                         {vendor.employeeCount} employees · avg{' '}
-                        {formatCurrency(vendor.averageAmount)}
+                        <span className="financial-amount">
+                          {formatCurrency(vendor.averageAmount)}
+                        </span>
                       </p>
                     </div>
                   </TableCell>
@@ -221,7 +227,7 @@ export default function VendorsPage() {
                       </Badge>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell text-muted-foreground">
+                  <TableCell className="sensitive-data hidden lg:table-cell text-muted-foreground">
                     {vendor.lastChargeDate ? formatDate(vendor.lastChargeDate) : 'No charges'}
                   </TableCell>
                   <TableCell>
@@ -250,11 +256,19 @@ function VendorsChaosFailure(): never {
   throw new Error('Vendor directory failed during procurement signal merge.');
 }
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
+function SummaryTile({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
   return (
     <div className="rounded-lg border bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
+      <p className={cn('mt-1 text-xl font-semibold tabular-nums', valueClassName)}>{value}</p>
     </div>
   );
 }

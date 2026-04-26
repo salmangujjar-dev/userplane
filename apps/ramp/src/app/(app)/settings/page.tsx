@@ -158,8 +158,8 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4">
             <BoringAvatar size={48} name={userName} variant="beam" colors={AVATAR_COLORS} />
             <div className="min-w-0">
-              <p className="font-medium truncate">{userName}</p>
-              <p className="text-sm text-muted-foreground truncate">{userEmail}</p>
+              <p className="employee-name font-medium truncate">{userName}</p>
+              <p className="employee-email text-sm text-muted-foreground truncate">{userEmail}</p>
             </div>
           </div>
           <form onSubmit={handleUpdateProfile} className="space-y-4 max-w-md">
@@ -170,12 +170,18 @@ export default function SettingsPage() {
                 value={name}
                 onChange={(e) => setName((e.target as HTMLInputElement).value)}
                 placeholder="Your name"
+                className="sensitive-form-field employee-name"
                 required
               />
             </Field>
             <Field>
               <FieldLabel>Email</FieldLabel>
-              <Input type="email" value={userEmail} disabled />
+              <Input
+                type="email"
+                value={userEmail}
+                className="sensitive-form-field employee-email"
+                disabled
+              />
             </Field>
             <div>
               <Button
@@ -207,6 +213,7 @@ export default function SettingsPage() {
               value={currentPassword}
               onChange={(e) => setCurrentPassword((e.target as HTMLInputElement).value)}
               placeholder="Enter current password"
+              className="sensitive-form-field"
               required
               autoComplete="current-password"
             />
@@ -218,6 +225,7 @@ export default function SettingsPage() {
               value={newPassword}
               onChange={(e) => setNewPassword((e.target as HTMLInputElement).value)}
               placeholder="Enter new password"
+              className="sensitive-form-field"
               required
               autoComplete="new-password"
             />
@@ -229,6 +237,7 @@ export default function SettingsPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword((e.target as HTMLInputElement).value)}
               placeholder="Confirm new password"
+              className="sensitive-form-field"
               required
               autoComplete="new-password"
             />

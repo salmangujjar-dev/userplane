@@ -108,12 +108,14 @@ export default function DashboardPage() {
           value={formatCurrency(finance.metrics.periodSpend)}
           trend={{ value: `${finance.metrics.budgetUtilization}% budget used`, positive: true }}
           icon={<DollarSignIcon className="size-4" />}
+          valueClassName="financial-amount"
         />
         <MetricCard
           title="Awaiting approval"
           value={formatCurrency(finance.metrics.pendingSpend)}
           trend={{ value: `${finance.metrics.pendingCount} expenses`, positive: false }}
           icon={<ClockIcon className="size-4" />}
+          valueClassName="financial-amount"
         />
         <MetricCard
           title="Active cards"
@@ -167,13 +169,16 @@ export default function DashboardPage() {
                   <ClockIcon className="size-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{item.expense.merchant}</p>
+                  <p className="merchant-name truncate text-sm font-medium">
+                    {item.expense.merchant}
+                  </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {item.expense.employee?.name} · {item.policyNote}
+                    <span className="employee-name">{item.expense.employee?.name}</span> ·{' '}
+                    {item.policyNote}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium tabular-nums">
+                  <p className="financial-amount text-sm font-medium tabular-nums">
                     {formatCurrency(item.expense.amount)}
                   </p>
                   <Badge size="sm" variant={item.riskLevel === 'high' ? 'warning' : 'secondary'}>
@@ -198,12 +203,12 @@ export default function DashboardPage() {
             {finance.vendors.slice(0, 5).map((vendor) => (
               <div key={vendor.merchant} className="flex items-center gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{vendor.merchant}</p>
+                  <p className="vendor-name truncate text-sm font-medium">{vendor.merchant}</p>
                   <p className="text-xs text-muted-foreground">
                     {vendor.transactionCount} transactions · {vendor.savingsOpportunity}
                   </p>
                 </div>
-                <p className="text-sm font-medium tabular-nums">
+                <p className="financial-amount text-sm font-medium tabular-nums">
                   {formatCurrency(vendor.totalSpend)}
                 </p>
               </div>
@@ -251,12 +256,15 @@ export default function DashboardPage() {
                 className="flex items-center justify-between gap-3 rounded-md p-1.5 hover:bg-muted"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{expense.merchant}</p>
+                  <p className="merchant-name truncate text-sm font-medium">{expense.merchant}</p>
                   <p className="text-xs text-muted-foreground">
-                    Missing receipt · {formatDate(expense.date)}
+                    Missing receipt ·{' '}
+                    <span className="sensitive-data">{formatDate(expense.date)}</span>
                   </p>
                 </div>
-                <p className="text-sm font-medium tabular-nums">{formatCurrency(expense.amount)}</p>
+                <p className="financial-amount text-sm font-medium tabular-nums">
+                  {formatCurrency(expense.amount)}
+                </p>
               </Link>
             ))}
             {finance.receiptExceptions.length === 0 && (

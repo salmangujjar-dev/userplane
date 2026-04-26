@@ -68,14 +68,14 @@ export function CategoryBreakdown({ expenses }: CategoryBreakdownProps) {
       <div className="shrink-0">
         <ChartContainer
           config={chartConfig}
-          className="min-h-[260px] w-[260px] sm:min-h-[300px] sm:w-[300px]"
+          className="financial-amount min-h-[260px] w-[260px] sm:min-h-[300px] sm:w-[300px]"
         >
           <PieChart>
             <ChartTooltip
               content={
                 <ChartTooltipContent
                   formatter={(value, name) => (
-                    <div className="flex min-w-[140px] items-center gap-2 text-xs">
+                    <div className="financial-amount flex min-w-[140px] items-center gap-2 text-xs">
                       <div
                         className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
                         style={{ backgroundColor: chartConfig[name as string]?.color }}
@@ -149,7 +149,7 @@ export function CategoryBreakdown({ expenses }: CategoryBreakdownProps) {
             <span className="text-muted-foreground text-xs tabular-nums shrink-0">
               {total > 0 ? `${((item.value / total) * 100).toFixed(1)}%` : '0%'}
             </span>
-            <span className="font-medium tabular-nums shrink-0 text-right min-w-20">
+            <span className="financial-amount font-medium tabular-nums shrink-0 text-right min-w-20">
               {formatCurrency(item.value)}
             </span>
           </div>

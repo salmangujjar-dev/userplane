@@ -29,13 +29,13 @@ export const POST = withFailureInjection(
       );
     }
 
-    const expense = repo.getExpense(id);
+    const expense = await repo.getExpense(id);
     if (!expense) {
       log.debug({ id }, 'POST /api/expenses/[id]/reject not found');
       return NextResponse.json({ success: false, error: 'Expense not found' }, { status: 404 });
     }
 
-    const updated = repo.updateExpense(id, { status: 'rejected' });
+    const updated = await repo.updateExpense(id, { status: 'rejected' });
     log.debug({ id, previousStatus: expense.status }, 'expense rejected');
     return NextResponse.json({ success: true, data: updated });
   }

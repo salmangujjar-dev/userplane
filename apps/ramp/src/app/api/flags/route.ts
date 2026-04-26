@@ -14,8 +14,8 @@ function getResponseData() {
   return { flags: getRuntimeFlags(), variants: getRuntimeVariants() };
 }
 
-export function GET() {
-  loadAndApplyOverrides();
+export async function GET() {
+  await loadAndApplyOverrides();
   return NextResponse.json({ success: true, data: getResponseData() });
 }
 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
 
   if (body.action === 'reset-all') {
-    clearAllOverrides();
+    await clearAllOverrides();
     return NextResponse.json({ success: true, data: getResponseData() });
   }
 
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    setOverrides(validOverrides, validVariantOverrides);
+    await setOverrides(validOverrides, validVariantOverrides);
     return NextResponse.json({ success: true, data: getResponseData() });
   }
 

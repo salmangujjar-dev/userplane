@@ -23,7 +23,7 @@ export const GET = withFailureInjection(async () => {
     );
   }
 
-  const data = repo.getDepartmentBudgets();
+  const data = await repo.getDepartmentBudgets();
   log.debug({ count: data.length }, 'GET /api/budgets response');
   return NextResponse.json({ success: true, data });
 });

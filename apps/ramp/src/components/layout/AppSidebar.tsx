@@ -118,8 +118,8 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
               <BoringAvatar size={32} name={userName} variant="beam" colors={AVATAR_COLORS} />
             </div>
             <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-medium leading-tight truncate">{userName}</p>
-              <p className="text-xs text-sidebar-foreground/50 leading-tight truncate">
+              <p className="employee-name text-sm font-medium leading-tight truncate">{userName}</p>
+              <p className="employee-email text-xs text-sidebar-foreground/50 leading-tight truncate">
                 {userEmail}
               </p>
             </div>

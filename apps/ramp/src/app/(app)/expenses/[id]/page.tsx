@@ -136,7 +136,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <h2 className="text-3xl font-bold">{formatCurrency(expense.amount)}</h2>
+            <h2 className="expense-amount text-3xl font-bold">{formatCurrency(expense.amount)}</h2>
             <ExpenseStatusBadge status={expense.status} />
           </div>
           <div className="flex gap-2">
@@ -181,7 +181,7 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
               <dl className="space-y-4">
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground text-sm">Employee</dt>
-                  <dd className="flex items-center gap-2 text-sm font-medium">
+                  <dd className="employee-name flex items-center gap-2 text-sm font-medium">
                     <BoringAvatar
                       size={20}
                       name={expense.employee?.name ?? '?'}
@@ -197,15 +197,15 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground text-sm">Merchant</dt>
-                  <dd className="text-sm font-medium">{expense.merchant}</dd>
+                  <dd className="merchant-name text-sm font-medium">{expense.merchant}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground text-sm">Expense Date</dt>
-                  <dd className="text-sm font-medium">{formatDate(expense.date)}</dd>
+                  <dd className="sensitive-data text-sm font-medium">{formatDate(expense.date)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground text-sm">Submitted</dt>
-                  <dd className="text-sm font-medium">
+                  <dd className="sensitive-data text-sm font-medium">
                     {formatDate(expense.submittedAt, 'MMM d, yyyy h:mm a')}
                   </dd>
                 </div>
@@ -220,11 +220,11 @@ export default function ExpenseDetailPage({ params }: { params: Promise<{ id: st
                 <CardTitle>Description</CardTitle>
               </CardHeader>
               <CardPanel>
-                <p className="text-sm">{expense.description}</p>
+                <p className="expense-description text-sm">{expense.description}</p>
                 {expense.notes && (
                   <div className="mt-4">
                     <p className="text-xs font-medium text-muted-foreground mb-1">Notes</p>
-                    <p className="text-sm">{expense.notes}</p>
+                    <p className="expense-description text-sm">{expense.notes}</p>
                   </div>
                 )}
               </CardPanel>

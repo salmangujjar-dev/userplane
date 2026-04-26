@@ -65,6 +65,7 @@ export default function LoginPage() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail((e.target as HTMLInputElement).value)}
+            className="sensitive-form-field employee-email"
             required
             autoComplete="email"
           />
@@ -77,6 +78,7 @@ export default function LoginPage() {
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
+            className="sensitive-form-field"
             required
             autoComplete="current-password"
           />

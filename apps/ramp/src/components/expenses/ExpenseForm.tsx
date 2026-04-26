@@ -332,14 +332,14 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isSubmitting }: Expen
       <div className="space-y-2">
         <Label>Employee</Label>
         <Select value={employeeId} onValueChange={(val) => setEmployeeId(val as string)} required>
-          <SelectTrigger>
+          <SelectTrigger className="sensitive-form-field">
             <SelectValue placeholder="Select employee">
               {() => getEmployeeName(employeeId)}
             </SelectValue>
           </SelectTrigger>
           <SelectPopup>
             {employees.map((emp) => (
-              <SelectItem key={emp.id} value={emp.id}>
+              <SelectItem key={emp.id} value={emp.id} className="employee-name">
                 {emp.name}
               </SelectItem>
             ))}
@@ -375,6 +375,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isSubmitting }: Expen
             placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount((e.target as HTMLInputElement).value)}
+            className="sensitive-form-field financial-amount"
             required
           />
         </div>
@@ -384,6 +385,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isSubmitting }: Expen
             type="date"
             value={date}
             onChange={(e) => setDate((e.target as HTMLInputElement).value)}
+            className="sensitive-form-field"
             required
           />
         </div>
@@ -395,6 +397,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isSubmitting }: Expen
           placeholder="e.g. United Airlines"
           value={merchant}
           onChange={(e) => setMerchant((e.target as HTMLInputElement).value)}
+          className="sensitive-form-field merchant-name"
           required
         />
       </div>
@@ -405,6 +408,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isSubmitting }: Expen
           placeholder="Brief description of expense"
           value={description}
           onChange={(e) => setDescription((e.target as HTMLInputElement).value)}
+          className="sensitive-form-field expense-description"
           required
         />
       </div>
@@ -415,6 +419,7 @@ export function ExpenseForm({ expense, onSubmit, onCancel, isSubmitting }: Expen
           placeholder="Additional notes..."
           value={notes}
           onChange={(e) => setNotes((e.target as HTMLTextAreaElement).value)}
+          className="sensitive-form-field expense-description"
         />
       </div>
 
