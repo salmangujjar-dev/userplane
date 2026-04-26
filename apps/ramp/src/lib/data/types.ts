@@ -1,4 +1,7 @@
 export type ExpenseStatus = 'pending' | 'approved' | 'rejected';
+export type CardStatus = 'active' | 'locked' | 'review';
+export type CardType = 'virtual' | 'physical';
+export type VendorStatus = 'active' | 'review' | 'monitor';
 
 export interface Employee {
   id: string;
@@ -32,4 +35,41 @@ export interface Expense {
 export interface ExpenseWithRelations extends Expense {
   employee: Employee;
   category: Category;
+}
+
+export interface CorporateCard {
+  id: string;
+  employeeId: string;
+  type: CardType;
+  status: CardStatus;
+  monthlyLimit: number;
+  controlsLabel: string;
+  issuedAt: string;
+  lastFour: string;
+}
+
+export interface CorporateCardWithEmployee extends CorporateCard {
+  employee: Employee;
+}
+
+export interface Vendor {
+  id: string;
+  merchant: string;
+  categoryId: string;
+  recurring: boolean;
+  savingsOpportunity: string;
+  ownerDepartment: string;
+  status: VendorStatus;
+}
+
+export interface VendorWithCategory extends Vendor {
+  category: Category;
+}
+
+export interface DepartmentBudget {
+  id: string;
+  department: string;
+  monthlyBudget: number;
+  ownerEmail: string;
+  resetCadence: 'monthly';
 }

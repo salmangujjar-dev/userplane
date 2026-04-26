@@ -33,7 +33,7 @@ export async function GET() {
       user_id: user.id,
       email: user.email,
       name: user.name,
-      company: process.env.NEXT_PUBLIC_DEMO_USER_COMPANY ?? 'Spense',
+      company: process.env.NEXT_PUBLIC_RAMP_COMPANY_NAME ?? 'Spense',
       created_at: user.createdAt
         ? Math.floor(new Date(user.createdAt).getTime() / 1000)
         : undefined,

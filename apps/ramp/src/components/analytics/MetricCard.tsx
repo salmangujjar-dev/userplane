@@ -10,11 +10,18 @@ interface MetricCardProps {
   icon?: React.ReactNode;
 }
 
-export function MetricCard({ title, value, trend }: MetricCardProps) {
+export function MetricCard({ title, value, trend, icon }: MetricCardProps) {
   return (
-    <Card>
-      <CardPanel>
-        <p className="text-sm text-muted-foreground">{title}</p>
+    <Card className="gap-0 rounded-lg py-0">
+      <CardPanel className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm text-muted-foreground">{title}</p>
+          {icon && (
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              {icon}
+            </div>
+          )}
+        </div>
         <p className="mt-1 text-2xl font-bold tracking-tight">{value}</p>
         {trend && (
           <p

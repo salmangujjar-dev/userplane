@@ -73,6 +73,15 @@ export const api = {
   categories: {
     list: () => request<unknown[]>('/categories'),
   },
+  cards: {
+    list: () => request<unknown[]>('/cards'),
+  },
+  vendors: {
+    list: () => request<unknown[]>('/vendors'),
+  },
+  budgets: {
+    list: () => request<unknown[]>('/budgets'),
+  },
 };
 
 // SWR fetcher — returns `any` to satisfy SWR generic type inference

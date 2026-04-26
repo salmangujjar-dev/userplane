@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     user_id: session?.user?.id ?? '',
     user_name: session?.user?.name ?? '',
     user_email: session?.user?.email ?? '',
-    user_company: process.env.NEXT_PUBLIC_DEMO_USER_COMPANY ?? 'Spense',
+    user_company: process.env.NEXT_PUBLIC_RAMP_COMPANY_NAME ?? 'Spense',
     user_created_at: session?.user?.createdAt
       ? String(Math.floor(new Date(session.user.createdAt).getTime() / 1000))
       : '',

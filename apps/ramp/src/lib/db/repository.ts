@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, like, or, sql } from 'drizzle-orm';
 
 import { db } from './client';
-import { categories, employees, expenses } from './schema';
+import { cards, categories, departmentBudgets, employees, expenses, vendors } from './schema';
 
 export function getEmployees() {
   return db.select().from(employees).all();
@@ -17,6 +17,32 @@ export function getCategories() {
 
 export function getCategory(id: string) {
   return db.select().from(categories).where(eq(categories.id, id)).get() ?? null;
+}
+
+export function getCards() {
+  return db
+    .select()
+    .from(cards)
+    .all()
+    .map((card) => ({
+      ...card,
+      employee: getEmployee(card.employeeId)!,
+    }));
+}
+
+export function getVendors() {
+  return db
+    .select()
+    .from(vendors)
+    .all()
+    .map((vendor) => ({
+      ...vendor,
+      category: getCategory(vendor.categoryId)!,
+    }));
+}
+
+export function getDepartmentBudgets() {
+  return db.select().from(departmentBudgets).all();
 }
 
 export function getExpense(id: string) {
