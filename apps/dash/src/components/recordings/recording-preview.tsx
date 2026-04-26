@@ -1,7 +1,7 @@
 'use client';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
-import { Clock, Link2, Play } from 'lucide-react';
+import { Link2, Play } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -35,7 +35,6 @@ interface RecordingPreviewProps {
   onClick?: () => void;
   createdBy: string;
   createdAt: Date;
-  expiresAt: Date | null;
   durationMs: number | null;
   thumbnailUrl: string | null;
 }
@@ -45,7 +44,6 @@ export function RecordingPreview({
   onClick,
   createdBy,
   createdAt,
-  expiresAt,
   durationMs,
   thumbnailUrl,
 }: RecordingPreviewProps) {
@@ -86,11 +84,6 @@ export function RecordingPreview({
       showCopyFailedToast();
     }
   };
-
-  const isExpiringSoon =
-    expiresAt &&
-    expiresAt.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 &&
-    expiresAt.getTime() > Date.now();
 
   const showFallback = !thumbnailUrl || imageError;
   const staticImageUrl = thumbnailUrl || '';
@@ -140,19 +133,6 @@ export function RecordingPreview({
               <p>Copy link</p>
             </TooltipContent>
           </Tooltip>
-          {isExpiringSoon && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="absolute bottom-3 left-3 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
-                  <Clock className="h-3 w-3 text-white" />
-                  <span className="text-white text-xs font-medium">Expiring soon</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p>Expires {expiresAt?.toLocaleDateString()}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
           <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
             <Play className="h-3 w-3 text-white fill-white" />
             <span className="text-white text-sm font-medium">{displayDuration}</span>
