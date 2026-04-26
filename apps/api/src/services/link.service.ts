@@ -170,7 +170,12 @@ export class LinkService {
    * Common validation and setup for link creation
    * Returns validated projectId and member info
    */
-  private async validateAndPrepareLink(workspaceId: string, createdBy: string, projectId?: string) {
+  private async validateAndPrepareLink(
+    workspaceId: string,
+    createdBy: string,
+    domainId: string,
+    projectId?: string
+  ) {
     // Guard rail: Check if workspace is deleted
     const isWorkspaceDeleted = await this.deps.workspaceRepo.isSoftDeleted(workspaceId);
     if (isWorkspaceDeleted === null) {
@@ -191,9 +196,21 @@ export class LinkService {
       throw linkError.LINK_MEMBER_WORKSPACE_MISMATCH();
     }
 
-    // Determine projectId - use provided or get default
-    let resolvedProjectId = projectId;
-    if (!resolvedProjectId) {
+    // Determine project - use provided or get default, then ensure it is scoped
+    // to the authorized workspace before any entitlement checks or inserts.
+    let resolvedProjectId: string;
+    if (projectId) {
+      const project = await this.deps.projectRepo.findByIdWithDeletionInfo(projectId);
+      if (!project || project.workspaceId !== workspaceId) {
+        throw linkError.LINK_NOT_FOUND();
+      }
+
+      if (project.isDeleted) {
+        throw linkError.LINK_PROJECT_DELETED();
+      }
+
+      resolvedProjectId = project.projectId;
+    } else {
       const defaultProject = await this.deps.projectRepo.findDefaultByWorkspace(workspaceId);
       if (!defaultProject) {
         throw linkError.LINK_DEFAULT_PROJECT_NOT_FOUND();
@@ -201,13 +218,11 @@ export class LinkService {
       resolvedProjectId = defaultProject.projectId;
     }
 
-    // Guard rail: Check if project is deleted
-    const isProjectDeleted = await this.deps.projectRepo.isSoftDeleted(resolvedProjectId);
-    if (isProjectDeleted === null) {
+    // Verify the domain belongs to the same workspace. Domain failures are
+    // intentionally opaque so callers cannot probe other workspace IDs.
+    const domain = await this.deps.domainRepo.findById(domainId);
+    if (!domain || domain.workspaceId !== workspaceId) {
       throw linkError.LINK_NOT_FOUND();
-    }
-    if (isProjectDeleted) {
-      throw linkError.LINK_PROJECT_DELETED();
     }
 
     // Read-only UX guard: check link capacity before creating
@@ -356,6 +371,7 @@ export class LinkService {
     const { memberWithUser, projectId } = await this.validateAndPrepareLink(
       params.workspaceId,
       params.createdBy,
+      params.domainId,
       params.projectId
     );
 
@@ -397,6 +413,7 @@ export class LinkService {
     const { memberWithUser, projectId } = await this.validateAndPrepareLink(
       params.workspaceId,
       params.createdBy,
+      params.domainId,
       params.projectId
     );
 
