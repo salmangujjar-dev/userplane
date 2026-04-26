@@ -10,9 +10,13 @@ import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
 
 const pageInfo: Record<string, { title: string; subtitle: string }> = {
+  '/dashboard': { title: 'Dashboard', subtitle: 'Spend control command center' },
   '/expenses': { title: 'Expenses', subtitle: 'Review and manage expense submissions' },
+  '/approvals': { title: 'Approvals', subtitle: 'Triage pending spend before it settles' },
+  '/cards': { title: 'Cards', subtitle: 'Mock corporate card controls and activity' },
   '/analytics': { title: 'Analytics', subtitle: 'Spending insights and trends' },
   '/employees': { title: 'Employees', subtitle: 'Team directory and spend overview' },
+  '/vendors': { title: 'Vendors', subtitle: 'Merchant spend, recurrence, and savings signals' },
   '/settings': { title: 'Settings', subtitle: 'Manage your account' },
   '/flags': { title: 'Feature Flags', subtitle: 'Toggle feature flags at runtime' },
 };

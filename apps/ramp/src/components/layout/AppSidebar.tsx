@@ -3,7 +3,11 @@
 import BoringAvatar from 'boring-avatars';
 import {
   BarChart3Icon,
+  Building2Icon,
   ChevronsUpDownIcon,
+  ClipboardCheckIcon,
+  CreditCardIcon,
+  GaugeIcon,
   LogOutIcon,
   ReceiptTextIcon,
   SettingsIcon,
@@ -26,8 +30,12 @@ import { cn } from '@/lib/utils';
 const AVATAR_COLORS = ['#1F1F1F', '#E4F222', '#737373', '#A3A3A3', '#D4D4D4'];
 
 const navItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: GaugeIcon },
   { href: '/expenses', label: 'Expenses', icon: ReceiptTextIcon },
+  { href: '/approvals', label: 'Approvals', icon: ClipboardCheckIcon },
+  { href: '/cards', label: 'Cards', icon: CreditCardIcon },
   { href: '/employees', label: 'Employees', icon: UsersIcon },
+  { href: '/vendors', label: 'Vendors', icon: Building2Icon },
   { href: '/analytics', label: 'Analytics', icon: BarChart3Icon },
 ];
 
@@ -57,7 +65,7 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-14 items-center justify-between px-4">
-        <Link href="/expenses" className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2">
           <Image src="/media/Ramp_idxW_Yq9Eu_1.svg" alt="Ramp" width={80} height={22} priority />
         </Link>
         {onClose && (
@@ -84,7 +92,7 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
             >
               <item.icon className="size-4" />
               {item.label}
-              {item.label === 'Expenses' && pendingCount > 0 && (
+              {(item.label === 'Expenses' || item.label === 'Approvals') && pendingCount > 0 && (
                 <Badge
                   variant="secondary"
                   size="sm"

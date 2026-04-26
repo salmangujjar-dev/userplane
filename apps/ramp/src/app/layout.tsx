@@ -17,8 +17,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Spense - Expense Management',
-  description: 'B2B expense management demo application',
+  title: 'Ramp - Expense Management',
+  description: 'Corporate spend, cards, approvals, vendors, and analytics in one Ramp workspace.',
+  applicationName: 'Ramp',
+  openGraph: {
+    title: 'Ramp - Expense Management',
+    description: 'Corporate spend, cards, approvals, vendors, and analytics in one Ramp workspace.',
+    images: [
+      {
+        url: '/media/Ramp_Banner_3.png',
+        width: 1500,
+        height: 500,
+        alt: 'Ramp',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ramp - Expense Management',
+    description: 'Corporate spend, cards, approvals, vendors, and analytics in one Ramp workspace.',
+    images: ['/media/Ramp_Banner_3.png'],
+  },
   other: {
     // Userplane configuration meta tags
     'userplane:workspace': 'ws_cyqt7SPbjszW',

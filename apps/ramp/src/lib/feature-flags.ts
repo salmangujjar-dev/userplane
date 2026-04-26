@@ -17,6 +17,30 @@ const featureFlags = {
   // SpendingChart throws during render → caught by ErrorBoundary
   analyticsChartRender: false,
 
+  // Analytics budget/vendor panels throw during render → caught by ErrorBoundary
+  analyticsOpsPanelsRender: false,
+
+  // Dashboard command center throws during render → caught by ErrorBoundary
+  dashboardSummaryRender: false,
+
+  // Employees card/list view toggle becomes unresponsive
+  employeeViewToggle: false,
+
+  // Approvals queue table throws during render → caught by ErrorBoundary
+  approvalsQueueRender: false,
+
+  // Approvals page action buttons appear to work but do not submit
+  approvalsActionButtons: false,
+
+  // Cards table throws during render → caught by ErrorBoundary
+  cardsTableRender: false,
+
+  // Card lock/settings controls become unresponsive
+  cardControls: false,
+
+  // Vendor directory table throws during render → caught by ErrorBoundary
+  vendorDirectoryRender: false,
+
   // Form silently drops required fields → server returns 400
   expenseFormValidation: false,
 
@@ -63,6 +87,18 @@ const featureFlags = {
 
   // GET /categories returns 500 "cache poisoned"
   categoriesEndpoint: false,
+
+  // GET /cards returns 503 "issuer processor unavailable"
+  cardsEndpoint: false,
+
+  // GET /vendors returns 502 "procurement sync failed"
+  vendorsEndpoint: false,
+
+  // GET /budgets returns 500 "budget ledger checksum mismatch"
+  budgetsEndpoint: false,
+
+  // GET /expenses?status=pending returns 503 "approval queue unavailable"
+  approvalsQueueEndpoint: false,
 
   // ── Cross-cutting API chaos flags ─────────────────────────────────────
 
@@ -164,6 +200,46 @@ const FLAG_METADATA: Record<FeatureFlag, FlagMeta> = {
     description: 'SpendingChart throws during render, caught by ErrorBoundary',
     isChaos: false,
   },
+  analyticsOpsPanelsRender: {
+    category: 'Client UI',
+    description: 'Analytics budget and vendor panels throw during render, caught by ErrorBoundary',
+    isChaos: false,
+  },
+  dashboardSummaryRender: {
+    category: 'Client UI',
+    description: 'Dashboard command center throws during render, caught by ErrorBoundary',
+    isChaos: false,
+  },
+  employeeViewToggle: {
+    category: 'Client UI',
+    description: 'Employees card/list view toggle becomes unresponsive',
+    isChaos: false,
+  },
+  approvalsQueueRender: {
+    category: 'Client UI',
+    description: 'Approvals queue table throws during render, caught by ErrorBoundary',
+    isChaos: false,
+  },
+  approvalsActionButtons: {
+    category: 'Client UI',
+    description: 'Approvals page action buttons appear to work but do not submit',
+    isChaos: false,
+  },
+  cardsTableRender: {
+    category: 'Client UI',
+    description: 'Cards table throws during render, caught by ErrorBoundary',
+    isChaos: false,
+  },
+  cardControls: {
+    category: 'Client UI',
+    description: 'Card lock and settings controls become unresponsive',
+    isChaos: false,
+  },
+  vendorDirectoryRender: {
+    category: 'Client UI',
+    description: 'Vendor directory table throws during render, caught by ErrorBoundary',
+    isChaos: false,
+  },
   expenseFormValidation: {
     category: 'Client UI',
     description: 'Form silently drops required fields, causing server 400 errors',
@@ -237,6 +313,26 @@ const FLAG_METADATA: Record<FeatureFlag, FlagMeta> = {
   categoriesEndpoint: {
     category: 'Server API',
     description: 'GET /categories returns 500 "cache poisoned"',
+    isChaos: false,
+  },
+  cardsEndpoint: {
+    category: 'Server API',
+    description: 'GET /cards returns 503 "issuer processor unavailable"',
+    isChaos: false,
+  },
+  vendorsEndpoint: {
+    category: 'Server API',
+    description: 'GET /vendors returns 502 "procurement sync failed"',
+    isChaos: false,
+  },
+  budgetsEndpoint: {
+    category: 'Server API',
+    description: 'GET /budgets returns 500 "budget ledger checksum mismatch"',
+    isChaos: false,
+  },
+  approvalsQueueEndpoint: {
+    category: 'Server API',
+    description: 'GET /expenses?status=pending returns 503 "approval queue unavailable"',
     isChaos: false,
   },
   apiLatencyInjection: {

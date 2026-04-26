@@ -63,10 +63,13 @@ export function CategoryBreakdown({ expenses }: CategoryBreakdownProps) {
   }, [expenses]);
 
   return (
-    <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+    <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
       {/* Donut chart */}
       <div className="shrink-0">
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-[300px]">
+        <ChartContainer
+          config={chartConfig}
+          className="min-h-[260px] w-[260px] sm:min-h-[300px] sm:w-[300px]"
+        >
           <PieChart>
             <ChartTooltip
               content={
@@ -97,8 +100,8 @@ export function CategoryBreakdown({ expenses }: CategoryBreakdownProps) {
               nameKey="name"
               strokeWidth={0}
             >
-              {data.map((entry, i) => (
-                <Cell key={i} fill={entry.fill} />
+              {data.map((entry) => (
+                <Cell key={entry.name} fill={entry.fill} />
               ))}
               <Label
                 content={({ viewBox }) => {
@@ -113,7 +116,7 @@ export function CategoryBreakdown({ expenses }: CategoryBreakdownProps) {
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy ?? 0) - 10}
-                          className="fill-foreground text-2xl font-bold"
+                          className="fill-foreground text-xl font-bold sm:text-2xl"
                         >
                           {formatCurrency(total)}
                         </tspan>

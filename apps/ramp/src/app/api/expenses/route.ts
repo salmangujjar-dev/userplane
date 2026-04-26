@@ -21,6 +21,21 @@ export const GET = withFailureInjection(async (request: NextRequest) => {
     'GET /api/expenses'
   );
 
+  if (status === 'pending' && isFailureActive('approvalsQueueEndpoint')) {
+    log.error(
+      {
+        endpoint: 'GET /api/expenses?status=pending',
+        flag: 'approvalsQueueEndpoint',
+        injectedError: 'approval_queue_unavailable',
+      },
+      'injected endpoint failure'
+    );
+    return NextResponse.json(
+      { success: false, error: 'Approval queue is temporarily unavailable.' },
+      { status: 503 }
+    );
+  }
+
   const { data: expenses, total } = repo.getExpenses({
     status,
     categoryId,

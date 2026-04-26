@@ -21,5 +21,5 @@ export default async function Home({
   }
 
   const qs = preserved.toString();
-  redirect(qs ? `/expenses?${qs}` : '/expenses');
+  redirect(qs ? `/dashboard?${qs}` : '/dashboard');
 }

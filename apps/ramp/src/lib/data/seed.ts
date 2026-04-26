@@ -1,4 +1,4 @@
-import type { Category, Employee, Expense } from './types';
+import type { Category, CorporateCard, DepartmentBudget, Employee, Expense, Vendor } from './types';
 
 export const employees: Employee[] = [
   // Engineering (20)
@@ -922,3 +922,139 @@ function generateExpenses(): Expense[] {
 }
 
 export const expenses: Expense[] = generateExpenses();
+
+const departmentMonthlyBudgets: Record<string, number> = {
+  Engineering: 52000,
+  Sales: 68000,
+  Marketing: 56000,
+  Operations: 34000,
+  Finance: 22000,
+  HR: 18000,
+};
+
+const cardLimits: Record<string, number> = {
+  Engineering: 6500,
+  Sales: 9500,
+  Marketing: 8000,
+  Operations: 4500,
+  Finance: 3500,
+  HR: 3000,
+};
+
+export const departmentBudgets: DepartmentBudget[] = Object.entries(departmentMonthlyBudgets).map(
+  ([department, monthlyBudget]) => {
+    const owner =
+      employees.find(
+        (employee) => employee.department === department && employee.position.includes('VP')
+      ) ??
+      employees.find((employee) => employee.department === department) ??
+      employees[0];
+
+    return {
+      id: `budget_${slugify(department)}`,
+      department,
+      monthlyBudget,
+      ownerEmail: owner?.email ?? 'finance@spense.io',
+      resetCadence: 'monthly',
+    };
+  }
+);
+
+export const cards: CorporateCard[] = employees.map((employee, index) => {
+  const utilizationSeed = employee.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const monthlyLimit = cardLimits[employee.department] ?? 4000;
+  const status =
+    utilizationSeed % 17 === 0 ? 'review' : utilizationSeed % 13 === 0 ? 'locked' : 'active';
+
+  return {
+    id: `card_${employee.id.replace('emp_', '')}`,
+    employeeId: employee.id,
+    type: index % 3 === 0 ? 'virtual' : 'physical',
+    status,
+    monthlyLimit,
+    controlsLabel: index % 4 === 0 ? 'Vendor locked' : index % 5 === 0 ? 'Travel only' : 'Standard',
+    issuedAt: offsetDate(index + 20),
+    lastFour: String(1000 + ((index * 7919) % 9000)),
+  };
+});
+
+export const vendors: Vendor[] = generateVendors(expenses);
+
+function generateVendors(sourceExpenses: Expense[]): Vendor[] {
+  const merchantMap = new Map<
+    string,
+    {
+      categoryCounts: Map<string, number>;
+      departmentCounts: Map<string, number>;
+      transactionCount: number;
+      totalSpend: number;
+    }
+  >();
+
+  sourceExpenses.forEach((expense) => {
+    const employee = employees.find((item) => item.id === expense.employeeId);
+    const current = merchantMap.get(expense.merchant) ?? {
+      categoryCounts: new Map<string, number>(),
+      departmentCounts: new Map<string, number>(),
+      transactionCount: 0,
+      totalSpend: 0,
+    };
+
+    current.transactionCount += 1;
+    current.totalSpend += expense.amount;
+    current.categoryCounts.set(
+      expense.categoryId,
+      (current.categoryCounts.get(expense.categoryId) ?? 0) + 1
+    );
+    if (employee) {
+      current.departmentCounts.set(
+        employee.department,
+        (current.departmentCounts.get(employee.department) ?? 0) + 1
+      );
+    }
+    merchantMap.set(expense.merchant, current);
+  });
+
+  return Array.from(merchantMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([merchant, data], index) => {
+      const categoryId = topEntry(data.categoryCounts) ?? categories[0]?.id ?? 'cat_b8c9d0';
+      const ownerDepartment = topEntry(data.departmentCounts) ?? 'Finance';
+      const recurring = data.transactionCount >= 3;
+      const savingsOpportunity = getSavingsOpportunity(data.totalSpend, data.transactionCount);
+
+      return {
+        id: `vendor_${String(index + 1).padStart(3, '0')}_${slugify(merchant).slice(0, 24)}`,
+        merchant,
+        categoryId,
+        recurring,
+        savingsOpportunity,
+        ownerDepartment,
+        status: savingsOpportunity === 'Monitor' ? 'monitor' : 'review',
+      };
+    });
+}
+
+function topEntry(map: Map<string, number>) {
+  return Array.from(map.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+}
+
+function getSavingsOpportunity(totalSpend: number, transactionCount: number) {
+  if (totalSpend >= 10000) return 'Contract review';
+  if (transactionCount >= 5) return 'Consolidate seats';
+  if (totalSpend >= 3000) return 'Negotiate terms';
+  return 'Monitor';
+}
+
+function offsetDate(daysAgo: number) {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  return date.toISOString();
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}

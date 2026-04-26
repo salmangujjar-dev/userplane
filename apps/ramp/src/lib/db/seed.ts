@@ -6,9 +6,12 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 
 import {
+  cards as seedCards,
   categories as seedCategories,
+  departmentBudgets as seedDepartmentBudgets,
   employees as seedEmployees,
   expenses as seedExpenses,
+  vendors as seedVendors,
 } from '../data/seed';
 import * as schema from './schema';
 
@@ -27,6 +30,9 @@ console.log('Migrations applied.');
 
 // Clear tables in FK-safe order
 db.delete(schema.expenses).run();
+db.delete(schema.cards).run();
+db.delete(schema.vendors).run();
+db.delete(schema.departmentBudgets).run();
 db.delete(schema.employees).run();
 db.delete(schema.categories).run();
 console.log('Tables cleared.');
@@ -49,6 +55,15 @@ db.insert(schema.employees)
   )
   .run();
 console.log(`Inserted ${seedEmployees.length} employees.`);
+
+db.insert(schema.departmentBudgets).values(seedDepartmentBudgets).run();
+console.log(`Inserted ${seedDepartmentBudgets.length} department budgets.`);
+
+db.insert(schema.vendors).values(seedVendors).run();
+console.log(`Inserted ${seedVendors.length} vendors.`);
+
+db.insert(schema.cards).values(seedCards).run();
+console.log(`Inserted ${seedCards.length} cards.`);
 
 // Insert expenses in batches (SQLite has a variable limit)
 const BATCH_SIZE = 50;
