@@ -1,4 +1,4 @@
-.PHONY: help install dev dev\:extras dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:recorder dev\:sdk dev\:docs build build\:web build\:home build\:api build\:share build\:ramp build\:recorder build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix generate\:openapi docs\:check clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build extension\:dev extension\:build extension\:build\:prod extension\:zip extension\:zip\:prod extension\:storybook extension\:storybook\:build raycast\:dev raycast\:build raycast\:lint raycast\:lint\:fix raycast\:typecheck raycast\:prepublish raycast\:publish assets\:optimize assets\:optimize\:dry-run assets\:optimize\:dir i d b l f t c
+.PHONY: help install dev dev\:extras dev\:web dev\:home dev\:api dev\:share dev\:email dev\:ramp dev\:recorder dev\:sdk dev\:docs prod\:dash prod\:api prod\:ramp prod\:recorder prod\:home build build\:web build\:home build\:api build\:share build\:ramp build\:recorder build\:zendesk lint lint\:fix format format\:check fmt fmt\:check fmt\:fix typecheck test test\:watch test\:api check fix generate\:openapi docs\:check clean clean\:all clean\:deep reset preview\:home deploy\:home deploy\:home\:production update env\:setup env\:check db\:generate db\:generate\:production db\:migrate db\:migrate\:production db\:push db\:push\:production db\:reset db\:studio db\:studio\:production ramp\:db\:generate ramp\:db\:migrate ramp\:db\:push ramp\:db\:reset ramp\:db\:seed ramp\:db\:studio pricing\:sync pricing\:sync\:production inngest\:dev storybook\:recorder storybook\:recorder\:build storybook\:postbridge storybook\:postbridge\:build storybook\:blurr storybook\:blurr\:build storybook\:sdk storybook\:sdk\:build storybook\:embed storybook\:embed\:build storybook\:logger storybook\:logger\:build storybook\:zendesk storybook\:zendesk\:build serve\:zendesk package\:zendesk assets\:upload assets\:upload\:production assets\:upload\:dry-run assets\:manifest assets\:validate assets\:validate\:local assets\:validate\:production tunnel\:start tunnel\:stop tunnel\:status sdk\:dev\:prepare sdk\:build sdk\:build\:npm sdk\:build\:cdn sdk\:build\:npm\:obfuscate sdk\:build\:cdn\:obfuscate metadata\:build metadata\:build\:npm metadata\:build\:cdn embed\:build embed\:build\:cdn embed\:build\:cdn\:dev embed\:build\:cdn\:production embed\:upload embed\:upload\:production embed\:upload\:dry-run embed\:deploy embed\:deploy\:production dev\:extension build\:extension zip\:extension storybook\:extension storybook\:extension\:build extension\:dev extension\:build extension\:build\:prod extension\:zip extension\:zip\:prod extension\:storybook extension\:storybook\:build raycast\:dev raycast\:build raycast\:lint raycast\:lint\:fix raycast\:typecheck raycast\:prepublish raycast\:publish assets\:optimize assets\:optimize\:dry-run assets\:optimize\:dir i d b l f t c
 .DEFAULT_GOAL := help
 
 # Colors
@@ -67,6 +67,14 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(GREEN)dev:extension$(WHITE)                 ║$(RESET) Run Chrome extension in dev mode (WXT, port 3010)                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:recorder$(WHITE)                  ║$(RESET) Run recorder app only (Next.js, port 4322)                        $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)dev:sdk$(WHITE)                       ║$(RESET) Run SDK toolchain + recorder/dash/api/ramp (focused)              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(CYAN)PRODUCTION PREVIEW$(WHITE)                                                                                ║$(RESET)"
+	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)prod:dash$(WHITE)                     ║$(RESET) Build and run dash production server                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)prod:api$(WHITE)                      ║$(RESET) Build and run API production server                               $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)prod:ramp$(WHITE)                     ║$(RESET) Build and run Ramp production server                              $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)prod:recorder$(WHITE)                 ║$(RESET) Build and run recorder production server                          $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)prod:home$(WHITE)                     ║$(RESET) Preview home production build (Cloudflare)                         $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)BUILD$(WHITE)                                                                                             ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
@@ -177,6 +185,7 @@ help: ## Show this help message
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)SDK PACKAGE$(WHITE)                                                                                        ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)sdk:dev:prepare$(WHITE)               ║$(RESET) Build SDK dependencies before local dev startup                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)sdk:build$(WHITE)                     ║$(RESET) Build SDK (standard dev build)                                     $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)sdk:build:npm$(WHITE)                 ║$(RESET) Build SDK (size-optimized for npm)                                 $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)sdk:build:cdn$(WHITE)                 ║$(RESET) Build SDK (size-optimized for CDN)                                 $(WHITE)║$(RESET)"
@@ -224,10 +233,12 @@ install: ## Install all dependencies
 
 dev: ## Run core apps in development mode (excludes docs, extension)
 	@echo "$(MAGENTA)Starting core apps in development mode...$(RESET)"
+	@$(MAKE) sdk:dev:prepare
 	@bunx turbo dev --filter='!./apps/docs' --filter='!./apps/extension' --concurrency=30
 
 dev\:extras: ## Run all apps including docs and extension
 	@echo "$(MAGENTA)Starting all apps in development mode...$(RESET)"
+	@$(MAKE) sdk:dev:prepare
 	@bun dev
 
 dev\:dash: ## Run web app only
@@ -248,7 +259,19 @@ dev\:email: ## Run Email preview server only
 
 dev\:ramp: ## Run ramp app only
 	@echo "$(MAGENTA)Starting Ramp app...$(RESET)"
-	@cd apps/ramp && bun dev
+	@$(MAKE) sdk:dev:prepare
+	@bunx turbo dev \
+		--filter=@userplane/sdk \
+		--filter=@userplane/blurr \
+		--filter=@userplane/postbridge \
+		--filter=@userplane/contract \
+		--filter=@userplane/logger \
+		--filter=@userplane/console-logger \
+		--filter=@userplane/metadata \
+		--filter=@userplane/payments \
+		--filter=@userplane/pricing \
+		--filter=ramp \
+		--concurrency=30
 
 dev\:home: ## Run home app only
 	@echo "$(MAGENTA)Starting Home app (Astro)...$(RESET)"
@@ -268,6 +291,7 @@ dev\:recorder: ## Run recorder app only
 
 dev\:sdk: ## Run SDK toolchain + consuming apps (focused for SDK development)
 	@echo "$(MAGENTA)Starting SDK dev environment (sdk + recorder + dash + api + ramp)...$(RESET)"
+	@$(MAKE) sdk:dev:prepare
 	@bunx turbo dev \
 		--filter=@userplane/sdk \
 		--filter=@userplane/blurr \
@@ -276,6 +300,8 @@ dev\:sdk: ## Run SDK toolchain + consuming apps (focused for SDK development)
 		--filter=@userplane/logger \
 		--filter=@userplane/console-logger \
 		--filter=@userplane/metadata \
+		--filter=@userplane/payments \
+		--filter=@userplane/pricing \
 		--filter=@userplane/client \
 		--filter=@userplane/shared \
 		--filter=@userplane/storage \
@@ -284,6 +310,31 @@ dev\:sdk: ## Run SDK toolchain + consuming apps (focused for SDK development)
 		--filter=api \
 		--filter=ramp \
 		--concurrency=30
+
+prod\:dash: ## Build and run dash production server
+	@echo "$(MAGENTA)Starting Dash production server...$(RESET)"
+	@bun run turbo build --filter=dash^...
+	@cd apps/dash && bun --env-file=.env.production run build:production && bun --env-file=.env.production run start:production
+
+prod\:api: ## Build and run API production server
+	@echo "$(MAGENTA)Starting API production server...$(RESET)"
+	@bun run turbo build --filter=@userplane/api^...
+	@cd apps/api && bun --env-file=.env.production run build && bun run start:production
+
+prod\:ramp: ## Build and run Ramp production server
+	@echo "$(MAGENTA)Starting Ramp production server...$(RESET)"
+	@bun run turbo build --filter=ramp^...
+	@cd apps/ramp && bun --env-file=.env.production run build:production && bun --env-file=.env.production run start:production
+
+prod\:recorder: ## Build and run recorder production server
+	@echo "$(MAGENTA)Starting Recorder production server...$(RESET)"
+	@bun run turbo build --filter=recorder^...
+	@cd apps/recorder && APP_ENV=production bun --env-file=.env.production run build && APP_ENV=production bun --env-file=.env.production run start
+
+prod\:home: ## Preview home production build (Cloudflare)
+	@echo "$(MAGENTA)Starting Home production preview (Cloudflare)...$(RESET)"
+	@bun run turbo build --filter=home^...
+	@cd apps/home && bun --env-file=.env.production run build:production && bun --env-file=.env.production run preview:cf
 
 build: ## Build all apps
 	@echo "$(BLUE)Building all apps...$(RESET)"
@@ -953,6 +1004,11 @@ SDK_VERIFICATION_BASE_URL ?=
 SDK_BUILD_ENV := $(if $(SDK_RECORDER_BASE_URL),SDK_RECORDER_BASE_URL=$(SDK_RECORDER_BASE_URL)) \
                  $(if $(SDK_VERIFICATION_BASE_URL),SDK_VERIFICATION_BASE_URL=$(SDK_VERIFICATION_BASE_URL))
 
+sdk\:dev\:prepare: ## Build SDK package output required by local dev servers
+	@echo "$(BLUE)Preparing SDK package output for local dev...$(RESET)"
+	@$(SDK_BUILD_ENV) bunx turbo build --filter=@userplane/sdk
+	@echo "$(GREEN)SDK package output ready!$(RESET)"
+
 sdk\:build: ## Build SDK (standard dev build)
 	@$(MAKE) metadata:build
 	@echo "$(BLUE)Building SDK...$(RESET)"
@@ -1124,4 +1180,3 @@ l: lint ## Shortcut for lint
 f: format ## Shortcut for format
 t: test ## Shortcut for test
 c: check ## Shortcut for check
-
