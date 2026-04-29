@@ -6,10 +6,10 @@ import type { z } from 'zod';
  */
 export interface McpToolAnnotations {
   title?: string;
-  readOnlyHint?: boolean;
-  destructiveHint?: boolean;
-  idempotentHint?: boolean;
-  openWorldHint?: boolean;
+  readOnlyHint: boolean;
+  destructiveHint: boolean;
+  idempotentHint: boolean;
+  openWorldHint: boolean;
 }
 
 /**
@@ -43,6 +43,7 @@ export interface McpToolDefinition<
 export const READ_ONLY_ANNOTATIONS = {
   readOnlyHint: true,
   destructiveHint: false,
+  idempotentHint: true,
   openWorldHint: false,
 } as const satisfies McpToolAnnotations;
 
@@ -63,12 +64,6 @@ export const IDEMPOTENT_MUTATING_ANNOTATIONS = {
 export const DESTRUCTIVE_ANNOTATIONS = {
   readOnlyHint: false,
   destructiveHint: true,
-  idempotentHint: true,
+  idempotentHint: false,
   openWorldHint: false,
-} as const satisfies McpToolAnnotations;
-
-export const EXTERNAL_RESOURCE_ANNOTATIONS = {
-  readOnlyHint: true,
-  destructiveHint: false,
-  openWorldHint: true,
 } as const satisfies McpToolAnnotations;

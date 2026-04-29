@@ -8,7 +8,7 @@ import {
   WorkspaceIdSchema,
 } from '../../schemas/common';
 import type { McpToolDefinition } from '../types';
-import { EXTERNAL_RESOURCE_ANNOTATIONS, READ_ONLY_ANNOTATIONS } from '../types';
+import { READ_ONLY_ANNOTATIONS } from '../types';
 
 const resourceInput = {
   workspaceId: z.string().describe('Workspace ID'),
@@ -30,7 +30,7 @@ export const userplaneGetRecVideo = {
   description:
     'Retrieve a time-limited presigned URL to download or stream the screen recording video file.',
   inputSchema: resourceInput,
-  annotations: EXTERNAL_RESOURCE_ANNOTATIONS,
+  annotations: READ_ONLY_ANNOTATIONS,
 } as const satisfies McpToolDefinition;
 
 export const userplaneGetRecThumb = {
@@ -38,7 +38,7 @@ export const userplaneGetRecThumb = {
   title: 'Get recording thumbnail',
   description: "Retrieve the screen recording's thumbnail preview as an inline base64 data URI.",
   inputSchema: resourceInput,
-  annotations: EXTERNAL_RESOURCE_ANNOTATIONS,
+  annotations: READ_ONLY_ANNOTATIONS,
 } as const satisfies McpToolDefinition;
 
 export const userplaneGetRecConsole = {

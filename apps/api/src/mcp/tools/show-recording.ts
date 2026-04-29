@@ -1,7 +1,6 @@
 import { registerAppTool } from '@modelcontextprotocol/ext-apps/server';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { EXTERNAL_RESOURCE_ANNOTATIONS, userplaneShowRecording } from '@userplane/contract';
-import { z } from 'zod';
+import { userplaneAppFetchResource, userplaneShowRecording } from '@userplane/contract';
 
 import { env } from '@/api/env';
 
@@ -75,22 +74,9 @@ export function registerShowRecordingTools(server: McpServer, deps: McpDeps, use
   // Thumbnails are inlined in the main tool result. Video is not proxied —
   // the app links to the dashboard instead.
   // -----------------------------------------------------------------------
-  server.registerTool(
-    'userplane_app_fetch_resource',
-    {
-      description:
-        'Fetch recording log data (console, network, or actions) and return its content.',
-      inputSchema: {
-        workspaceId: z.string().describe('Workspace ID'),
-        recordingId: z.string().describe('Recording ID'),
-        resourceType: z
-          .enum(['consoleLog', 'networkLog', 'action'])
-          .describe('Which log resource to fetch'),
-      },
-      annotations: EXTERNAL_RESOURCE_ANNOTATIONS,
-      _meta: { ui: { visibility: ['app'] } },
-    },
-    async ({ workspaceId, recordingId, resourceType }) => {
+  {
+    const { name, ...config } = userplaneAppFetchResource;
+    server.registerTool(name, config, async ({ workspaceId, recordingId, resourceType }) => {
       await requireWorkspaceMember(deps, userId, workspaceId);
 
       const getters = {
@@ -124,6 +110,6 @@ export function registerShowRecordingTools(server: McpServer, deps: McpDeps, use
       } catch (err) {
         return textResult({ error: `Error parsing JSON: ${err}`, resourceType });
       }
-    }
-  );
+    });
+  }
 }
