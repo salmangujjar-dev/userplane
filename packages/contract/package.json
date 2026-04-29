@@ -23,7 +23,9 @@
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
-    "generate:openapi": "bun run scripts/generate-openapi.ts"
+    "generate:openapi": "bun run scripts/generate-openapi.ts",
+    "check:mcp-tool-annotations": "bun run scripts/check-mcp-tool-annotations.ts",
+    "generate:mcp-tool-justifications": "bun run scripts/generate-mcp-tool-hint-justifications.ts"
   },
   "dependencies": {
     "@userplane/logger": "*",

@@ -7,11 +7,7 @@ import {
   WorkspaceIdSchema,
 } from '../../schemas/common';
 import type { McpToolDefinition } from '../types';
-import {
-  IDEMPOTENT_MUTATING_ANNOTATIONS,
-  MUTATING_ANNOTATIONS,
-  READ_ONLY_ANNOTATIONS,
-} from '../types';
+import { DESTRUCTIVE_ANNOTATIONS, MUTATING_ANNOTATIONS, READ_ONLY_ANNOTATIONS } from '../types';
 
 export const userplaneListLinks = {
   name: 'userplane_list_links',
@@ -81,7 +77,7 @@ export const userplaneUpdateLink = {
     linkProviderRef: z.string().optional().describe('External provider reference'),
     linkMeta: z.record(z.string(), z.string()).optional().describe('Custom key-value metadata'),
   },
-  annotations: IDEMPOTENT_MUTATING_ANNOTATIONS,
+  annotations: DESTRUCTIVE_ANNOTATIONS,
 } as const satisfies McpToolDefinition;
 
 // ---------------------------------------------------------------------------

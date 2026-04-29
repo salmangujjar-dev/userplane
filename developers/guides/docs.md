@@ -15,6 +15,7 @@ No external services required.
 apps/docs/
   docs.json              # Mintlify configuration (navigation, theme, metadata)
   openapi.json           # Generated OpenAPI spec (do not edit manually)
+  tool-hint-justifications.json # Generated MCP app review artifact (do not edit manually)
   introduction.mdx       # Landing page
   quickstart.mdx         # Getting started guide
   getting-started/       # Onboarding guides
@@ -45,12 +46,13 @@ The docs dev server hot-reloads on file changes. Open http://localhost:3005 to p
 
 ## Key Files
 
-| File                         | Purpose                                    |
-| ---------------------------- | ------------------------------------------ |
-| `apps/docs/docs.json`        | Navigation, theme, metadata configuration  |
-| `apps/docs/openapi.json`     | OpenAPI spec for API reference (generated) |
-| `apps/docs/introduction.mdx` | Documentation landing page                 |
-| `apps/docs/quickstart.mdx`   | Getting started guide                      |
+| File                                      | Purpose                                                         |
+| ----------------------------------------- | --------------------------------------------------------------- |
+| `apps/docs/docs.json`                     | Navigation, theme, metadata configuration                       |
+| `apps/docs/openapi.json`                  | OpenAPI spec for API reference (generated)                      |
+| `apps/docs/tool-hint-justifications.json` | MCP tool hint justifications for ChatGPT app review (generated) |
+| `apps/docs/introduction.mdx`              | Documentation landing page                                      |
+| `apps/docs/quickstart.mdx`                | Getting started guide                                           |
 
 ## Common Tasks
 
@@ -68,6 +70,14 @@ The docs dev server hot-reloads on file changes. Open http://localhost:3005 to p
    ```
 2. The API reference pages auto-generate from `openapi.json`
 
+### Updating MCP app review artifacts
+
+1. If MCP tool definitions or annotations changed, regenerate the tool hint justifications:
+   ```sh
+   make generate:mcp-tool-justifications
+   ```
+2. Upload `apps/docs/tool-hint-justifications.json` in the OpenAI Platform app review flow
+
 ### Adding images
 
 1. Place images in `apps/docs/media/`
@@ -82,7 +92,7 @@ The docs dev server hot-reloads on file changes. Open http://localhost:3005 to p
 
 ## Notes
 
-- Do not edit `openapi.json` manually — it is generated from API contracts
+- Do not edit `openapi.json` or `tool-hint-justifications.json` manually — they are generated from API/MCP contracts
 - Docs are hosted by Mintlify (not self-hosted)
 - Use code blocks with copy instead of the Mintlify Prompt component
 - Keep card descriptions minimal — no paragraphs

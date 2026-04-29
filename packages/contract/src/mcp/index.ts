@@ -1,6 +1,7 @@
 export * from './tools';
 export * from './types';
 
+import { userplaneAppFetchResource } from './tools/app-fetch-resource';
 import { userplaneGetDomain, userplaneListDomains } from './tools/domains';
 import {
   userplaneCreateLink,
@@ -35,17 +36,18 @@ export const mcpToolDefinitions = [
   userplaneListDomains,
   userplaneGetDomain,
   userplaneListRecordings,
-  userplaneListLinks,
-  userplaneCreateLink,
-  userplaneGetLink,
-  userplaneUpdateLink,
   userplaneGetRecInfo,
   userplaneGetRecVideo,
   userplaneGetRecThumb,
   userplaneGetRecConsole,
   userplaneGetRecNetwork,
   userplaneGetRecActions,
+  userplaneListLinks,
+  userplaneCreateLink,
+  userplaneGetLink,
+  userplaneUpdateLink,
   userplaneShowRecording,
+  userplaneAppFetchResource,
   userplaneShowRecConsole,
   userplaneShowRecNetwork,
   userplaneShowRecActions,

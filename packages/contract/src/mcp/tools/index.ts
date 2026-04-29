@@ -1,3 +1,4 @@
+export * from './app-fetch-resource';
 export * from './domains';
 export * from './links';
 export * from './projects';
