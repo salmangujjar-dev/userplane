@@ -15,7 +15,7 @@ Each connected app shows four pieces of information:
 
 | Column          | What it means                                                                    |
 | --------------- | -------------------------------------------------------------------------------- |
-| **Application** | The MCP client name and icon (Claude, Cursor, VS Code, etc.)                     |
+| **Application** | The MCP client name and icon (Claude, Codex, Cursor, VS Code, etc.)              |
 | **Permissions** | OAuth scopes granted — hover to see the full list                                |
 | **Status**      | **Active** if the token is valid; **Inactive** if it has expired or been revoked |
 | **Authorized**  | The date you approved the connection                                             |
@@ -46,7 +46,7 @@ Each connected app shows four pieces of information:
 
 <Note>
   Revoking one client does not affect others. Each MCP client registers independently — Claude,
-  Cursor, and VS Code hold separate authorizations.
+  Codex, Cursor, and VS Code hold separate authorizations.
 </Note>
 
 ## What happens after you revoke
@@ -66,7 +66,7 @@ If you haven't authorized any MCP clients yet, the tab shows an empty state.
 
 <CardGroup cols={2}>
   <Card title="Get started with MCP" icon="rocket" href="/integrations/mcp-getting-started">
-    Connect Claude, Cursor, VS Code, or ChatGPT to your Userplane workspace
+    Connect Claude, Codex, Cursor, VS Code, or ChatGPT to your Userplane workspace
   </Card>
   <Card title="How authentication works" icon="lock" href="/integrations/mcp-authentication">
     OAuth 2.1 flow, PKCE, token scoping, and per-client registration

@@ -1,9 +1,9 @@
 ---
 title: Skills
-description: 14 Userplane skills that give AI agents built-in knowledge for framework integration, SDK usage, and privacy configuration
+description: 18 Userplane skills that give AI agents built-in knowledge for framework integration, SDK usage, privacy, and workflows
 ---
 
-The plugin includes 14 skills — the knowledge layer that [commands](/integrations/claude-code-commands) and [subagents](/integrations/claude-code-subagents) rely on. Skills also activate directly from natural-language prompts.
+The plugin includes 18 skills — 14 framework and reference skills plus 4 workflow skills. They form the knowledge layer that [commands](/integrations/claude-code-commands), [subagents](/integrations/claude-code-subagents), Codex workflows, and Cursor workflows rely on.
 
 ## How skills load
 
@@ -40,6 +40,15 @@ Each skill covers the full integration: CDN quick start, npm SDK, URL parameter 
 | `userplane-cdn`            | Script placement, CSP directives, redirect handling                 |
 | `userplane-sensitive-data` | `data-userplane-blur`, meta tag blur, third-party compatibility     |
 | `userplane-best-practices` | Cross-cutting install, SDK, metadata, and privacy guidance          |
+
+## Workflow skills
+
+| Skill                 | Covers                                                     |
+| --------------------- | ---------------------------------------------------------- |
+| `userplane-integrate` | Detect framework and install Userplane as concrete edits   |
+| `userplane-audit`     | Read-only PASS/FAIL integration audit with suggested diffs |
+| `userplane-debug`     | Recording root-cause analysis through the workspace MCP    |
+| `userplane-privacy`   | Read-only PII, blur, metadata, and CSP privacy audit       |
 
 ## Example prompts
 
@@ -104,14 +113,16 @@ The `/userplane:integrate` and `/userplane:audit` commands auto-detect the frame
 Skills follow the open [Agent Skills](https://agentskills.io) standard. They work with Claude Code (via plugin), Cursor, Windsurf, and any agent that supports the standard.
 
 <Note>
-  [Commands](/integrations/claude-code-commands) and
-  [subagents](/integrations/claude-code-subagents) are Claude Code plugin features. In other agents,
-  skills activate through natural-language prompts.
+  Claude Code users usually start with [slash commands](/integrations/claude-code-commands). Cursor
+  users can use [Cursor workflow commands](/integrations/cursor-workflows). Codex users can invoke
+  the workflow skills directly with `$userplane-*`.
 </Note>
 
 ## Related articles
 
 - [Commands](/integrations/claude-code-commands) — the slash commands that use these skills.
 - [Subagents](/integrations/claude-code-subagents) — how each subagent loads skills.
+- [Codex Workflows](/integrations/codex-workflows) — direct workflow skill usage in Codex.
+- [Cursor Workflows](/integrations/cursor-workflows) — slash commands that use the same workflows in Cursor.
 - [Agent Skills](/developer/agent-skills) — install skills via the Skills CLI for other agents.
 - [Framework Guides](/frameworks/react) — human-readable integration guides.

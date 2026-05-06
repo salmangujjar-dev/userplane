@@ -84,9 +84,25 @@ https://api.userplane.io/mcp
 
     <Tip>
       The [Userplane Claude Code plugin](/integrations/claude-code) installs both MCP servers
-      automatically alongside 14 framework skills and 4 slash commands. If you're using Claude Code,
+      automatically alongside 18 skills and 4 slash commands. If you're using Claude Code,
       the plugin is the fastest setup path.
     </Tip>
+
+  </Tab>
+  <Tab title="Codex">
+    The [Userplane Codex plugin](/integrations/codex) installs both MCP servers automatically.
+
+    ```bash
+    codex marketplace add userplanehq/userplane-agent
+    ```
+
+    Then open `/plugins` in Codex and install `userplane`. Verify the servers with:
+
+    ```text
+    /mcp
+    ```
+
+    You should see `userplane-workspace` and `userplane-docs`. On first workspace tool call, Codex opens a browser window for Userplane sign-in.
 
   </Tab>
   <Tab title="Cursor">
@@ -118,6 +134,11 @@ https://api.userplane.io/mcp
     <Note>
       See [Installing MCP servers](https://cursor.com/docs#installing-mcp-servers) in the Cursor documentation for more details.
     </Note>
+
+    <Tip>
+      The [Userplane Cursor plugin](/integrations/cursor) installs both MCP servers alongside
+      commands, rules, subagents, and skills.
+    </Tip>
 
   </Tab>
   <Tab title="VS Code">
@@ -300,6 +321,9 @@ https://api.userplane.io/mcp
 ## Related articles
 
 - [Userplane MCP](/integrations/mcp-workspace) — overview of the workspace MCP server.
+- [Codex Plugin](/integrations/codex) — bundled skills and MCP servers for Codex.
+- [Cursor Plugin](/integrations/cursor) — bundled commands, rules, skills, and MCP servers for Cursor.
+- [Claude Code Plugin](/integrations/claude-code) — bundled slash commands, subagents, skills, and MCP servers for Claude Code.
 - [Recording Tools](/integrations/mcp-tools-recordings) — tools for listing, inspecting, and analyzing recordings.
 - [Recording Link Tools](/integrations/mcp-tools-links) — tools for creating and managing recording links.
 - [MCP Apps](/integrations/mcp-apps) — rich viewers rendered inside your AI client.

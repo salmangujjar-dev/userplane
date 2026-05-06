@@ -65,7 +65,7 @@ MCP tools respect the same workspace roles as the Userplane dashboard and REST A
 
 ## Security
 
-- **Per-client registration** — each AI client (Claude, Cursor, VS Code, ChatGPT) registers as a separate OAuth client. Revoking one client's access does not affect others.
+- **Per-client registration** — each AI client (Claude, Codex, Cursor, VS Code, ChatGPT) registers as a separate OAuth client. Revoking one client's access does not affect others.
 - **Token scoping** — access tokens are scoped to `mcp:tools` and carry no broader permissions.
 - **JWT verification** — every request is verified against Userplane's JWKS endpoint with issuer and audience checks.
 - **No shared secrets** — no API keys or client secrets are shared with the AI client. All clients use PKCE (public client flow).

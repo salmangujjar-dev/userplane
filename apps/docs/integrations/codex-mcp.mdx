@@ -1,0 +1,45 @@
+---
+title: MCP Servers
+description: The two Userplane MCP servers bundled with the Codex plugin
+---
+
+The Codex plugin registers both Userplane MCP servers. No manual MCP configuration is needed after the plugin is installed.
+
+## Bundled servers
+
+| Server                | URL                             | Authentication | Purpose                                       |
+| --------------------- | ------------------------------- | -------------- | --------------------------------------------- |
+| `userplane-workspace` | `https://api.userplane.io/mcp`  | OAuth 2.1      | Recordings, links, projects, domains, viewers |
+| `userplane-docs`      | `https://docs.userplane.io/mcp` | None (public)  | Userplane documentation search                |
+
+## Workspace MCP
+
+The workspace server lets Codex access Userplane workspace data for debugging and support workflows. The `userplane-debug` workflow uses it to fetch recording info, console logs, network requests, and user actions after the recording is resolved.
+
+<Note>
+  The workspace server requires a Userplane account and workspace membership. On first use, Codex
+  opens a browser window for OAuth sign-in.
+</Note>
+
+## Documentation MCP
+
+The documentation server lets Codex search Userplane docs inline while it integrates the SDK or answers framework questions. It is public and does not require authentication.
+
+## Verifying the servers
+
+After installing the plugin, open:
+
+```text
+/mcp
+```
+
+You should see `userplane-workspace` and `userplane-docs`.
+
+## Related articles
+
+- [Codex Getting Started](/integrations/codex-getting-started) — install and verify the Codex plugin.
+- [Codex Workflows](/integrations/codex-workflows) — workflows that use the MCP servers.
+- [Userplane MCP](/integrations/mcp-workspace) — detailed workspace server documentation.
+- [Documentation MCP](/integrations/mcp-docs) — public documentation search server.
+- [MCP Authentication](/integrations/mcp-authentication) — OAuth 2.1 flow and permissions.
+- [Cursor MCP Servers](/integrations/cursor-mcp) — the same bundled MCP servers in Cursor.

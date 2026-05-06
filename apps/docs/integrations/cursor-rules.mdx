@@ -1,0 +1,44 @@
+---
+title: Rules
+description: The Cursor rule that routes Userplane integration, audit, debug, and privacy prompts
+---
+
+The Cursor plugin includes a Userplane workflow rule. It helps Cursor choose the right Userplane command, subagent, or skill when a prompt mentions installing, auditing, debugging, or privacy-checking Userplane.
+
+## Included rule
+
+| File                            | Applies automatically | Purpose                                          |
+| ------------------------------- | --------------------- | ------------------------------------------------ |
+| `rules/userplane-workflows.mdc` | No                    | Routes Userplane workflow requests to the plugin |
+
+The rule keeps Cursor from guessing integration steps from memory. It points Cursor to the bundled Userplane skills and workflows as the source of truth.
+
+## Workflow routing
+
+| User asks for       | Cursor should use                           |
+| ------------------- | ------------------------------------------- |
+| Installation        | `/userplane-integrate` or `integrate-agent` |
+| Verification        | `/userplane-audit` or `audit-agent`         |
+| Recording debugging | `/userplane-debug` or `debug-agent`         |
+| Privacy review      | `/userplane-privacy` or `privacy-agent`     |
+
+## Ground truth
+
+The rule tells Cursor to load the matching framework skill before writing or reviewing code. It also points Cursor to the shared reference skills:
+
+| Skill                      | Covers                                                     |
+| -------------------------- | ---------------------------------------------------------- |
+| `userplane-web-sdk`        | SDK initialization, recorder control, and recording state  |
+| `userplane-metadata-sdk`   | `setUser`, `setMetadata`, and recording metadata           |
+| `userplane-cdn`            | Script placement, CSP, redirects, and browser support      |
+| `userplane-sensitive-data` | Blur attributes and sensitive data protection              |
+| `userplane-best-practices` | Cross-cutting install, SDK, metadata, and privacy guidance |
+
+## Related articles
+
+- [Cursor Plugin](/integrations/cursor) — what the Cursor plugin includes.
+- [Cursor Workflows](/integrations/cursor-workflows) — commands the rule routes to.
+- [Cursor Getting Started](/integrations/cursor-getting-started) — install and verify rules and MCP.
+- [Agent Skills](/developer/agent-skills) — how Userplane skills load across agents.
+- [Codex Workflows](/integrations/codex-workflows) — skill-based workflow entry points in Codex.
+- [Claude Code Subagents](/integrations/claude-code-subagents) — the same workflow-agent model in Claude Code.

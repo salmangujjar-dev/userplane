@@ -1,0 +1,46 @@
+---
+title: MCP Servers
+description: The two Userplane MCP servers bundled with the Cursor plugin
+---
+
+The Cursor plugin registers both Userplane MCP servers. You do not need to edit `mcp.json` manually when the plugin is installed.
+
+## Bundled servers
+
+| Server                | URL                             | Authentication | Purpose                                       |
+| --------------------- | ------------------------------- | -------------- | --------------------------------------------- |
+| `userplane-workspace` | `https://api.userplane.io/mcp`  | OAuth 2.1      | Recordings, links, projects, domains, viewers |
+| `userplane-docs`      | `https://docs.userplane.io/mcp` | None (public)  | Userplane documentation search                |
+
+## Workspace MCP
+
+The workspace server gives Cursor access to Userplane workspace data for support and debugging workflows. The `/userplane-debug` command uses it to resolve recordings and fetch console logs, network requests, and user actions.
+
+<Note>
+  The workspace server requires a Userplane account and workspace membership. On first use, Cursor
+  opens a browser window for OAuth sign-in.
+</Note>
+
+## Documentation MCP
+
+The documentation server lets Cursor search Userplane docs inline while it integrates the SDK or answers framework questions. It is public and does not require authentication.
+
+## Verify the servers
+
+Open Cursor MCP settings. You should see:
+
+```text
+userplane-workspace
+userplane-docs
+```
+
+If either server is missing, check that the `userplane` plugin is enabled.
+
+## Related articles
+
+- [Cursor Getting Started](/integrations/cursor-getting-started) — install and verify the Cursor plugin.
+- [Cursor Workflows](/integrations/cursor-workflows) — workflows that use the MCP servers.
+- [Userplane MCP](/integrations/mcp-workspace) — detailed workspace server documentation.
+- [Documentation MCP](/integrations/mcp-docs) — public documentation search server.
+- [MCP Authentication](/integrations/mcp-authentication) — OAuth 2.1 flow and permissions.
+- [Codex MCP Servers](/integrations/codex-mcp) — the same bundled MCP servers in Codex.

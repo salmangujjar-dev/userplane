@@ -1,0 +1,66 @@
+---
+title: Cursor Plugin
+description: Install, audit, debug, and privacy-check Userplane from Cursor with bundled commands, rules, skills, subagents, and MCP servers
+---
+
+The Userplane plugin for Cursor gives Cursor Agent the same Userplane workflows your team can use in Claude Code and Codex, packaged for Cursor. It installs skills, slash commands, subagents, Cursor rules, and both Userplane MCP servers in one place.
+
+## What the plugin does
+
+<CardGroup cols={2}>
+  <Card title="4 Slash Commands" icon="terminal" href="/integrations/cursor-workflows">
+    Integrate, audit, debug, and privacy-check Userplane installs
+  </Card>
+  <Card title="18 Agent Skills" icon="code" href="/developer/agent-skills">
+    Framework, SDK, privacy, and workflow context for Userplane
+  </Card>
+  <Card title="Cursor Rules" icon="list" href="/integrations/cursor-rules">
+    Workflow routing so Cursor uses the right Userplane skill or subagent
+  </Card>
+  <Card title="2 MCP Servers" icon="plug" href="/integrations/cursor-mcp">
+    Workspace and documentation servers bundled with the plugin
+  </Card>
+</CardGroup>
+
+## Quick install
+
+Install `userplane` from the Cursor Marketplace. You can also install directly from Cursor Agent:
+
+```text
+/add-plugin userplane
+```
+
+## How it fits together
+
+| Component                | What it does                                                  | When it runs                         |
+| ------------------------ | ------------------------------------------------------------- | ------------------------------------ |
+| **Skills** (18)          | Framework-specific integration knowledge and workflow context | Auto-loaded when your prompt matches |
+| `/userplane-integrate`   | Detects framework and writes the full install                 | On demand                            |
+| `/userplane-audit`       | Read-only PASS/FAIL checklist against the framework skill     | On demand                            |
+| `/userplane-debug <id>`  | Root-causes a recording via console, network, and action data | On demand                            |
+| `/userplane-privacy`     | Scans for PII leaks, missing blur attrs, and CSP gaps         | On demand                            |
+| **Cursor rule**          | Routes Userplane prompts to the right workflow                | When matching requests appear        |
+| **Workspace + Docs MCP** | Workspace data and documentation search                       | Used by workflows and directly       |
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Getting Started" icon="rocket" href="/integrations/cursor-getting-started">
+    Install and verify the Cursor plugin
+  </Card>
+  <Card title="Workflows" icon="terminal" href="/integrations/cursor-workflows">
+    All four Cursor slash commands
+  </Card>
+  <Card title="Rules" icon="list" href="/integrations/cursor-rules">
+    How Cursor routes Userplane prompts
+  </Card>
+</CardGroup>
+
+## Related articles
+
+- [Codex Plugin](/integrations/codex) — install the same Userplane skills and MCP servers in Codex.
+- [Claude Code Plugin](/integrations/claude-code) — slash commands, subagents, skills, and MCP for Claude Code.
+- [Cursor Workflows](/integrations/cursor-workflows) — command reference for Cursor.
+- [Cursor MCP Servers](/integrations/cursor-mcp) — bundled workspace and documentation servers.
+- [Agent Skills](/developer/agent-skills) — install Userplane skills in other AI coding agents.
+- [Userplane MCP](/integrations/mcp-workspace) — connect agents to recordings and workspace data.

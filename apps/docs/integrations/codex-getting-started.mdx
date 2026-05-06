@@ -1,0 +1,91 @@
+---
+title: Getting Started
+description: Install and verify the Userplane plugin in Codex
+---
+
+The Codex plugin installs Userplane skills and both MCP servers in one setup flow. Use it when you want Codex to make framework-aware Userplane changes or analyze recordings with workspace data.
+
+## Install
+
+<Steps>
+  <Step title="Register the marketplace">
+    Run this once from your terminal:
+
+    ```bash
+    codex marketplace add userplanehq/userplane-agent
+    ```
+
+  </Step>
+  <Step title="Install the plugin">
+    Open `/plugins` in Codex, choose the Userplane marketplace, and install `userplane`.
+  </Step>
+  <Step title="Verify the plugin">
+    Open `/plugins` again and confirm `userplane` is listed and enabled.
+  </Step>
+  <Step title="Verify MCP servers">
+    Open `/mcp`.
+
+    You should see `userplane-workspace` and `userplane-docs`.
+
+  </Step>
+</Steps>
+
+## First use
+
+<Steps>
+  <Step title="Authenticate">
+    On the first tool call that uses the workspace MCP server, Codex opens a browser window for Userplane sign-in. Log in and approve access. Tokens are stored by Codex.
+  </Step>
+  <Step title="Try a workflow">
+    Open a web app repository and ask Codex:
+
+    ```text
+    $userplane-integrate Install Userplane in this app.
+    ```
+
+    Codex detects the framework, loads the matching skill, and applies the integration.
+
+  </Step>
+  <Step title="Try natural language">
+    You can also ask without naming the skill:
+
+    ```text
+    Audit my Userplane setup and tell me what needs to change.
+    ```
+
+    Codex loads `userplane-audit` when the request matches the workflow.
+
+  </Step>
+</Steps>
+
+## Verification checklist
+
+| Check                          | Expected result                                   |
+| ------------------------------ | ------------------------------------------------- |
+| `/plugins`                     | `userplane` listed and enabled                    |
+| `/mcp`                         | `userplane-workspace` and `userplane-docs` listed |
+| `$userplane-integrate`         | Detects framework or prompts for one              |
+| "List my Userplane workspaces" | Returns workspace list after MCP authentication   |
+
+## Troubleshooting
+
+**Plugin not visible**
+
+Confirm the marketplace was added with `codex marketplace add userplanehq/userplane-agent`, then reopen `/plugins`.
+
+**MCP authentication failed**
+
+Open `/mcp` to view server status and re-authenticate.
+
+**A workflow skill did not activate**
+
+Name the skill explicitly, such as `$userplane-audit`, or make the request more specific: "Audit my Userplane install in this repo."
+
+## Related articles
+
+- [Codex Plugin](/integrations/codex) — what the plugin includes.
+- [Codex Workflows](/integrations/codex-workflows) — explicit skill names and example prompts.
+- [Codex MCP Servers](/integrations/codex-mcp) — bundled workspace and documentation servers.
+- [Cursor Plugin](/integrations/cursor) — install the same workflows in Cursor.
+- [Claude Code Plugin](/integrations/claude-code) — slash-command setup for Claude Code.
+- [Agent Skills](/developer/agent-skills) — install skills in other AI coding agents.

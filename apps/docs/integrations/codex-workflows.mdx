@@ -1,0 +1,78 @@
+---
+title: Workflows
+description: Four Codex workflow skills for integrating, auditing, debugging, and privacy-checking Userplane
+---
+
+The Codex plugin includes four workflow skills. They can activate from natural language, or you can name them directly with `$userplane-*` when you want a specific workflow.
+
+## Workflow reference
+
+| Skill                  | Job                       | Output                          |
+| ---------------------- | ------------------------- | ------------------------------- |
+| `$userplane-integrate` | Add Userplane to this app | File edits + summary            |
+| `$userplane-audit`     | Verify my install         | PASS/FAIL checklist with diffs  |
+| `$userplane-debug`     | Root-cause a recording    | Timeline + root cause + fix     |
+| `$userplane-privacy`   | Check privacy posture     | Severity-ranked findings report |
+
+## Usage
+
+<CodeGroup>
+
+```text
+$userplane-integrate Install Userplane in this app.
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+$userplane-audit Verify my Userplane setup.
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+$userplane-debug rec_01HX2KYN
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+$userplane-privacy Check whether recordings expose PII.
+```
+
+</CodeGroup>
+
+## What each workflow does
+
+| Workflow      | Behavior                                                                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Integrate** | Detects the framework from `package.json`, loads the matching framework skill, and writes the provider, script, environment, and CSP changes.  |
+| **Audit**     | Read-only. Checks an existing install against the framework skill and reports PASS/FAIL results with file:line citations and suggested diffs.  |
+| **Debug**     | Uses the workspace MCP server to resolve a recording, fetch console/network/action data after confirmation, and build a root-cause timeline.   |
+| **Privacy**   | Read-only. Scans blur coverage, `setUser` and `setMetadata` payloads, CSP iframe gaps, and visible DOM leaks that could expose sensitive data. |
+
+## Natural-language activation
+
+Codex can load the same workflows without explicit skill names:
+
+| Prompt                                             | Skill loaded          |
+| -------------------------------------------------- | --------------------- |
+| "Set up Userplane in this Astro site"              | `userplane-integrate` |
+| "Check if our Userplane install is correct"        | `userplane-audit`     |
+| "Debug this Userplane recording"                   | `userplane-debug`     |
+| "Do recordings expose emails or card fields here?" | `userplane-privacy`   |
+
+## Related articles
+
+- [Codex Plugin](/integrations/codex) — overview of the Codex plugin.
+- [Codex Getting Started](/integrations/codex-getting-started) — install and verify the plugin.
+- [Codex MCP Servers](/integrations/codex-mcp) — workspace and documentation MCP in Codex.
+- [Cursor Workflows](/integrations/cursor-workflows) — equivalent slash commands in Cursor.
+- [Claude Code Commands](/integrations/claude-code-commands) — equivalent slash commands in Claude Code.
+- [Agent Skills](/developer/agent-skills) — how skills load across AI agents.
