@@ -213,7 +213,7 @@ help: ## Show this help message
 	@echo "$(WHITE)║ $(CYAN)CODEGEN$(WHITE)                                                                                           ║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╦═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)generate:openapi$(WHITE)               ║$(RESET) Generate OpenAPI spec for docs playground                         $(WHITE)║$(RESET)"
-	@echo "$(WHITE)║ $(GREEN)generate:mcp-tool-justifications$(WHITE) ║$(RESET) Generate MCP tool hint justifications for app review            $(WHITE)║$(RESET)"
+	@echo "$(WHITE)║ $(GREEN)generate:chatgpt-app-submission$(WHITE) ║$(RESET) Generate ChatGPT app submission artifact                  $(WHITE)║$(RESET)"
 	@echo "$(WHITE)║ $(GREEN)docs:check$(WHITE)                    ║$(RESET) Validate Mintlify docs (broken links + build validation)          $(WHITE)║$(RESET)"
 	@echo "$(WHITE)╠═══════════════════════════════╩═══════════════════════════════════════════════════════════════════╣$(RESET)"
 	@echo "$(WHITE)║ $(CYAN)MAINTENANCE$(WHITE)                                                                                       ║$(RESET)"
@@ -458,10 +458,13 @@ generate\:openapi: ## Generate OpenAPI spec for docs playground
 	@cd packages/contract && bun run generate:openapi
 	@echo "$(GREEN)OpenAPI spec written to apps/docs/openapi.json$(RESET)"
 
-generate\:mcp-tool-justifications: ## Generate MCP tool hint justifications for app review
-	@echo "$(BLUE)Generating MCP tool hint justifications from MCP contract...$(RESET)"
-	@cd packages/contract && bun run generate:mcp-tool-justifications
-	@echo "$(GREEN)MCP tool hint justifications written to apps/docs/tool-hint-justifications.json$(RESET)"
+generate\:chatgpt-app-submission: ## Generate ChatGPT app submission artifact
+	@echo "$(BLUE)Generating ChatGPT app submission artifact from MCP contract...$(RESET)"
+	@cd packages/contract && bun run generate:chatgpt-app-submission
+	@echo "$(GREEN)ChatGPT app submission written to apps/docs/chatgpt-app-submission.json$(RESET)"
+
+generate\:mcp-tool-justifications: ## Backwards-compatible alias
+	@$(MAKE) generate:chatgpt-app-submission
 
 docs\:check: ## Validate Mintlify docs (broken links + build validation)
 	@echo "$(BLUE)Checking Mintlify docs for broken links...$(RESET)"
