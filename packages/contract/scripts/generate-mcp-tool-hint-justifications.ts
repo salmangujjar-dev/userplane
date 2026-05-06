@@ -142,9 +142,9 @@ const TOOL_HINT_JUSTIFICATIONS = {
     read_only_justification:
       'Creates a new private recording link record, so it changes Userplane workspace state.',
     open_world_justification:
-      'Creates the link inside Userplane and cannot post, publish, send, or update third-party systems.',
+      'Creates a first-party Userplane recording URL that can be opened by an end user outside the dashboard; workspace membership is required and the tool does not send messages or post to third-party services.',
     destructive_justification:
-      'Adds a new link record and does not delete, overwrite, revoke access, or perform an irreversible action.',
+      'Adds a new link record and consumes link quota, but does not delete, overwrite, revoke access, send messages, or perform an irreversible action.',
   },
   userplane_get_link: {
     read_only_justification:
@@ -158,9 +158,9 @@ const TOOL_HINT_JUSTIFICATIONS = {
     read_only_justification:
       'Updates an existing private recording link record, so it changes Userplane workspace state.',
     open_world_justification:
-      'Applies changes only inside Userplane and cannot post, publish, send, or update third-party systems.',
+      'Changes settings on a first-party Userplane recording URL that can be opened by an end user outside the dashboard; workspace membership is required and only provided fields are updated.',
     destructive_justification:
-      'Can overwrite existing link settings such as title, reusability, provider fields, or metadata.',
+      'Can overwrite existing link settings such as title, reusability, provider fields, or metadata, with no MCP undo path.',
   },
   userplane_show_recording: {
     read_only_justification:
