@@ -54,6 +54,13 @@ export const MUTATING_ANNOTATIONS = {
   openWorldHint: false,
 } as const satisfies McpToolAnnotations;
 
+export const OPEN_WORLD_MUTATING_ANNOTATIONS = {
+  readOnlyHint: false,
+  destructiveHint: false,
+  idempotentHint: false,
+  openWorldHint: true,
+} as const satisfies McpToolAnnotations;
+
 export const IDEMPOTENT_MUTATING_ANNOTATIONS = {
   readOnlyHint: false,
   destructiveHint: false,
@@ -66,4 +73,11 @@ export const DESTRUCTIVE_ANNOTATIONS = {
   destructiveHint: true,
   idempotentHint: false,
   openWorldHint: false,
+} as const satisfies McpToolAnnotations;
+
+export const OPEN_WORLD_DESTRUCTIVE_ANNOTATIONS = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  idempotentHint: false,
+  openWorldHint: true,
 } as const satisfies McpToolAnnotations;
