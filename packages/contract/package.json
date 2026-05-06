@@ -25,7 +25,8 @@
     "typecheck": "tsc --noEmit",
     "generate:openapi": "bun run scripts/generate-openapi.ts",
     "check:mcp-tool-annotations": "bun run scripts/check-mcp-tool-annotations.ts",
-    "generate:mcp-tool-justifications": "bun run scripts/generate-mcp-tool-hint-justifications.ts"
+    "generate:chatgpt-app-submission": "bun run scripts/generate-mcp-tool-hint-justifications.ts",
+    "generate:mcp-tool-justifications": "bun run generate:chatgpt-app-submission"
   },
   "dependencies": {
     "@userplane/logger": "*",

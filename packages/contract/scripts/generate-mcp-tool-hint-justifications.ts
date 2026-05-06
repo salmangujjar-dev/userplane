@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { mcpToolDefinitions } from '../src/mcp';
 
 /**
- * Generates the ChatGPT Apps MCP tool hint justification artifact.
- * Output: apps/docs/tool-hint-justifications.json
+ * Generates the ChatGPT Apps submission artifact.
+ * Output: apps/docs/chatgpt-app-submission.json
  *
  * Usage: bun run scripts/generate-mcp-tool-hint-justifications.ts
  */
@@ -205,7 +205,7 @@ const TOOL_HINT_JUSTIFICATIONS = {
 } satisfies Record<ToolName, ToolJustifications>;
 
 const output = {
-  $schema: 'https://developers.openai.com/apps-sdk/schemas/tool-hint-justifications.v1.json',
+  $schema: 'https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json',
   schema_version: 1,
   tools: Object.fromEntries(
     mcpToolDefinitions.map((tool) => {
@@ -230,8 +230,8 @@ const output = {
 };
 
 const outputPath = fileURLToPath(
-  new URL('../../../apps/docs/tool-hint-justifications.json', import.meta.url)
+  new URL('../../../apps/docs/chatgpt-app-submission.json', import.meta.url)
 );
 await Bun.write(outputPath, `${JSON.stringify(output, null, 2)}\n`);
 
-console.log(`Wrote ${mcpToolDefinitions.length} tool justifications to ${outputPath}`);
+console.log(`Wrote ${mcpToolDefinitions.length} tool submission entries to ${outputPath}`);
