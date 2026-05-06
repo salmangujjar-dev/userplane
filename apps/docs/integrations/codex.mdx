@@ -1,0 +1,71 @@
+---
+title: Codex Plugin
+description: Install, audit, debug, and privacy-check Userplane from Codex with bundled skills and MCP servers
+---
+
+The Userplane plugin for Codex gives Codex the context it needs to work with Userplane in your app. It installs framework skills, workflow skills, and both Userplane MCP servers so Codex can integrate the SDK, audit an install, debug recordings, and check privacy posture from the same workspace.
+
+## What the plugin does
+
+<CardGroup cols={2}>
+  <Card title="18 Agent Skills" icon="code" href="/developer/agent-skills">
+    Framework, SDK, privacy, and workflow knowledge for Userplane
+  </Card>
+  <Card title="4 Codex Workflows" icon="terminal" href="/integrations/codex-workflows">
+    Integrate, audit, debug, and privacy-check from natural language or explicit skill calls
+  </Card>
+  <Card title="2 MCP Servers" icon="plug" href="/integrations/codex-mcp">
+    Workspace and documentation servers loaded by the plugin
+  </Card>
+  <Card title="Framework Detection" icon="magnifying-glass">
+    Next.js, Nuxt, Angular, Vue, SvelteKit, Astro, TanStack Start, React, and static HTML
+  </Card>
+</CardGroup>
+
+## Quick install
+
+```bash
+codex marketplace add userplanehq/userplane-agent
+```
+
+Then open `/plugins` in Codex and install `userplane` from the Userplane marketplace.
+
+<Tip>
+  Using Cursor or Claude Code instead? See [Cursor Plugin](/integrations/cursor) or [Claude Code
+  Plugin](/integrations/claude-code).
+</Tip>
+
+## How it fits together
+
+| Component              | What it does                                                  | When it runs                         |
+| ---------------------- | ------------------------------------------------------------- | ------------------------------------ |
+| **Skills** (18)        | Framework-specific integration knowledge and workflow context | Auto-loaded when your prompt matches |
+| `$userplane-integrate` | Detects framework and writes the full install                 | On demand                            |
+| `$userplane-audit`     | Read-only PASS/FAIL checklist against the framework skill     | On demand                            |
+| `$userplane-debug`     | Root-causes a recording via console, network, and action data | On demand                            |
+| `$userplane-privacy`   | Scans for PII leaks, missing blur attrs, and CSP gaps         | On demand                            |
+| **Workspace MCP**      | Recordings, links, projects, domains, interactive viewers     | Used by debugging workflows          |
+| **Docs MCP**           | Searches Userplane documentation                              | Used for SDK and framework guidance  |
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Getting Started" icon="rocket" href="/integrations/codex-getting-started">
+    Install and verify the Codex plugin
+  </Card>
+  <Card title="Workflows" icon="terminal" href="/integrations/codex-workflows">
+    All four Codex workflow skills
+  </Card>
+  <Card title="MCP Servers" icon="plug" href="/integrations/codex-mcp">
+    Workspace and documentation MCP in Codex
+  </Card>
+</CardGroup>
+
+## Related articles
+
+- [Cursor Plugin](/integrations/cursor) — install the same Userplane workflows in Cursor.
+- [Claude Code Plugin](/integrations/claude-code) — slash commands, subagents, skills, and MCP for Claude Code.
+- [Agent Skills](/developer/agent-skills) — install Userplane skills in other AI coding agents.
+- [Userplane MCP](/integrations/mcp-workspace) — connect agents to recordings and workspace data.
+- [Documentation MCP](/integrations/mcp-docs) — search Userplane docs from an AI tool.
+- [Developer Installation](/developer/installation) — install the Userplane SDK manually.

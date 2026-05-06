@@ -1,0 +1,75 @@
+---
+title: Workflows
+description: Four Cursor slash commands for integrating, auditing, debugging, and privacy-checking Userplane
+---
+
+The Cursor plugin registers four Userplane slash commands. Each command delegates to the matching Userplane subagent and loads the relevant skills for the task.
+
+## Command reference
+
+| Command                       | Job                       | Output                          |
+| ----------------------------- | ------------------------- | ------------------------------- |
+| `/userplane-integrate`        | Add Userplane to this app | File edits + summary            |
+| `/userplane-audit`            | Verify my install         | PASS/FAIL checklist with diffs  |
+| `/userplane-debug <id\|desc>` | Root-cause a recording    | Timeline + root cause + fix     |
+| `/userplane-privacy`          | Check privacy posture     | Severity-ranked findings report |
+
+## Usage
+
+<CodeGroup>
+
+```text
+/userplane-integrate
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+/userplane-audit
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+/userplane-debug rec_01HX2KYN
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+/userplane-debug "Sarah's checkout failure yesterday"
+```
+
+</CodeGroup>
+
+<CodeGroup>
+
+```text
+/userplane-privacy
+```
+
+</CodeGroup>
+
+## What each command does
+
+| Command                | Behavior                                                                                                                                      |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/userplane-integrate` | Detects the framework from `package.json`, loads the matching skill, and writes provider, script, environment, and CSP changes.               |
+| `/userplane-audit`     | Read-only. Checks an existing install against the framework skill and reports PASS/FAIL results with file:line citations and suggested diffs. |
+| `/userplane-debug`     | Uses the workspace MCP server to resolve a recording, fetch session data after confirmation, and produce a root-cause timeline.               |
+| `/userplane-privacy`   | Read-only. Scans blur coverage, metadata PII leakage, CSP iframe gaps, and visible DOM leaks.                                                 |
+
+## Related articles
+
+- [Cursor Plugin](/integrations/cursor) — overview of the Cursor plugin.
+- [Cursor Getting Started](/integrations/cursor-getting-started) — install and verify the plugin.
+- [Cursor Rules](/integrations/cursor-rules) — how natural-language prompts route to these workflows.
+- [Cursor MCP Servers](/integrations/cursor-mcp) — workspace and documentation MCP in Cursor.
+- [Codex Workflows](/integrations/codex-workflows) — equivalent workflow skills in Codex.
+- [Claude Code Commands](/integrations/claude-code-commands) — equivalent slash commands in Claude Code.

@@ -5,7 +5,23 @@ description: Install Userplane Agent Skills to give AI agents built-in expertise
 
 Userplane publishes an Agent Skills package that gives AI agents built-in knowledge of Userplane's APIs, SDKs, and workflows. Once installed, agents load the relevant context automatically — no manual prompting required.
 
-## Install
+## Recommended install paths
+
+<CardGroup cols={3}>
+  <Card title="Codex" icon="terminal" href="/integrations/codex">
+    Plugin install with skills and MCP servers
+  </Card>
+  <Card title="Cursor" icon="cursor-arrow-rays" href="/integrations/cursor">
+    Plugin install with commands, rules, subagents, skills, and MCP servers
+  </Card>
+  <Card title="Claude Code" icon="code" href="/integrations/claude-code">
+    Plugin install with slash commands, subagents, skills, and MCP servers
+  </Card>
+</CardGroup>
+
+Use the plugin for your agent when one is available. Use the Skills CLI for other agents that support the Agent Skills standard.
+
+## Skills CLI
 
 ```bash
 npx skills add userplanehq/userplane-agent
@@ -36,18 +52,28 @@ Agent Skills are modular capabilities that extend AI agents with domain-specific
 
 The agent only loads what's relevant to your current task.
 
+## What's included
+
+| Category                   | Skills                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------- |
+| **Framework integrations** | React, Next.js, Vue, Angular, Nuxt, Astro, SvelteKit, TanStack Start, and static HTML |
+| **SDK and reference**      | Web SDK, Metadata SDK, CDN installation, sensitive data redaction, and best practices |
+| **Workflow skills**        | `userplane-integrate`, `userplane-audit`, `userplane-debug`, and `userplane-privacy`  |
+
 ## Which AI agents support skills?
 
 Skills work with popular AI coding agents including Claude Code, Cursor, Windsurf, and others. Check each skill's documentation for specific compatibility information.
 
 <Tip>
-  Using Claude Code? The [Userplane Claude Code plugin](/integrations/claude-code) bundles these
-  skills with 4 slash commands, purpose-built subagents, and both MCP servers — all from a single
-  plugin install.
+  Using Codex, Cursor, or Claude Code? Install the Userplane plugin for that agent instead of the
+  Skills CLI. The plugins include the skills plus the MCP servers and workflow entry points for the
+  host agent.
 </Tip>
 
 ## Related articles
 
+- [Codex Plugin](/integrations/codex) — install skills and MCP servers in Codex.
+- [Cursor Plugin](/integrations/cursor) — install commands, rules, subagents, skills, and MCP servers in Cursor.
 - [Claude Code Plugin](/integrations/claude-code) — the full plugin with skills, commands, subagents, and MCP servers.
 - [Documentation MCP](/integrations/mcp-docs) — connect AI tools to Userplane documentation via MCP.
 - [Userplane MCP](/integrations/mcp-workspace) — connect AI agents to your workspace for debugging and root cause analysis.

@@ -1,0 +1,91 @@
+---
+title: Getting Started
+description: Install and verify the Userplane plugin in Cursor
+---
+
+The Cursor plugin installs Userplane commands, skills, subagents, rules, and both MCP servers. Use it when you want Cursor Agent to install Userplane, audit the setup, debug recordings, or check privacy issues with Userplane-specific context.
+
+## Install
+
+<Steps>
+  <Step title="Install from Cursor Marketplace">
+    Open the Cursor Marketplace, search for **Userplane**, and install the `userplane` plugin.
+  </Step>
+  <Step title="Install from Agent">
+    You can also install directly from Cursor Agent:
+
+    ```text
+    /add-plugin userplane
+    ```
+
+  </Step>
+  <Step title="Verify commands">
+    Open the Agent slash menu and confirm the Userplane commands are available:
+
+    ```text
+    /userplane-integrate
+    /userplane-audit
+    /userplane-debug
+    /userplane-privacy
+    ```
+
+  </Step>
+  <Step title="Verify rules and MCP">
+    Open Cursor Settings and confirm:
+
+    | Area         | Expected result                                   |
+    | ------------ | ------------------------------------------------- |
+    | Rules        | Userplane workflow rule is visible                |
+    | MCP settings | `userplane-workspace` and `userplane-docs` listed |
+
+  </Step>
+</Steps>
+
+## First use
+
+<Steps>
+  <Step title="Authenticate">
+    On the first command that uses the workspace MCP server, Cursor opens a browser window for Userplane sign-in. Log in and approve access.
+  </Step>
+  <Step title="Try a command">
+    Open a web app repository and run:
+
+    ```text
+    /userplane-integrate
+    ```
+
+    Cursor detects the framework, loads the matching skill, and writes the integration.
+
+  </Step>
+  <Step title="Try natural language">
+    Skills and rules can also route natural-language requests:
+
+    ```text
+    Audit my Userplane setup and tell me what needs to change.
+    ```
+
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+**Plugin not found**
+
+Update Cursor, then install from the Cursor Marketplace or run `/add-plugin userplane` again.
+
+**Commands are missing**
+
+Reload Cursor and check that the `userplane` plugin is enabled.
+
+**MCP authentication failed**
+
+Open Cursor MCP settings, check `userplane-workspace`, and re-authenticate on the next tool call.
+
+## Related articles
+
+- [Cursor Plugin](/integrations/cursor) — what the plugin includes.
+- [Cursor Workflows](/integrations/cursor-workflows) — command reference for all four workflows.
+- [Cursor Rules](/integrations/cursor-rules) — how Userplane prompts are routed.
+- [Cursor MCP Servers](/integrations/cursor-mcp) — bundled workspace and documentation servers.
+- [Codex Plugin](/integrations/codex) — install Userplane in Codex.
+- [Claude Code Plugin](/integrations/claude-code) — install Userplane in Claude Code.

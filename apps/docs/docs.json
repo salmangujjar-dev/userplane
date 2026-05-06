@@ -387,6 +387,25 @@
                 ]
               },
               {
+                "group": "Codex",
+                "pages": [
+                  "integrations/codex",
+                  "integrations/codex-getting-started",
+                  "integrations/codex-workflows",
+                  "integrations/codex-mcp"
+                ]
+              },
+              {
+                "group": "Cursor",
+                "pages": [
+                  "integrations/cursor",
+                  "integrations/cursor-getting-started",
+                  "integrations/cursor-workflows",
+                  "integrations/cursor-rules",
+                  "integrations/cursor-mcp"
+                ]
+              },
+              {
                 "group": "Claude Code",
                 "pages": [
                   "integrations/claude-code",

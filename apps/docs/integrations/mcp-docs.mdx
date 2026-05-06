@@ -1,6 +1,6 @@
 ---
 title: Documentation MCP
-description: Connect AI tools like Claude, Cursor, and VS Code directly to Userplane documentation via MCP
+description: Connect AI tools like Claude, Codex, Cursor, and VS Code directly to Userplane documentation via MCP
 ---
 
 <Note>
@@ -9,7 +9,7 @@ description: Connect AI tools like Claude, Cursor, and VS Code directly to Userp
   see [Userplane MCP](/integrations/mcp-workspace) instead.
 </Note>
 
-Userplane's Documentation MCP server gives AI tools like Claude, Cursor, Goose, and ChatGPT direct access to the Userplane docs — so they can search them inline while generating responses, rather than relying on web search.
+Userplane's Documentation MCP server gives AI tools like Claude, Codex, Cursor, Goose, and ChatGPT direct access to the Userplane docs — so they can search them inline while generating responses, rather than relying on web search.
 
 ## Connect to your AI tool
 
@@ -60,6 +60,22 @@ https://docs.userplane.io/mcp
     </Note>
 
   </Tab>
+  <Tab title="Codex">
+    The [Userplane Codex plugin](/integrations/codex) installs the documentation MCP server automatically alongside the workspace server.
+
+    ```bash
+    codex marketplace add userplanehq/userplane-agent
+    ```
+
+    Then open `/plugins` in Codex and install `userplane`. Verify with:
+
+    ```text
+    /mcp
+    ```
+
+    You should see `userplane-docs`.
+
+  </Tab>
   <Tab title="Cursor">
     <Steps>
       <Step title="Open the command palette">
@@ -89,6 +105,11 @@ https://docs.userplane.io/mcp
     <Note>
       See [Installing MCP servers](https://cursor.com/docs#installing-mcp-servers) in the Cursor documentation for more details.
     </Note>
+
+    <Tip>
+      The [Userplane Cursor plugin](/integrations/cursor) installs `userplane-docs` automatically
+      alongside the workspace MCP server.
+    </Tip>
 
   </Tab>
   <Tab title="VS Code">
@@ -141,6 +162,8 @@ To protect availability, Userplane applies the following rate limits to MCP requ
 ## Related articles
 
 - [Userplane MCP](/integrations/mcp-workspace) — connect AI agents to your workspace for debugging and root cause analysis.
+- [Codex Plugin](/integrations/codex) — bundled skills and MCP servers for Codex.
+- [Cursor Plugin](/integrations/cursor) — bundled commands, rules, skills, and MCP servers for Cursor.
 - [Agent Skills](/developer/agent-skills) — install Userplane Agent Skills for SDK integration guidance.
 - [Claude Code Plugin](/integrations/claude-code) — the full Userplane plugin with skills, commands, and MCP servers.
 - [Installation](/developer/installation) — install the Userplane SDK in your app.
