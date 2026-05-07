@@ -1,7 +1,7 @@
 'use client';
 
 import { CreditCardIcon, LockIcon, SearchIcon, Settings2Icon, ShieldCheckIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Badge } from '@/components/ui/badge';
@@ -31,9 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toastManager } from '@/components/ui/toast';
-import { useCards } from '@/hooks/useCards';
-import { useExpenses } from '@/hooks/useExpenses';
-import { deriveCardSummaries } from '@/lib/data/mock-finance';
+import { useCardDirectorySummary } from '@/hooks/useFinanceSummaries';
 import type { CardStatus } from '@/lib/data/types';
 import { isFailureActive } from '@/lib/feature-flags';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
@@ -44,44 +42,25 @@ const statusLabels: Record<string, string> = {
   locked: 'Locked',
   review: 'Review',
 };
+const PAGE_SIZE = 25;
 
 export default function CardsPage() {
-  const { cards: persistedCards, isLoading: cardsLoading } = useCards();
-  const { expenses, isLoading: expensesLoading } = useExpenses();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [department, setDepartment] = useState('all');
-  const isLoading = cardsLoading || expensesLoading;
-
-  const cards = useMemo(
-    () => deriveCardSummaries(persistedCards, expenses),
-    [expenses, persistedCards]
-  );
-  const departments = useMemo(() => {
-    return Array.from(new Set(cards.map((card) => card.employee.department))).sort();
-  }, [cards]);
-
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return cards.filter((card) => {
-      const searchMatches =
-        !query ||
-        card.employee.name.toLowerCase().includes(query) ||
-        card.employee.email.toLowerCase().includes(query) ||
-        card.lastMerchant.toLowerCase().includes(query) ||
-        card.controlsLabel.toLowerCase().includes(query);
-      const statusMatches = status === 'all' || card.status === status;
-      const departmentMatches = department === 'all' || card.employee.department === department;
-
-      return searchMatches && statusMatches && departmentMatches;
-    });
-  }, [cards, department, search, status]);
-
-  const activeCount = cards.filter((card) => card.status === 'active').length;
-  const lockedCount = cards.filter((card) => card.status === 'locked').length;
-  const reviewCount = cards.filter((card) => card.status === 'review').length;
-  const availableCredit = filtered.reduce((sum, card) => sum + card.available, 0);
+  const [page, setPage] = useState(0);
+  const { data, isLoading } = useCardDirectorySummary({
+    search,
+    status,
+    department,
+    page: String(page),
+    pageSize: String(PAGE_SIZE),
+  });
+  const cards = data?.cards ?? [];
+  const departments = data?.departments ?? [];
+  const totals = data?.totals;
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const handleCardControl = (control: 'lock' | 'settings') => {
     if (isFailureActive('cardControls')) {
@@ -94,7 +73,7 @@ export default function CardsPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <div className="space-y-4 p-4 md:p-6">
         <div className="grid gap-3 sm:grid-cols-4">
@@ -110,12 +89,15 @@ export default function CardsPage() {
   return (
     <div className="space-y-4 p-4 md:p-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryTile label="Issued cards" value={cards.length.toString()} />
-        <SummaryTile label="Active" value={activeCount.toString()} />
-        <SummaryTile label="Needs review" value={(lockedCount + reviewCount).toString()} />
+        <SummaryTile label="Issued cards" value={(totals?.issued ?? 0).toString()} />
+        <SummaryTile label="Active" value={(totals?.active ?? 0).toString()} />
+        <SummaryTile
+          label="Needs review"
+          value={((totals?.locked ?? 0) + (totals?.review ?? 0)).toString()}
+        />
         <SummaryTile
           label="Available credit"
-          value={formatCurrency(availableCredit)}
+          value={formatCurrency(totals?.availableCredit ?? 0)}
           valueClassName="financial-amount"
         />
       </div>
@@ -127,11 +109,20 @@ export default function CardsPage() {
             <Input
               placeholder="Search cards..."
               value={search}
-              onChange={(event) => setSearch((event.target as HTMLInputElement).value)}
+              onChange={(event) => {
+                setSearch((event.target as HTMLInputElement).value);
+                setPage(0);
+              }}
               className="sensitive-form-field pl-9"
             />
           </div>
-          <Select value={status} onValueChange={(value) => setStatus(value as string)}>
+          <Select
+            value={status}
+            onValueChange={(value) => {
+              setStatus(value as string);
+              setPage(0);
+            }}
+          >
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue>{() => statusLabels[status] ?? 'All Statuses'}</SelectValue>
             </SelectTrigger>
@@ -142,7 +133,13 @@ export default function CardsPage() {
               <SelectItem value="review">Review</SelectItem>
             </SelectPopup>
           </Select>
-          <Select value={department} onValueChange={(value) => setDepartment(value as string)}>
+          <Select
+            value={department}
+            onValueChange={(value) => {
+              setDepartment(value as string);
+              setPage(0);
+            }}
+          >
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue>
                 {() => (department === 'all' ? 'All Departments' : department)}
@@ -158,14 +155,16 @@ export default function CardsPage() {
             </SelectPopup>
           </Select>
         </div>
-        <p className="text-sm text-muted-foreground">Showing {filtered.length} cards</p>
+        <p className="text-sm text-muted-foreground">
+          Showing {cards.length} of {total} cards
+        </p>
       </div>
 
       {isFailureActive('cardsTableRender') ? (
         <ErrorBoundary>
           <CardsChaosFailure />
         </ErrorBoundary>
-      ) : filtered.length === 0 ? (
+      ) : cards.length === 0 ? (
         <Empty>
           <EmptyMedia variant="icon">
             <CreditCardIcon />
@@ -189,7 +188,7 @@ export default function CardsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((card) => (
+              {cards.map((card) => (
                 <TableRow key={card.id}>
                   <TableCell>
                     <div className="min-w-0">
@@ -271,12 +270,52 @@ export default function CardsPage() {
           </Table>
         </div>
       )}
+
+      {totalPages > 1 && (
+        <DirectoryPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      )}
     </div>
   );
 }
 
 function CardsChaosFailure(): never {
   throw new Error('Cards table failed to reconcile issuer controls.');
+}
+
+function DirectoryPagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <p className="text-sm text-muted-foreground">
+        Page {page + 1} of {totalPages}
+      </p>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page === 0}
+          onClick={() => onPageChange(Math.max(0, page - 1))}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page >= totalPages - 1}
+          onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 function SummaryTile({

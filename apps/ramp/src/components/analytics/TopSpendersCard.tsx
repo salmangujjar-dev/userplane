@@ -5,6 +5,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { getTopSpenders, type TopSpender } from '@/lib/data/mock-finance';
 import type { ExpenseWithRelations } from '@/lib/data/types';
 import { formatCurrency } from '@/lib/utils';
 
@@ -12,24 +13,16 @@ const AVATAR_COLORS = ['#1F1F1F', '#E4F222', '#737373', '#A3A3A3', '#D4D4D4'];
 const ITEMS_PER_PAGE = 5;
 
 interface TopSpendersCardProps {
-  expenses: ExpenseWithRelations[];
+  expenses?: ExpenseWithRelations[];
+  spenders?: TopSpender[];
 }
 
-export function TopSpendersCard({ expenses }: TopSpendersCardProps) {
+export function TopSpendersCard({ expenses = [], spenders }: TopSpendersCardProps) {
   const [currentPage, setCurrentPage] = useState(0);
 
   const allSpenders = useMemo(() => {
-    const map = new Map<string, { name: string; total: number }>();
-    expenses
-      .filter((e) => e.status === 'approved')
-      .forEach((e) => {
-        const name = e.employee?.name ?? 'Unknown';
-        const existing = map.get(e.employeeId) ?? { name, total: 0 };
-        existing.total += e.amount;
-        map.set(e.employeeId, existing);
-      });
-    return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [expenses]);
+    return spenders ?? getTopSpenders(expenses);
+  }, [expenses, spenders]);
 
   const totalPages = Math.ceil(allSpenders.length / ITEMS_PER_PAGE);
   const startIndex = currentPage * ITEMS_PER_PAGE;

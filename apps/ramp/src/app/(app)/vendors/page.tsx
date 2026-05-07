@@ -2,7 +2,7 @@
 
 import { ArrowUpRightIcon, Building2Icon, RepeatIcon, SearchIcon, TagsIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Badge } from '@/components/ui/badge';
@@ -31,10 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useCategories } from '@/hooks/useCategories';
-import { useExpenses } from '@/hooks/useExpenses';
-import { useVendors } from '@/hooks/useVendors';
-import { deriveVendorSummaries } from '@/lib/data/mock-finance';
+import { useVendorDirectorySummary } from '@/hooks/useFinanceSummaries';
 import { isFailureActive } from '@/lib/feature-flags';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
@@ -44,45 +41,27 @@ const signalLabels: Record<string, string> = {
   review: 'Review',
   monitor: 'Monitor',
 };
+const PAGE_SIZE = 25;
 
 export default function VendorsPage() {
-  const { expenses, isLoading: expensesLoading } = useExpenses();
-  const { categories, isLoading: categoriesLoading } = useCategories();
-  const { vendors: persistedVendors, isLoading: vendorsLoading } = useVendors();
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('all');
   const [signal, setSignal] = useState('all');
-  const isLoading = expensesLoading || categoriesLoading || vendorsLoading;
+  const [page, setPage] = useState(0);
+  const { data, isLoading } = useVendorDirectorySummary({
+    search,
+    categoryId,
+    signal,
+    page: String(page),
+    pageSize: String(PAGE_SIZE),
+  });
+  const vendors = data?.vendors ?? [];
+  const categories = data?.categories ?? [];
+  const totals = data?.totals;
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const vendors = useMemo(
-    () => deriveVendorSummaries(persistedVendors, expenses),
-    [expenses, persistedVendors]
-  );
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return vendors.filter((vendor) => {
-      const searchMatches =
-        !query ||
-        vendor.merchant.toLowerCase().includes(query) ||
-        vendor.categoryName.toLowerCase().includes(query) ||
-        vendor.savingsOpportunity.toLowerCase().includes(query);
-      const categoryMatches = categoryId === 'all' || vendor.categoryId === categoryId;
-      const signalMatches =
-        signal === 'all' ||
-        (signal === 'recurring' && vendor.recurring) ||
-        (signal === 'review' && vendor.savingsOpportunity !== 'Monitor') ||
-        (signal === 'monitor' && vendor.savingsOpportunity === 'Monitor');
-
-      return searchMatches && categoryMatches && signalMatches;
-    });
-  }, [categoryId, search, signal, vendors]);
-
-  const totalSpend = filtered.reduce((sum, vendor) => sum + vendor.totalSpend, 0);
-  const recurringCount = vendors.filter((vendor) => vendor.recurring).length;
-  const reviewCount = vendors.filter((vendor) => vendor.savingsOpportunity !== 'Monitor').length;
-
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <div className="space-y-4 p-4 md:p-6">
         <div className="grid gap-3 sm:grid-cols-4">
@@ -100,12 +79,12 @@ export default function VendorsPage() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryTile
           label="Visible spend"
-          value={formatCurrency(totalSpend)}
+          value={formatCurrency(totals?.visibleSpend ?? 0)}
           valueClassName="financial-amount"
         />
-        <SummaryTile label="Vendors" value={filtered.length.toString()} />
-        <SummaryTile label="Recurring" value={recurringCount.toString()} />
-        <SummaryTile label="Review signals" value={reviewCount.toString()} />
+        <SummaryTile label="Vendors" value={(totals?.visibleVendors ?? 0).toString()} />
+        <SummaryTile label="Recurring" value={(totals?.recurring ?? 0).toString()} />
+        <SummaryTile label="Review signals" value={(totals?.review ?? 0).toString()} />
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -115,11 +94,20 @@ export default function VendorsPage() {
             <Input
               placeholder="Search vendors..."
               value={search}
-              onChange={(event) => setSearch((event.target as HTMLInputElement).value)}
+              onChange={(event) => {
+                setSearch((event.target as HTMLInputElement).value);
+                setPage(0);
+              }}
               className="sensitive-form-field pl-9"
             />
           </div>
-          <Select value={categoryId} onValueChange={(value) => setCategoryId(value as string)}>
+          <Select
+            value={categoryId}
+            onValueChange={(value) => {
+              setCategoryId(value as string);
+              setPage(0);
+            }}
+          >
             <SelectTrigger className="w-full sm:w-56">
               <SelectValue>
                 {() =>
@@ -139,7 +127,13 @@ export default function VendorsPage() {
               ))}
             </SelectPopup>
           </Select>
-          <Select value={signal} onValueChange={(value) => setSignal(value as string)}>
+          <Select
+            value={signal}
+            onValueChange={(value) => {
+              setSignal(value as string);
+              setPage(0);
+            }}
+          >
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue>{() => signalLabels[signal] ?? 'All Signals'}</SelectValue>
             </SelectTrigger>
@@ -151,14 +145,16 @@ export default function VendorsPage() {
             </SelectPopup>
           </Select>
         </div>
-        <p className="text-sm text-muted-foreground">Grouped from {expenses.length} expenses</p>
+        <p className="text-sm text-muted-foreground">
+          Showing {vendors.length} of {total} vendors · grouped from {data.expenseCount} expenses
+        </p>
       </div>
 
       {isFailureActive('vendorDirectoryRender') ? (
         <ErrorBoundary>
           <VendorsChaosFailure />
         </ErrorBoundary>
-      ) : filtered.length === 0 ? (
+      ) : vendors.length === 0 ? (
         <Empty>
           <EmptyMedia variant="icon">
             <Building2Icon />
@@ -183,7 +179,7 @@ export default function VendorsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((vendor) => (
+              {vendors.map((vendor) => (
                 <TableRow key={vendor.merchant}>
                   <TableCell>
                     <div className="min-w-0">
@@ -248,12 +244,52 @@ export default function VendorsPage() {
           </Table>
         </div>
       )}
+
+      {totalPages > 1 && (
+        <DirectoryPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      )}
     </div>
   );
 }
 
 function VendorsChaosFailure(): never {
   throw new Error('Vendor directory failed during procurement signal merge.');
+}
+
+function DirectoryPagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <p className="text-sm text-muted-foreground">
+        Page {page + 1} of {totalPages}
+      </p>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page === 0}
+          onClick={() => onPageChange(Math.max(0, page - 1))}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page >= totalPages - 1}
+          onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 function SummaryTile({
