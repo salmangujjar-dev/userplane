@@ -29,14 +29,14 @@ export const POST = withFailureInjection(
       );
     }
 
-    const expense = await repo.getExpense(id);
-    if (!expense) {
+    const updated = await repo.updateExpense(id, { status: 'rejected' });
+    if (!updated) {
       log.debug({ id }, 'POST /api/expenses/[id]/reject not found');
       return NextResponse.json({ success: false, error: 'Expense not found' }, { status: 404 });
     }
 
-    const updated = await repo.updateExpense(id, { status: 'rejected' });
-    log.debug({ id, previousStatus: expense.status }, 'expense rejected');
-    return NextResponse.json({ success: true, data: updated });
+    const data = await repo.getExpenseWithRelations(id);
+    log.debug({ id }, 'expense rejected');
+    return NextResponse.json({ success: true, data: data ?? updated });
   }
 );

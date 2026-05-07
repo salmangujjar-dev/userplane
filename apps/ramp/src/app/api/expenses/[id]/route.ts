@@ -26,17 +26,11 @@ export const GET = withFailureInjection(
       );
     }
 
-    const expense = await repo.getExpense(id);
-    if (!expense) {
+    const data = await repo.getExpenseWithRelations(id);
+    if (!data) {
       log.debug({ id }, 'GET /api/expenses/[id] not found');
       return NextResponse.json({ success: false, error: 'Expense not found' }, { status: 404 });
     }
-
-    const data = {
-      ...expense,
-      employee: await repo.getEmployee(expense.employeeId),
-      category: await repo.getCategory(expense.categoryId),
-    };
 
     return NextResponse.json({ success: true, data });
   }
@@ -70,8 +64,9 @@ export const PUT = withFailureInjection(
         log.debug({ id }, 'PUT /api/expenses/[id] not found');
         return NextResponse.json({ success: false, error: 'Expense not found' }, { status: 404 });
       }
+      const data = await repo.getExpenseWithRelations(id);
       log.debug({ id }, 'PUT /api/expenses/[id] updated');
-      return NextResponse.json({ success: true, data: updated });
+      return NextResponse.json({ success: true, data: data ?? updated });
     } catch (err) {
       log.error({ id, err }, 'PUT /api/expenses/[id] failed');
       return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
