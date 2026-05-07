@@ -12,7 +12,6 @@ import {
   TrendingUpIcon,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo } from 'react';
 
 import { MetricCard } from '@/components/analytics/MetricCard';
 import { SpendingChart } from '@/components/analytics/SpendingChart';
@@ -21,55 +20,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useBudgets } from '@/hooks/useBudgets';
-import { useCards } from '@/hooks/useCards';
-import { useEmployees } from '@/hooks/useEmployees';
-import { useExpenses } from '@/hooks/useExpenses';
-import { useVendors } from '@/hooks/useVendors';
-import {
-  deriveApprovalQueue,
-  deriveBudgetSummaries,
-  deriveCardSummaries,
-  deriveDashboardMetrics,
-  deriveVendorSummaries,
-  getReceiptExceptions,
-} from '@/lib/data/mock-finance';
+import { useDashboardSummary } from '@/hooks/useFinanceSummaries';
 import { isFailureActive } from '@/lib/feature-flags';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 export default function DashboardPage() {
-  const { employees, isLoading: employeesLoading } = useEmployees();
-  const { expenses, isLoading: expensesLoading } = useExpenses();
-  const { cards, isLoading: cardsLoading } = useCards();
-  const { vendors, isLoading: vendorsLoading } = useVendors();
-  const { budgets, isLoading: budgetsLoading } = useBudgets();
-  const isLoading =
-    employeesLoading || expensesLoading || cardsLoading || vendorsLoading || budgetsLoading;
+  const { data: finance, isLoading } = useDashboardSummary();
 
-  const finance = useMemo(() => {
-    const cardSummaries = deriveCardSummaries(cards, expenses);
-    const vendorSummaries = deriveVendorSummaries(vendors, expenses);
-    const budgetSummaries = deriveBudgetSummaries(budgets, employees, expenses);
-    const metrics = deriveDashboardMetrics(
-      expenses,
-      cardSummaries,
-      vendorSummaries,
-      budgetSummaries
-    );
-    const approvals = deriveApprovalQueue(expenses);
-    const receiptExceptions = getReceiptExceptions(expenses);
-
-    return {
-      cards: cardSummaries,
-      vendors: vendorSummaries,
-      budgets: budgetSummaries,
-      metrics,
-      approvals,
-      receiptExceptions,
-    };
-  }, [budgets, cards, employees, expenses, vendors]);
-
-  if (isLoading) {
+  if (isLoading || !finance) {
     return (
       <div className="space-y-4 p-4 md:p-6">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -85,10 +43,7 @@ export default function DashboardPage() {
     );
   }
 
-  const topBudgets = finance.budgets
-    .slice()
-    .sort((a, b) => b.utilization - a.utilization)
-    .slice(0, 5);
+  const topBudgets = finance.budgets;
 
   if (isFailureActive('dashboardSummaryRender')) {
     return (
@@ -144,7 +99,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardPanel className="p-4">
             <ErrorBoundary>
-              <SpendingChart expenses={expenses} days={30} />
+              <SpendingChart data={finance.spendingTrend} days={30} />
             </ErrorBoundary>
           </CardPanel>
         </Card>

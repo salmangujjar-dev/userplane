@@ -2,7 +2,7 @@
 
 import { CheckIcon, ClipboardCheckIcon, ClockIcon, EyeIcon, SearchIcon, XIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ExpenseStatusBadge } from '@/components/expenses/ExpenseStatusBadge';
@@ -33,12 +33,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toastManager } from '@/components/ui/toast';
-import { useExpenses } from '@/hooks/useExpenses';
+import { useApprovalSummary } from '@/hooks/useFinanceSummaries';
 import { api } from '@/lib/api/client';
 import { log } from '@/lib/client-logger';
-import { deriveApprovalQueue, type RiskLevel } from '@/lib/data/mock-finance';
+import type { RiskLevel } from '@/lib/data/mock-finance';
 import { isFailureActive } from '@/lib/feature-flags';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
+
+const PAGE_SIZE = 25;
 
 const riskLabels: Record<string, string> = {
   all: 'All Risk',
@@ -48,48 +50,39 @@ const riskLabels: Record<string, string> = {
 };
 
 export default function ApprovalsPage() {
-  const { expenses, total, isLoading, mutate } = useExpenses({
-    status: 'pending',
-    sortField: 'date',
-    sortDir: 'desc',
-  });
   const [search, setSearch] = useState('');
   const [risk, setRisk] = useState('all');
   const [department, setDepartment] = useState('all');
+  const [page, setPage] = useState(0);
   const [activeAction, setActiveAction] = useState<string | null>(null);
+  const { data, isLoading, mutate } = useApprovalSummary({
+    search,
+    risk: risk === 'all' ? undefined : risk,
+    department: department === 'all' ? undefined : department,
+    page: String(page),
+    pageSize: String(PAGE_SIZE),
+  });
+  const approvals = data?.approvals ?? [];
+  const departments = data?.departments ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const pageStart = total === 0 ? 0 : page * PAGE_SIZE + 1;
+  const pageEnd = Math.min((page + 1) * PAGE_SIZE, total);
 
-  const queue = useMemo(() => deriveApprovalQueue(expenses), [expenses]);
-  const departments = useMemo(() => {
-    return Array.from(
-      new Set(
-        queue.flatMap((item) =>
-          item.expense.employee?.department ? [item.expense.employee.department] : []
-        )
-      )
-    ).sort();
-  }, [queue]);
+  const setSearchFilter = (value: string) => {
+    setSearch(value);
+    setPage(0);
+  };
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
+  const setRiskFilter = (value: string) => {
+    setRisk(value);
+    setPage(0);
+  };
 
-    return queue.filter((item) => {
-      const expense = item.expense;
-      const searchMatches =
-        !query ||
-        expense.merchant.toLowerCase().includes(query) ||
-        expense.description.toLowerCase().includes(query) ||
-        expense.employee?.name.toLowerCase().includes(query) ||
-        expense.category?.name.toLowerCase().includes(query);
-      const riskMatches = risk === 'all' || item.riskLevel === risk;
-      const departmentMatches = department === 'all' || expense.employee?.department === department;
-
-      return searchMatches && riskMatches && departmentMatches;
-    });
-  }, [department, queue, risk, search]);
-
-  const highRiskCount = queue.filter((item) => item.riskLevel === 'high').length;
-  const agingCount = queue.filter((item) => item.submittedAgeDays >= 7).length;
-  const pendingAmount = queue.reduce((sum, item) => sum + item.expense.amount, 0);
+  const setDepartmentFilter = (value: string) => {
+    setDepartment(value);
+    setPage(0);
+  };
 
   const handleAction = async (id: string, action: 'approve' | 'reject') => {
     if (isFailureActive('approvalsActionButtons')) {
@@ -146,11 +139,11 @@ export default function ApprovalsPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         <SummaryTile
           label="Pending amount"
-          value={formatCurrency(pendingAmount)}
+          value={formatCurrency(data?.totals.pendingAmount ?? 0)}
           valueClassName="financial-amount"
         />
-        <SummaryTile label="High-risk items" value={highRiskCount.toString()} />
-        <SummaryTile label="Aging over 7d" value={agingCount.toString()} />
+        <SummaryTile label="High-risk items" value={(data?.totals.highRiskCount ?? 0).toString()} />
+        <SummaryTile label="Aging over 7d" value={(data?.totals.agingCount ?? 0).toString()} />
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -160,11 +153,11 @@ export default function ApprovalsPage() {
             <Input
               placeholder="Search approvals..."
               value={search}
-              onChange={(event) => setSearch((event.target as HTMLInputElement).value)}
+              onChange={(event) => setSearchFilter((event.target as HTMLInputElement).value)}
               className="sensitive-form-field pl-9"
             />
           </div>
-          <Select value={risk} onValueChange={(value) => setRisk(value as string)}>
+          <Select value={risk} onValueChange={(value) => setRiskFilter(value as string)}>
             <SelectTrigger className="w-full sm:w-36">
               <SelectValue>{() => riskLabels[risk] ?? 'All Risk'}</SelectValue>
             </SelectTrigger>
@@ -175,7 +168,10 @@ export default function ApprovalsPage() {
               <SelectItem value="low">Low</SelectItem>
             </SelectPopup>
           </Select>
-          <Select value={department} onValueChange={(value) => setDepartment(value as string)}>
+          <Select
+            value={department}
+            onValueChange={(value) => setDepartmentFilter(value as string)}
+          >
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue>
                 {() => (department === 'all' ? 'All Departments' : department)}
@@ -192,7 +188,7 @@ export default function ApprovalsPage() {
           </Select>
         </div>
         <p className="text-sm text-muted-foreground">
-          Showing {filtered.length} of {total}
+          Showing {pageStart}-{pageEnd} of {total}
         </p>
       </div>
 
@@ -200,7 +196,7 @@ export default function ApprovalsPage() {
         <ErrorBoundary>
           <ApprovalsChaosFailure />
         </ErrorBoundary>
-      ) : filtered.length === 0 ? (
+      ) : approvals.length === 0 ? (
         <Empty>
           <EmptyMedia variant="icon">
             <ClipboardCheckIcon />
@@ -224,7 +220,7 @@ export default function ApprovalsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((item) => {
+              {approvals.map((item) => {
                 const expense = item.expense;
                 const approving = activeAction === `approve:${expense.id}`;
                 const rejecting = activeAction === `reject:${expense.id}`;
@@ -307,6 +303,32 @@ export default function ApprovalsPage() {
               })}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Page {page + 1} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0}
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((current) => Math.min(totalPages - 1, current + 1))}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
     </div>

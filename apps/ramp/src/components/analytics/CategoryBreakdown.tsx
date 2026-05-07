@@ -9,6 +9,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { type CategoryBreakdownPoint, getCategoryBreakdownData } from '@/lib/data/mock-finance';
 import type { ExpenseWithRelations } from '@/lib/data/types';
 import { formatCurrency } from '@/lib/utils';
 
@@ -26,28 +27,19 @@ const CATEGORY_COLORS = [
 ];
 
 interface CategoryBreakdownProps {
-  expenses: ExpenseWithRelations[];
+  expenses?: ExpenseWithRelations[];
+  data?: CategoryBreakdownPoint[];
 }
 
-export function CategoryBreakdown({ expenses }: CategoryBreakdownProps) {
+export function CategoryBreakdown({
+  expenses = [],
+  data: precomputedData,
+}: CategoryBreakdownProps) {
   const { data, total, chartConfig } = useMemo(() => {
-    const map = new Map<string, { name: string; value: number }>();
-    expenses
-      .filter((e) => e.status === 'approved')
-      .forEach((e) => {
-        const catName = e.category?.name ?? 'Unknown';
-        const existing = map.get(catName) ?? { name: catName, value: 0 };
-        existing.value += e.amount;
-        map.set(catName, existing);
-      });
-
-    const sorted = Array.from(map.values())
-      .sort((a, b) => b.value - a.value)
-      .map((d, i) => ({
-        ...d,
-        value: Math.round(d.value * 100) / 100,
-        fill: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
-      }));
+    const sorted = (precomputedData ?? getCategoryBreakdownData(expenses)).map((d, i) => ({
+      ...d,
+      fill: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+    }));
 
     const total = sorted.reduce((sum, d) => sum + d.value, 0);
 
@@ -60,7 +52,7 @@ export function CategoryBreakdown({ expenses }: CategoryBreakdownProps) {
     });
 
     return { data: sorted, total, chartConfig: config };
-  }, [expenses]);
+  }, [precomputedData, expenses]);
 
   return (
     <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">

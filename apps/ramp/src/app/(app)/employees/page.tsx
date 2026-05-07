@@ -3,8 +3,8 @@
 import BoringAvatar from 'boring-avatars';
 import { ArrowUpRightIcon, Grid3X3Icon, ListIcon, SearchIcon, UsersIcon } from 'lucide-react';
 import Link from 'next/link';
-import { parseAsString, useQueryStates } from 'nuqs';
-import { Suspense, useEffect, useMemo } from 'react';
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
+import { Suspense, useEffect } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,14 +34,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toastManager } from '@/components/ui/toast';
-import { useEmployees } from '@/hooks/useEmployees';
-import { useExpenses } from '@/hooks/useExpenses';
+import { useEmployeeDirectorySummary } from '@/hooks/useFinanceSummaries';
 import { log } from '@/lib/client-logger';
-import { deriveEmployeeSpendSummaries, type EmployeeSpendSummary } from '@/lib/data/mock-finance';
+import type { EmployeeSpendSummary } from '@/lib/data/mock-finance';
 import { isFailureActive } from '@/lib/feature-flags';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
 type ViewMode = 'cards' | 'list';
+const PAGE_SIZE = 25;
 
 const AVATAR_COLORS = ['#1F1F1F', '#E4F222', '#737373', '#A3A3A3', '#D4D4D4'];
 
@@ -49,6 +49,7 @@ const filterParsers = {
   view: parseAsString.withDefault('cards'),
   search: parseAsString.withDefault(''),
   department: parseAsString.withDefault('All'),
+  page: parseAsInteger.withDefault(0),
 };
 
 export default function EmployeesPage() {
@@ -76,59 +77,28 @@ export default function EmployeesPage() {
 
 function EmployeesContent() {
   const [filters, setFilters] = useQueryStates(filterParsers, { shallow: false });
-  const { employees, isLoading: employeesLoading } = useEmployees();
-  const { expenses, isLoading: expensesLoading } = useExpenses();
-  const isLoading = employeesLoading || expensesLoading;
+  const { data, isLoading } = useEmployeeDirectorySummary({
+    search: filters.search,
+    department: filters.department,
+    page: String(filters.page),
+    pageSize: String(PAGE_SIZE),
+  });
   const view: ViewMode = filters.view === 'list' ? 'list' : 'cards';
+  const filtered = data?.employees ?? [];
+  const departments = data?.departments ?? ['All'];
+  const totals = data?.totals;
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   useEffect(() => {
     log.debug('EmployeesPage mounted');
   }, []);
 
-  const summaries = useMemo(() => {
-    return deriveEmployeeSpendSummaries(employees, expenses).sort(
-      (a, b) => b.approvedSpend + b.pendingSpend - (a.approvedSpend + a.pendingSpend)
-    );
-  }, [employees, expenses]);
-
-  const departments = useMemo(() => {
-    return ['All', ...Array.from(new Set(employees.map((employee) => employee.department))).sort()];
-  }, [employees]);
-
-  const filtered = useMemo(() => {
-    const query = filters.search.trim().toLowerCase();
-
-    return summaries.filter((employee) => {
-      const departmentMatches =
-        filters.department === 'All' || employee.department === filters.department;
-      const searchMatches =
-        !query ||
-        employee.name.toLowerCase().includes(query) ||
-        employee.email.toLowerCase().includes(query) ||
-        employee.position.toLowerCase().includes(query) ||
-        employee.department.toLowerCase().includes(query);
-
-      return departmentMatches && searchMatches;
-    });
-  }, [filters.department, filters.search, summaries]);
-
   useEffect(() => {
     if (!isLoading) {
-      log.debug(
-        { employeeCount: employees.length, visibleCount: filtered.length },
-        'EmployeesPage data ready'
-      );
+      log.debug({ visibleCount: filtered.length }, 'EmployeesPage data ready');
     }
-  }, [employees.length, filtered.length, isLoading]);
-
-  const totalApproved = filtered.reduce((sum, employee) => sum + employee.approvedSpend, 0);
-  const totalPending = filtered.reduce((sum, employee) => sum + employee.pendingCount, 0);
-  const avgReceiptCoverage =
-    filtered.length > 0
-      ? Math.round(
-          filtered.reduce((sum, employee) => sum + employee.receiptCoverage, 0) / filtered.length
-        )
-      : 0;
+  }, [filtered.length, isLoading]);
 
   const handleViewChange = (nextView: ViewMode) => {
     if (isFailureActive('employeeViewToggle')) {
@@ -143,7 +113,7 @@ function EmployeesContent() {
     setFilters({ view: nextView });
   };
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <div className="space-y-4 p-4 md:p-6">
         <div className="flex flex-wrap gap-3">
@@ -163,14 +133,14 @@ function EmployeesContent() {
   return (
     <div className="space-y-4 p-4 md:p-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryTile label="Visible employees" value={filtered.length.toString()} />
+        <SummaryTile label="Visible employees" value={(totals?.visibleEmployees ?? 0).toString()} />
         <SummaryTile
           label="Approved spend"
-          value={formatCurrency(totalApproved)}
+          value={formatCurrency(totals?.approvedSpend ?? 0)}
           valueClassName="financial-amount"
         />
-        <SummaryTile label="Pending items" value={totalPending.toString()} />
-        <SummaryTile label="Receipt coverage" value={`${avgReceiptCoverage}%`} />
+        <SummaryTile label="Pending items" value={(totals?.pendingItems ?? 0).toString()} />
+        <SummaryTile label="Receipt coverage" value={`${totals?.avgReceiptCoverage ?? 0}%`} />
       </div>
 
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -180,13 +150,15 @@ function EmployeesContent() {
             <Input
               placeholder="Search employees..."
               value={filters.search}
-              onChange={(event) => setFilters({ search: (event.target as HTMLInputElement).value })}
+              onChange={(event) =>
+                setFilters({ search: (event.target as HTMLInputElement).value, page: 0 })
+              }
               className="sensitive-form-field pl-9"
             />
           </div>
           <Select
             value={filters.department}
-            onValueChange={(value) => setFilters({ department: value as string })}
+            onValueChange={(value) => setFilters({ department: value as string, page: 0 })}
           >
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="All Departments">
@@ -238,6 +210,14 @@ function EmployeesContent() {
       ) : (
         <EmployeesTable employees={filtered} />
       )}
+
+      {totalPages > 1 && (
+        <DirectoryPagination
+          page={filters.page}
+          totalPages={totalPages}
+          onPageChange={(nextPage) => setFilters({ page: nextPage })}
+        />
+      )}
     </div>
   );
 }
@@ -255,6 +235,42 @@ function SummaryTile({
     <div className="rounded-lg border bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className={cn('mt-1 text-xl font-semibold tabular-nums', valueClassName)}>{value}</p>
+    </div>
+  );
+}
+
+function DirectoryPagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <p className="text-sm text-muted-foreground">
+        Page {page + 1} of {totalPages}
+      </p>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page === 0}
+          onClick={() => onPageChange(Math.max(0, page - 1))}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page >= totalPages - 1}
+          onClick={() => onPageChange(Math.min(totalPages - 1, page + 1))}
+        >
+          Next
+        </Button>
+      </div>
     </div>
   );
 }

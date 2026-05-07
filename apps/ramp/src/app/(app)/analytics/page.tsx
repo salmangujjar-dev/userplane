@@ -8,7 +8,7 @@ import {
   GaugeIcon,
   ReceiptTextIcon,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { CategoryBreakdown } from '@/components/analytics/CategoryBreakdown';
 import { MetricCard } from '@/components/analytics/MetricCard';
@@ -20,37 +20,14 @@ import { Card, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs';
 import { toastManager } from '@/components/ui/toast';
-import { useBudgets } from '@/hooks/useBudgets';
-import { useCards } from '@/hooks/useCards';
-import { useCategories } from '@/hooks/useCategories';
-import { useEmployees } from '@/hooks/useEmployees';
-import { useExpenses } from '@/hooks/useExpenses';
-import { useVendors } from '@/hooks/useVendors';
+import { useAnalyticsSummary } from '@/hooks/useFinanceSummaries';
 import { log } from '@/lib/client-logger';
-import {
-  deriveBudgetSummaries,
-  deriveCardSummaries,
-  deriveVendorSummaries,
-  getCategorySpend,
-} from '@/lib/data/mock-finance';
 import { getActiveFailureFlags, isFailureActive } from '@/lib/feature-flags';
 import { formatCurrency } from '@/lib/utils';
 
 export default function AnalyticsPage() {
-  const { expenses, isLoading: expensesLoading } = useExpenses();
-  const { employees, isLoading: employeesLoading } = useEmployees();
-  const { categories, isLoading: categoriesLoading } = useCategories();
-  const { cards, isLoading: cardsLoading } = useCards();
-  const { vendors, isLoading: vendorsLoading } = useVendors();
-  const { budgets, isLoading: budgetsLoading } = useBudgets();
+  const { data: analytics, isLoading } = useAnalyticsSummary();
   const [trendPeriod, setTrendPeriod] = useState<string | number>('90');
-  const isLoading =
-    expensesLoading ||
-    employeesLoading ||
-    categoriesLoading ||
-    cardsLoading ||
-    vendorsLoading ||
-    budgetsLoading;
 
   useEffect(() => {
     const activeFlags = getActiveFailureFlags();
@@ -58,36 +35,10 @@ export default function AnalyticsPage() {
   }, []);
 
   useEffect(() => {
-    if (!isLoading) log.debug({ expenseCount: expenses.length }, 'AnalyticsPage data ready');
-  }, [expenses.length, isLoading]);
+    if (!isLoading && analytics) log.debug('AnalyticsPage data ready');
+  }, [analytics, isLoading]);
 
-  const analytics = useMemo(() => {
-    const approved = expenses.filter((expense) => expense.status === 'approved');
-    const pending = expenses.filter((expense) => expense.status === 'pending');
-    const receiptCount = expenses.filter((expense) => Boolean(expense.receiptUrl)).length;
-    const totalSpend = approved.reduce((sum, expense) => sum + expense.amount, 0);
-    const avgExpense = approved.length > 0 ? totalSpend / approved.length : 0;
-    const approvalRate = expenses.length > 0 ? (approved.length / expenses.length) * 100 : 0;
-    const receiptCoverage = expenses.length > 0 ? (receiptCount / expenses.length) * 100 : 0;
-    const budgetSummaries = deriveBudgetSummaries(budgets, employees, expenses);
-    const vendorSummaries = deriveVendorSummaries(vendors, expenses);
-    const cardSummaries = deriveCardSummaries(cards, expenses);
-    const categorySpend = getCategorySpend(categories, expenses);
-
-    return {
-      totalSpend,
-      avgExpense,
-      pendingCount: pending.length,
-      approvalRate,
-      receiptCoverage,
-      budgets: budgetSummaries,
-      vendors: vendorSummaries,
-      cards: cardSummaries,
-      categorySpend,
-    };
-  }, [budgets, cards, categories, employees, expenses, vendors]);
-
-  if (isLoading) {
+  if (isLoading || !analytics) {
     return (
       <div className="space-y-4 p-4 md:p-6">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -103,12 +54,9 @@ export default function AnalyticsPage() {
     );
   }
 
-  const topBudgets = analytics.budgets
-    .slice()
-    .sort((a, b) => b.utilization - a.utilization)
-    .slice(0, 6);
-  const topVendors = analytics.vendors.slice(0, 6);
-  const cardReviewCount = analytics.cards.filter((card) => card.status !== 'active').length;
+  const topBudgets = analytics.budgets;
+  const topVendors = analytics.vendors;
+  const cardReviewCount = analytics.cardReviewCount;
 
   return (
     <div className="space-y-4 p-4 md:p-6">
@@ -116,7 +64,7 @@ export default function AnalyticsPage() {
         <MetricCard
           title="Approved spend"
           value={formatCurrency(analytics.totalSpend)}
-          trend={{ value: `${analytics.vendors.length} vendors`, positive: true }}
+          trend={{ value: `${analytics.vendorCount} vendors`, positive: true }}
           icon={<BarChart3Icon className="size-4" />}
           valueClassName="financial-amount"
         />
@@ -181,17 +129,17 @@ export default function AnalyticsPage() {
             <Tabs value={trendPeriod} onValueChange={setTrendPeriod}>
               <TabsPanel value="30">
                 <ErrorBoundary>
-                  <SpendingChart expenses={expenses} days={30} />
+                  <SpendingChart data={analytics.spendingTrends['30']} days={30} />
                 </ErrorBoundary>
               </TabsPanel>
               <TabsPanel value="90">
                 <ErrorBoundary>
-                  <SpendingChart expenses={expenses} days={90} />
+                  <SpendingChart data={analytics.spendingTrends['90']} days={90} />
                 </ErrorBoundary>
               </TabsPanel>
               <TabsPanel value="365">
                 <ErrorBoundary>
-                  <SpendingChart expenses={expenses} days={365} />
+                  <SpendingChart data={analytics.spendingTrends['365']} days={365} />
                 </ErrorBoundary>
               </TabsPanel>
             </Tabs>
@@ -249,7 +197,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardPanel className="p-4">
             <ErrorBoundary>
-              <CategoryBreakdown expenses={expenses} />
+              <CategoryBreakdown data={analytics.categoryBreakdown} />
             </ErrorBoundary>
           </CardPanel>
         </Card>
@@ -320,7 +268,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardPanel className="p-4">
             <ErrorBoundary>
-              <TopSpendersCard expenses={expenses} />
+              <TopSpendersCard spenders={analytics.topSpenders} />
             </ErrorBoundary>
           </CardPanel>
         </Card>

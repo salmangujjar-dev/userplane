@@ -1,3 +1,5 @@
+import { format, isAfter, startOfDay, subDays } from 'date-fns';
+
 import type {
   CardStatus,
   Category,
@@ -87,6 +89,21 @@ export interface DashboardMetrics {
   activeCards: number;
   vendorCount: number;
   budgetUtilization: number;
+}
+
+export interface SpendingTrendPoint {
+  name: string;
+  total: number;
+}
+
+export interface CategoryBreakdownPoint {
+  name: string;
+  value: number;
+}
+
+export interface TopSpender {
+  name: string;
+  total: number;
 }
 
 export function deriveEmployeeSpendSummaries(
@@ -340,6 +357,79 @@ export function getCategorySpend(
       };
     })
     .sort((a, b) => b.spend - a.spend);
+}
+
+export function getSpendingTrendData(
+  expenses: ExpenseWithRelations[],
+  days: number
+): SpendingTrendPoint[] {
+  const now = new Date();
+  const start = startOfDay(subDays(now, days));
+  const buckets: Record<string, number> = {};
+
+  for (let i = 0; i <= days; i++) {
+    const d = subDays(now, days - i);
+    const key = format(d, days > 90 ? 'MMM yyyy' : 'MMM d');
+    buckets[key] = 0;
+  }
+
+  expenses
+    .filter((expense) => expense.status === 'approved' && isAfter(new Date(expense.date), start))
+    .forEach((expense) => {
+      const key = format(new Date(expense.date), days > 90 ? 'MMM yyyy' : 'MMM d');
+      if (key in buckets && buckets[key] !== undefined) {
+        buckets[key] += expense.amount;
+      }
+    });
+
+  const entries = Object.entries(buckets);
+  const seen = new Set<string>();
+  const deduped =
+    days > 90
+      ? entries.filter(([key]) => {
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+      : entries;
+
+  return deduped.map(([name, total]) => ({ name, total: roundCurrency(total) }));
+}
+
+export function getCategoryBreakdownData(
+  expenses: ExpenseWithRelations[]
+): CategoryBreakdownPoint[] {
+  const map = new Map<string, { name: string; value: number }>();
+
+  expenses
+    .filter((expense) => expense.status === 'approved')
+    .forEach((expense) => {
+      const categoryName = expense.category?.name ?? 'Unknown';
+      const existing = map.get(categoryName) ?? { name: categoryName, value: 0 };
+      existing.value += expense.amount;
+      map.set(categoryName, existing);
+    });
+
+  return Array.from(map.values())
+    .sort((a, b) => b.value - a.value)
+    .map((item) => ({ ...item, value: roundCurrency(item.value) }));
+}
+
+export function getTopSpenders(expenses: ExpenseWithRelations[]): TopSpender[] {
+  const map = new Map<string, { name: string; total: number }>();
+
+  expenses
+    .filter((expense) => expense.status === 'approved')
+    .forEach((expense) => {
+      const name = expense.employee?.name ?? 'Unknown';
+      const existing = map.get(expense.employeeId) ?? { name, total: 0 };
+      existing.total += expense.amount;
+      map.set(expense.employeeId, existing);
+    });
+
+  return Array.from(map.values())
+    .map((spender) => ({ ...spender, total: roundCurrency(spender.total) }))
+    .sort((a, b) => b.total - a.total);
 }
 
 export function getReceiptExceptions(expenses: ExpenseWithRelations[]) {
