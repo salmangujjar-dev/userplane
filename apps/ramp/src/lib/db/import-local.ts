@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { type Client, createClient, type InValue } from '@libsql/client';
-import nextEnv from '@next/env';
+import { loadEnvConfig } from '@next/env';
 
 type TableCopy = {
   name: string;
@@ -132,8 +132,6 @@ async function copyTable(source: Client, target: Client, table: TableCopy) {
 
   return { read: sourceRows.rows.length, inserted };
 }
-
-const { loadEnvConfig } = nextEnv;
 
 loadEnvConfig(process.cwd(), true);
 

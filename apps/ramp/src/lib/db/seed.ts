@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import nextEnv from '@next/env';
+import { loadEnvConfig } from '@next/env';
 
 import {
   cards as seedCards,
@@ -10,8 +10,6 @@ import {
   expenses as seedExpenses,
   vendors as seedVendors,
 } from '../data/seed';
-
-const { loadEnvConfig } = nextEnv;
 
 loadEnvConfig(process.cwd(), true);
 

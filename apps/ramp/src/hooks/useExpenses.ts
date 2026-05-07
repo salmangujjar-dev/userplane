@@ -11,13 +11,22 @@ interface ExpensesResponse {
   total: number;
 }
 
-const expensesFetcher = (url: string): Promise<ExpensesResponse> =>
-  fetch(url)
-    .then((res) => res.json())
-    .then((json) => {
-      if (!json.success) throw new Error(json.error);
-      return { data: json.data, total: json.total };
-    });
+const expensesFetcher = async (url: string): Promise<ExpensesResponse> => {
+  const res = await fetch(url);
+  let json: { success?: boolean; error?: string; data?: ExpenseWithRelations[]; total?: number };
+
+  try {
+    json = await res.json();
+  } catch {
+    throw new Error(`Request failed with status ${res.status}`);
+  }
+
+  if (!res.ok || !json.success) {
+    throw new Error(json.error ?? `Request failed with status ${res.status}`);
+  }
+
+  return { data: json.data ?? [], total: json.total ?? 0 };
+};
 
 export function useExpenses(params?: Record<string, string>) {
   const query = params ? `?${new URLSearchParams(params)}` : '';

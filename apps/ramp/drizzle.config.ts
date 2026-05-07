@@ -1,9 +1,7 @@
-import nextEnv from '@next/env';
+import { loadEnvConfig } from '@next/env';
 import { defineConfig } from 'drizzle-kit';
 
 import { getDatabaseUrl, getLocalDatabasePath, isRemoteDatabaseUrl } from './src/lib/db/config';
-
-const { loadEnvConfig } = nextEnv;
 
 loadEnvConfig(process.cwd(), true);
 
