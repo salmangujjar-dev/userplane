@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const publicPaths = ['/login', '/signup', '/api/auth'];
+const sessionCookieNames = [
+  'better-auth.session_token',
+  '__Secure-better-auth.session_token',
+] as const;
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -9,8 +13,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const sessionCookie = request.cookies.get('better-auth.session_token');
-  if (!sessionCookie) {
+  const hasSessionCookie = sessionCookieNames.some((name) => request.cookies.get(name));
+  if (!hasSessionCookie) {
     // API routes get 401, pages get redirected to login
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
