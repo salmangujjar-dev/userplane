@@ -65,7 +65,14 @@ export function AppSidebar({ onClose }: { onClose?: () => void }) {
     <div className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-14 items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Image src="/media/Ramp_idxW_Yq9Eu_1.svg" alt="Ramp" width={80} height={22} priority />
+          <Image
+            src="/media/Ramp_idxW_Yq9Eu_1.svg"
+            alt="Ramp"
+            width={282}
+            height={75}
+            priority
+            style={{ width: 80, height: 'auto' }}
+          />
         </Link>
         {onClose && (
           <Button variant="ghost" size="icon-xs" onClick={onClose}>

@@ -31,7 +31,10 @@ const USERPLANE_BLUR_SELECTORS = [
   '.company-name',
 ].join(', ');
 
+const metadataBase = new URL(process.env.BETTER_AUTH_URL ?? 'http://localhost:3002');
+
 export const metadata: Metadata = {
+  metadataBase,
   title: 'Ramp - Expense Management',
   description: 'Corporate spend, cards, approvals, vendors, and analytics in one Ramp workspace.',
   applicationName: 'Ramp',
