@@ -159,6 +159,7 @@
         "PUBLIC_CLOUDFLARE_IMAGE_ZONE",
         "SDK_RECORDER_BASE_URL",
         "SDK_VERIFICATION_BASE_URL",
+        "USERPLANE_SDK_SOURCE",
         "DEV",
         "INTERNAL_API_KEY",
         "WXT_API_URL",
