@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 
 import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
+import { DemoBanner } from './DemoBanner';
 
 const pageInfo: Record<string, { title: string; subtitle: string }> = {
   '/dashboard': { title: 'Dashboard', subtitle: 'Spend control command center' },
@@ -49,32 +50,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       : { title: 'Ramp', subtitle: '' });
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-sidebar">
-      {/* Desktop sidebar */}
-      <div
-        className="hidden md:block transition-[width] duration-200 ease-in-out overflow-hidden shrink-0"
-        style={{ width: sidebarOpen ? '16rem' : '0px' }}
-      >
-        <AppSidebar />
-      </div>
+    <div className="flex h-dvh flex-col overflow-hidden bg-sidebar">
+      <DemoBanner />
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        {/* Desktop sidebar */}
+        <div
+          className="hidden md:block transition-[width] duration-200 ease-in-out overflow-hidden shrink-0"
+          style={{ width: sidebarOpen ? '16rem' : '0px' }}
+        >
+          <AppSidebar />
+        </div>
 
-      {/* Mobile sidebar */}
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetPopup side="left" showCloseButton={false} className="w-64 p-0">
-          <AppSidebar onClose={() => setMobileOpen(false)} />
-        </SheetPopup>
-      </Sheet>
+        {/* Mobile sidebar */}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetPopup side="left" showCloseButton={false} className="w-64 p-0">
+            <AppSidebar onClose={() => setMobileOpen(false)} />
+          </SheetPopup>
+        </Sheet>
 
-      {/* Main content - inset panel */}
-      <div className={cn('flex flex-1 flex-col overflow-hidden md:p-2', sidebarOpen && 'md:pl-0')}>
-        <div className="flex flex-1 flex-col overflow-hidden bg-background md:rounded-lg md:border md:shadow-sm">
-          <AppHeader
-            title={info.title}
-            subtitle={info.subtitle}
-            onMenuClick={() => setMobileOpen(true)}
-            onToggleSidebar={toggleSidebar}
-          />
-          <main className="flex-1 overflow-y-auto">{children}</main>
+        {/* Main content - inset panel */}
+        <div
+          className={cn('flex flex-1 flex-col overflow-hidden md:p-2', sidebarOpen && 'md:pl-0')}
+        >
+          <div className="flex flex-1 flex-col overflow-hidden bg-background md:rounded-lg md:border md:shadow-sm">
+            <AppHeader
+              title={info.title}
+              subtitle={info.subtitle}
+              onMenuClick={() => setMobileOpen(true)}
+              onToggleSidebar={toggleSidebar}
+            />
+            <main className="flex-1 overflow-y-auto">{children}</main>
+          </div>
         </div>
       </div>
     </div>
