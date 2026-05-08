@@ -10,6 +10,15 @@ bun dev
 
 Open [http://localhost:3002](http://localhost:3002) with your browser to see the result.
 
+## Userplane SDK resolution
+
+Ramp intentionally resolves `@userplane/sdk` differently by build mode:
+
+- `bun run dev` sets `USERPLANE_SDK_SOURCE=workspace` and bundles `packages/sdk/src/index.ts` through Next.js aliases.
+- `bun run build`, `bun run build:production`, and Netlify builds set `USERPLANE_SDK_SOURCE=npm` and use the pinned published SDK package from npm.
+
+When publishing a new SDK for production Ramp, update the exact `@userplane/sdk` tarball URL in `package.json`.
+
 ## Database
 
 Ramp uses Turso through the LibSQL Drizzle driver.

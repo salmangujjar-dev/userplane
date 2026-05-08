@@ -1,23 +1,64 @@
+import { fileURLToPath } from 'node:url';
+
 import type { NextConfig } from 'next';
+
+type UserplaneSdkSource = 'workspace' | 'npm';
+
+const WORKSPACE_SDK_ENTRY = fileURLToPath(
+  new URL('../../packages/sdk/src/index.ts', import.meta.url)
+);
+const TURBOPACK_WORKSPACE_SDK_ENTRY = '../../packages/sdk/src/index.ts';
+
+const WORKSPACE_TRANSPILE_PACKAGES = [
+  '@userplane/sdk',
+  '@userplane/blurr',
+  '@userplane/console-logger',
+  '@userplane/metadata',
+  '@userplane/postbridge',
+];
+
+function getUserplaneSdkSource(): UserplaneSdkSource {
+  const defaultSource: UserplaneSdkSource =
+    process.env.NODE_ENV === 'production' ? 'npm' : 'workspace';
+  const source = process.env.USERPLANE_SDK_SOURCE ?? defaultSource;
+
+  if (source !== 'workspace' && source !== 'npm') {
+    throw new Error(`Invalid USERPLANE_SDK_SOURCE "${source}". Expected "workspace" or "npm".`);
+  }
+
+  return source;
+}
+
+const userplaneSdkSource = getUserplaneSdkSource();
+const useWorkspaceSdk = userplaneSdkSource === 'workspace';
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['ramp-dev.userplane.io'],
 
-  // Transpile workspace packages (SDK and its transitive workspace deps)
-  transpilePackages: [
-    '@userplane/sdk',
-    '@userplane/blurr',
-    '@userplane/console-logger',
-    '@userplane/metadata',
-    '@userplane/postbridge',
-  ],
+  // Transpile workspace packages only when Ramp is intentionally using local SDK source.
+  transpilePackages: useWorkspaceSdk ? WORKSPACE_TRANSPILE_PACKAGES : [],
 
-  // Turbopack (Next.js 16 default): empty config required when webpack config
-  // is present. transpilePackages + workspace linking handles source resolution.
-  turbopack: {},
+  // Turbopack (Next.js 16 default): keep an object here because webpack config is present.
+  turbopack: useWorkspaceSdk
+    ? {
+        resolveAlias: {
+          '@userplane/sdk': TURBOPACK_WORKSPACE_SDK_ENTRY,
+        },
+      }
+    : {},
 
-  // Webpack fallback: resolve workspace "source" export condition
   webpack: (config) => {
+    if (!useWorkspaceSdk) {
+      return config;
+    }
+
+    config.resolve ??= {};
+    config.resolve.alias = {
+      ...(config.resolve.alias ?? {}),
+      '@userplane/sdk': WORKSPACE_SDK_ENTRY,
+    };
+
+    // Webpack fallback: resolve workspace "source" export condition.
     config.resolve.conditionNames = [
       'source',
       ...(config.resolve.conditionNames ?? ['import', 'module', 'require', 'default']),
