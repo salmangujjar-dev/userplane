@@ -52,9 +52,9 @@
   "scripts": {
     "build": "bun build src/index.ts --outdir ./dist --target bun --external inngest --sourcemap=linked && if [ -n \"$POSTHOG_PERSONAL_API_KEY\" ] && [ -n \"$POSTHOG_PROJECT_ID\" ]; then POSTHOG_CLI_TOKEN=$POSTHOG_PERSONAL_API_KEY POSTHOG_CLI_ENV_ID=$POSTHOG_PROJECT_ID posthog-cli sourcemap inject --directory ./dist && POSTHOG_CLI_TOKEN=$POSTHOG_PERSONAL_API_KEY POSTHOG_CLI_ENV_ID=$POSTHOG_PROJECT_ID posthog-cli sourcemap upload --directory ./dist; else echo 'Skipping source map upload (POSTHOG_PERSONAL_API_KEY or POSTHOG_PROJECT_ID not set)'; fi",
     "dev": "bun run dev:api",
-    "dev:api": "bun run --env-file=.env.development --watch src/index.ts",
+    "dev:api": "env -u DATABASE_URL bun --env-file=.env.development --watch src/index.ts",
     "dev:inngest": "npx inngest-cli@latest dev",
-    "dev:hot": "bun run --env-file=.env.development --hot src/index.ts",
+    "dev:hot": "env -u DATABASE_URL bun --env-file=.env.development --hot src/index.ts",
     "start": "bun run dist/index.js",
     "start:production": "bun run --env-file=.env.production dist/index.js",
     "lint": "eslint . --max-warnings 0",
