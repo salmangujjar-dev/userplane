@@ -3,11 +3,13 @@ import { userplaneListRecordings } from '@userplane/contract';
 
 import { requireWorkspaceMemberForMcp, textResult } from '../helpers';
 import { toMcpListRecordings } from '../responses';
+import { registerContractTool } from '../tool-registration';
 import type { McpDeps } from '../types';
 
 export function registerRecordingTools(server: McpServer, deps: McpDeps, userId: string) {
   const { name, ...config } = userplaneListRecordings;
-  server.registerTool(
+  registerContractTool(
+    server,
     name,
     config,
     async ({ workspaceId, page, per_page, project_id, link_id, created_by }) => {

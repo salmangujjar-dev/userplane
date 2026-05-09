@@ -286,12 +286,13 @@ function connect(
 
   // Detect if guest is a worker (vs iframe)
   const guestIsWorker = isWorkerLike(guest);
+  const guestIsSharedWorker = typeof SharedWorker !== 'undefined' && guest instanceof SharedWorker;
 
   // Determine where to listen for messages based on guest type
   const listenTo =
     guestIsWorker || isNodeEnv()
       ? (guest as Worker) // Workers: listen on worker
-      : guest instanceof SharedWorker
+      : guestIsSharedWorker
         ? guest.port // SharedWorker: listen on port
         : window; // iframe: listen on main window
 
@@ -315,7 +316,7 @@ function connect(
       const sendTo =
         guestIsWorker || isNodeEnv()
           ? (guest as Worker) // Workers: send to worker
-          : guest instanceof SharedWorker
+          : guestIsSharedWorker
             ? guest.port // SharedWorker: send to port
             : event.source; // iframe: send to event.source
 

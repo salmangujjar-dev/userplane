@@ -8,12 +8,14 @@ import {
 
 import { requireWorkspaceMemberForMcp, textResult } from '../helpers';
 import { toMcpLinkResponse, toMcpListLinks } from '../responses';
+import { registerContractTool } from '../tool-registration';
 import type { McpDeps } from '../types';
 
 export function registerLinkTools(server: McpServer, deps: McpDeps, userId: string) {
   {
     const { name, ...config } = userplaneListLinks;
-    server.registerTool(
+    registerContractTool(
+      server,
       name,
       config,
       async ({ workspaceId, page, per_page, project_id, domain_id, created_by }) => {
@@ -38,7 +40,8 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
 
   {
     const { name, ...config } = userplaneCreateLink;
-    server.registerTool(
+    registerContractTool(
+      server,
       name,
       config,
       async ({ workspaceId, domainId, projectId, linkReference, linkReusable, linkMeta }) => {
@@ -60,7 +63,7 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
 
   {
     const { name, ...config } = userplaneGetLink;
-    server.registerTool(name, config, async ({ workspaceId, linkId }) => {
+    registerContractTool(server, name, config, async ({ workspaceId, linkId }) => {
       await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
       const link = await deps.linkService.getByIdForMcp(linkId, workspaceId);
       return textResult(toMcpLinkResponse(workspaceId, link));
@@ -69,7 +72,8 @@ export function registerLinkTools(server: McpServer, deps: McpDeps, userId: stri
 
   {
     const { name, ...config } = userplaneUpdateLink;
-    server.registerTool(
+    registerContractTool(
+      server,
       name,
       config,
       async ({

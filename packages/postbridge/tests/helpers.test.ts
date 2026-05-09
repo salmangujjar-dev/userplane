@@ -142,11 +142,12 @@ describe('environment detection', () => {
       global.process = realProcess;
     });
 
-    it('returns true in a real Node.js environment', () => {
-      expect(isNodeEnv()).toBe(true);
+    it('returns false in a real Node.js environment because Node support is disabled', () => {
+      expect(isNodeEnv()).toBe(false);
     });
 
     it('returns false when the global `process` is missing (browser-like)', () => {
+      // @ts-expect-error - mocking browser-like env without process
       global.process = undefined;
       expect(isNodeEnv()).toBe(false);
     });

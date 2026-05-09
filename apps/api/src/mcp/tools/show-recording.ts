@@ -1,4 +1,3 @@
-import { registerAppTool } from '@modelcontextprotocol/ext-apps/server';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { userplaneAppFetchResource, userplaneShowRecording } from '@userplane/contract';
 
@@ -6,6 +5,7 @@ import { env } from '@/api/env';
 
 import { APP_RESOURCE_URIS } from '../app-resources';
 import { fetchThumbnailDataUri, requireWorkspaceMember, textResult } from '../helpers';
+import { registerContractAppTool, registerContractTool } from '../tool-registration';
 import type { McpDeps } from '../types';
 
 export function registerShowRecordingTools(server: McpServer, deps: McpDeps, userId: string) {
@@ -21,7 +21,7 @@ export function registerShowRecordingTools(server: McpServer, deps: McpDeps, use
   // Main tool: userplane_show_recording
   // Returns recording detail + resource URLs + inline thumbnail data URI.
   // -----------------------------------------------------------------------
-  registerAppTool(
+  registerContractAppTool(
     server,
     userplaneShowRecording.name,
     {
@@ -76,40 +76,45 @@ export function registerShowRecordingTools(server: McpServer, deps: McpDeps, use
   // -----------------------------------------------------------------------
   {
     const { name, ...config } = userplaneAppFetchResource;
-    server.registerTool(name, config, async ({ workspaceId, recordingId, resourceType }) => {
-      await requireWorkspaceMember(deps, userId, workspaceId);
+    registerContractTool(
+      server,
+      name,
+      config,
+      async ({ workspaceId, recordingId, resourceType }) => {
+        await requireWorkspaceMember(deps, userId, workspaceId);
 
-      const getters = {
-        consoleLog: deps.recordingService.getConsoleLogResource.bind(deps.recordingService),
-        networkLog: deps.recordingService.getNetworkLogResource.bind(deps.recordingService),
-        action: deps.recordingService.getActionResource.bind(deps.recordingService),
-      } as const;
+        const getters = {
+          consoleLog: deps.recordingService.getConsoleLogResource.bind(deps.recordingService),
+          networkLog: deps.recordingService.getNetworkLogResource.bind(deps.recordingService),
+          action: deps.recordingService.getActionResource.bind(deps.recordingService),
+        } as const;
 
-      const resource = await getters[resourceType](recordingId, workspaceId);
-      if (!resource.url) {
-        return textResult({ error: 'Resource not available', resourceType });
+        const resource = await getters[resourceType](recordingId, workspaceId);
+        if (!resource.url) {
+          return textResult({ error: 'Resource not available', resourceType });
+        }
+
+        let response: Response;
+        try {
+          response = await fetch(resource.url);
+        } catch (err) {
+          return textResult({ error: `Network error fetching resource: ${err}`, resourceType });
+        }
+
+        if (!response.ok) {
+          return textResult({
+            error: `Failed to fetch resource: HTTP ${response.status}`,
+            resourceType,
+          });
+        }
+
+        try {
+          const json = await response.json();
+          return textResult({ resourceType, json });
+        } catch (err) {
+          return textResult({ error: `Error parsing JSON: ${err}`, resourceType });
+        }
       }
-
-      let response: Response;
-      try {
-        response = await fetch(resource.url);
-      } catch (err) {
-        return textResult({ error: `Network error fetching resource: ${err}`, resourceType });
-      }
-
-      if (!response.ok) {
-        return textResult({
-          error: `Failed to fetch resource: HTTP ${response.status}`,
-          resourceType,
-        });
-      }
-
-      try {
-        const json = await response.json();
-        return textResult({ resourceType, json });
-      } catch (err) {
-        return textResult({ error: `Error parsing JSON: ${err}`, resourceType });
-      }
-    });
+    );
   }
 }

@@ -3,11 +3,12 @@ import { userplaneGetProfile } from '@userplane/contract';
 
 import { textResult } from '../helpers';
 import { toMcpProfile } from '../responses';
+import { registerContractTool } from '../tool-registration';
 import type { McpDeps } from '../types';
 
 export function registerUserTools(server: McpServer, deps: McpDeps, userId: string) {
   const { name, ...config } = userplaneGetProfile;
-  server.registerTool(name, config, async () => {
+  registerContractTool(server, name, config, async () => {
     const [userData, workspaceCount, recordingCount, linkCount] = await Promise.all([
       deps.userService.getById(userId),
       deps.workspaceRepo.countByUserId(userId),
