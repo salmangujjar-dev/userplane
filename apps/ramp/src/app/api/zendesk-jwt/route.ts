@@ -26,9 +26,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // eslint-disable-next-line turbo/no-undeclared-env-vars
     const signingKey = process.env.ZENDESK_MESSAGING_SIGNING_KEY;
-    // eslint-disable-next-line turbo/no-undeclared-env-vars
     const signingKeyId = process.env.ZENDESK_MESSAGING_SIGNING_KEY_ID;
     if (!signingKey || !signingKeyId) {
       log.error('ZENDESK_MESSAGING_SIGNING_KEY or ZENDESK_MESSAGING_SIGNING_KEY_ID not configured');

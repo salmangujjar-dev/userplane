@@ -13,7 +13,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // eslint-disable-next-line turbo/no-undeclared-env-vars
     const apiSecret = process.env.INTERCOM_API_SECRET;
     if (!apiSecret) {
       log.error('INTERCOM_API_SECRET not configured');

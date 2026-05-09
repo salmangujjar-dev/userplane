@@ -16,40 +16,132 @@ const path = require('path');
 const WORKSPACE_ROOT = path.join(__dirname, '..');
 const TURBO_JSON_PATH = path.join(WORKSPACE_ROOT, 'turbo.json');
 
-const APPS = [
-  { name: 'api', path: 'apps/api', type: 'node' },
-  { name: 'dash', path: 'apps/dash', type: 'next' },
-  { name: 'home', path: 'apps/home', type: 'astro' },
-  { name: 'recorder', path: 'apps/recorder', type: 'astro' },
-  { name: 'ramp', path: 'apps/ramp', type: 'next' },
-];
+const WORKSPACE_DIRS = ['apps', 'packages'];
+const FRAMEWORK_PROVIDED_ENV_VARS = new Set(['DEV', 'MODE']);
+const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.astro'];
+const SKIP_DIRS = new Set([
+  'node_modules',
+  'dist',
+  '.next',
+  '.astro',
+  '.wrangler',
+  '.wxt',
+  '.cache',
+  'coverage',
+  'build',
+  '.turbo',
+  'storybook-static',
+]);
+
+function discoverWorkspaceTargets() {
+  const targets = [];
+
+  for (const workspaceDir of WORKSPACE_DIRS) {
+    const absoluteWorkspaceDir = path.join(WORKSPACE_ROOT, workspaceDir);
+    if (!fs.existsSync(absoluteWorkspaceDir)) continue;
+
+    for (const entry of fs.readdirSync(absoluteWorkspaceDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+
+      const relativePath = path.join(workspaceDir, entry.name);
+      const packageJsonPath = path.join(WORKSPACE_ROOT, relativePath, 'package.json');
+      if (!fs.existsSync(packageJsonPath)) continue;
+
+      let packageName = entry.name;
+      try {
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        packageName = packageJson.name || packageName;
+      } catch {
+        // Fall back to the folder name if package.json is temporarily invalid.
+      }
+
+      targets.push({
+        name: packageName,
+        path: relativePath,
+        type: workspaceDir === 'apps' ? 'app' : 'package',
+      });
+    }
+  }
+
+  return targets.sort((a, b) => a.path.localeCompare(b.path));
+}
 
 /**
  * Extract environment variables from code files
  */
 function extractEnvVarsFromCode(filePath, fileContent) {
   const envVars = new Set();
+  const code = stripComments(fileContent);
 
-  // Match process.env.VARIABLE_NAME
-  const processEnvRegex = /process\.env\.([A-Z_][A-Z0-9_]*)/g;
-  let match;
-  while ((match = processEnvRegex.exec(fileContent)) !== null) {
-    envVars.add(match[1]);
-  }
+  const patterns = [
+    /process\.env\.([A-Z_][A-Z0-9_]*)/g,
+    /process\.env\[['"`]([A-Z_][A-Z0-9_]*)['"`]\]/g,
+    /import\.meta\.env\.([A-Z_][A-Z0-9_]*)/g,
+    /Bun\.env\.([A-Z_][A-Z0-9_]*)/g,
+  ];
 
-  // Match import.meta.env.VARIABLE_NAME (for Astro/Vite)
-  const importMetaEnvRegex = /import\.meta\.env\.([A-Z_][A-Z0-9_]*)/g;
-  while ((match = importMetaEnvRegex.exec(fileContent)) !== null) {
-    envVars.add(match[1]);
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(code)) !== null) {
+      if (!FRAMEWORK_PROVIDED_ENV_VARS.has(match[1])) {
+        envVars.add(match[1]);
+      }
+    }
   }
 
   return Array.from(envVars);
 }
 
+function stripComments(fileContent) {
+  const lines = [];
+  let inBlockComment = false;
+
+  for (const line of fileContent.split('\n')) {
+    let rest = line;
+    let codeLine = '';
+
+    while (rest.length > 0) {
+      if (inBlockComment) {
+        const blockEnd = rest.indexOf('*/');
+        if (blockEnd === -1) {
+          rest = '';
+          continue;
+        }
+        rest = rest.slice(blockEnd + 2);
+        inBlockComment = false;
+        continue;
+      }
+
+      const blockStart = rest.indexOf('/*');
+      const lineStart = rest.indexOf('//');
+
+      if (lineStart !== -1 && (blockStart === -1 || lineStart < blockStart)) {
+        codeLine += rest.slice(0, lineStart);
+        rest = '';
+        continue;
+      }
+
+      if (blockStart !== -1) {
+        codeLine += rest.slice(0, blockStart);
+        rest = rest.slice(blockStart + 2);
+        inBlockComment = true;
+        continue;
+      }
+
+      codeLine += rest;
+      rest = '';
+    }
+
+    lines.push(codeLine);
+  }
+
+  return lines.join('\n');
+}
+
 /**
  * Recursively scan directory for source files
  */
-function scanDirectory(dirPath, extensions = ['.ts', '.tsx', '.js', '.jsx', '.astro']) {
+function scanDirectory(dirPath, extensions = SOURCE_EXTENSIONS) {
   const envVars = new Set();
 
   if (!fs.existsSync(dirPath)) {
@@ -63,8 +155,7 @@ function scanDirectory(dirPath, extensions = ['.ts', '.tsx', '.js', '.jsx', '.as
       const fullPath = path.join(currentPath, entry.name);
 
       if (entry.isDirectory()) {
-        // Skip node_modules, dist, .next, etc.
-        if (['node_modules', 'dist', '.next', '.astro', 'coverage'].includes(entry.name)) {
+        if (SKIP_DIRS.has(entry.name)) {
           continue;
         }
         walkDir(fullPath);
@@ -120,6 +211,11 @@ function loadTurboJsonEnvVars() {
     turboJson.globalEnv.forEach((v) => envVars.add(v));
   }
 
+  // Add pass-through env vars
+  if (turboJson.globalPassThroughEnv) {
+    turboJson.globalPassThroughEnv.forEach((v) => envVars.add(v));
+  }
+
   // Add task-specific env vars
   if (turboJson.tasks) {
     for (const [taskName, taskConfig] of Object.entries(turboJson.tasks)) {
@@ -144,20 +240,20 @@ function validateEnvironmentVariables() {
   console.log(`Turbo.json declares ${turboEnvVars.length} environment variables`);
   console.log();
 
+  const targets = discoverWorkspaceTargets();
   const allUsedEnvVars = new Set();
   const allExampleEnvVars = new Set();
   const appReports = [];
 
-  // Scan each app
-  for (const app of APPS) {
+  // Scan each app/package workspace
+  for (const app of targets) {
     const appPath = path.join(WORKSPACE_ROOT, app.path);
-    const srcPath = path.join(appPath, 'src');
     const envExamplePath = path.join(appPath, '.env.example');
 
     console.log(`Scanning ${app.name} (${app.type})...`);
 
     // Get env vars from code
-    const codeEnvVars = scanDirectory(srcPath);
+    const codeEnvVars = scanDirectory(appPath);
     codeEnvVars.forEach((v) => allUsedEnvVars.add(v));
 
     // Get env vars from .env.example
@@ -192,7 +288,7 @@ function validateEnvironmentVariables() {
 
   // Print detailed app reports
   console.log('='.repeat(80));
-  console.log('DETAILED APP REPORTS');
+  console.log('DETAILED WORKSPACE REPORTS');
   console.log('='.repeat(80));
   console.log();
 
