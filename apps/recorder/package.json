@@ -6,7 +6,7 @@
   "scripts": {
     "prepare:worker": "bun build ../../packages/postbridge/src/bridge-worker.ts --outfile=public/bridge-worker.js --format=esm --target=browser && cp public/bridge-worker.js ../../packages/postbridge/src/bridge-worker.js",
     "prebuild": "bun run prepare:worker",
-    "dev": "bun run prepare:worker && next dev --turbopack -p 4322",
+    "dev": "bun run prepare:worker && next dev -p 4322",
     "build": "next build",
     "start": "next start -p 4322",
     "lint": "eslint . --max-warnings 0",

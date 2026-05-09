@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "fnm exec --using=22 mintlify dev --port 3005 --no-open",
-    "build": "echo 'Mintlify builds are handled by Mintlify hosting'",
+    "dev": "mint dev --port 3005 --no-open",
+    "build": "mint validate",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "typecheck": "echo 'No typecheck needed for Mintlify docs'"

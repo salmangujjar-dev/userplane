@@ -14,7 +14,7 @@ import { useWorkspaces } from '@/features/workspace';
  * The /workspace/suggest page handles showing suggestions and redirecting to
  * /workspace/create if no suggestions are available
  *
- * This route is authenticated by middleware, ensuring only logged-in users reach here
+ * This route is authenticated by proxy, ensuring only logged-in users reach here
  */
 export default function RootPage() {
   const router = useRouter();

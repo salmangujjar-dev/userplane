@@ -24,7 +24,7 @@ function LoadingFallback() {
  * This allows users to use shorthand workspace-independent URLs that
  * automatically resolve to their first available workspace
  *
- * This route is authenticated by middleware, ensuring only logged-in users reach here
+ * This route is authenticated by proxy, ensuring only logged-in users reach here
  */
 function UnderscoreCatchAllContent() {
   const router = useRouter();

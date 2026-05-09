@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "USERPLANE_SDK_SOURCE=workspace next dev --turbopack -p 3002",
+    "dev": "USERPLANE_SDK_SOURCE=workspace next dev -p 3002",
     "build": "USERPLANE_SDK_SOURCE=npm next build",
     "build:production": "APP_ENV=production USERPLANE_SDK_SOURCE=npm next build",
     "start": "USERPLANE_SDK_SOURCE=npm next start -p 3002",

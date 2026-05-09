@@ -155,7 +155,7 @@ function ConsentContent() {
     return <LoadingScreen message="Loading..." />;
   }
 
-  // No session (middleware will redirect, show loading in the meantime)
+  // No session (proxy will redirect, show loading in the meantime)
   if (!session) {
     return <LoadingScreen message="Redirecting to sign in..." />;
   }

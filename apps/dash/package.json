@@ -4,13 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 3000",
-    "build": "next build",
-    "build:production": "APP_ENV=production next build",
+    "dev": "next dev -p 3000",
+    "build": "next build --webpack",
+    "build:production": "APP_ENV=production next build --webpack",
     "start": "next start -p 3000",
     "start:production": "APP_ENV=production next start -p 3000",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6020",
     "build-storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
