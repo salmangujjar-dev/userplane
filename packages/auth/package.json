@@ -26,17 +26,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-auth/oauth-provider": "^1.6.2",
+    "@better-auth/oauth-provider": "^1.6.9",
     "@userplane/contract": "*",
     "@userplane/db": "*",
     "@userplane/payments": "*",
     "@userplane/shared": "*",
-    "better-auth": "^1.6.2"
+    "better-auth": "^1.6.9"
   },
   "devDependencies": {
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^9.32.0",
-    "typescript": "^5.5.4"
+    "eslint": "^9.39.4",
+    "typescript": "^5.9.3"
   }
 }
