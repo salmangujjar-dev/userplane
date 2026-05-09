@@ -1,12 +1,7 @@
-import { fileURLToPath } from 'node:url';
-
 import type { NextConfig } from 'next';
 
 type UserplaneSdkSource = 'workspace' | 'npm';
 
-const WORKSPACE_SDK_ENTRY = fileURLToPath(
-  new URL('../../packages/sdk/src/index.ts', import.meta.url)
-);
 const TURBOPACK_WORKSPACE_SDK_ENTRY = '../../packages/sdk/src/index.ts';
 
 const WORKSPACE_TRANSPILE_PACKAGES = [
@@ -46,25 +41,6 @@ const nextConfig: NextConfig = {
         },
       }
     : {},
-
-  webpack: (config) => {
-    if (!useWorkspaceSdk) {
-      return config;
-    }
-
-    config.resolve ??= {};
-    config.resolve.alias = {
-      ...(config.resolve.alias ?? {}),
-      '@userplane/sdk': WORKSPACE_SDK_ENTRY,
-    };
-
-    // Webpack fallback: resolve workspace "source" export condition.
-    config.resolve.conditionNames = [
-      'source',
-      ...(config.resolve.conditionNames ?? ['import', 'module', 'require', 'default']),
-    ];
-    return config;
-  },
 };
 
 export default nextConfig;

@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 import { env } from '@/env';
 import { getSafeRedirectPath } from '@/lib/redirect';
 
-const logger = createClientLogger('middleware', { level: 'debug' });
+const logger = createClientLogger('proxy', { level: 'debug' });
 
 const authRoutes = ['/auth'];
 const publicRoutes = [
@@ -26,7 +26,7 @@ function getSessionCookieName(): string {
   return env.useSecureCookies ? `__Secure-${baseName}` : baseName;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const matchesRoute = (route: string) => path === route || path.startsWith(`${route}/`);
   const isAuthRoute = authRoutes.some(matchesRoute);

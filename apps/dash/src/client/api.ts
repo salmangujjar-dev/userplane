@@ -19,7 +19,7 @@ function handle401Redirect(): void {
     .signOut()
     .catch(() => {
       // Ignore sign-out errors -- the session_expired param in the
-      // redirect URL ensures the middleware won't redirect back.
+      // redirect URL ensures the proxy won't redirect back.
     })
     .finally(() => {
       window.location.href = redirectUrl;

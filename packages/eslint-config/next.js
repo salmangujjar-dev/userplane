@@ -13,6 +13,9 @@ import { config as baseConfig } from './base.js';
 export const nextJsConfig = [
   ...baseConfig,
   {
+    ignores: ['next-env.d.ts'],
+  },
+  {
     ...pluginReact.configs.flat.recommended,
     languageOptions: {
       ...pluginReact.configs.flat.recommended.languageOptions,

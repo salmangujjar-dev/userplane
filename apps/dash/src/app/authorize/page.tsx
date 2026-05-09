@@ -10,7 +10,7 @@ import { env } from '@/env';
  * OAuth Authorize Bridge
  *
  * The oauthProvider plugin redirects here with signed OAuth params when the
- * user needs to log in. The dashboard middleware treats this as a protected
+ * user needs to log in. The dashboard proxy treats this as a protected
  * route, so unauthenticated users are sent to /auth?redirect_to=/authorize?<params>.
  * After login they return here, and this page forwards them to the API's
  * authorize endpoint to continue the OAuth flow.
