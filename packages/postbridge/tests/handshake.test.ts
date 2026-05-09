@@ -38,6 +38,7 @@ beforeEach(() => {
     });
   let counter = 1;
   generateIdSpy = vi.spyOn(helpers, 'generateId').mockImplementation(() => `id-${counter++}`);
+  vi.spyOn(helpers, 'isWorkerLike').mockReturnValue(true);
 });
 
 afterEach(() => {

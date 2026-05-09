@@ -1,4 +1,3 @@
-import { registerAppTool } from '@modelcontextprotocol/ext-apps/server';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   userplaneShowRecActions,
@@ -8,6 +7,7 @@ import {
 
 import { APP_RESOURCE_URIS } from '../app-resources';
 import { getRecordingStartTime, requireWorkspaceMember, textResult } from '../helpers';
+import { registerContractAppTool } from '../tool-registration';
 import type { McpDeps } from '../types';
 
 /**
@@ -59,7 +59,7 @@ export function registerShowResourceAppTools(server: McpServer, deps: McpDeps, u
       annotations,
       _meta: contractMeta,
     } = userplaneShowRecConsole;
-    registerAppTool(
+    registerContractAppTool(
       server,
       userplaneShowRecConsole.name,
       {
@@ -88,7 +88,7 @@ export function registerShowResourceAppTools(server: McpServer, deps: McpDeps, u
       annotations,
       _meta: contractMeta,
     } = userplaneShowRecNetwork;
-    registerAppTool(
+    registerContractAppTool(
       server,
       userplaneShowRecNetwork.name,
       {
@@ -117,7 +117,7 @@ export function registerShowResourceAppTools(server: McpServer, deps: McpDeps, u
       annotations,
       _meta: contractMeta,
     } = userplaneShowRecActions;
-    registerAppTool(
+    registerContractAppTool(
       server,
       userplaneShowRecActions.name,
       {

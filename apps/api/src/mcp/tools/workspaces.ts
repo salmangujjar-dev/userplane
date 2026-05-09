@@ -3,12 +3,13 @@ import { userplaneGetWorkspace, userplaneListWorkspaces } from '@userplane/contr
 
 import { requireWorkspaceMemberForMcp, textResult } from '../helpers';
 import { toMcpListWorkspaces, toMcpWorkspaceDetail } from '../responses';
+import { registerContractTool } from '../tool-registration';
 import type { McpDeps } from '../types';
 
 export function registerWorkspaceTools(server: McpServer, deps: McpDeps, userId: string) {
   {
     const { name, ...config } = userplaneListWorkspaces;
-    server.registerTool(name, config, async ({ page, per_page }) => {
+    registerContractTool(server, name, config, async ({ page, per_page }) => {
       const p = page ?? 1;
       const pp = per_page ?? 5;
       const { workspaces, total } = await deps.workspaceService.getByUserIdPaginatedForMcp(
@@ -22,7 +23,7 @@ export function registerWorkspaceTools(server: McpServer, deps: McpDeps, userId:
 
   {
     const { name, ...config } = userplaneGetWorkspace;
-    server.registerTool(name, config, async ({ workspaceId }) => {
+    registerContractTool(server, name, config, async ({ workspaceId }) => {
       const { workspace } = await requireWorkspaceMemberForMcp(deps, userId, workspaceId);
       return textResult(toMcpWorkspaceDetail(workspace));
     });
