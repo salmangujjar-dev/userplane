@@ -11,8 +11,8 @@
     "typecheck": "echo 'No typecheck needed for Mintlify docs'"
   },
   "devDependencies": {
-    "mintlify": "^4.2.415",
     "@userplane/eslint-config": "*",
-    "eslint": "^9.32.0"
+    "eslint": "^9.39.4",
+    "mint": "^4.2.557"
   }
 }

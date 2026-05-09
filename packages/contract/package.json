@@ -30,25 +30,25 @@
   },
   "dependencies": {
     "@userplane/logger": "*",
-    "@orpc/contract": "^1.0.3",
-    "@orpc/zod": "^1.0.3",
+    "@orpc/contract": "^1.14.2",
+    "@orpc/zod": "^1.14.2",
     "@userplane/payments": "*",
     "@userplane/pricing": "*",
-    "validator": "^13.12.0",
-    "zod": "^4.3.6"
+    "validator": "^13.15.35",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@orpc/openapi": "^1.12.3",
-    "@orpc/server": "^1.12.3",
-    "@types/node": "^22.14.1",
+    "@orpc/openapi": "^1.14.2",
+    "@orpc/server": "^1.14.2",
+    "@types/node": "^24.10.2",
     "@types/validator": "^13.12.2",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^9.32.0",
-    "typescript": "5.8.2"
+    "eslint": "^9.39.4",
+    "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@orpc/server": ">=1.0.0"
+    "@orpc/server": "^1.14.2"
   },
   "peerDependenciesMeta": {
     "@orpc/server": {
