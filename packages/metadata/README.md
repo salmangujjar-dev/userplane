@@ -1,144 +1,81 @@
-<div align="center">
+# @userplane/metadata
 
-<h1>@userplane/metadata</h1>
+## Purpose
 
-<p>Attach custom metadata to Userplane recordings</p>
+`@userplane/metadata` stores custom metadata callbacks and static metadata for Userplane recordings. It is a standalone browser package for pages that need metadata support without importing the full SDK.
 
-<p>
-  <a href="https://userplane.io">Website</a> |
-  <a href="https://userplane.io/help">Docs</a>
-</p>
+## Import Surface
 
-</div>
+- `@userplane/metadata`: `metadata`, `set`, `getCustomMetadata`, `clearMetadata`, `MetadataFunction`, `Serializable`, and `SerializableObject`.
 
----
+## Consumers
 
-## Package Overview
-
-| Package               | Use Case                            |
-| --------------------- | ----------------------------------- |
-| `@userplane/metadata` | Standalone metadata-only            |
-| `@userplane/sdk`      | NPM install (SSR-safe, manual init) |
-| `@userplane/embed`    | CDN/script tag (auto-initializes)   |
-
-## Installation
-
-```bash
-npm i @userplane/metadata
-```
-
-- Zero runtime dependencies
-- ESM-only
-- `sideEffects: false`
+Package-level consumers include `@userplane/embed` and `@userplane/sdk`.
 
 ## Quick Start
 
-```typescript
+```ts
 import { metadata, set } from '@userplane/metadata';
 
-// Static defaults
 set('appVersion', '2.1.0');
 set('environment', 'production');
 
-// Dynamic metadata (called at recording submission time)
 metadata(() => ({
   userId: getCurrentUser().id,
   route: window.location.pathname,
 }));
 ```
 
-## API
+Read or clear metadata:
 
-### `metadata(fn)`
+```ts
+import { clearMetadata, getCustomMetadata } from '@userplane/metadata';
 
-Register a function that returns metadata. The function is called lazily when a recording is submitted, not when registered. Calling again replaces the previous function.
-
-```typescript
-metadata(() => ({
-  userId: getCurrentUser().id,
-  plan: 'enterprise',
-}));
+const current = getCustomMetadata();
+clearMetadata('function');
+clearMetadata('appVersion');
+clearMetadata();
 ```
 
-### `set(key, value)`
+## Architecture
 
-Set a static key-value pair as a default. Each call adds or updates that specific key.
+- `src/index.ts` owns the full metadata implementation.
+- Metadata is stored at `window.__userplane__.exports`.
+- `metadata(fn)` stores one lazy callback; calling it again replaces the previous callback.
+- `set(key, value)` stores static metadata by key.
+- `getCustomMetadata()` merges static metadata with callback results; callback values take priority.
+- `clearMetadata()` clears all metadata, `function`, `static`, or a specific static key.
 
-```typescript
-set('appVersion', '2.1.0');
-set('buildId', '12345');
-```
+## Scripts
 
-### `getCustomMetadata()`
+- `bun run dev`: Vite build watch.
+- `bun run build`: compile with `tsc` and build with Vite.
+- `bun run build:npm`: build NPM-optimized output.
+- `bun run build:cdn`: build CDN-optimized output.
+- `bun run typecheck`: run TypeScript without emitting output.
+- `bun run lint`: run ESLint.
+- `bun run clean`: remove generated caches, `dist`, and `node_modules`.
+- `bun run preview`: Vite preview.
+- `bun run prepublishOnly`: fail local publishing with a GitHub Actions reminder.
 
-Retrieves the merged metadata object. Merges static defaults with function results (function takes priority). Returns `null` if no metadata is registered.
+## Tests/Storybook
 
-```typescript
-import { getCustomMetadata } from '@userplane/metadata';
+There is no package-local test or Storybook script. Use `typecheck`, `lint`, and consuming SDK/embed checks.
 
-const data = getCustomMetadata();
-// { appVersion: '2.1.0', buildId: '12345', userId: '...', plan: 'enterprise' }
-```
+## Env/Secrets
 
-### `clearMetadata(keyOrType?)`
+No secrets are required. Development logging uses the build-time `__DEV__` constant where bundlers define it.
 
-Clear metadata based on the provided parameter:
+## Change Checklist
 
-```typescript
-clearMetadata(); // clear everything (function + all static)
-clearMetadata('function'); // clear only the metadata function
-clearMetadata('static'); // clear all static key-value pairs
-clearMetadata('userId'); // clear a specific static key
-```
+- Keep metadata values serializable.
+- Preserve the shared `window.__userplane__.exports` namespace used by SDK and embed.
+- Check merge and clear behavior when changing storage logic.
+- Run `bun run --filter @userplane/metadata typecheck`, `lint`, and `build`.
 
-## Merge Behavior
+## Troubleshooting
 
-Static defaults and function results are merged at retrieval time. Function metadata takes priority on overlapping keys:
-
-```typescript
-set('appVersion', '2.1.0');
-set('environment', 'production');
-
-metadata(() => ({
-  userId: 'u_123',
-  appVersion: '3.0.0-beta', // overrides the static value
-}));
-
-getCustomMetadata();
-// { appVersion: '3.0.0-beta', environment: 'production', userId: 'u_123' }
-```
-
-## Types
-
-```typescript
-type Serializable =
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | Serializable[]
-  | SerializableObject;
-
-interface SerializableObject {
-  [key: string]: Serializable;
-}
-
-type MetadataFunction = () => SerializableObject;
-```
-
-## When to Use Standalone
-
-`@userplane/sdk` re-exports `metadata()`, `set()`, and `clearMetadata()` — so if you're already using the SDK, you don't need this package.
-
-Use `@userplane/metadata` standalone when:
-
-- You're using the `<script>` tag embed and want to set metadata from a separate module
-- You want to register metadata without pulling in the full SDK
-- You're in a context that doesn't need recorder control (e.g., a shared utility module)
-
-Metadata is stored at `window.__userplane__.exports` and shared across all Userplane packages on the page.
-
-## License
-
-[Fair Source License v0.9](LICENSE)
+- If metadata is `null`, verify either `set()` or `metadata()` has been called in the same browser context.
+- If static values are overwritten, check whether the metadata callback returns the same key.
+- If server rendering fails, ensure calls that access metadata run in the browser.
+- If SDK metadata behaves differently, check SDK re-exports before changing this package.

@@ -1,169 +1,100 @@
 # @userplane/email
 
-Unified email package with clients and React Email templates.
+## Purpose
 
-## Features
+`@userplane/email` centralizes Userplane email delivery and React Email rendering. It provides provider clients for local development and Resend, a common send interface, batch sending support, typed template render helpers, and shared email types.
 
-- Multiple email providers (localhost for development, Resend for production)
-- React Email templates with server-safe rendering
-- Idempotency keys for safe retries
-- Email scheduling capabilities
-- Batch sending for multiple recipients (up to 100 emails at once)
-- Type-safe API
-- Consistent response format (always returns array of IDs)
+## Import Surface
 
-## Usage
+- `@userplane/email`: `createEmailClient`, `LocalhostEmailClient`, `ResendEmailClient`, email client/send types, render result types, email template prop types, and render helpers such as `renderMagicLink`, `renderWorkspaceInvite`, and recording/workspace/project/offboarding render functions.
 
-### Email Client
+## Consumers
 
-```typescript
-import { createEmailClient } from '@userplane/email';
+No sibling package currently depends on `@userplane/email` at package level. It is intended for app/server mail workflows, including auth and product lifecycle emails.
+
+## Quick Start
+
+```ts
+import { createEmailClient, renderWorkspaceInvite } from '@userplane/email';
 
 const client = createEmailClient({
   provider: 'resend',
-  apiKey: process.env.RESEND_API_KEY,
+  apiKey: process.env.RESEND_API_KEY!,
 });
 
-// Send single email
-const response = await client.send({
-  from: 'noreply@example.com',
-  to: 'user@example.com',
-  subject: 'Welcome!',
-  html: '<p>Hello world</p>',
+const rendered = await renderWorkspaceInvite({
+  workspaceName: 'Acme',
+  inviterName: 'Sam',
+  inviteUrl: 'https://dash.userplane.io/invite/token',
 });
-console.log(response.ids); // ['email-id-123']
 
-// Send to multiple recipients using batch mode
-const response = await client.send({
-  from: 'noreply@example.com',
-  to: ['user1@example.com', 'user2@example.com', 'user3@example.com'],
-  subject: 'Welcome!',
-  html: '<p>Hello world</p>',
-  batch: true, // Triggers efficient batch sending
-});
-console.log(response.ids); // ['email-id-1', 'email-id-2', 'email-id-3']
-
-// With idempotency key
 await client.send(
   {
-    from: 'noreply@example.com',
-    to: 'user@example.com',
-    subject: 'Welcome!',
-    html: '<p>Hello world</p>',
+    from: 'Userplane <support@userplane.io>',
+    to: 'teammate@example.com',
+    subject: 'Join Acme on Userplane',
+    html: rendered.html,
+    text: rendered.text,
   },
   {
-    idempotencyKey: 'unique-key-123',
-  }
-);
-
-// Schedule email (not supported in batch mode)
-await client.send(
-  {
-    from: 'noreply@example.com',
-    to: 'user@example.com',
-    subject: 'Scheduled',
-    html: '<p>Future email</p>',
-  },
-  {
-    scheduledAt: '2026-02-01T10:00:00Z',
+    idempotencyKey: 'workspace-invite/invite_123',
   }
 );
 ```
 
-### Batch Sending
+Local development:
 
-Batch sending is more efficient than sending individual emails when you need to send the same content to multiple recipients:
-
-```typescript
-// Instead of this (slow, multiple API calls)
-for (const email of emails) {
-  await client.send({
-    from: 'noreply@example.com',
-    to: email,
-    subject: 'Update',
-    html: '<p>News</p>',
-  });
-}
-
-// Do this (fast, single API call)
-const response = await client.send({
-  from: 'noreply@example.com',
-  to: emails, // Array of email addresses
-  batch: true, // Enable batch mode
-  subject: 'Update',
-  html: '<p>News</p>',
-});
-console.log(`Sent ${response.ids.length} emails`);
-```
-
-**Batch Limitations:**
-
-- Maximum 100 recipients per batch
-- `scheduledAt` is not supported in batch mode
-- Each recipient gets a separate email with individual tracking
-
-### Email Templates
-
-```typescript
-import { renderWorkspaceInvite } from '@userplane/email';
-
-// Render template to HTML
-const html = await renderWorkspaceInvite({
-  workspaceName: 'My Workspace',
-  inviterName: 'John Doe',
-  inviteUrl: 'https://example.com/invite/token',
-});
-
-// Send with client
-await client.send({
-  from: 'noreply@example.com',
-  to: ['user@example.com'],
-  subject: 'Workspace Invitation',
-  html,
-});
-```
-
-## Development
-
-```bash
-# Start React Email dev server to preview templates
-bun run dev
-
-# Type check
-bun run typecheck
-```
-
-## Providers
-
-### localhost (Development)
-
-Writes emails to files in the workspace for local testing. No external API calls.
-
-```typescript
-createEmailClient({
+```ts
+const client = createEmailClient({
   provider: 'localhost',
   workingDirectory: process.cwd(),
 });
 ```
 
-### resend (Production)
+## Architecture
 
-Production email sending via [Resend API](https://resend.com/).
+- `src/factory.ts` chooses the provider client from `EmailClientConfig`.
+- `src/clients/localhost.client.ts` implements local file-based delivery for development.
+- `src/clients/resend.client.ts` implements Resend delivery.
+- `src/types.ts` defines the common client, send params, send options, and response shapes.
+- Template components live in `src/emails/`.
+- Copy modules live in `src/copy/`.
+- Typed render helpers are collected in `src/emails.ts` and exported by `src/index.ts`.
+- Shared layout/components live under `src/shared/`.
 
-```typescript
-createEmailClient({
-  provider: 'resend',
-  apiKey: process.env.RESEND_API_KEY,
-});
-```
+## Scripts
 
-## Adding New Templates
+- `bun run build`: compile with `tsc`.
+- `bun run dev`: run React Email preview on port `3003` with `--dir src/emails`.
+- `bun run lint`: run ESLint with zero warnings.
+- `bun run lint:fix`: apply ESLint fixes.
+- `bun run typecheck`: run TypeScript without emitting output.
 
-1. Create a new template in `src/templates/` directory (e.g., `src/templates/password-reset.tsx`)
-2. Add rendering functions in `src/templates.tsx`
-3. Export from `src/index.ts`
-4. Add types for template props
+## Tests/Storybook
 
-## API Reference
+There is no package-local test or Storybook script. Use the React Email preview server for visual checks and `typecheck`/`lint` for code verification.
 
-See [Resend Documentation](https://resend.com/docs/api-reference/emails/send-email) for the full API specification that this package follows.
+## Env/Secrets
+
+The package does not load secrets directly. Callers pass:
+
+- `apiKey` for the `resend` provider, usually from `RESEND_API_KEY`.
+- `workingDirectory` for the `localhost` provider when local output should be rooted somewhere specific.
+
+Batch sends support multiple recipients, but scheduled sends are not supported in batch mode.
+
+## Change Checklist
+
+- Add or update the template component under `src/emails/`.
+- Add or update copy under `src/copy/` when copy is separated from presentation.
+- Add or update the render helper in `src/emails.ts`.
+- Export new render helpers and prop types from `src/index.ts`.
+- Preview template changes with `bun run --filter @userplane/email dev`.
+- Run `bun run --filter @userplane/email typecheck` and `lint`.
+
+## Troubleshooting
+
+- If a template preview is missing, confirm it lives under `src/emails/` and has a render helper in `src/emails.ts`.
+- If a render helper is not importable, check `src/emails.ts` and `src/index.ts`.
+- If Resend sends fail, verify the API key and whether `batch`, `scheduledAt`, or recipient count is supported for that call.
+- If localhost output is hard to find, check the configured `workingDirectory`.
