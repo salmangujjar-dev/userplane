@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- **Bun** >= 1.3.3 (`curl -fsSL https://bun.sh/install | bash`)
-- **Node.js** >= 20
+- **Bun** 1.3.13 (`curl -fsSL https://bun.sh/install | bash`)
+- **Node.js** >= 24 and < 25
 - **cloudflared** (`brew install cloudflared` on macOS)
 - A managed PostgreSQL database ([Neon](developers/setup/neon.md) or [Supabase](developers/setup/supabase.md))
 
@@ -14,10 +14,18 @@ git clone https://github.com/wizenheimer/userplane.git
 cd userplane
 make install
 make env:setup
-# Edit apps/api/.env.development — set DATABASE_URL to your managed Postgres
+# Edit apps/api/.env.development and set DATABASE_URL to your managed Postgres
 make db:push
 make dev
 ```
+
+## Documentation Map
+
+- [README.md](README.md) is the flagship product and monorepo overview.
+- [apps/README.md](apps/README.md) maps every runnable app, local port, command, environment surface, and owner guide.
+- [packages/README.md](packages/README.md) maps every shared package, import surface, consumer set, and change checklist.
+- [developers/README.md](developers/README.md) contains deeper setup guides and area-specific contributor guides.
+- [assets/readme/README.md](assets/readme/README.md) tracks the media used by the root README.
 
 ## Cloudflare Tunnels
 
