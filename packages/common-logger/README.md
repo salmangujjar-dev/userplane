@@ -1,89 +1,80 @@
-# @userplane/logger
+# @userplane/common-logger
 
-Structured logging using Pino. Two exports: server and client. Both return `pino.Logger`.
+## Purpose
 
-The package owns **structure** (formatters, base field shape, pretty-print config).
-Callers own **policy** (log level, pretty-printing, base metadata).
-The package does not read `process.env` -- each app passes config explicitly.
+`@userplane/common-logger` standardizes structured Pino logging for shared server and browser contexts. It owns logger shape, level formatting, context base fields, and optional pretty output while leaving logging policy to each caller.
 
-## Exports
+This package is `@userplane/common-logger`; it is for structured Pino logging, not browser recording capture.
 
-### `@userplane/logger` -- `createServerLogger`
+## Import Surface
 
-Server-side logger using Pino with optional pretty-printing via pino-pretty transport.
+- `@userplane/common-logger`: `createServerLogger`, `Logger`, `LogLevel`, and `ServerLoggerOptions`.
+- `@userplane/common-logger/browser`: `createClientLogger`, `Logger`, `LogLevel`, and `ClientLoggerOptions`.
 
-```typescript
-import { createServerLogger, type LogLevel } from '@userplane/logger';
+## Consumers
 
-const logger = createServerLogger('my-service', {
-  level: 'debug',
-  pretty: true,
-  base: { env: 'development', appEnv: 'local' },
+Package-level consumers include `@userplane/db` and `@userplane/email`.
+
+## Quick Start
+
+Server logger:
+
+```ts
+import { createServerLogger, type LogLevel } from '@userplane/common-logger';
+
+const logger = createServerLogger('api', {
+  level: (process.env.LOG_LEVEL as LogLevel) || 'info',
+  pretty: process.env.NODE_ENV !== 'production',
+  base: { appEnv: process.env.APP_ENV },
 });
 
-logger.info({ userId: 123 }, 'User logged in');
-logger.error({ err }, 'Something failed');
+logger.info({ route: '/health' }, 'Health check');
 ```
 
-**`ServerLoggerOptions`:**
+Browser logger:
 
-| Field    | Type                      | Required | Description                                     |
-| -------- | ------------------------- | -------- | ----------------------------------------------- |
-| `level`  | `LogLevel`                | yes      | Log level -- caller decides based on their env  |
-| `pretty` | `boolean`                 | no       | Enable pretty-printed output (default: `false`) |
-| `base`   | `Record<string, unknown>` | no       | Additional base fields on every log line        |
+```ts
+import { createClientLogger } from '@userplane/common-logger/browser';
 
-### `@userplane/logger/browser` -- `createClientLogger`
+const logger = createClientLogger('settings-panel', {
+  level: 'warn',
+});
 
-Client-side logger using Pino's native browser build. Outputs structured objects via `console.*` methods.
-
-```typescript
-import { createClientLogger } from '@userplane/logger/browser';
-
-const logger = createClientLogger('my-component', { level: 'info' });
-
-logger.info({ action: 'click' }, 'Button clicked');
+logger.warn({ tab: 'billing' }, 'Unexpected billing state');
 ```
 
-**`ClientLoggerOptions`:**
+## Architecture
 
-| Field   | Type                      | Required | Description                                    |
-| ------- | ------------------------- | -------- | ---------------------------------------------- |
-| `level` | `LogLevel`                | yes      | Log level -- caller decides based on their env |
-| `base`  | `Record<string, unknown>` | no       | Additional base fields on every log line       |
+- `src/index.ts` builds a Pino server logger and uses `pino-pretty` as a stream when requested.
+- `src/browser.ts` builds a Pino browser logger that writes through browser console methods.
+- Both entrypoints format levels as labels and include a `context` base field.
+- The package does not read application environment variables; app-local wrappers bind env-specific policy once.
 
-## App-local wrappers
+## Scripts
 
-Each app should create a thin local wrapper that binds env-specific config once:
+- `bun run build`: compile with `tsc`.
+- `bun run dev`: compile in watch mode.
+- `bun run typecheck`: run TypeScript without emitting output.
+- `bun run lint`: run ESLint.
 
-```typescript
-// apps/api/src/lib/logger.ts
-import { createServerLogger, type LogLevel } from '@userplane/logger';
-import { env } from '@/api/env';
+## Tests/Storybook
 
-const isDev = env.server.nodeEnv !== 'production';
+There is no package-local test or Storybook script.
 
-export function createLogger(context: string) {
-  return createServerLogger(context, {
-    level: (process.env.LOG_LEVEL as LogLevel) || (isDev ? 'debug' : 'info'),
-    pretty: isDev,
-    base: { env: env.server.nodeEnv, appEnv: env.server.appEnv },
-  });
-}
-```
+## Env/Secrets
 
-Then all files in that app import from the local wrapper:
+No environment variables or secrets are read directly. Callers pass level, pretty mode, and base metadata.
 
-```typescript
-import { createLogger } from '@/api/lib/logger';
+## Change Checklist
 
-const logger = createLogger('my-module');
-```
+- Keep server and browser option names aligned where possible.
+- Do not add process-env policy inside the package; keep policy in app-local wrappers.
+- Verify Pino and `pino-pretty` behavior before changing pretty output.
+- Run `bun run --filter @userplane/common-logger typecheck` and `lint`.
 
-## Standardized behavior
+## Troubleshooting
 
-Both loggers share the same structural conventions:
-
-- Level formatted as label (`{ level: 'info' }` not `{ level: 30 }`)
-- `context` field in base for identifying the module
-- Returns `pino.Logger` -- same type, same API surface everywhere
+- If pretty output fails in a monorepo consumer, keep using `pino-pretty` as a stream rather than a worker-thread transport.
+- If browser bundles include server-only code, check for root imports where `/browser` was intended.
+- If log fields are missing, verify the caller passes expected `base` metadata.
+- If log levels appear numeric, check the Pino `formatters.level` configuration.

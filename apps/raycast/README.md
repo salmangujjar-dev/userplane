@@ -1,59 +1,137 @@
 # Userplane for Raycast
 
-> Create Userplane recording links, browse recordings, and jump into the Userplane dashboard — all without leaving Raycast.
+## Purpose
 
-Userplane helps your support team request screen recordings from customers in seconds. The Raycast extension puts every core Userplane workflow behind a keystroke: create a recording link, paste it into Intercom, Zendesk, or Slack, and review the recording — console logs, network activity, user actions — from the same place you launch the rest of your day.
+`apps/raycast` is the Userplane Raycast extension. It lets users create recording links, browse recordings, browse recording links, and open dashboard views from Raycast commands and the macOS menu bar.
 
-## What you can do
+The package name is `userplane`, and the extension is configured for Raycast Store publishing.
 
-- **Create a recording link** in two keystrokes, copied to your clipboard and ready to send.
-- **Browse recordings** in a thumbnail grid with creator, duration, and expiry indicators.
-- **Browse recording links** with filters by creator, project, and domain.
-- **Jump into the dashboard** for playback, console logs, network activity, and the Issue Analyzer.
-- **Menu bar access** so every command is one click away.
+## Where It Fits
 
-## Getting started
+The Raycast extension is intentionally standalone:
 
-1. Create an API key at [dash.userplane.io/\_/account?tab=developers](https://dash.userplane.io/_/account?tab=developers).
-2. Run any Userplane command in Raycast.
-3. Paste your key into the **API Key** preference when prompted.
+- It does not depend on private `@userplane/*` workspace packages, so `ray publish` can produce a valid Store submission.
+- It uses a hand-written API client against the public API under `/api/v1/public/*`.
+- It authenticates with a Userplane API key stored by Raycast preferences.
+- It opens dashboard URLs for deep review and settings workflows.
+- Its user-facing docs and screenshots are mirrored in `apps/docs/integrations/raycast*.mdx`.
 
-Your key is stored in the macOS keychain by Raycast.
+## Stack
 
-## Commands
+- Platform: Raycast extension runtime.
+- UI/API: `@raycast/api` and `@raycast/utils`.
+- Language: TypeScript and React components compiled by Raycast tooling.
+- API client: hand-written fetch client in `src/api/client.ts`.
+- Formatting/linting: Raycast ESLint config, Prettier, and TypeScript.
+- Release metadata: `package.json`, `CHANGELOG.md`, `assets`, `metadata`, and committed `package-lock.json`.
 
-### Create Recording Link
+## Local Development
 
-Pick a workspace, project, and domain, add an optional reference (ticket number, customer ID, anything), and submit. The link is copied to your clipboard. `⌘↵` creates the link and opens it in your browser in one step. The extension remembers your last workspace, project, and domain so the next link is one keystroke faster.
+From the repository root:
 
-### Browse Recordings
+```bash
+make raycast:dev
+```
 
-Thumbnail grid of every recording in the current workspace. Filter by creator, project, or link (`⌘F`). Sort by newest or longest (`⌘⇧F` to reset). Recordings nearing expiry are flagged with a clock icon. `⌘C` copies the dashboard URL.
+Or from this directory:
 
-### Browse Links
+```bash
+cd apps/raycast
+bun run dev
+```
 
-Every recording link in the current workspace. Filter by creator, project, or domain (`⌘F`, `⌘⇧F` to reset). Copy a link URL, open it in the browser, or jump to the recordings it captured (`⌘R`).
+Useful commands:
 
-### Show Menu Bar
+```bash
+bun run build
+bun run lint
+bun run fix-lint
+bun run typecheck
+bun run publish
+```
 
-One-click access to every command plus the dashboard, from the macOS menu bar.
+The Raycast dev command opens the extension in the local Raycast runtime with hot reload.
 
-Every command exposes a Userplane action section with Open Dashboard (`⌘D`), View My Recordings (`⌘⇧R`), Change API Key (`⌘⇧K`), and Advanced Options (`⌘⇧A`).
+## Environment
 
-## Self-hosted and staging deployments
+Raycast extensions use preferences rather than `.env` files. Preferences are defined in `package.json` and typed in the generated `raycast-env.d.ts`.
 
-Override **API Host** (`apiBaseUrl`, default `api.userplane.io`) and **Dashboard Host** (`dashBaseUrl`, default `dash.userplane.io`) in Extension Preferences. Both accept bare hosts or full `https://` URLs. Every "Open in Dashboard" action respects the dashboard override.
+Preferences:
 
-## Learn more
+- `apiKey` - required Userplane API key. Create one in the dashboard developer settings.
+- `apiBaseUrl` - optional API host override. Defaults to `api.userplane.io`. Bare hosts and full `http(s)://` origins are accepted.
+- `dashBaseUrl` - optional dashboard host override. Defaults to `dash.userplane.io`. Bare hosts and full `http(s)://` origins are accepted.
 
-- [Userplane docs](https://docs.userplane.io)
-- [Quickstart](https://docs.userplane.io/quickstart)
-- [For support agents](https://docs.userplane.io/getting-started/for-support-agents)
+`src/utils/normalize-url.ts` normalizes preference input down to a clean origin. The API client appends `/api/v1`, and dashboard helpers append product paths.
 
-## Contributing
+## Key Workflows
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for local development, build, and publish instructions.
+- `create-link` - choose workspace, project, and domain; add optional reference; create a recording link through the public API; copy it to the clipboard; optionally open it in the browser.
+- `list-recordings` - browse workspace recordings with filters and sorting, then open or copy dashboard playback URLs.
+- `list-links` - browse recording links with filters and sorting, copy/open links, edit context from dashboard, or jump to recordings for a link.
+- `menu-bar` - macOS menu bar entry with quick links to Raycast commands and dashboard pages.
+- Shared actions - open dashboard, view recordings, change API key, and advanced options from common command action sections.
+- Persistence - Raycast LocalStorage remembers last-used workspace/domain/project and filter preferences.
 
-## License
+## Important Directories
 
-MIT — see [LICENSE](./LICENSE).
+- `src/api` - fetch client, error mapping, pagination helpers, and hand-written response types.
+- `src/components` - shared command actions, filter picker, and link success view.
+- `src/hooks` - cached resource hooks for workspaces, domains, projects, members, links, recordings, search, and debouncing.
+- `src/utils` - dashboard URL helpers, formatting helpers, and host normalization.
+- `src/*.tsx` - Raycast command entry files and filter forms.
+- `assets` - extension icon assets.
+- `metadata` - Raycast Store screenshots.
+- `CHANGELOG.md` - release notes for Store submission.
+- `CONTRIBUTING.md` - detailed local development and release guidance.
+- `package-lock.json` - npm lockfile required for Raycast Store review.
+
+## Checks
+
+From this directory:
+
+```bash
+bun run lint
+bun run typecheck
+bun run build
+```
+
+From the root:
+
+```bash
+make raycast:lint
+make raycast:typecheck
+make raycast:build
+```
+
+## Deployment/Release
+
+Before publishing:
+
+1. Update `CHANGELOG.md`.
+2. Confirm `metadata` screenshots are current.
+3. Bump package metadata if needed.
+4. Regenerate the Raycast Store lockfile:
+
+```bash
+make raycast:prepublish
+```
+
+Publish flow:
+
+```bash
+make raycast:publish
+```
+
+That target regenerates `apps/raycast/package-lock.json`, then runs `ray publish`, which opens the Raycast Store submission flow.
+
+## Related Docs
+
+- `apps/raycast/CONTRIBUTING.md`
+- `apps/raycast/CHANGELOG.md`
+- `apps/raycast/package.json`
+- `apps/docs/integrations/raycast.mdx`
+- `apps/docs/integrations/raycast-create-links.mdx`
+- `apps/docs/integrations/raycast-recordings.mdx`
+- `apps/docs/integrations/raycast-links.mdx`
+- `apps/api/README.md`

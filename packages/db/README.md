@@ -1,78 +1,75 @@
 # @userplane/db
 
-Database schema, migrations, and client for the application. Built on Drizzle ORM with PostgreSQL.
+## Purpose
 
-## Structure
+`@userplane/db` owns the Drizzle/PostgreSQL schema, generated migrations, database client factory, schema type exports, database constants, and selected Drizzle operator re-exports for Userplane data access.
 
-```
-src/
-  schema/       Table definitions (source of truth for DB structure)
-  client.ts     Drizzle client factory
-  migrate.ts    Migration runner
-drizzle/
-  *.sql         Generated migration files (committed to repo)
-  meta/         Drizzle snapshots and journal
-drizzle.config.ts
-```
+## Import Surface
 
-## Workflow
+- `@userplane/db`: `createDb`, `getDb`, `DbClient`, `DbConfig`, schema exports, constants, and selected `drizzle-orm` operators such as `eq`, `and`, `sql`, `count`, and ordering/comparison helpers.
+- `@userplane/db/schema`: table definitions, relations, enums, and inferred model types.
+- `@userplane/db/client`: database client factory and client/config types.
 
-### 1. Edit schema and iterate locally
+## Consumers
 
-Modify or create files in `src/schema/`. Use `push` to apply changes directly to your local database. Repeat until the schema is right.
+Package-level consumers include `@userplane/auth`.
 
-```bash
-make db:push
-```
+## Quick Start
 
-Use Drizzle Studio to inspect data:
+```ts
+import { getDb, workspaces, eq } from '@userplane/db';
 
-```bash
-make db:studio
+const db = getDb({
+  databaseUrl: process.env.DATABASE_URL!,
+  maxConnections: 10,
+});
+
+const rows = await db.select().from(workspaces).where(eq(workspaces.id, workspaceId));
 ```
 
-### 2. Generate migration
+## Architecture
 
-Once the schema is stable, generate a migration file from the diff:
+- `src/client.ts` creates a `pg` pool and Drizzle client. It strips `sslrootcert=system` for providers that append that value.
+- `src/schema/` contains table definitions, relations, enums, and inferred insert/select types.
+- `src/constants.ts` contains DB-adjacent shared constants.
+- `src/migrate.ts` and `src/reset.ts` run database workflows.
+- `drizzle/` contains generated SQL migrations and Drizzle snapshot metadata.
+- `drizzle.config.ts` points Drizzle Kit at `src/schema/index.ts` and `drizzle/`.
 
-```bash
-make db:generate
-```
+## Scripts
 
-This creates a new SQL file in `drizzle/` and updates the snapshot in `drizzle/meta/`.
+- `bun run build`: compile with `tsc`.
+- `bun run dev`: compile in watch mode.
+- `bun run db:generate`: generate Drizzle migrations from schema changes.
+- `bun run db:migrate`: run migrations through `src/migrate.ts`.
+- `bun run db:reset`: run reset workflow through `src/reset.ts`.
+- `bun run db:push`: push schema directly with Drizzle Kit.
+- `bun run db:studio`: open Drizzle Studio.
+- `bun run lint`: run ESLint with zero warnings.
+- `bun run lint:fix`: apply ESLint fixes.
+- `bun run typecheck`: run TypeScript without emitting output.
 
-### 3. Review the generated SQL
+## Tests/Storybook
 
-Open the new `drizzle/XXXX_*.sql` file and read it. Check for:
+There is no package-local test or Storybook script. Verify with `typecheck`, `lint`, migration generation/review, and local migration execution.
 
-- Unintended column drops or type changes
-- Missing `IF NOT EXISTS` / `IF EXISTS` guards on risky operations
-- Constraint changes that could fail against existing data
+## Env/Secrets
 
-### 4. Test migration locally
+- `DATABASE_URL` is required by Drizzle Kit workflows and migration scripts.
+- Runtime database clients receive `databaseUrl` through `DbConfig`.
 
-```bash
-make db:migrate
-```
+## Change Checklist
 
-This runs the migration against your local database the same way production does. Confirms the SQL actually works.
+- Edit schema in `src/schema/` first.
+- Use `db:push` only for local iteration.
+- Run `db:generate` once the schema is stable.
+- Review generated SQL in `drizzle/` for destructive changes.
+- Run `db:migrate` locally before merging.
+- Commit schema changes, generated SQL, and Drizzle snapshot metadata together.
 
-### 5. Commit and merge
+## Troubleshooting
 
-Commit the schema changes, the generated SQL file, and the updated snapshot together in the same PR.
-
-### 6. Apply to production
-
-```bash
-make db:migrate:production
-```
-
-Never use `push` against production. Migrations are tracked in a `__drizzle_migrations` table. Each runs exactly once, identified by a content hash.
-
-## Rules
-
-- **One migration per logical change.** Don't batch unrelated schema changes.
-- **Never modify a migration after it has been applied** to any persistent environment. The content hash changes and drizzle cannot reconcile it.
-- **Never skip `db:generate`.** Hand-written migration SQL is not tracked by drizzle snapshots and will cause drift.
-- **Commit migration files with the schema change.** A PR that changes schema should include the generated SQL.
-- **Review generated SQL before merging.** `drizzle-kit generate` is a code generator -- verify its output.
+- If `sslrootcert=system` causes file errors, verify the URL passes through `createDb` or the sanitized Drizzle config.
+- If migrations drift, do not hand-edit already-applied migrations; generate a new migration.
+- If Drizzle Studio cannot connect, check `DATABASE_URL`.
+- If a type is missing from the root import, confirm it is exported by `src/schema/index.ts`.
