@@ -2,6 +2,15 @@
 
 Everything a contributor needs to get productive in the Userplane monorepo. Pick the area you want to work on, set up the required services, and follow the guide.
 
+## Start Here
+
+| Document                                 | Use it for                                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [Root README](../README.md)              | Product overview, architecture, quickstart, commands, and public-facing repo map            |
+| [Apps README](../apps/README.md)         | Runnable app inventory, ports, workflows, environments, and app-specific READMEs            |
+| [Packages README](../packages/README.md) | Shared package inventory, import surfaces, consumers, scripts, and package-specific READMEs |
+| [Contributing](../CONTRIBUTING.md)       | Branching, commits, PR expectations, and contribution checklist                             |
+
 ## Setup Guides
 
 | Guide                                             | Service                  | Free Tier                   | Needed For           |
