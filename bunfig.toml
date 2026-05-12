@@ -1,0 +1,8 @@
+# https://bun.com/docs/pm/cli/install#minimum-release-age
+[install]
+# Reject npm versions newer than this many seconds (3 days). Applies when
+# resolving new or changed dependencies; existing bun.lock entries are unchanged.
+minimumReleaseAge = 259_200
+
+# Packages that may need immediate updates (types, toolchain).
+minimumReleaseAgeExcludes = ["@types/node", "typescript"]
