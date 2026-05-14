@@ -105,6 +105,10 @@ apps/api/localhost
 !AGENTS.md
 !CONTRIBUTING.md
 !LICENSE
+!LICENSES/
+!LICENSES/*.md
+!apps/*/LICENSE.md
+!packages/*/LICENSE.md
 !developers/**/*.md
 !apps/home/src/content/**/*.md
 !apps/docs/**/*.md

@@ -1,6 +1,7 @@
 {
   "name": "@userplane/postbridge",
   "version": "0.6.3",
+  "license": "FSL-1.1-ALv2",
   "type": "module",
   "private": true,
   "description": "Type-safe bidirectional RPC for postMessage contexts - iframes, workers, and cross-tab communication",
