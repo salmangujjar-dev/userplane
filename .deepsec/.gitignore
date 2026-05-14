@@ -1,0 +1,13 @@
+.env.local
+node_modules/
+findings/
+*.jsonl
+
+data/*/INFO.md
+data/*/SETUP.md
+data/*/config.json
+data/*/files/
+data/*/runs/
+data/*/reports/
+data/*/project.json
+data/*/tech.json

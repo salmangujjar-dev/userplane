@@ -127,3 +127,10 @@ storybook-static
 .claude/
 .cursor/
 .gemini/
+
+# DeepSec wrapper config is tracked; project context and generated scan state
+# stay local under .deepsec/data/.
+!.deepsec/
+!.deepsec/.gitignore
+!.deepsec/package.json
+!.deepsec/deepsec.config.ts
