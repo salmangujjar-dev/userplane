@@ -2,6 +2,7 @@
   "name": "@userplane/contract",
   "type": "module",
   "version": "1.0.0",
+  "license": "FSL-1.1-ALv2",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

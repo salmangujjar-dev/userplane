@@ -1,6 +1,7 @@
 {
   "name": "@userplane/zendesk",
   "version": "0.2.0",
+  "license": "FSL-1.1-ALv2",
   "private": true,
   "description": "Zendesk app manifest packaging (UI lives in apps/dash)",
   "scripts": {

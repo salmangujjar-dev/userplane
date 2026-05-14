@@ -110,4 +110,5 @@ Run `make help` for a full list of available commands. Key targets:
 
 ## License
 
-This project is licensed under AGPLv3. See [LICENSE](LICENSE).
+This project uses Apache-2.0 at the repository root, with workspace-specific
+FSL-1.1-ALv2 exceptions declared in each app/package `LICENSE.md`.

@@ -2,6 +2,7 @@
   "name": "recorder",
   "type": "module",
   "version": "0.0.1",
+  "license": "FSL-1.1-ALv2",
   "private": true,
   "scripts": {
     "prepare:worker": "bun build ../../packages/postbridge/src/bridge-worker.ts --outfile=public/bridge-worker.js --format=esm --target=browser && cp public/bridge-worker.js ../../packages/postbridge/src/bridge-worker.js",

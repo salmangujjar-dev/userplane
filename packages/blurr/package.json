@@ -1,6 +1,7 @@
 {
   "name": "@userplane/blurr",
   "version": "1.0.0",
+  "license": "FSL-1.1-ALv2",
   "type": "module",
   "private": true,
   "description": "Production-grade privacy blur system for screen recording and session replay",

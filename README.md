@@ -564,4 +564,5 @@ supported scope.
 
 ## License
 
-Userplane is licensed under AGPLv3. See [LICENSE](LICENSE).
+Userplane uses Apache-2.0 at the repository root, with workspace-specific
+FSL-1.1-ALv2 exceptions declared in each app/package `LICENSE.md`.

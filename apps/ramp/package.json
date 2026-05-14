@@ -1,6 +1,7 @@
 {
   "name": "ramp",
   "version": "0.0.1",
+  "license": "FSL-1.1-ALv2",
   "type": "module",
   "private": true,
   "scripts": {

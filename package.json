@@ -1,6 +1,7 @@
 {
   "name": "userplane",
   "version": "0.0.1",
+  "license": "Apache-2.0",
   "private": true,
   "scripts": {
     "build": "turbo build",
@@ -11,6 +12,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,mdx,astro}\"",
     "fix": "bun run lint:fix && bun run format",
     "check:env": "node scripts/check-env-vars.js",
+    "check:licenses": "bun run scripts/check-workspace-licenses.ts",
     "prepare": "husky"
   },
   "devDependencies": {

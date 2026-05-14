@@ -47,6 +47,8 @@ bun.lockb
 # Misc
 coverage
 .nyc_output
+apps/*/LICENSE.md
+packages/*/LICENSE.md
 
 # Mintlify
 .mintlify
