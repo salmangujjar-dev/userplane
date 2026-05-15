@@ -77,7 +77,7 @@ export const InitUploadSchema = z.object({
       .number()
       .int()
       .min(RECORDING_DURATION_LIMITS.MIN_DURATION_MS)
-      .max(RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS),
+      .max(RECORDING_DURATION_LIMITS.SYSTEM_MAX_DURATION_MS),
     recording_started_at: z.number().int().positive().optional(),
     files: z.array(UploadFileSchema).min(1).max(5),
     metadata: SessionRecordingMetaSchema,

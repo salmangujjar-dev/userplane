@@ -47,6 +47,7 @@ export const RESOURCE_TYPE_VALUES = [
   'recordings',
   'screenshots',
   'files',
+  'recording_max_duration',
 ] as const;
 export type ResourceType = (typeof RESOURCE_TYPE_VALUES)[number];
 
@@ -66,6 +67,12 @@ export const PERIOD_BASED_RESOURCES: readonly ResourceType[] = [
   'screenshots',
   'files',
 ] as const;
+
+/**
+ * Static resources - plan-level limits that are neither consumed nor reset
+ * Examples: max recording duration (ms)
+ */
+export const STATIC_RESOURCES: readonly ResourceType[] = ['recording_max_duration'] as const;
 
 /**
  * Resource limit configuration for a plan
@@ -116,6 +123,10 @@ export const FREE_PLAN_ENTITLEMENTS: PlanEntitlements = {
   files: {
     quotedLimit: 0,
     actualLimit: 0,
+  },
+  recording_max_duration: {
+    quotedLimit: 180000,
+    actualLimit: 180000,
   },
 };
 

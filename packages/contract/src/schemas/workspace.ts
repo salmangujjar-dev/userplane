@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   DOMAIN_PAGINATION,
   MAX_EMAIL_DOMAINS,
+  RECORDING_DURATION_LIMITS,
   SEARCH_PAGINATION,
   WORKSPACE_MEMBERS_PAGINATION,
   WORKSPACE_PAGINATION,
@@ -408,7 +409,12 @@ export const UpdateWorkspacePreferencesSchema = z.object({
     recordingHeader: z.string().nullable().optional(),
     recordingFootnote: z.string().nullable().optional(),
     recordingPrimaryColor: z.string().nullable().optional(),
-    recordingMaxDurationMs: z.number().int().nullable().optional(),
+    recordingMaxDurationMs: z
+      .number()
+      .int()
+      .max(RECORDING_DURATION_LIMITS.SYSTEM_MAX_DURATION_MS)
+      .nullable()
+      .optional(),
   }),
 });
 
