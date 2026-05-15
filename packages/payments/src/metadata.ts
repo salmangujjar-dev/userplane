@@ -47,6 +47,10 @@ export const LIMIT_METADATA_KEYS = {
   links: { quoted: 'links_quoted_limit', actual: 'links_actual_limit' },
   screenshots: { quoted: 'screenshots_quoted_limit', actual: 'screenshots_actual_limit' },
   files: { quoted: 'files_quoted_limit', actual: 'files_actual_limit' },
+  recording_max_duration: {
+    quoted: 'recording_max_duration_quoted_limit',
+    actual: 'recording_max_duration_actual_limit',
+  },
 } as const satisfies Record<ResourceType, { quoted: string; actual: string }>;
 
 /**

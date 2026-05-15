@@ -1,0 +1,2 @@
+ALTER TABLE "entitlements" DROP CONSTRAINT "entitlements_resource_type_check";--> statement-breakpoint
+ALTER TABLE "entitlements" ADD CONSTRAINT "entitlements_resource_type_check" CHECK ("entitlements"."resource_type" IN ('seats', 'links', 'recordings', 'screenshots', 'files', 'recording_max_duration'));

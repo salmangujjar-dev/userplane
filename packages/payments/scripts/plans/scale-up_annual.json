@@ -17,6 +17,8 @@
     "screenshots_actual_limit": "3120",
     "files_quoted_limit": "0",
     "files_actual_limit": "0",
+    "recording_max_duration_quoted_limit": "1200000",
+    "recording_max_duration_actual_limit": "1200000",
     "request_recordings_enabled": "true",
     "request_sessions_enabled": "true",
     "request_screenshots_enabled": "true",

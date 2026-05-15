@@ -9,6 +9,8 @@
 export const RECORDING_DURATION_LIMITS = {
   /** Default maximum recording duration (3 minutes) */
   DEFAULT_MAX_DURATION_MS: 180000,
+  /** System-wide absolute maximum recording duration (20 minutes) */
+  SYSTEM_MAX_DURATION_MS: 1_200_000,
   /** Minimum recording duration (1 second) */
   MIN_DURATION_MS: 1000,
 } as const;
