@@ -14,6 +14,7 @@ export const ADMIN_CUSTOM_PLAN_QUICKSTART_LIMITS: AdminCustomPlanLimits = {
   links: { quotedLimit: -1, actualLimit: 1750 },
   screenshots: { quotedLimit: -1, actualLimit: 1000 },
   files: { quotedLimit: -1, actualLimit: 4000 },
+  recording_max_duration: { quotedLimit: 1200000, actualLimit: 1200000 },
 };
 
 export const ADMIN_CUSTOM_PLAN_QUICKSTART_GATES: AdminCustomPlanGates = Object.fromEntries(

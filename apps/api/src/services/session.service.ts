@@ -401,13 +401,14 @@ export class SessionService {
       throw sessionError.SESSION_DURATION_TOO_SHORT();
     }
 
-    // Validate against workspace-specific limit (if set)
-    if (sessionPayload.prefs.rmd !== null && recordingDurationMs > sessionPayload.prefs.rmd) {
+    // Validate against workspace-specific limit (falls back to default for plans without override)
+    const workspaceLimit = sessionPayload.prefs.rmd ?? SESSION_CONSTRAINTS.DEFAULT_MAX_DURATION_MS;
+    if (recordingDurationMs > workspaceLimit) {
       throw sessionError.SESSION_DURATION_TOO_LONG();
     }
 
-    // Validate against absolute maximum
-    if (recordingDurationMs > SESSION_CONSTRAINTS.DEFAULT_MAX_DURATION_MS) {
+    // Validate against system-wide absolute maximum
+    if (recordingDurationMs > SESSION_CONSTRAINTS.SYSTEM_MAX_DURATION_MS) {
       throw sessionError.SESSION_DURATION_TOO_LONG();
     }
 
