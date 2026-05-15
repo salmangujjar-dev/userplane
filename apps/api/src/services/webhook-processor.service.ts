@@ -14,7 +14,7 @@
  */
 
 import type { CacheService } from '@userplane/cache';
-import type { AddonItems } from '@userplane/contract';
+import { type AddonItems, RECORDING_DURATION_LIMITS } from '@userplane/contract';
 import type { DbClient } from '@userplane/db';
 import type { getDodoPaymentsClient } from '@userplane/payments/client';
 import { getPlanIdFromProductId } from '@userplane/payments/products';
@@ -465,6 +465,16 @@ export class WebhookProcessorService {
       });
     }
 
+    // Sync workspace recording max duration from plan entitlement
+    const recordingMaxDuration =
+      metadata.featureLimits?.recording_max_duration?.actualLimit ??
+      RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS;
+    await this.deps.workspaceRepo.updatePreferences(
+      workspaceId,
+      { recordingMaxDurationMs: recordingMaxDuration },
+      { tx }
+    );
+
     await this.deps.webhookEventsRepo.markProcessed(
       webhookId,
       { previousStatus, newStatus: 'active' },
@@ -692,6 +702,16 @@ export class WebhookProcessorService {
           addons: opts.incomingAddons,
           billingCadence: opts.billingCadence,
         }
+      );
+
+      // Sync workspace recording max duration from plan entitlement
+      const recordingMaxDuration =
+        opts.metadata.featureLimits.recording_max_duration?.actualLimit ??
+        RECORDING_DURATION_LIMITS.DEFAULT_MAX_DURATION_MS;
+      await this.deps.workspaceRepo.updatePreferences(
+        workspaceId,
+        { recordingMaxDurationMs: recordingMaxDuration },
+        { tx }
       );
     } else if (opts.planChanged || opts.addonsChanged) {
       // Plan or addon changed but no metadata available — this is an error

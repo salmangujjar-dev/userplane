@@ -90,7 +90,7 @@ export const preferenceArgTypes = {
     table: { category: 'Recording Options' },
   },
   maxDurationMs: {
-    control: { type: 'number', min: 60000, max: 600000, step: 60000 },
+    control: { type: 'number', min: 60000, max: 1200000, step: 60000 },
     description: 'Maximum recording duration in milliseconds',
     table: { category: 'Recording Options' },
   },

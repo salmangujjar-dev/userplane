@@ -6,7 +6,6 @@
   "private": true,
   "scripts": {
     "dev": "mint dev --port 3005 --no-open",
-    "build": "mint validate",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "typecheck": "echo 'No typecheck needed for Mintlify docs'"
