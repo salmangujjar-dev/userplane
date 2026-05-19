@@ -26,8 +26,12 @@ https://api.userplane.io/mcp
 <Tabs>
   <Tab title="Claude">
     <Steps>
-      <Step title="Open Connectors">
-        Navigate to the **Connectors** page in your [Claude settings](https://claude.ai/settings).
+      <Step title="Add the Userplane connector">
+        Open [Add Userplane to Claude](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Userplane&connectorUrl=https://api.userplane.io/mcp) to prefill Claude's custom connector form.
+
+      </Step>
+      <Step title="Open Connectors manually">
+        If the prefilled form does not open, navigate to the **Connectors** page in your [Claude settings](https://claude.ai/settings).
 
         <Frame caption="Claude connector settings">
           <img src="/media/mcp/claude/oauth/connector-settings.png" />
@@ -38,7 +42,7 @@ https://api.userplane.io/mcp
         Select **Add custom connector**.
       </Step>
       <Step title="Enter server details">
-        Enter a name (e.g., `userplane`) and the MCP server URL:
+        Enter the connector name `Userplane` and the MCP server URL:
         ```
         https://api.userplane.io/mcp
         ```
