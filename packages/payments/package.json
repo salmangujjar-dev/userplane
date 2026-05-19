@@ -56,7 +56,6 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.2",
-    "@userplane/db": "*",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "eslint": "^9.39.4",
