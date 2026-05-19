@@ -16,10 +16,6 @@
 
 `products` reads product IDs from `process.env`, so keep it server-side.
 
-## Consumers
-
-Package-level consumers include `@userplane/auth`, `@userplane/contract`, and `@userplane/db`.
-
 ## Quick Start
 
 ```ts
