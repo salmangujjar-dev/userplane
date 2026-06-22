@@ -12,11 +12,14 @@ export type SessionResource = 'list' | 'revoke' | 'delete';
 export type Resource = 'user' | 'session';
 export type Action = UserResource | SessionResource;
 
-// Define the permission map structure
-export interface PermissionMap {
+// Define the permission map structure.
+// NB: this is a `type` alias (not an `interface`) on purpose — better-auth's
+// `ac.newRole()` expects a `Statements`-compatible shape (an index signature),
+// and only type aliases (not interfaces) are assignable to index signatures.
+export type PermissionMap = {
   user: UserResource[];
   session: SessionResource[];
-}
+};
 
 // Role names
 export type RoleName = 'admin' | 'csm' | 'user';

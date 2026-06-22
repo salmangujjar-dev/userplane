@@ -33,7 +33,7 @@
     "dotenv": "^17.4.2",
     "lucide-react": "^0.563.0",
     "nanoid": "^5.1.11",
-    "next": "16.2.6",
+    "next": "16.2.9",
     "nuqs": "^2.8.9",
     "react": "19.2.6",
     "react-confetti": "^6.4.0",
