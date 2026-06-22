@@ -218,7 +218,9 @@ export class ApiKeyService {
         externalId: userId,
       });
 
-      return (response.data ?? []).map((k) => ({
+      // @unkey/api v2.4 returns a PageIterator; the first page's keys live at
+      // `response.result.data` (previously `response.data`).
+      return (response.result.data ?? []).map((k) => ({
         keyId: k.keyId,
         start: k.start,
         name: k.name ?? undefined,
