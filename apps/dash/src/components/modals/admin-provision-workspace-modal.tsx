@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ADMIN_TRIAL_PERIOD_VALUES,
   AdminPlanBillingCycleSchema,
+  type AdminPlanProduct,
   type AdminWorkspaceProvisionData,
   DEFAULT_TRIAL_PERIOD_DAYS,
 } from '@userplane/contract';
@@ -340,14 +341,11 @@ function TrialPeriodSelector({
 interface ExistingPlanSelectorProps {
   selectedProductId: string;
   onProductChange: (productId: string) => void;
-  plans: ReturnType<typeof useAdminPlans>['data'] extends infer R
-    ? R extends { success: true; data: { products: infer P } }
-      ? P extends (infer U)[]
-        ? U[]
-        : never
-      : never
-    : never;
-  selectedPlan: ExistingPlanSelectorProps['plans'][number] | null;
+  // The plans list is `z.array(AdminPlanProductSchema)` in the contract, so use
+  // the canonical `AdminPlanProduct` type directly rather than re-deriving it
+  // from the `useAdminPlans` hook's (fragile-to-infer) return type.
+  plans: AdminPlanProduct[];
+  selectedPlan: AdminPlanProduct | null;
   isPending: boolean;
 }
 

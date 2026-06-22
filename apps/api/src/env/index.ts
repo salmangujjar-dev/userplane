@@ -386,10 +386,20 @@ function validateSecrets(config: EnvConfig): void {
     }
   }
 
-  // Production-only email validation
+  // Production-only required-secret validation
   if (isProduction) {
     if (config.email.provider !== 'localhost' && !config.email.providerApiKey) {
       errors.push('EMAIL_PROVIDER_API_KEY must be set when email provider is not localhost');
+    }
+    // Shared secret for server-to-server (dashboard → API) calls. An empty value
+    // silently leaves internal endpoints unprotected/unusable, so fail closed.
+    if (!config.server.internalApiKey) {
+      errors.push('INTERNAL_API_KEY must be set in production');
+    }
+    // Google OAuth must be fully configured when enabled (client ID present but
+    // secret missing is a half-configured, broken sign-in path).
+    if (config.google.clientId && !config.google.clientSecret) {
+      errors.push('GOOGLE_CLIENT_SECRET must be set when GOOGLE_CLIENT_ID is configured');
     }
   }
 
