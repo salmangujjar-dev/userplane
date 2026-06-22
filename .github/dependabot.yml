@@ -1,0 +1,46 @@
+# Dependabot configuration
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+#
+# Notes:
+# - This repo uses Bun. Dependabot resolves the npm ecosystem against the root
+#   `package.json` workspaces + `bun.lock`. If Bun-lockfile updates don't open as
+#   expected, switch to Renovate (which has first-class Bun support).
+# - Bun's `bunfig.toml` `minimumReleaseAge` (3-day quarantine) does NOT apply to
+#   Dependabot PRs — review freshly published bumps before merging.
+# - Minor/patch updates are grouped to reduce PR noise across the 33 workspaces.
+#   Major updates intentionally arrive as individual PRs so each can be reviewed.
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 10
+    labels:
+      - 'dependencies'
+    groups:
+      production-minor-patch:
+        dependency-type: 'production'
+        update-types:
+          - 'minor'
+          - 'patch'
+      development-minor-patch:
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 5
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+    groups:
+      github-actions:
+        patterns:
+          - '*'
