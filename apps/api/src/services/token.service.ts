@@ -105,7 +105,9 @@ export class TokenService {
    */
   verifyInviteToken(token: string): InviteTokenPayload | null {
     try {
-      const payload = jwt.verify(token, this.jwtSecret) as InviteTokenPayload;
+      const payload = jwt.verify(token, this.jwtSecret, {
+        algorithms: ['HS256'],
+      }) as InviteTokenPayload;
       // Verify issuer
       if (payload.iss !== this.jwtIssuer) {
         return null;
@@ -469,7 +471,9 @@ export class TokenService {
    * Throws jwt.JsonWebTokenError if token is invalid
    */
   verifyLinkToken(token: string): { lid: string } {
-    const decoded = jwt.verify(token, this.recordingLinkSecret) as { lid: string };
+    const decoded = jwt.verify(token, this.recordingLinkSecret, {
+      algorithms: ['HS256'],
+    }) as { lid: string };
     return decoded;
   }
 
@@ -496,7 +500,9 @@ export class TokenService {
    */
   verifySessionToken(token: string): SessionTokenPayload | null {
     try {
-      const payload = jwt.verify(token, this.sessionSecret) as SessionTokenPayload;
+      const payload = jwt.verify(token, this.sessionSecret, {
+        algorithms: ['HS256'],
+      }) as SessionTokenPayload;
       if (payload.iss !== this.jwtIssuer) {
         return null;
       }
@@ -529,7 +535,9 @@ export class TokenService {
    */
   verifyUploadToken(token: string): UploadTokenPayload | null {
     try {
-      const payload = jwt.verify(token, this.uploadSecret) as UploadTokenPayload;
+      const payload = jwt.verify(token, this.uploadSecret, {
+        algorithms: ['HS256'],
+      }) as UploadTokenPayload;
       if (payload.iss !== this.jwtIssuer) {
         return null;
       }
