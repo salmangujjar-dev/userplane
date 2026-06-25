@@ -24,45 +24,35 @@
   </p>
 </div>
 
+![Introducing Userplane](assets/videos/introducing-userplane.mp4)
+
 ![Userplane dashboard overview](apps/docs/media/recordings/recordings-list.png)
 
-> Loom is great for async video. Userplane is for customer issues: a
-> support-native recording workflow that turns hard-to-describe bugs into debug-ready
-> evidence.
+Loom is for your team. Userplane is for your customers — async issue capture that turns "it broke" into a debug-ready artifact your entire support chain can act on.
 
 ## Table Of Contents
 
-**Product Core**
+**Product**
 
 - [Why This Exists](#why-this-exists)
 - [The Information Gap In Support](#the-information-gap-in-support)
 - [How Userplane Works](#how-userplane-works)
 - [How Userplane Compares](#how-userplane-compares)
-
-**Features & Capabilities**
-
-- [Getting Started & Onboarding](#getting-started--onboarding)
-- [Recording Links & Projects](#recording-links--projects)
+- [Key Capabilities](#key-capabilities-at-a-glance)
 - [What Comes Back With A Recording](#what-comes-back-with-a-recording)
 - [Recording Playback & Analysis](#recording-playback--analysis)
-- [Support Workflows And Integrations](#support-workflows-and-integrations)
-- [Workspace Management & Security](#workspace-management--security)
-
-**For Teams**
-
-- [Built For Every Team That Touches Support](#built-for-every-team-that-touches-support)
-- [Privacy, Control, And Trust](#privacy-control-and-trust)
-- [Billing & Account](#billing--account)
+- [Support Workflows & Integrations](#support-workflows-and-integrations)
+- [Privacy, Control & Trust](#privacy-control-and-trust)
+- [Built For Every Team](#built-for-every-team-that-touches-support)
 
 **Developer Guide**
 
-- [Developer Platform And AI Debugging](#developer-platform-and-ai-debugging)
-- [What Lives In This Repo](#what-lives-in-this-repo)
-- [Product Surfaces](#product-surfaces)
+- [Developer Platform & AI Debugging](#developer-platform-and-ai-debugging)
+- [Repo Structure](#what-lives-in-this-repo)
 - [Architecture](#architecture)
 - [Getting Started](#getting-started)
 - [Common Commands](#common-commands)
-- [Environment And Services](#environment-and-services)
+- [Environment & Services](#environment-and-services)
 
 **Reference**
 
@@ -72,25 +62,23 @@
 - [Security](#security)
 - [License](#license)
 
-## The Product
+## Why This Exists
 
-If Loom is async video for your team, Userplane is async issue capture for your customers.
+We hit this problem repeatedly at a previous startup: a customer reports a bug, support asks for steps, success asks for a screenshot, engineering asks for console output. By the time everyone has context, the customer has explained the same problem three times.
 
-### Watch: Introducing Userplane
+The problem wasn't effort — it was the artifact. A written ticket can't reliably carry visual state, browser state, failed requests, user actions, account context, and customer expectations.
 
-<div align="center">
+Userplane is the artifact we wished we had: one link for the customer, one recording for the team, one place where video, logs, network activity, metadata, and support references stay together.
 
-[![Introducing Userplane](assets/videos/introducing-userplane.png)](assets/videos/introducing-userplane.mp4)
+## The Information Gap In Support
 
-**[Download Video](assets/videos/introducing-userplane.mp4)** | [View Source](https://vimeo.com/1183878947)
+Support is usually treated like a response problem: answer faster, better macros, more agents. But the hardest tickets are information problems.
 
-</div>
+The customer experiences the full issue but describes it as "export is broken." Support receives a sentence without sequence, environment, browser state, account context, failed requests, console output, or expectations. Engineering gets an even thinner version and tries to reproduce from memory and guesses.
 
-It is built for the moment when a ticket says "it broke", but the team needs to know what page the customer was on, what they clicked, which request failed, what the console said, which account or workspace was involved, and whether the same issue can be reproduced.
+Result: long threads, customers repeating themselves, support asking broad clarifying questions, engineers marking issues not reproducible.
 
-Userplane gives support teams the easiest possible ask: "Can you record what you are seeing?" The customer opens a link, records in the browser, and submits. Your team gets the video plus the technical context that usually takes several messages, screenshots, calls, and escalations to collect.
-
-The result is a cleaner support artifact: the issue as the customer experienced it, with enough evidence for support, success, and engineering to decide what to do next.
+Userplane captures the missing information when it exists — when the customer is experiencing the issue. They don't need to know what details matter. They show the problem, and Userplane turns that moment into a debug-ready artifact your team can replay, inspect, and share.
 
 ## Key Capabilities at a Glance
 
@@ -105,42 +93,37 @@ The result is a cleaner support artifact: the issue as the customer experienced 
 | **Team Sharing**     | Role-based access, expiry controls             | Keep recordings secure and organized            |
 | **Integrations**     | Slack, Zendesk, Intercom, Raycast, Claude Code | Stay in your existing workflow                  |
 
-## Why This Exists
+## How Userplane Works
 
-We hit this problem repeatedly at a previous startup: a customer reports a bug, support asks for steps, success asks for a screenshot, engineering asks for console output. By the time everyone has context, the customer has explained the same problem three times.
+### 1. Create A Recording Link
 
-The problem wasn't effort—it was the artifact. A written ticket can't reliably carry visual state, browser state, failed requests, user actions, account context, and customer expectations.
+![Create a Userplane recording link](apps/docs/media/links/create-link/create-link-filled.png)
 
-Userplane is the artifact we wished we had: one link for the customer, one recording for the team, one place where video, logs, network activity, metadata, and support reference stay together.
+Create a recording link from the dashboard, API, Chrome extension, Raycast, Intercom, Zendesk, Slack, or another support workflow. Choose the project and domain, add a ticket or customer reference, decide whether the link is single-use or reusable, and send it to the customer.
 
-## The Information Gap In Support
+![Link creation in progress](apps/docs/media/links/create-link/create-link-project-selection.png)
 
-Support is usually treated like a response problem: answer faster, better macros, more agents. But the hardest tickets are information problems.
+### 2. The Customer Records In Browser
 
-The customer experiences the full issue but describes it as "export is broken." Support receives a sentence without sequence, environment, browser state, account context, failed requests, console output, or expectations. Engineering gets an even thinner version and tries to reproduce from memory and guesses.
+![Customer recording in Userplane](apps/docs/media/recorder/recording-in-progress.png)
 
-Result: long threads, customers repeating themselves, support asking broad clarifying questions, engineers marking issues not reproducible.
+The customer opens the link and records in their browser — no account, install, or extension required. They show what went wrong, add notes, and submit. Userplane captures the surrounding technical context automatically.
 
-Userplane captures the missing information when it exists—when the customer is experiencing the issue. They don't need to know what details matter. They show the problem, and Userplane turns that moment into a debug-ready artifact your team can replay, inspect, and share.
+**Recorder features:** one-click start, real-time capture preview, sensitive data blur, notes and voice narration, review before upload.
 
-## Why Support Needs More Than Video
+![Recorder with notes](apps/docs/media/recorder/add-notes-prior-upload.png)
+![Blur sensitive data toggle](apps/docs/media/recorder/recorder-toggle-blurr.png)
+![Blur data example](apps/docs/media/recorder/recorder-data-blurr-in-action-part-3.png)
 
-Video shows the symptom. For customer support, the unlock is the context behind it.
+### 3. Your Team Reviews The Replay
 
-Most screen recorders assume the recorder is internal: a teammate demoing, a sales rep, an engineer documenting. Support is different. Your customer is in another timezone, already frustrated, and unsure which details matter. That gap is where tickets stall.
+![Userplane recording detail view](apps/docs/media/recordings/recording-detail.png)
 
-Userplane is designed around that reality. It doesn't ask customers to become QA analysts. They show the issue; Userplane captures the context your team needs around that moment.
+The recording lands in Userplane with video and debugging context attached. Support sees the issue through the customer's lens, engineering inspects the technical signals, everyone works from the same evidence.
 
-| Problem                                        | Screen Recording             | Userplane                                                                      |
-| :--------------------------------------------- | :--------------------------- | :----------------------------------------------------------------------------- |
-| Customer can't describe the issue clearly      | Video (if they know to show) | One-click recording link for issue reporting                                   |
-| Support needs screenshots, steps, browser data | Follow-up questions          | Replay, notes, browser context, link references, metadata                      |
-| Engineers need to know what failed             | A visual clue                | Console logs, network requests, user actions, timestamped debugging evidence   |
-| Ticket moves between tools and teams           | Scattered links              | Structured recording tied to workspace, project, domain, customer, ticket      |
-| Recording may contain sensitive data           | Manual cleanup               | Blur rules, capture controls, workspace access, sharing controls, expiry rules |
+![Recording info panel](apps/docs/media/recordings/recording-info-tab.png)
 
-The ticket stops being a description of the bug and becomes something your team
-can replay, inspect, share, and debug.
+![Request screen recordings with console logs](assets/videos/request-screen-recordings.mp4)
 
 ## How Userplane Compares
 
@@ -158,129 +141,6 @@ Userplane isn't trying to replace every tool near the support stack. It's specif
 | Impersonation                | Inspecting account state and configuration                    | Cannot show what happened earlier, customer's browser, timing, external context | Captures sequence from customer's actual environment               |
 
 **The pattern:** Adjacent tools explain, monitor, aggregate, guide, or inspect. Userplane is for when a customer says "something broke" and your team needs to see what happened, what failed, and what belongs with the ticket.
-
-## How Userplane Works
-
-### 1. Create A Recording Link
-
-![Create a Userplane recording link](apps/docs/media/links/create-link/create-link-filled.png)
-
-Create a recording link from the dashboard, API, Chrome extension, Raycast,
-Intercom, Zendesk, Slack, or another support workflow. Choose the project and
-domain, add a ticket or customer reference, decide whether the link is
-single-use or reusable, and send it to the customer.
-
-This keeps the ask lightweight for the customer and structured for your team.
-The link already knows where the recording belongs.
-
-![Link creation in progress](apps/docs/media/links/create-link/create-link-project-selection.png)
-
-### 2. The Customer Records In Browser
-
-![Customer recording in Userplane](apps/docs/media/recorder/recording-in-progress.png)
-
-The customer opens the link and records the issue in their browser. No account, app install, or browser extension is required for the customer. They can show exactly what went wrong, add notes, and submit.
-
-They do not need to know whether the console matters, which network call failed, or what metadata your team needs. Userplane captures the surrounding technical context automatically.
-
-**Recorder features:**
-
-- One-click to start recording (no setup needed)
-- See what's being captured in real-time
-- Blur sensitive data before recording
-- Add notes and voice narration
-- Review before upload
-
-![Recorder with notes](apps/docs/media/recorder/add-notes-prior-upload.png)
-![Blur sensitive data toggle](apps/docs/media/recorder/recorder-toggle-blurr.png)
-![Blur data example](apps/docs/media/recorder/recorder-data-blurr-in-action-part-3.png)
-
-### 3. Your Team Reviews The Replay
-
-![Userplane recording detail view](apps/docs/media/recordings/recording-detail.png)
-
-The recording lands in Userplane with the video and debugging context attached.
-Support can see the issue through the customer's lens, engineering can inspect
-the technical signals, and everyone can work from the same evidence instead of
-reconstructing the issue from a ticket transcript.
-
-![Recording info panel](apps/docs/media/recordings/recording-info-tab.png)
-
-### Watch: Request Screen Recordings with Console Logs
-
-<div align="center">
-
-[![Request Screen Recordings with Console Logs](assets/videos/request-screen-recordings.png)](assets/videos/request-screen-recordings.mp4)
-
-**[Download Video](assets/videos/request-screen-recordings.mp4)** | [View Source](https://vimeo.com/1187463893)
-
-</div>
-
-## Getting Started & Onboarding
-
-Guided setup flows for workspaces, integrations, and team invitations.
-
-**Workspace onboarding:**
-
-- Choose workspace name and settings
-- Invite team members during setup
-- Configure domains and projects
-- Connect integrations (Intercom, Zendesk, Slack)
-- Customize recording preferences
-
-![Onboarding settings preview](apps/docs/media/onboarding/post-onboarding-settings-preview.png)
-![Accept workspace invite](apps/docs/media/onboarding/accept-workspace-invite.png)
-
-**Account setup:**
-
-- Create profile and set preferences
-- Manage workspace memberships
-- Connect third-party accounts
-- Configure notification settings
-- View workspace access history
-
-![Account workspaces](apps/docs/media/account/account-workspaces.png)
-![Account settings](apps/docs/media/account/account-settings.png)
-
-## Recording Links & Projects
-
-Organize your recordings with links, projects, and custom metadata.
-
-**Recording links:**
-
-- Create single-use or reusable links
-- Custom branding and form fields
-- Link-level metadata attachment
-- Expiry controls and tracking
-- Domain-specific preferences
-
-**Projects:**
-
-- Group recordings by product or feature
-- Set retention policies per project
-- Team-level access and filtering
-- Project templates for teams
-
-![Project creation](apps/docs/media/projects/create-project-dialog.png)
-![Project retention config](apps/docs/media/projects/project-retention-dropdown.png)
-
-## Recording Management Gallery
-
-**Browse & filter recordings:**
-
-![Recording list view](apps/docs/media/recordings/recordings-list.png)
-![Filter by project](apps/docs/media/recordings/recordings-project-filter.png)
-![Filter by member](apps/docs/media/recordings/recordings-member-filter.png)
-
-**Manage recording settings:**
-
-![Recording options menu](apps/docs/media/recordings/recording-options-menu.png)
-![Edit recording expiry](apps/docs/media/recordings/edit-recording-expiry.png)
-![Recording actions tab](apps/docs/media/recordings/recording-actions-tab.png)
-
-**Recording detail tabs:**
-
-![Recording network tab](apps/docs/media/recordings/recording-network-tab.png)
 
 ## What Comes Back With A Recording
 
@@ -302,124 +162,114 @@ Each recording is a compact case file: video plus the surrounding session contex
 
 Synchronized playback of video with debugging context.
 
-**Video player:**
-
-- Full browser video with customer's exact experience
-- Timeline controls with frame-by-frame inspection
-- Overlay of console logs, network requests, and user actions
-- Audio playback for customer narration
-- Speed controls and loop options
+**Video player:** full browser replay with frame controls, console/network/action overlay, audio narration, and speed controls.
 
 ![Recording playback screen](apps/docs/media/playback/media/player-playback-screen.png)
 
-**Console inspection:**
-
-- JavaScript errors, warnings, debug logs in chronological order
-- Stack traces with source file references
-- Error grouping and filtering
-- Copy and share individual error messages
-- Source maps support for minified code
+**Console inspection:** JavaScript errors, warnings, and debug logs in chronological order — stack traces, source references, error grouping, and source maps for minified code.
 
 ![Console logs tab](apps/docs/media/recordings/recording-console-tab.png)
 
-**Network analysis:**
-
-- HTTP request/response inspection with headers and body
-- Status codes, response times, and performance metrics
-- Failed request highlighting
-- Request waterfall and timing analysis
-- API endpoint and endpoint grouping
+**Network analysis:** HTTP request/response inspection, status codes, response times, failed request highlighting, and waterfall timing.
 
 ![Network panel detail view](apps/docs/media/playback/network/network-panel-detail-view.png)
 
-**User actions timeline:**
-
-- Clicks, form inputs, scrolls, navigation events
-- Timestamp alignment with video and logs
-- Action filtering by type
-- Heatmap visualization of interaction patterns
-- Customer intent analysis
+**User actions timeline:** clicks, inputs, scrolls, and navigation events — timestamp-aligned with video and logs, filterable by type.
 
 ![User actions detail view](apps/docs/media/playback/actions/actions-detail-view.png)
 
-**Recording metadata & info:**
-
-- System metadata — browser, OS, page URL, device, viewport
-- Custom metadata — user IDs, account context, app state
-- Expanded metadata view with all captured context
-- Easy copying of key values for issue tracking
+**Recording metadata:** system context (browser, OS, URL, viewport) and custom metadata (user IDs, account context, app state) — all copyable.
 
 ![Recording metadata expanded](apps/docs/media/recordings/recording-metadata-expanded.png)
 
-**Sharing & collaboration:**
-
-- Share recordings with team members or external stakeholders
-- Set expiry dates for shared links
-- View-only and full-access sharing modes
-- Tracking of who viewed and when
-- Collaborator notes and comments
+**Sharing:** share with team or external stakeholders, set expiry dates, view-only or full-access modes, collaborator tracking.
 
 ![Share recording options](apps/docs/media/recordings/share-recording-options.png)
 ![Share with teammates](apps/docs/media/recordings/share-teammates.png)
-![Share with collaborators](apps/docs/media/recordings/share-collaborators.png)
 
-## Workspace Management & Security
+## Getting Started & Onboarding
 
-Userplane provides enterprise-grade workspace controls for teams of any size.
+Guided setup for workspaces, integrations, and team invitations.
 
-**Team & Access Management:**
+- Workspace setup: name, settings, domain, project, and integration config during onboarding
+- Team invitations with role assignment from day one
+- Account profile, notification preferences, and multi-workspace switching
 
-- Invite team members with role-based access (admin, member, viewer)
-- Permission management per workspace
-- Invite policies — public, protected (email whitelist), or private
-- Workspace lifecycle — create, configure, manage, leave
-- Multiple workspace support for organizations
+![Onboarding settings preview](apps/docs/media/onboarding/post-onboarding-settings-preview.png)
+![Accept workspace invite](apps/docs/media/onboarding/accept-workspace-invite.png)
 
-![Team management interface](apps/docs/media/workspace/team/team-list.png)
+## Recording Links & Projects
 
-**Domain Configuration:**
+- Single-use or reusable links with custom branding, form fields, expiry controls, and domain preferences
+- Projects grouped by product or feature area with retention policies and team-level access
 
-- Domain verification and trust establishment
-- Domain-level capture preferences and security rules
-- Domain whitelist for sensitive websites
-- Project and workspace organization by domain
-- Domain performance monitoring
+![Project creation](apps/docs/media/projects/create-project-dialog.png)
+![Project retention config](apps/docs/media/projects/project-retention-dropdown.png)
 
-![Domain management list](apps/docs/media/workspace/domain/domain-list.png)
+## Support Workflows And Integrations
 
-**Projects & Organization:**
+![Userplane integrations overview](apps/docs/media/workspace/integrations/integrations-overview.png)
 
-- Group recordings by project or product area
-- Project-level retention and archival policies
-- Cross-team visibility and filtering
-- Custom project templates and workflows
+### Helpdesk & Communication
 
-![Project view](apps/docs/media/workspace/projects/view-projects.png)
+**Intercom** — create links from conversations, notifications, macros, and shortcuts
 
-**Notifications & Preferences:**
+![Intercom onboarding](apps/docs/media/intercom/intercom-oauth/intercom-onboarding-kickoff.png)
 
-- Email notifications for new recordings, team activity
-- Per-workspace notification preferences
-- Recording update notifications and alerts
-- Digest options and frequency control
+**Zendesk** — sidebar, ticket editor, top bar, and notifications
 
-![Notification toggles](apps/docs/media/workspace/notification/notification-toggles.png)
+![Zendesk workspace selector](apps/docs/media/zendesk/zendesk-oauth/zendesk-workspace-selector.png)
 
-### Domain & Access Management Gallery
+**Slack** — commands, shortcuts, home feed, and notifications
 
-**Domain setup and verification:**
+![Slack home browse links](apps/docs/media/slack/home/home-browse-links.png)
 
-![Domain list view](apps/docs/media/workspace/domain/domain-list.png)
-![Domain verification code](apps/docs/media/workspace/domain/domain-verification-code.png)
+**Raycast** — create links, browse recordings, manage from your command palette
 
-**Team & roles:**
+![Raycast create link](apps/docs/media/raycast/create-link.png)
+![Raycast browse recordings](apps/docs/media/raycast/browse-recordings.png)
 
-![Team invite dialog](apps/docs/media/workspace/team/team-invite.png)
-![Team role change](apps/docs/media/workspace/team/team-role-change.png)
+**Chrome extension** — side panel, create/manage links, browse recordings, shortcuts in any tool
+
+![Chrome extension side panel](apps/docs/media/extension/extension-create-link.png)
+![Extension list recordings](apps/docs/media/extension/extension-list-recordings.png)
+
+### AI & Development Integrations
+
+**Claude Code** — audit, debug, integrate, and analyze recordings with Claude via MCP tools and agent skills
+
+![Userplane for Claude Code](assets/videos/userplane-for-claude.mp4)
+
+**Cursor / Codex** — MCP integration and workflow automation for AI-driven analysis
+
+![MCP root cause analysis](apps/docs/media/mcp/root-cause-analysis.png)
+![MCP available tools](apps/docs/media/mcp/available-tools.png)
+
+### Programmatic Integration
+
+**Public REST API** — workspaces, projects, domains, links, recordings, users, and search — with API keys, rate limiting, and pagination
+
+**Webhooks & automation** — create links from your product or backend; integrate with Jira, Linear, and other issue trackers
+
+![Userplane for Issue Trackers](assets/videos/userplane-for-issue-trackers.mp4)
+
+## Privacy, Control, And Trust
+
+![Userplane privacy and security controls](apps/docs/media/recorder/recorder-data-blurr-in-action-part-1.png)
+
+Recording customer sessions is powerful, so the capture surface needs controls. Userplane includes workspace, domain, project, link, sharing, retention, and capture preferences that help teams collect useful context without collecting everything.
+
+**Data capture controls:** configure what a domain can capture (screen, audio, console, network), blur sensitive fields before they're recorded (credit cards, passwords, SSNs), redaction rules per field type or custom pattern, customer-side controls in the recorder UI.
+
+![Redact Sensitive Information](assets/videos/redact-sensitive-info.mp4)
+
+**Access & sharing:** workspace membership and roles, invite policies (public, protected, private), recording sharing with expiry controls and view-only or full-access modes, collaborator tracking.
+
+**Data lifecycle:** retention policies per project, automatic deletion, manual archival, export options, and compliance reporting.
+
+**Governance:** GDPR and CCPA controls, data residency options, access logs, and audit trails.
 
 ## Built For Every Team That Touches Support
-
-Userplane is built for the people who pass customer issues between support, success, and engineering.
 
 | Team               | What they need                                                | How Userplane helps                                                                                         |
 | :----------------- | :------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------- |
@@ -431,269 +281,59 @@ Userplane is built for the people who pass customer issues between support, succ
 | AI and automation  | Analyze real customer sessions with permissioned context      | Use public API and MCP tools to inspect recordings, pull logs, review actions, summarize likely root causes |
 | Product teams      | Monitor feature adoption and customer workflows               | Embed recording links in-product, attach metadata, analyze session paths                                    |
 
-## Support Workflows And Integrations
+## Workspace Management & Security
 
-![Userplane integrations overview](apps/docs/media/workspace/integrations/integrations-overview.png)
+**Team & Access Management:** role-based access (admin, member, viewer), invite policies (public, protected, private), multiple workspace support.
 
-Userplane integrates deeply into your existing support, development, and AI tooling:
+![Team management interface](apps/docs/media/workspace/team/team-list.png)
+![Team invite dialog](apps/docs/media/workspace/team/team-invite.png)
 
-### Helpdesk & Communication Integrations
+**Domain Configuration:** domain verification, capture preferences and security rules, domain whitelist for sensitive websites.
 
-**Intercom** — Create links from conversations, receive notifications, macros, and shortcuts
+![Domain management list](apps/docs/media/workspace/domain/domain-list.png)
+![Domain verification code](apps/docs/media/workspace/domain/domain-verification-code.png)
 
-![Intercom onboarding](apps/docs/media/intercom/intercom-oauth/intercom-onboarding-kickoff.png)
-![Intercom connection](apps/docs/media/intercom/workspace-settings/post-connection-modal.png)
+**Notifications:** email notifications for recordings and team activity, per-workspace preferences and digest options.
 
-**Zendesk** — Sidebar, ticket editor, top bar, and notifications
-
-![Zendesk workspace selector](apps/docs/media/zendesk/zendesk-oauth/zendesk-workspace-selector.png)
-![Zendesk connection](apps/docs/media/zendesk/workspace-settings/post-connection-modal.png)
-
-**Slack** — Commands, shortcuts, home feed, and notifications
-
-![Slack home browse links](apps/docs/media/slack/home/home-browse-links.png)
-![Slack create link form](apps/docs/media/slack/home/home-create-link-form.png)
-
-**Raycast** — Create links, browse recordings, manage links from your command palette
-
-![Raycast create link](apps/docs/media/raycast/create-link.png)
-![Raycast browse recordings](apps/docs/media/raycast/browse-recordings.png)
-
-**Chrome extension** — Side panel, create/manage links, browse recordings, shortcuts in any tool
-
-![Chrome extension side panel](apps/docs/media/extension/extension-create-link.png)
-
-![Chrome extension create link with keyboard shortcut](apps/docs/media/extension/extension-keyboard-shortcut.png)
-
-![Extension workspace settings](apps/docs/media/extension/extension-setting-workspace-switcher.png)
-
-![Extension list recordings](apps/docs/media/extension/extension-list-recordings.png)
-
-### AI & Development Integrations
-
-**Claude Code** — Audit, debug, integrate, and analyze recordings with Claude
-
-- Audit agents for code quality and security
-- Debug agents for root cause analysis
-- Integration agents for workflow automation
-- Privacy agents for compliance verification
-- MCP tools and agent skills
-- Subagent support for distributed analysis
-
-### Watch: Userplane for Claude Code
-
-<div align="center">
-
-[![Userplane for Claude Code](assets/videos/userplane-for-claude.png)](assets/videos/userplane-for-claude.mp4)
-
-**[Download Video](assets/videos/userplane-for-claude.mp4)** | [View Source](https://vimeo.com/1186040219)
-
-</div>
-
-**Cursor** — Integrated MCP with workflows and command access
-
-**Codex** — MCP and workflow automation for AI-driven analysis
-
-**MCP (Model Context Protocol)** — AI-native workflow engine
-
-![MCP root cause analysis](apps/docs/media/mcp/root-cause-analysis.png)
-![MCP consent screen](apps/docs/media/mcp/consent-screen.png)
-![MCP available tools](apps/docs/media/mcp/available-tools.png)
-
-### Programmatic Integration
-
-**Public REST API** — Workspaces, projects, domains, links, recordings, users, and search
-
-- Authentication via API keys with rotation and revocation
-- Rate limiting and pagination for large datasets
-- Error handling and best practices documentation
-
-**Webhooks & automation** — Create links from your product, backend, or automation system
-
-- Integrate with issue tracking systems (Jira, Linear, etc.)
-- Custom workflows and automated link generation
-- Usage monitoring and billing integration
-
-### Watch: Userplane for Issue Trackers
-
-<div align="center">
-
-[![Userplane for Issue Trackers](assets/videos/userplane-for-issue-trackers.png)](assets/videos/userplane-for-issue-trackers.mp4)
-
-**[Download Video](assets/videos/userplane-for-issue-trackers.mp4)** | [View Source](https://vimeo.com/1189897005)
-
-</div>
-
-A recording request can start from where the problem was reported and come back to where the team is already working.
-
-## Privacy, Control, And Trust
-
-![Userplane privacy and security controls](apps/docs/media/recorder/recorder-data-blurr-in-action-part-1.png)
-
-Recording customer sessions is powerful, so the capture surface needs controls. Userplane includes workspace, domain, project, link, sharing, retention, and capture preferences that help teams collect useful context without collecting everything.
-
-**Data capture controls:**
-
-- Configure what a domain is allowed to capture (screen, audio, console, network)
-- Blur sensitive fields before they're recorded — credit cards, passwords, SSNs, etc.
-- Redaction rules per field type or custom patterns
-- Customer-side privacy controls in the recorder UI
-- Domain-level and link-level preferences
-
-![Blur sensitive data in action](apps/docs/media/recorder/recorder-data-blurr-in-action-part-2.png)
-
-### Watch: Redact Sensitive Information
-
-<div align="center">
-
-[![Redact Sensitive Information](assets/videos/redact-sensitive-info.png)](assets/videos/redact-sensitive-info.mp4)
-
-**[Download Video](assets/videos/redact-sensitive-info.mp4)** | [View Source](https://vimeo.com/1186816300)
-
-</div>
-
-**Access & sharing:**
-
-- Manage workspace membership, roles, access policies, and share behavior
-- Invite policies control who can access workspace
-- Recording sharing — team members, external stakeholders, time-limited links
-- Collaborator and teammate access tracking
-- View-only vs. full-access sharing modes
-
-**Data lifecycle:**
-
-- Organize recordings by project, link, domain, creator, status, and expiry
-- Automatic deletion after retention period
-- Manual archival and export options
-- Recording expiry controls — per-link or workspace-wide
-- Usage monitoring and compliance reporting
-
-**Governance & compliance:**
-
-- Data governance policies and audit trails
-- GDPR and CCPA compliance controls
-- Data residency and storage location options
-- Export and deletion capabilities
-- Access logs and activity tracking
+![Notification toggles](apps/docs/media/workspace/notification/notification-toggles.png)
 
 ## Billing & Account
 
-Transparent usage-based pricing with flexible plans and controls.
+Usage-based pricing — per recording, per month — with a free trial and no credit card required.
 
-**Billing overview:**
-
-- Usage-based pricing — per recording, per month
-- Free trial with no credit card required
-- Multiple plan tiers — starter, professional, enterprise
-- Workspace-level billing and cost allocation
-- Usage dashboard with real-time tracking
+- Starter, professional, and enterprise tiers with custom plans for larger teams
+- Workspace-level billing, usage dashboard, and real-time tracking
+- Upgrade or downgrade anytime, seat add-ons, overage controls
 
 ![Usage dashboard](apps/docs/media/billing/usage-dashboard.png)
-
-**Plan management:**
-
-- Upgrade and downgrade anytime
-- Seat add-ons for team growth
-- Custom plans for enterprises
-- Usage limits and alerts
-- Overage handling and cost controls
-
 ![Plan details view](apps/docs/media/billing/workspace-plan/current-plan-details.png)
-
-**Account & profile:**
-
-- User profile management
-- Account connections and integrations
-- Multiple workspace support and switching
-- Notification preferences
-- Leave or manage workspace memberships
-
-![Workspace settings](apps/docs/media/workspace/settings/settings-general.png)
 
 ## Developer Platform And AI Debugging
 
 ![Userplane issue analyzer](apps/docs/media/recordings/issue-analyzer-fix.png)
 
-Userplane is a comprehensive developer platform for recording links, metadata capture, API automation, and AI integration.
+### SDK & Installation
+
+- **CDN embed** — one line to add recordings to any page
+- **`@userplane/sdk`** — full programmatic control: recorder init, link creation, state inspection, metadata attachment, and redaction config
+- **`@userplane/metadata`** — standalone metadata capture without the full SDK
+- Framework guides for React, Next.js, Vue, Nuxt, Angular, Svelte, SvelteKit, Solid, Remix, Astro, Django, Ruby on Rails, TanStack Start, and static HTML
 
 ![Userplane SDK on npm](apps/docs/media/developer/npm/userplane-sdk.png)
 
-### SDK & Installation
-
-**Installation methods:**
-
-- CDN embed script — one line to add recordings to any page
-- `@userplane/sdk` — full programmatic control, recorder initialization, state inspection
-- `@userplane/metadata` — standalone metadata capture without the full SDK
-- Framework guides for React, Next.js, Vue, Nuxt, Angular, Svelte, SvelteKit, Solid, Remix, Astro, Django, Ruby on Rails, TanStack Start, and static HTML
-
-**Key capabilities:**
-
-- Programmatic link creation and initialization
-- Recorder control (start, stop, pause)
-- Metadata attachment — user IDs, account context, custom state, feature flags
-- Sensitive data redaction — blur PII before capture, configure field rules
-- Domain verification for security
-- Recording data reference — what gets captured and when
-
-### Workspace & Recording Management
-
-**Recording links:**
-
-- Create, manage, and share links via dashboard or API
-- Single-use and reusable links with custom branding
-- Link-level expiry, metadata, and domain preferences
-- Capture controls and sensitive data redaction
-- Link references to tie recordings to external tickets/issues
-
-**Recording organization:**
-
-- Filter by project, domain, member, creator, status
-- Expiry management and retention policies
-- Sharing controls and team access
-- Recording metadata expanded view
-
-**Issue analyzer:**
-
-- AI-powered root cause detection
-- Surfaces errors, network failures, and anomalies
-- Timestamped evidence and reproduction steps
-- Integration with Claude Code and AI agents
-
 ### API & Automation
 
-**Public REST API:**
-
-- Authentication via API keys with rotation and revocation
-- Endpoints: workspaces, projects, domains, links, recordings, users, search
-- Rate limiting and pagination for large datasets
-- Error handling and best practices documentation
-- OpenAPI spec and Postman collection available
+- **Public REST API** — auth via API keys with rotation and revocation; endpoints for workspaces, projects, domains, links, recordings, users, and search; OpenAPI spec and Postman collection available
+- **Webhooks** — programmatic link creation from your app or backend; Jira/Linear integration; usage monitoring and billing hooks
 
 ![API key management](apps/docs/media/api/list-api-keys.png)
 
-**Webhooks & automation:**
-
-- Create recording links programmatically from your app or backend
-- Integrate with issue tracking systems (Jira, Linear, etc.)
-- Custom workflows and automated link generation
-- Usage monitoring and billing integration
-
 ### AI & MCP Integration
 
-**MCP (Model Context Protocol):**
-
-- Userplane MCP at `https://api.userplane.io/mcp` — full workspace, recording, link, and domain tools
-- AI-native app rendering — single-file React widgets from MCP results
-- Authenticated access to workspace data for AI agents
-- Documentation MCP at `https://docs.userplane.io/mcp` — inline integration help
-
-**Agent capabilities:**
-
-- Claude Code audit, debug, integrate, and privacy agents
-- Cursor and Codex integration with workflows
-- Subagent support for distributed analysis
-- Agent skills for specialized recording analysis
+- **Userplane MCP** at `https://api.userplane.io/mcp` — full workspace, recording, link, and domain tools for AI agents
+- **Documentation MCP** at `https://docs.userplane.io/mcp` — inline integration help
+- AI-native app rendering: single-file React widgets from MCP results
+- Claude Code, Cursor, and Codex integration with subagent support and agent skills
 
 ## What Lives In This Repo
 
@@ -706,23 +346,6 @@ This is a full-stack monorepo containing the complete Userplane product system:
 **Infrastructure:** Database schema and migrations, data contracts, API contracts, OpenAPI spec, MCP tools, payment processing, email system, auth
 
 **Integrations:** Intercom, Zendesk, Slack, Chrome extension, Raycast, Claude Code, Cursor, Codex, and more
-
-**Documentation:** User guides for all features, framework guides (React, Next.js, Vue, Angular, etc.), API reference, integration guides, MCP docs
-
-The docs directory (`apps/docs`) contains **complete documentation** for every feature:
-
-- Getting started guides (support agents, engineers, developers, workspace setup)
-- Recording workflows (requesting, reviewing, sharing, analysis)
-- Workspace management (team, domains, projects, access control, invites)
-- Integrations (helpdesk, AI agents, Chrome extension, Raycast, Slack, Intercom, Zendesk)
-- API (authentication, endpoints, rate limiting, best practices, error handling)
-- Billing (plans, trial, upgrades, usage monitoring, seat add-ons)
-- Developer guides (SDK, metadata, frameworks, domain verification, redaction, agent skills)
-- Recording & playback features (issue analyzer, console, network, actions, sharing)
-
-**Product overview?** Start with the sections above.
-
-**Working on the codebase?** Read on for the monorepo structure and developer setup.
 
 ```text
 userplane/
@@ -753,8 +376,7 @@ userplane/
 `-- .github/        # Issues, PR template, security policy, workflows
 ```
 
-For the full runnable-app index, see [apps/README.md](apps/README.md). For the
-full shared-package index, see [packages/README.md](packages/README.md).
+For the full runnable-app index, see [apps/README.md](apps/README.md). For the full shared-package index, see [packages/README.md](packages/README.md).
 
 ## Product Surfaces
 
@@ -797,22 +419,17 @@ flowchart LR
 1. A client uses `@userplane/client`, the public API, or a direct app route.
 2. Shared contracts in `@userplane/contract` define request and response shapes.
 3. API routes in `apps/api` validate the request and call a service.
-4. Services call repositories, storage clients, email clients, billing clients,
-   integration clients, or Inngest.
-5. Data is persisted in Postgres via `@userplane/db` and media/log artifacts are
-   stored through `@userplane/storage`.
+4. Services call repositories, storage clients, email clients, billing clients, integration clients, or Inngest.
+5. Data is persisted in Postgres via `@userplane/db` and media/log artifacts are stored through `@userplane/storage`.
 
 ### Recording Flow
 
-1. A link is created with workspace, project, domain, reference, and reuse
-   settings.
+1. A link is created with workspace, project, domain, reference, and reuse settings.
 2. The customer opens a `userplane-action=recording` link with a signed token.
 3. The SDK/embed or recorder runtime validates the token and opens the recorder.
-4. The recorder captures screen/audio and coordinates browser context through
-   PostBridge, logger, metadata, and blur packages.
+4. The recorder captures screen/audio and coordinates browser context through PostBridge, logger, metadata, and blur packages.
 5. Uploads complete through API session endpoints and storage presigned URLs.
-6. The dashboard, API, MCP tools, and integrations review the recording and its
-   related logs, actions, requests, notes, and metadata.
+6. The dashboard, API, MCP tools, and integrations review the recording and its related logs, actions, requests, notes, and metadata.
 
 ## Getting Started
 
@@ -837,8 +454,7 @@ make db:push
 make dev
 ```
 
-`make dev` starts the core local apps. Use focused commands when working on one
-surface at a time.
+`make dev` starts the core local apps. Use focused commands when working on one surface at a time.
 
 ## Common Commands
 
@@ -918,8 +534,7 @@ surface at a time.
 
 ## Environment And Services
 
-Run `make env:setup` first. Each app/package owns its own `.env.example`, and
-the generated development files should be edited only for the services you need.
+Run `make env:setup` first. Each app/package owns its own `.env.example`.
 
 | Service                   | Needed for                                           | Guide                                                                      |
 | :------------------------ | :--------------------------------------------------- | :------------------------------------------------------------------------- |
@@ -946,7 +561,6 @@ the generated development files should be edited only for the services you need.
 | Contributor docs | [developers](developers/README.md)                     | Local setup and area-specific contribution guides    |
 | App index        | [apps/README.md](apps/README.md)                       | Detailed map of runnable apps                        |
 | Package index    | [packages/README.md](packages/README.md)               | Detailed map of shared packages                      |
-| README media     | [assets/readme](assets/readme/README.md)               | Source mapping for root README visuals               |
 | Contributing     | [CONTRIBUTING.md](CONTRIBUTING.md)                     | Branching, commits, PR expectations                  |
 | Security         | [.github/SECURITY.md](.github/SECURITY.md)             | Vulnerability reporting                              |
 
@@ -954,7 +568,7 @@ the generated development files should be edited only for the services you need.
 
 | If you are...                   | Start here                                                                                                                                             | Then go deeper                                                                                                                                                                                                                                                                                                      |
 | :------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Evaluating Userplane            | [The Product](#the-product), [The Information Gap In Support](#the-information-gap-in-support), [How Userplane Compares](#how-userplane-compares)      | [Docs](https://docs.userplane.io), [Demo](https://userplane.io/demo), [Pricing](https://userplane.io/pricing)                                                                                                                                                                                                       |
+| Evaluating Userplane            | [The Information Gap In Support](#the-information-gap-in-support), [How Userplane Compares](#how-userplane-compares)                                   | [Docs](https://docs.userplane.io), [Demo](https://userplane.io/demo), [Pricing](https://userplane.io/pricing)                                                                                                                                                                                                       |
 | Using integrations              | [Support Workflows And Integrations](#support-workflows-and-integrations), [Workspace Management & Security](#workspace-management--security)          | [Chrome extension](https://docs.userplane.io/integrations/chrome-extension), [Slack](https://docs.userplane.io/integrations/slack), [Intercom](https://docs.userplane.io/integrations/intercom), [Zendesk](https://docs.userplane.io/integrations/zendesk), [AI agents](https://docs.userplane.io/integrations/mcp) |
 | Integrating the SDK             | [Developer Platform And AI Debugging](#developer-platform-and-ai-debugging), [What Comes Back With A Recording](#what-comes-back-with-a-recording)     | [SDK guides](https://docs.userplane.io/developer/web-sdk), [Framework guides](https://docs.userplane.io/frameworks), [Metadata SDK](https://docs.userplane.io/developer/metadata-sdk)                                                                                                                               |
 | Setting up billing & workspace  | [Workspace Management & Security](#workspace-management--security), [Billing & Account](#billing--account)                                             | [Workspace setup](https://docs.userplane.io/getting-started/workspace-setup), [Team management](https://docs.userplane.io/workspace/team-management), [Billing docs](https://docs.userplane.io/billing/overview)                                                                                                    |
@@ -963,13 +577,11 @@ the generated development files should be edited only for the services you need.
 | Working on API/data             | [Architecture](#architecture), [Product Surfaces](#product-surfaces)                                                                                   | [apps/api](apps/api/README.md), [packages/contract](packages/contract/README.md), [packages/db](packages/db/README.md)                                                                                                                                                                                              |
 | Working on recording capture    | [How Userplane Works](#how-userplane-works), [Developer Platform And AI Debugging](#developer-platform-and-ai-debugging)                               | [apps/recorder](apps/recorder/README.md), [packages/sdk](packages/sdk/README.md), [packages/logger](packages/logger/README.md)                                                                                                                                                                                      |
 | Working on support integrations | [Support Workflows And Integrations](#support-workflows-and-integrations), [Environment And Services](#environment-and-services)                       | [apps/extension](apps/extension/README.md), [apps/raycast](apps/raycast/README.md), [apps/home](apps/home/README.md)                                                                                                                                                                                                |
-| Maintaining docs or media       | [Documentation Map](#documentation-map)                                                                                                                | [apps/docs](apps/docs/README.md), [apps/home](apps/home/README.md), [assets/readme](assets/readme/README.md)                                                                                                                                                                                                        |
+| Maintaining docs or media       | [Documentation Map](#documentation-map)                                                                                                                | [apps/docs](apps/docs/README.md), [apps/home](apps/home/README.md)                                                                                                                                                                                                                                                  |
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [developers/README.md](developers/README.md) for full details.
-
-**Quick start:**
 
 1. Branch from `main`
 2. Use conventional branch names: `feat/add-slack-notifications`
@@ -979,11 +591,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [developers/README.md](developers/REA
 
 ## Security
 
-Please do not open public issues for vulnerabilities. Follow
-[.github/SECURITY.md](.github/SECURITY.md) for reporting instructions and
-supported scope.
+Please do not open public issues for vulnerabilities. Follow [.github/SECURITY.md](.github/SECURITY.md) for reporting instructions and supported scope.
 
 ## License
 
-Userplane uses Apache-2.0 at the repository root, with workspace-specific
-FSL-1.1-ALv2 exceptions declared in each app/package `LICENSE.md`.
+Userplane uses Apache-2.0 at the repository root, with workspace-specific FSL-1.1-ALv2 exceptions declared in each app/package `LICENSE.md`.
