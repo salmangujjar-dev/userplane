@@ -1,0 +1,17 @@
+# Video files are large and should be stored separately
+# Download from Vimeo and place here:
+# - introducing-userplane.mp4
+# - request-screen-recordings.mp4
+# - redact-sensitive-info.mp4
+# - userplane-for-claude.mp4
+# - userplane-for-issue-trackers.mp4
+
+*.mp4
+*.webm
+*.mov
+*.mkv
+*.m4v
+
+# But commit the README and instructions
+!README.md
+!.gitignore
