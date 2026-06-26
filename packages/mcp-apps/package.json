@@ -29,7 +29,7 @@
     "@types/react-dom": "^19.2.3",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "@vitejs/plugin-react": "^5.2.0",
+    "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^9.39.4",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3",
