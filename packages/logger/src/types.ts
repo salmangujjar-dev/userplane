@@ -43,7 +43,7 @@ declare global {
     __userplane_pristine_natives?: PristineNatives;
     __userplane_has_focus?: boolean;
     __userplane_removeNavigationApiHook?: () => void;
-    navigation?: Navigation;
+    // `navigation` (Navigation API) is provided by the DOM lib; do not redeclare it here.
   }
 
   var __userplane_has_focus: boolean;
