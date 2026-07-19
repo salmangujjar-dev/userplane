@@ -1,7 +1,8 @@
 <div align="center">
   <h1>Userplane</h1>
-
   <p><strong>The open-source Loom alternative built for customer support.</strong></p>
+
+https://github.com/user-attachments/assets/5e6c71b0-d139-4365-abc3-202d32a7f52f
 
   <p>
     Send customers one recording link. Get back the session replay, console logs,
@@ -23,8 +24,6 @@
     <a href="#contributing"><strong>Contributing</strong></a>
   </p>
 </div>
-
-![Userplane dashboard overview](apps/docs/media/recordings/recordings-list.png)
 
 ## Table of contents
 
@@ -59,6 +58,8 @@
 
 ## Why this exists
 
+https://github.com/user-attachments/assets/b1ef202b-429f-4ab4-9c05-d10e48367465
+
 A customer reports a bug. Support asks for steps to reproduce. Customer success asks for screenshots. Engineering asks for console logs. By the time everyone has enough context to investigate, the customer has explained the same problem three different ways.
 
 Bug reports lose the details that actually matter: what the customer saw, what they clicked, what failed, and what they expected to happen.
@@ -66,6 +67,8 @@ Bug reports lose the details that actually matter: what the customer saw, what t
 Userplane gives your team all of that in a single recording link. Customers record the issue in their browser and your team gets the video, console logs, network requests, user actions, metadata, and customer notes—all attached to the same recording.
 
 ## The information gap in support
+
+https://github.com/user-attachments/assets/5aa19565-8056-4072-af58-47c4e0c3eae7
 
 Support teams don't have a response-time problem. They have an information problem.
 
@@ -90,6 +93,10 @@ Each recording is a complete case file. Video plus the surrounding session conte
 Support gets complete context upfront. No chasing customers for details. Engineering doesn't guess from a screenshot. Customers don't need to explain technical concepts they don't have language for.
 
 ## How Userplane works
+
+https://github.com/user-attachments/assets/2a247499-0f98-44c4-8105-6b7e5ea44f9c
+
+
 
 ### 1. Create a recording link
 
@@ -120,6 +127,9 @@ The recording lands in Userplane with video and debugging context attached. Supp
 ![Recording info panel](apps/docs/media/recordings/recording-info-tab.png)
 
 ## How Userplane compares
+
+https://github.com/user-attachments/assets/9cb90a76-4281-4966-8561-5ed7c3226b26
+
 
 Userplane isn't trying to replace every tool in the support stack. We built it for one thing: customer-initiated, asynchronous issue capture with technical context attached.
 
@@ -238,7 +248,7 @@ Single-use or reusable links with custom branding, form fields, expiry controls,
 
 ## Privacy, control, and trust
 
-![Userplane privacy and security controls](apps/docs/media/recorder/recorder-data-blurr-in-action-part-1.png)
+https://github.com/user-attachments/assets/5ae88276-decd-4e28-b137-e26e0c19c62f
 
 Recording customer sessions is powerful, so the capture surface needs controls. Userplane includes workspace, domain, project, link, sharing, retention, and capture preferences that help teams collect useful context without collecting everything.
 
