@@ -230,9 +230,6 @@ Single-use or reusable links with custom branding, form fields, expiry controls,
 
 **Cursor / Codex:** MCP integration and workflow automation for AI-driven analysis.
 
-![MCP root cause analysis](apps/docs/media/mcp/root-cause-analysis.png)
-![MCP available tools](apps/docs/media/mcp/available-tools.png)
-
 ### Programmatic integration
 
 **Public REST API:** Workspaces, projects, domains, links, recordings, users, and search. API keys, rate limiting, and pagination included.
