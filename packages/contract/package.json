@@ -45,7 +45,7 @@
     "@types/validator": "^13.12.2",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^9.39.4",
+    "eslint": "^10.7.0",
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
