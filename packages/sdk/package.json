@@ -52,7 +52,7 @@
     "@storybook/addon-docs": "^10.3.6",
     "@storybook/react": "^10.3.6",
     "@storybook/react-vite": "^10.3.6",
-    "@types/node": "^24.10.2",
+    "@types/node": "^26.1.1",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "eslint": "^9.39.4",

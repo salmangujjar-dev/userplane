@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@react-email/preview-server": "^5.2.5",
-    "@types/node": "^24.10.2",
+    "@types/node": "^26.1.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@userplane/eslint-config": "*",
