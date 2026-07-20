@@ -12,7 +12,7 @@
     "./astro": "./astro.js"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^10.0.1",
     "@next/eslint-plugin-next": "^16.2.6",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
