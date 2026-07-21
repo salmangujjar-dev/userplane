@@ -22,7 +22,7 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "eslint": "^9.39.4",
+    "eslint": "^10.7.0",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "typescript": "^6.0.3"

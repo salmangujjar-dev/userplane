@@ -55,7 +55,7 @@
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "concurrently": "^10.0.3",
-    "eslint": "^9.39.4",
+    "eslint": "^10.7.0",
     "eslint-plugin-storybook": "^10.3.6",
     "playwright": "^1.59.1",
     "storybook": "^10.3.6",
