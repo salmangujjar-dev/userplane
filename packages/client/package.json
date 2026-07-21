@@ -25,9 +25,9 @@
     "@userplane/contract": "*"
   },
   "devDependencies": {
-    "eslint": "^9.39.4",
+    "eslint": "^10.7.0",
     "@userplane/eslint-config": "*",
-    "@types/node": "^24.10.2",
+    "@types/node": "^26.1.1",
     "@userplane/typescript-config": "*",
     "typescript": "^6.0.3"
   }

@@ -41,11 +41,11 @@
   "devDependencies": {
     "@orpc/openapi": "^1.14.2",
     "@orpc/server": "^1.14.2",
-    "@types/node": "^24.10.2",
+    "@types/node": "^26.1.1",
     "@types/validator": "^13.12.2",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^9.39.4",
+    "eslint": "^10.7.0",
     "typescript": "^6.0.3"
   },
   "peerDependencies": {

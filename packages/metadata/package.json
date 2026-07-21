@@ -36,10 +36,10 @@
   "devDependencies": {
     "@userplane/console-logger": "*",
     "@rollup/plugin-terser": "^1.0.0",
-    "@types/node": "^24.10.2",
+    "@types/node": "^26.1.1",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^9.39.4",
+    "eslint": "^10.7.0",
     "terser": "^5.46.0",
     "typescript": "^6.0.3",
     "vite": "^8.1.0",

@@ -22,7 +22,7 @@
     "inngest": "^3.54.2",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.1.11",
-    "posthog-node": "^4.3.1",
+    "posthog-node": "^5.45.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "slugify": "^1.6.9",
@@ -41,7 +41,7 @@
     "@types/uuid": "^11.0.0",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^9.39.4"
+    "eslint": "^10.7.0"
   },
   "exports": {
     "./routes": "./src/routes/index.ts",
