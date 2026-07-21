@@ -39,7 +39,7 @@
     "react": "19.2.7",
     "react-confetti": "^6.4.0",
     "posthog-js": "^1.372.10",
-    "posthog-node": "^4.14.0",
+    "posthog-node": "^5.45.2",
     "react-dom": "19.2.7",
     "react-hook-form": "^7.75.0",
     "recharts": "3.9.0",
