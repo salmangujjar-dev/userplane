@@ -55,7 +55,7 @@
     "dodopayments": "^2.19.1"
   },
   "devDependencies": {
-    "@types/node": "^24.10.2",
+    "@types/node": "^26.1.1",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "eslint": "^10.7.0",
