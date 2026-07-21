@@ -27,7 +27,7 @@
     "@userplane/storage": "*",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "resend": "^4.0.1"
+    "resend": "^6.17.2"
   },
   "devDependencies": {
     "@react-email/preview-server": "^5.2.5",
