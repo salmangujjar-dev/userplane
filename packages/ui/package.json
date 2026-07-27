@@ -31,7 +31,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.563.0",
     "react-resizable-panels": "^3.0.6",
-    "recharts": "3.9.2",
+    "recharts": "3.10.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tw-animate-css": "^1.3.6",
@@ -39,8 +39,8 @@
     "zod": "^4.4.3"
   },
   "peerDependencies": {
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
@@ -51,8 +51,8 @@
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "eslint": "^10.7.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "react-hook-form": "^7.75.0",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3"
