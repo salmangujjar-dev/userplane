@@ -50,7 +50,7 @@
     "@types/react-dom": "^19.2.3",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^10.7.0",
+    "eslint": "^9.39.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.75.0",

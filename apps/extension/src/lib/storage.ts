@@ -19,8 +19,8 @@ export async function getSessionCache(): Promise<{
   const result = await chrome.storage.session.get([STORAGE_KEYS.user, STORAGE_KEYS.session]);
 
   return {
-    user: result[STORAGE_KEYS.user] ?? null,
-    session: result[STORAGE_KEYS.session] ?? null,
+    user: (result[STORAGE_KEYS.user] as SessionUser | undefined) ?? null,
+    session: (result[STORAGE_KEYS.session] as SessionData | undefined) ?? null,
   };
 }
 

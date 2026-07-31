@@ -19,7 +19,7 @@
     "@userplane/shared": "*",
     "@userplane/storage": "*",
     "hono": "^4.12.18",
-    "inngest": "^4.13.0",
+    "inngest": "^3.54.2",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^6.0.0",
     "posthog-node": "^5.45.2",
@@ -41,7 +41,7 @@
     "@types/uuid": "^11.0.0",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^10.7.0"
+    "eslint": "^9.39.4"
   },
   "exports": {
     "./routes": "./src/routes/index.ts",

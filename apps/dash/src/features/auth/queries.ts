@@ -1,11 +1,32 @@
 'use client';
 
+import type { QueryObserverResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 
 import { authClient } from '@/client/auth';
-import type { SessionData } from '@/types';
+import type { Session, SessionData, User } from '@/types';
 
 import { authKeys } from './query-keys';
+
+/**
+ * Return shape of {@link useSession}.
+ *
+ * Declared explicitly because the inferred type references `QueryObserverResult`
+ * from a transitively duplicated copy of `@tanstack/query-core`, which TypeScript
+ * cannot name portably.
+ */
+interface UseSessionResult {
+  user: User | null;
+  session: Session | null;
+  isAdmin: boolean;
+  isCsm: boolean;
+  hasAdminAccess: boolean;
+  isImpersonating: boolean;
+  impersonatedBy: string | null;
+  isPending: boolean;
+  error: Error | null;
+  refetch: () => Promise<QueryObserverResult<SessionData | null, Error>>;
+}
 
 /**
  * Hook to access the current session data with admin and impersonation status.
@@ -13,7 +34,7 @@ import { authKeys } from './query-keys';
  * This hook uses React Query to fetch the session from Better Auth and provides
  * additional computed properties for checking admin status and impersonation state.
  */
-export function useSession() {
+export function useSession(): UseSessionResult {
   const {
     data: sessionData,
     isPending,
