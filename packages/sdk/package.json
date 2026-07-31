@@ -22,7 +22,7 @@
     "access": "public"
   },
   "dependencies": {
-    "nanoid": "^5.1.11"
+    "nanoid": "^6.0.0"
   },
   "sideEffects": false,
   "scripts": {
