@@ -37,7 +37,7 @@
   "devDependencies": {
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^9.39.4",
+    "eslint": "^10.8.0",
     "typescript": "^6.0.3"
   }
 }
