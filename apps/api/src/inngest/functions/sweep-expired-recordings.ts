@@ -1,7 +1,9 @@
+import { cron } from 'inngest';
+
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
-import { inngest } from '@/api/inngest/client';
-import { BATCH_LIMITS, EVENT_NAMES } from '@/api/inngest/constants';
+import { EVENTS, inngest } from '@/api/inngest/client';
+import { BATCH_LIMITS } from '@/api/inngest/constants';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { chunkArray } from '@/api/lib/batch';
 import { createLogger } from '@/api/lib/logger';
@@ -21,8 +23,8 @@ export const sweepExpiredRecordings = inngest.createFunction(
   {
     id: 'sweep-expired-recordings',
     retries: 3,
+    triggers: [cron(env.inngest.expiredRecordingSweepCronSchedule)],
   },
-  { cron: env.inngest.expiredRecordingSweepCronSchedule },
   async ({ step }) => {
     // Environment guard: only run in production
     if (env.server.appEnv !== 'production') {
@@ -54,11 +56,12 @@ export const sweepExpiredRecordings = inngest.createFunction(
       for (const [index, chunk] of recordingChunks.entries()) {
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
-            chunk.map((recording) => ({
-              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
-              data: { recordingId: recording.recordingId },
-              id: buildRecordingDeletionKey(recording.recordingId),
-            }))
+            chunk.map((recording) =>
+              EVENTS.deleteRecordingResources.create(
+                { recordingId: recording.recordingId },
+                { id: buildRecordingDeletionKey(recording.recordingId) }
+              )
+            )
           );
         });
 

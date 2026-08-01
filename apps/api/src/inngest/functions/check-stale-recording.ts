@@ -1,5 +1,5 @@
 import { db } from '@/api/clients/db';
-import { inngest } from '@/api/inngest/client';
+import { EVENTS, inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { createLogger } from '@/api/lib/logger';
@@ -21,8 +21,8 @@ export const checkStaleRecording = inngest.createFunction(
   {
     id: EVENT_NAMES.CHECK_STALE_RECORDING,
     retries: 3,
+    triggers: [EVENTS.checkStaleRecording],
   },
-  { event: EVENT_NAMES.CHECK_STALE_RECORDING },
   async ({ event, step }) => {
     const { recordingId } = event.data;
 
@@ -41,11 +41,12 @@ export const checkStaleRecording = inngest.createFunction(
 
     // Trigger resource cleanup immediately (no delay needed, upload already stale)
     await step.run('trigger-cleanup', async () => {
-      await inngest.send({
-        name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
-        data: { recordingId },
-        id: buildRecordingDeletionKey(recordingId),
-      });
+      await inngest.send(
+        EVENTS.deleteRecordingResources.create(
+          { recordingId },
+          { id: buildRecordingDeletionKey(recordingId) }
+        )
+      );
     });
 
     logger.debug(

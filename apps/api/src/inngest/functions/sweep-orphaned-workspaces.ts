@@ -1,7 +1,9 @@
+import { cron } from 'inngest';
+
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
-import { inngest } from '@/api/inngest/client';
-import { BATCH_LIMITS, EVENT_NAMES } from '@/api/inngest/constants';
+import { EVENTS, inngest } from '@/api/inngest/client';
+import { BATCH_LIMITS } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildRecordingDeletionKey, buildWorkspaceDeletionKey } from '@/api/inngest/idempotency';
 import { chunkArray } from '@/api/lib/batch';
@@ -21,8 +23,8 @@ export const cleanupOrphanedWorkspace = inngest.createFunction(
   {
     id: 'cleanup-orphaned-workspace',
     retries: 3,
+    triggers: [EVENTS.cleanupOrphanedWorkspace],
   },
-  { event: EVENT_NAMES.CLEANUP_ORPHANED_WORKSPACE },
   async ({ event, step }) => {
     const { workspaceId } = event.data;
 
@@ -72,12 +74,15 @@ export const cleanupOrphanedWorkspace = inngest.createFunction(
       for (const [index, chunk] of recordingChunks.entries()) {
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
-            chunk.map((recording) => ({
-              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
-              data: { recordingId: recording.recordingId },
-              id: buildRecordingDeletionKey(recording.recordingId),
-              ...(getPurgeDelayTimestamp() ? { ts: getPurgeDelayTimestamp() } : {}),
-            }))
+            chunk.map((recording) =>
+              EVENTS.deleteRecordingResources.create(
+                { recordingId: recording.recordingId },
+                {
+                  id: buildRecordingDeletionKey(recording.recordingId),
+                  ...(getPurgeDelayTimestamp() ? { ts: getPurgeDelayTimestamp() } : {}),
+                }
+              )
+            )
           );
         });
 
@@ -111,8 +116,8 @@ export const sweepOrphanedWorkspaces = inngest.createFunction(
   {
     id: 'sweep-orphaned-workspaces',
     retries: 3,
+    triggers: [cron(env.inngest.workspaceSweepCronSchedule)],
   },
-  { cron: env.inngest.workspaceSweepCronSchedule },
   async ({ step }) => {
     // Environment guard: only run in production
     if (env.server.appEnv !== 'production') {
@@ -159,11 +164,12 @@ export const sweepOrphanedWorkspaces = inngest.createFunction(
       for (const [index, chunk] of workspaceChunks.entries()) {
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
-            chunk.map((workspace) => ({
-              name: EVENT_NAMES.CLEANUP_ORPHANED_WORKSPACE,
-              data: { workspaceId: workspace.workspaceId },
-              id: buildWorkspaceDeletionKey(workspace.workspaceId),
-            }))
+            chunk.map((workspace) =>
+              EVENTS.cleanupOrphanedWorkspace.create(
+                { workspaceId: workspace.workspaceId },
+                { id: buildWorkspaceDeletionKey(workspace.workspaceId) }
+              )
+            )
           );
         });
 
