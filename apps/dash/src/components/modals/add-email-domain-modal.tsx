@@ -11,7 +11,7 @@ import {
 } from '@userplane/ui/components/dialog';
 import { Label } from '@userplane/ui/components/label';
 import Logo from '@userplane/ui/components/logo';
-import { useRef } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -51,11 +51,13 @@ export function AddEmailDomainModal({
   });
 
   // Reset form when the modal opens (adjust state during render)
-  const prevOpenRef = useRef(open);
-  if (open && !prevOpenRef.current) {
-    reset();
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) {
+      reset();
+    }
   }
-  prevOpenRef.current = open;
 
   const handleAdd = (data: { domain: string }) => {
     onAdd(data.domain.toLowerCase().trim());

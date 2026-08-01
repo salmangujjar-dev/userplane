@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { getFaviconForUrl } from '@/lib/urls';
 
@@ -19,67 +19,38 @@ interface UseFaviconResult {
 export function useFavicon(value: string, options: UseFaviconOptions = {}): UseFaviconResult {
   const { debounceMs = 300 } = options;
 
-  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleFaviconError = () => {
-    setFaviconUrl(null);
-  };
+  const url = value.trim();
+  // Results carry the url they were fetched for, so `isLoading` and the favicon
+  // itself are derived rather than stored — a slow response for a previous url
+  // can never be shown against the current one.
+  const [resolved, setResolved] = useState<{ url: string; faviconUrl: string | null } | null>(null);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+    if (!url) return;
 
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    if (!value || value.trim() === '') {
-      setFaviconUrl(null);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-
-    timeoutRef.current = setTimeout(async () => {
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
+    let cancelled = false;
+    const timeout = setTimeout(async () => {
       try {
-        const url = await getFaviconForUrl(value);
-
-        if (controller.signal.aborted) return;
-
-        setFaviconUrl(url);
+        const faviconUrl = await getFaviconForUrl(url);
+        if (!cancelled) setResolved({ url, faviconUrl });
       } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error('Error fetching favicon:', error);
-          setFaviconUrl(null);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
+        console.error('Error fetching favicon:', error);
+        if (!cancelled) setResolved({ url, faviconUrl: null });
       }
     }, debounceMs);
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      cancelled = true;
+      clearTimeout(timeout);
     };
-  }, [value, debounceMs]);
+  }, [url, debounceMs]);
+
+  const resolvedForUrl = resolved?.url === url ? resolved : null;
 
   return {
-    faviconUrl,
-    isLoading,
-    handleFaviconError,
+    faviconUrl: resolvedForUrl && failedUrl !== url ? resolvedForUrl.faviconUrl : null,
+    isLoading: Boolean(url) && resolvedForUrl === null,
+    handleFaviconError: () => setFailedUrl(url),
   };
 }

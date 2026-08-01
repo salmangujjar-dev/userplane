@@ -30,6 +30,27 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
+    ignore:
+      # TypeScript 7 is the native (Go) port. Its main entry exports only
+      # `{ version, versionMajorMinor }` — the whole legacy JS compiler API is
+      # gone, and only the `typescript/unstable/*` subpaths remain. Our source
+      # is already TS 7 clean (verified: all 27 typechecking workspaces compile
+      # with no errors under 7.0.2), but two toolchain deps still consume the
+      # removed API and have no compatible release:
+      #
+      #   - typescript-eslint — peers `>=4.8.4 <6.1.0` on both `latest` (8.65.0)
+      #     and `canary`; @typescript-eslint/typescript-estree calls
+      #     ts.createProgram, ts.ScriptTarget.Latest, ts.sys and ts.Extension.*.
+      #     Without it all 27 lint tasks stop working.
+      #   - vite-plugin-dts (via unplugin-dts / @microsoft/api-extractor) — same
+      #     legacy-API dependency; used to bundle .d.ts for packages/sdk,
+      #     packages/metadata and packages/embed.
+      #
+      # Drop this ignore once typescript-eslint ships a release peering on
+      # typescript >=7. See #62.
+      - dependency-name: 'typescript'
+        update-types:
+          - 'version-update:semver-major'
 
   - package-ecosystem: 'github-actions'
     directory: '/'

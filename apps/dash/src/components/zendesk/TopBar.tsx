@@ -3,7 +3,7 @@
  * Quick link creator popover with project/domain selection
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { useAgentContext } from '@/hooks/zendesk/use-agent-context';
 import { useWorkspaceData } from '@/hooks/zendesk/use-workspace-data';
@@ -44,25 +44,32 @@ export function TopBar({
       : 'Your support team has requested a screen recording from you'
   );
 
-  useEffect(() => {
+  // Re-seed the editable message when the agent changes (adjust state during render)
+  const [prevAgentName, setPrevAgentName] = useState(agentName);
+  if (prevAgentName !== agentName) {
+    setPrevAgentName(agentName);
     setCustomMessage(
       agentName
         ? `${agentName} has requested a screen recording from you`
         : 'Your support team has requested a screen recording from you'
     );
-  }, [agentName]);
+  }
 
   const workspace = useWorkspaceData({ workspaceId, enabled: true });
 
-  useEffect(() => {
+  const [prevAgentError, setPrevAgentError] = useState(agentError);
+  if (prevAgentError !== agentError) {
+    setPrevAgentError(agentError);
     if (agentError) {
       setError(agentError);
       setView('error');
     }
-  }, [agentError]);
+  }
 
   // Route workspace data errors to dedicated screens
-  useEffect(() => {
+  const [prevWorkspaceRawError, setPrevWorkspaceRawError] = useState(workspace.rawError);
+  if (prevWorkspaceRawError !== workspace.rawError) {
+    setPrevWorkspaceRawError(workspace.rawError);
     if (workspace.rawError) {
       const errorView = getErrorView(workspace.rawError);
       if (errorView) {
@@ -72,7 +79,7 @@ export function TopBar({
         setView('error');
       }
     }
-  }, [workspace.rawError, workspace.error]);
+  }
 
   const handleCreateLink = useCallback(async () => {
     if (!workspace.selectedProject) {

@@ -242,6 +242,14 @@ export function RecordingLinkSection() {
 
   const preferences = preferencesResult?.success ? preferencesResult.data : null;
 
+  // Track if toggle should sync from server
+  const shouldSyncToggleRef = useRef(true);
+
+  // Track whether formState has been seeded from preferences at least once.
+  // The first seed must always run; later seeds respect `!hasChanges` so
+  // background refetches can't clobber unsaved edits.
+  const hasSeededRef = useRef(false);
+
   const updateToggleMutation = useUpdateToggle(workspaceId, () => {
     // On error, allow re-sync from server
     shouldSyncToggleRef.current = true;
@@ -266,14 +274,6 @@ export function RecordingLinkSection() {
   // Decoupled from formState so a stale persisted CDN URL stays the source of
   // truth for "what's saved" until the upload + preferences mutation succeed.
   const [pendingLogo, setPendingLogo] = useState<{ file: File; previewUrl: string } | null>(null);
-
-  // Track if toggle should sync from server
-  const shouldSyncToggleRef = useRef(true);
-
-  // Track whether formState has been seeded from preferences at least once.
-  // The first seed must always run; later seeds respect `!hasChanges` so
-  // background refetches can't clobber unsaved edits.
-  const hasSeededRef = useRef(false);
 
   const updateAppearanceMutation = useUpdateAppearance(workspaceId);
   const uploadLogoMutation = useUploadWorkspaceLogo(workspaceId);

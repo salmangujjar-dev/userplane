@@ -1,7 +1,6 @@
 import { cn } from '@userplane/ui/lib/utils';
 import Avatar from 'boring-avatars';
-import { nanoid } from 'nanoid';
-import { useRef } from 'react';
+import { useId } from 'react';
 
 export const PLAN_AVATAR_SIZES = {
   USER: 32,
@@ -33,15 +32,10 @@ export function PlanAvatar({
   size = PLAN_AVATAR_SIZES.USER,
   className,
 }: PlanAvatarProps) {
-  const fallbackRef = useRef<string | null>(null);
-
-  let seed = resolvePlanSeed(productId, planName);
-  if (!seed) {
-    if (!fallbackRef.current) {
-      fallbackRef.current = nanoid();
-    }
-    seed = fallbackRef.current;
-  }
+  // Nothing to seed from; fall back to a per-instance id so the avatar still
+  // varies between anonymous entries and stays stable across renders.
+  const fallbackSeed = useId();
+  const seed = resolvePlanSeed(productId, planName) ?? fallbackSeed;
 
   return (
     <div

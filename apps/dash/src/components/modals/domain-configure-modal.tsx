@@ -20,7 +20,7 @@ import {
 } from '@userplane/ui/components/tooltip';
 import { cn } from '@userplane/ui/lib/utils';
 import { AlertCircle, HelpCircle } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { SUPPORT_LINKS } from '@/constants';
 import { useSubscriptionStatus } from '@/features/billing';
@@ -302,13 +302,15 @@ export function DomainConfigureModal({
   const [localSettings, setLocalSettings] = useState<DomainRecordingPreferences>(settings);
 
   // Sync local settings when the modal opens or when the settings prop changes
-  const prevOpenRef = useRef(open);
-  const prevSettingsRef = useRef(settings);
-  if ((open && !prevOpenRef.current) || prevSettingsRef.current !== settings) {
+  const [prevOpen, setPrevOpen] = useState(open);
+  const [prevSettings, setPrevSettings] = useState(settings);
+  if ((open && !prevOpen) || prevSettings !== settings) {
     setLocalSettings(settings);
-    prevSettingsRef.current = settings;
+    setPrevSettings(settings);
   }
-  prevOpenRef.current = open;
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+  }
 
   const hasChanges = useMemo(() => {
     return (

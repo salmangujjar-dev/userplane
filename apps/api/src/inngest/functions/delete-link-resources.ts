@@ -1,5 +1,5 @@
 import { db } from '@/api/clients/db';
-import { inngest } from '@/api/inngest/client';
+import { EVENTS, inngest } from '@/api/inngest/client';
 import { BATCH_LIMITS, EVENT_NAMES } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
@@ -25,8 +25,8 @@ export const deleteLinkResources = inngest.createFunction(
   {
     id: EVENT_NAMES.DELETE_LINK_RESOURCES,
     retries: 3,
+    triggers: [EVENTS.deleteLinkResources],
   },
-  { event: EVENT_NAMES.DELETE_LINK_RESOURCES },
   async ({ event, step }) => {
     const { linkId } = event.data;
 
@@ -70,14 +70,17 @@ export const deleteLinkResources = inngest.createFunction(
       for (const [index, chunk] of recordingChunks.entries()) {
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
-            chunk.map((recording) => ({
-              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
-              data: { recordingId: recording.recordingId },
-              id: buildRecordingDeletionKey(recording.recordingId),
-              ...(getPurgeDelayTimestamp(recording.uploadStatus)
-                ? { ts: getPurgeDelayTimestamp(recording.uploadStatus) }
-                : {}),
-            }))
+            chunk.map((recording) =>
+              EVENTS.deleteRecordingResources.create(
+                { recordingId: recording.recordingId },
+                {
+                  id: buildRecordingDeletionKey(recording.recordingId),
+                  ...(getPurgeDelayTimestamp(recording.uploadStatus)
+                    ? { ts: getPurgeDelayTimestamp(recording.uploadStatus) }
+                    : {}),
+                }
+              )
+            )
           );
         });
 

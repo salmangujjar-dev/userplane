@@ -6,7 +6,7 @@ import {
   getThumbnailsStorage,
   getVideoStorage,
 } from '@/api/clients/storage';
-import { inngest } from '@/api/inngest/client';
+import { EVENTS, inngest } from '@/api/inngest/client';
 import { EVENT_NAMES } from '@/api/inngest/constants';
 import { createLogger } from '@/api/lib/logger';
 import { captureException } from '@/api/posthog';
@@ -29,8 +29,8 @@ export const deleteRecordingResources = inngest.createFunction(
   {
     id: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
     retries: 3,
+    triggers: [EVENTS.deleteRecordingResources],
   },
-  { event: EVENT_NAMES.DELETE_RECORDING_RESOURCES },
   async ({ event, step }) => {
     const { recordingId } = event.data;
 

@@ -35,11 +35,13 @@ export function SpeedControl({
   const [isOpen, setIsOpen] = useState(false);
 
   // Close when forceClose changes to true
-  React.useEffect(() => {
+  const [prevForceClose, setPrevForceClose] = React.useState(forceClose);
+  if (prevForceClose !== forceClose) {
+    setPrevForceClose(forceClose);
     if (forceClose && isOpen) {
       setIsOpen(false);
     }
-  }, [forceClose, isOpen]);
+  }
 
   const handleToggle = useCallback(() => {
     const newState = !isOpen;

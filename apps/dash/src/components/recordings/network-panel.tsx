@@ -508,32 +508,41 @@ export function NetworkPanel({
   // Enable the entry's filter type if disabled, clear search only if it would
   // still hide the entry, then mark it focused. Keyed on focusToken so repeat
   // clicks re-fire.
+  const [prevFocusToken, setPrevFocusToken] = useState(focusToken);
+  if (prevFocusToken !== focusToken) {
+    setPrevFocusToken(focusToken);
+    const target =
+      focusRequest && focusRequest.kind === 'network'
+        ? requests.find((r) => r.timestamp === focusRequest.entryTimestamp)
+        : undefined;
+
+    if (target) {
+      const filterType = getFilterTypeFromMimeAndInitiator(target.type, target.mimeType);
+      setActiveFilters((prev) => {
+        if (prev.has(filterType)) return prev;
+        const next = new Set(prev);
+        next.add(filterType);
+        return next;
+      });
+
+      setSearchQuery((prev) => {
+        if (!prev) return prev;
+        const p = prev.toLowerCase();
+        const matches =
+          target.url.toLowerCase().includes(p) || target.method.toLowerCase().includes(p);
+        return matches ? prev : '';
+      });
+
+      setFocusedEntryTs(target.timestamp);
+    }
+  }
+
+  // Clear the highlight a moment after it lands.
   useEffect(() => {
-    if (!focusRequest || focusRequest.kind !== 'network') return;
-    const target = requests.find((r) => r.timestamp === focusRequest.entryTimestamp);
-    if (!target) return;
-
-    const filterType = getFilterTypeFromMimeAndInitiator(target.type, target.mimeType);
-    setActiveFilters((prev) => {
-      if (prev.has(filterType)) return prev;
-      const next = new Set(prev);
-      next.add(filterType);
-      return next;
-    });
-
-    setSearchQuery((prev) => {
-      if (!prev) return prev;
-      const p = prev.toLowerCase();
-      const matches =
-        target.url.toLowerCase().includes(p) || target.method.toLowerCase().includes(p);
-      return matches ? prev : '';
-    });
-
-    setFocusedEntryTs(focusRequest.entryTimestamp);
+    if (focusedEntryTs === null) return;
     const t = setTimeout(() => setFocusedEntryTs(null), 1800);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusToken]);
+  }, [focusedEntryTs]);
 
   const filteredRequests = requests.filter((request) => {
     if (activeFilters.size === 0) return false;

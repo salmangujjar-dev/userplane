@@ -27,7 +27,7 @@ import {
   TableRow,
 } from '@userplane/ui/components/table';
 import { MoreVertical, Pencil } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { useAdminUpdateEntitlements, useAdminWorkspaceEntitlements } from '@/features/admin';
 import type { AdminEntitlement, AdminUpdateEntitlementItem } from '@/types';
@@ -66,12 +66,16 @@ function EditEntitlementModal({
   const [quotedLimit, setQuotedLimit] = useState('');
   const [actualLimit, setActualLimit] = useState('');
 
-  useEffect(() => {
+  // Seed the inputs when the dialog opens or the entitlement changes
+  // (adjust state during render)
+  const [prevSeed, setPrevSeed] = useState<[boolean, typeof entitlement]>([open, entitlement]);
+  if (prevSeed[0] !== open || prevSeed[1] !== entitlement) {
+    setPrevSeed([open, entitlement]);
     if (open && entitlement) {
       setQuotedLimit(entitlement.quotedLimit.toString());
       setActualLimit(entitlement.actualLimit.toString());
     }
-  }, [open, entitlement]);
+  }
 
   const handleConfirm = () => {
     if (!entitlement) return;

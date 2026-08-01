@@ -1,24 +1,16 @@
 'use client';
 
-import type { ImperativePanelHandle } from '@userplane/ui/components/resizable';
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
+  usePanelRef,
 } from '@userplane/ui/components/resizable';
 import { useIsTablet } from '@userplane/ui/hooks/use-mobile';
 import { cn } from '@userplane/ui/lib/utils';
 import { Globe, Info, MousePointerClick, Terminal } from 'lucide-react';
 import type { ReactNode } from 'react';
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 const PANEL_TABS = [
   { value: 'info', label: 'Info', icon: Info, color: 'text-blue-500' },
@@ -26,6 +18,10 @@ const PANEL_TABS = [
   { value: 'network', label: 'Network', icon: Globe, color: 'text-green-500' },
   { value: 'actions', label: 'Actions', icon: MousePointerClick, color: 'text-purple-500' },
 ] as const;
+
+// react-resizable-panels v4 reads bare numbers as pixels, so every size here is
+// an explicit percentage string.
+const SIDE_PANEL_SIZE = '34%';
 
 // Context to sync active tab between bookmark tabs and the panel
 const PanelTabContext = createContext<{
@@ -72,42 +68,47 @@ function PanelBookmarkTabs({ onTabClick }: { onTabClick: (tab: string) => void }
 
 export function RecordingLayout({ player, panel }: RecordingLayoutProps) {
   const isTablet = useIsTablet();
-  const panelRef = useRef<ImperativePanelHandle>(null);
+  const panelRef = usePanelRef();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
 
   // Reset collapsed state when returning from tablet → desktop,
   // since the desktop panel remounts expanded (fresh defaultSize).
-  useEffect(() => {
+  const [prevIsTablet, setPrevIsTablet] = useState(isTablet);
+  if (prevIsTablet !== isTablet) {
+    setPrevIsTablet(isTablet);
     if (!isTablet) {
       setIsCollapsed(false);
     }
-  }, [isTablet]);
+  }
 
   const togglePanel = useCallback(() => {
     const ref = panelRef.current;
     if (!ref) return;
     if (ref.isCollapsed()) {
-      ref.resize(34);
+      ref.resize(SIDE_PANEL_SIZE);
     } else {
       ref.collapse();
     }
-  }, []);
+  }, [panelRef]);
 
   const expandPanel = useCallback(() => {
     const ref = panelRef.current;
     if (ref?.isCollapsed()) {
-      ref.resize(34);
+      ref.resize(SIDE_PANEL_SIZE);
     }
-  }, []);
+  }, [panelRef]);
 
-  const handleBookmarkTabClick = useCallback((tab: string) => {
-    setActiveTab(tab);
-    const ref = panelRef.current;
-    if (ref?.isCollapsed()) {
-      ref.resize(34);
-    }
-  }, []);
+  const handleBookmarkTabClick = useCallback(
+    (tab: string) => {
+      setActiveTab(tab);
+      const ref = panelRef.current;
+      if (ref?.isCollapsed()) {
+        ref.resize(SIDE_PANEL_SIZE);
+      }
+    },
+    [panelRef]
+  );
 
   // Keyboard shortcut: Cmd/Ctrl + ]
   useEffect(() => {
@@ -131,14 +132,14 @@ export function RecordingLayout({ player, panel }: RecordingLayoutProps) {
     return (
       <PanelTabContext.Provider value={tabContext}>
         <main className="w-full px-4 overflow-hidden flex-1">
-          <ResizablePanelGroup direction="vertical" className="h-full">
-            <ResizablePanel defaultSize={45} minSize={25}>
+          <ResizablePanelGroup orientation="vertical" className="h-full">
+            <ResizablePanel defaultSize="45%" minSize="25%">
               <div className="relative h-full pb-1">{player}</div>
             </ResizablePanel>
 
             <ResizableHandle withHandle />
 
-            <ResizablePanel defaultSize={55} minSize={25}>
+            <ResizablePanel defaultSize="55%" minSize="25%">
               <div className="h-full pt-1">{panel}</div>
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -151,8 +152,8 @@ export function RecordingLayout({ player, panel }: RecordingLayoutProps) {
   return (
     <PanelTabContext.Provider value={tabContext}>
       <main className="w-full px-4 overflow-hidden flex-1">
-        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg overflow-hidden">
-          <ResizablePanel defaultSize={66} minSize={30} className="overflow-x-visible">
+        <ResizablePanelGroup orientation="horizontal" className="h-full rounded-lg overflow-hidden">
+          <ResizablePanel defaultSize="66%" minSize="30%" className="overflow-x-visible">
             <div className="relative pr-4 h-full">{player}</div>
           </ResizablePanel>
 
@@ -162,13 +163,14 @@ export function RecordingLayout({ player, panel }: RecordingLayoutProps) {
           />
 
           <ResizablePanel
-            ref={panelRef}
-            defaultSize={34}
-            minSize={25}
+            panelRef={panelRef}
+            defaultSize={SIDE_PANEL_SIZE}
+            minSize="25%"
             collapsible
-            collapsedSize={0}
-            onCollapse={() => setIsCollapsed(true)}
-            onExpand={() => setIsCollapsed(false)}
+            collapsedSize="0%"
+            // v4 dropped onCollapse/onExpand; collapsedSize is 0% so a zero-width
+            // panel is a collapsed one.
+            onResize={(size) => setIsCollapsed(size.asPercentage <= 0)}
             className="overflow-hidden"
           >
             <div className="px-4 h-full">{panel}</div>

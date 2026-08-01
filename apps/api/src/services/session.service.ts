@@ -30,8 +30,7 @@ import type {
   VideoStorageClient,
 } from '@userplane/storage';
 
-import { inngest } from '@/api/inngest/client';
-import { EVENT_NAMES } from '@/api/inngest/constants';
+import { EVENTS, inngest } from '@/api/inngest/client';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildStaleRecordingCheckKey } from '@/api/inngest/idempotency';
 import { generateRecordingId, generateSessionId } from '@/api/lib/id';
@@ -491,12 +490,12 @@ export class SessionService {
     // Note: Inngest failures are non-blocking - recording can still proceed
     try {
       const ts = getPurgeDelayTimestamp('pending');
-      await inngest.send({
-        name: EVENT_NAMES.CHECK_STALE_RECORDING,
-        data: { recordingId },
-        id: buildStaleRecordingCheckKey(recordingId),
-        ...(ts ? { ts } : {}),
-      });
+      await inngest.send(
+        EVENTS.checkStaleRecording.create(
+          { recordingId },
+          { id: buildStaleRecordingCheckKey(recordingId), ...(ts ? { ts } : {}) }
+        )
+      );
     } catch (error) {
       // Log but don't fail the request - stale check is a background task
       // The recording will still be created and can be uploaded

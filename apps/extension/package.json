@@ -25,10 +25,10 @@
     "@userplane/storage": "*",
     "@userplane/ui": "*",
     "boring-avatars": "^2.0.4",
-    "lucide-react": "^0.563.0",
-    "nanoid": "^5.1.11",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "lucide-react": "^1.27.0",
+    "nanoid": "^6.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "react-hook-form": "^7.75.0",
     "tailwindcss": "^4.3.0",
     "posthog-js": "^1.372.10",
@@ -50,10 +50,10 @@
     "@types/chrome": "^0.2.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "eslint": "^10.7.0",
+    "eslint": "^9.39.4",
     "eslint-plugin-storybook": "^10.3.6",
     "storybook": "^10.3.6",
     "typescript": "^6.0.3",
-    "wxt": "^0.20.25"
+    "wxt": "^0.21.1"
   }
 }

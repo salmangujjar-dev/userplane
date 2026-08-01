@@ -182,8 +182,8 @@ function PlanDetailSheet({
   });
 
   // Sync form state when the selected product changes (adjust state during render)
-  const prevProductRef = useRef(product);
-  if (product && product !== prevProductRef.current) {
+  const [prevProduct, setPrevProduct] = useState(product);
+  if (product && product !== prevProduct) {
     const newLimits = {} as LimitRecord;
     for (const rt of RESOURCE_TYPE_VALUES) {
       const existing = product.featureLimits?.find((l) => l.resourceType === rt);
@@ -208,7 +208,9 @@ function PlanDetailSheet({
       gates: newGates,
     });
   }
-  prevProductRef.current = product;
+  if (prevProduct !== product) {
+    setPrevProduct(product);
+  }
 
   const updateLimit = (rt: ResourceType, field: LimitField, value: string) => {
     setFormState((prev) => ({
@@ -365,18 +367,20 @@ function CreatePlanSheet({
   });
 
   // Reset form when sheet opens (adjust state during render)
-  const prevOpenRef = useRef(open);
-  if (open && !prevOpenRef.current) {
-    setFormState({
-      name: '',
-      description: '',
-      priceAmount: '',
-      billingCycle: 'monthly',
-      limits: initLimits(),
-      gates: initGates(),
-    });
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) {
+      setFormState({
+        name: '',
+        description: '',
+        priceAmount: '',
+        billingCycle: 'monthly',
+        limits: initLimits(),
+        gates: initGates(),
+      });
+    }
   }
-  prevOpenRef.current = open;
 
   useEffect(() => {
     if (!open) return;

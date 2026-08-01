@@ -44,10 +44,12 @@ export default function RecordingInProgressScreen({
   const [hasClickedStop, setHasClickedStop] = useState(false);
   const elapsedSeconds = useElapsedTime(recordingStartedAt);
 
-  // Reset click tracking when parent processing completes (React recommended pattern)
-  const prevIsProcessingRef = useRef(isProcessing);
-  if (prevIsProcessingRef.current !== isProcessing) {
-    prevIsProcessingRef.current = isProcessing;
+  // Reset click tracking when parent processing completes (React recommended
+  // pattern). The previous value lives in state rather than a ref so the
+  // adjustment stays readable to the React Compiler.
+  const [prevIsProcessing, setPrevIsProcessing] = useState(isProcessing);
+  if (prevIsProcessing !== isProcessing) {
+    setPrevIsProcessing(isProcessing);
     if (!isProcessing && hasClickedStop) {
       setHasClickedStop(false);
     }

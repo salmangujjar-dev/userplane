@@ -738,11 +738,15 @@ export function AddonChangePreviewModal({
     },
   });
 
+  // Kept in a ref so the auto-trigger effect below doesn't re-run whenever the
+  // mutation object changes identity. Assigned in an effect, not during render.
   const manageAddonsRef = useRef(manageAddons);
-  manageAddonsRef.current = manageAddons;
+  useEffect(() => {
+    manageAddonsRef.current = manageAddons;
+  });
 
   // Reset state when modal opens or addons data changes (adjust state during render)
-  const prevAddonKeyRef = useRef<string | null>(null);
+  const [prevAddonKey, setPrevAddonKey] = useState<string | null>(null);
   const addonKey = open
     ? isAddonsLoading
       ? 'loading'
@@ -750,8 +754,8 @@ export function AddonChangePreviewModal({
         ? `${workspaceId}-${addonsData.seatsQuantity}-${requestedQuantity ?? 'default'}`
         : null
     : null;
-  if (addonKey !== prevAddonKeyRef.current) {
-    prevAddonKeyRef.current = addonKey;
+  if (addonKey !== prevAddonKey) {
+    setPrevAddonKey(addonKey);
     if (addonKey === 'loading') {
       setAddonState((prev) => ({ ...prev, step: 'loading' }));
     } else if (open && addonsData && workspaceId) {

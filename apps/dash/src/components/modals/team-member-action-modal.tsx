@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@userplane/ui/components/dialog';
 import Logo from '@userplane/ui/components/logo';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { WORKSPACE_ROLE_OPTIONS } from '@/constants';
 
@@ -47,11 +47,14 @@ export function TeamMemberActionModal({
 }: TeamMemberActionModalProps) {
   const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
 
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setSelectedRole(undefined);
     }
-  }, [open]);
+  }
 
   if (!actionType) return null;
 

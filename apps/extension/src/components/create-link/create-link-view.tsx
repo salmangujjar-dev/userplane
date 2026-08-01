@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/component
 import { ChevronDown, FolderKanban, Globe, HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Control, UseFormHandleSubmit, UseFormSetValue } from 'react-hook-form';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { DinoError } from '@/components/shared/dino-error';
@@ -64,7 +64,6 @@ export function CreateLinkView() {
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { isValid },
   } = useForm<CreateLinkFormValues>({
     resolver: zodResolver(createLinkFormSchema),
@@ -77,8 +76,10 @@ export function CreateLinkView() {
     },
   });
 
-  const selectedDomain = watch('domainId');
-  const selectedProject = watch('projectId');
+  // useWatch rather than watch(): watch() returns a fresh function each render,
+  // which the React Compiler cannot memoize.
+  const selectedDomain = useWatch({ control, name: 'domainId' });
+  const selectedProject = useWatch({ control, name: 'projectId' });
 
   const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects({
     perPage: 10,

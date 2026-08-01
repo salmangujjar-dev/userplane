@@ -54,7 +54,11 @@ function useProvideExtensionAuth(): UseExtensionAuthReturn {
   }, []);
 
   useEffect(() => {
-    checkSession();
+    // Awaited inside so the state updates land in an async continuation rather
+    // than synchronously during the effect.
+    void (async () => {
+      await checkSession();
+    })();
   }, [checkSession]);
 
   useEffect(() => {

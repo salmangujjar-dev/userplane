@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@userplane/ui/components/select';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { ADMIN_NOTIFY_DURATION_OPTIONS } from '@/constants';
 import type { AdminNotifyDuration } from '@/types';
@@ -50,12 +50,15 @@ export function AdminRestoreWorkspaceModal({
   const [confirmationInput, setConfirmationInput] = useState('');
   const [notify, setNotify] = useState<AdminNotifyDuration>('never');
 
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setConfirmationInput('');
       setNotify('never');
     }
-  }, [open]);
+  }
 
   if (!workspace) return null;
 

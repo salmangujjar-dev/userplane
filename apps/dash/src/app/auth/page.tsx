@@ -12,7 +12,7 @@ import {
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import posthog from 'posthog-js';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -188,13 +188,17 @@ function AuthPageContent() {
     form.reset();
   };
 
-  useEffect(() => {
+  // Clear the magic-link state when switching back to quick sign-in
+  // (adjust state during render)
+  const [prevAuthMode, setPrevAuthMode] = useState(authMode);
+  if (prevAuthMode !== authMode) {
+    setPrevAuthMode(authMode);
     if (authMode === 'quick') {
       setMagicLinkSent(false);
       setSentEmail('');
       form.reset();
     }
-  }, [authMode, form]);
+  }
 
   const handleAuthModeChange = (nextMode: AuthMode) => {
     if (nextMode === authMode) {

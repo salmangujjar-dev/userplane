@@ -29,7 +29,7 @@ import { ChevronDown, ChevronUp, Copy, FolderKanban, Globe, HelpCircle, Plus } f
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import type { Control, UseFormHandleSubmit, UseFormSetValue } from 'react-hook-form';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { LinkReferenceInput } from '@/components/link-reference-input';
@@ -84,7 +84,6 @@ export function CreateLinkModal({
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { isValid },
   } = useForm<CreateLinkFormValues>({
     resolver: zodResolver(createLinkFormSchema),
@@ -97,8 +96,10 @@ export function CreateLinkModal({
     },
   });
 
-  const selectedDomain = watch('domainId');
-  const selectedProject = watch('projectId');
+  // useWatch rather than watch(): watch() returns a fresh function each render,
+  // which the React Compiler cannot memoize.
+  const selectedDomain = useWatch({ control, name: 'domainId' });
+  const selectedProject = useWatch({ control, name: 'projectId' });
 
   const { data: projectsResult, isLoading: isLoadingProjects } = useWorkspaceProjects({
     perPage: 10,
@@ -140,13 +141,16 @@ export function CreateLinkModal({
   }, [open, domains, selectedDomain, setValue]);
 
   // Reset state when modal closes
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       reset();
       setShowAdvanced(false);
       setState({ view: 'create' });
     }
-  }, [open, reset]);
+  }
 
   const onSubmit = (data: CreateLinkFormValues) => {
     createLinkMutation.mutate(

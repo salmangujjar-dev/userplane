@@ -33,13 +33,12 @@ export const nextJsConfig = [
       ...pluginNext.configs['core-web-vitals'].rules,
     },
   },
+  // v7 ships flat configs under `configs.flat`; `recommended` also turns on the
+  // React Compiler rule set.
+  pluginReactHooks.configs.flat.recommended,
   {
-    plugins: {
-      'react-hooks': pluginReactHooks,
-    },
     settings: { react: { version: 'detect' } },
     rules: {
-      ...pluginReactHooks.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
     },
