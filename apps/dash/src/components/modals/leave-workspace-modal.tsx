@@ -11,7 +11,7 @@ import {
 import { Input } from '@userplane/ui/components/input';
 import { Label } from '@userplane/ui/components/label';
 import Logo from '@userplane/ui/components/logo';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface LeaveWorkspaceModalProps {
   open: boolean;
@@ -32,11 +32,14 @@ export function LeaveWorkspaceModal({
 }: LeaveWorkspaceModalProps) {
   const [confirmText, setConfirmText] = useState('');
 
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setConfirmText('');
     }
-  }, [open]);
+  }
 
   const handleConfirm = () => {
     if (confirmText === workspaceName) {

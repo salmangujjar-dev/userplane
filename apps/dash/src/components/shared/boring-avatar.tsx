@@ -1,7 +1,6 @@
 import { cn } from '@userplane/ui/lib/utils';
 import Avatar from 'boring-avatars';
-import { nanoid } from 'nanoid';
-import { useRef } from 'react';
+import { useId } from 'react';
 
 /**
  * Semantic size constants for BoringAvatar.
@@ -29,7 +28,7 @@ export type AvatarSize = (typeof AVATAR_SIZES)[keyof typeof AVATAR_SIZES];
  *
  * Generates unique, colorful avatars using the boring-avatars library.
  * Accepts optional name and email -- the component resolves the best seed
- * internally (email > name > stable nanoid fallback), so callers just pass
+ * internally (email > name > stable per-instance id), so callers just pass
  * what they have without worrying about fallback logic.
  *
  * Size is type-locked to AvatarSize to prevent arbitrary pixel values.
@@ -40,7 +39,7 @@ export type AvatarSize = (typeof AVATAR_SIZES)[keyof typeof AVATAR_SIZES];
  * // User avatar with email
  * <BoringAvatar size={AVATAR_SIZES.USER} email={member.memberEmail} />
  *
- * // Decorative / placeholder -- unique avatar via nanoid fallback
+ * // Decorative / placeholder -- unique avatar via per-instance id fallback
  * <BoringAvatar size={AVATAR_SIZES.GROUP} />
  */
 interface BoringAvatarProps {
@@ -72,15 +71,10 @@ export function BoringAvatar({
 }: BoringAvatarProps) {
   // Stable fallback ID per component instance so re-renders
   // do not produce a different avatar when no name/email is provided.
-  const fallbackRef = useRef<string | null>(null);
-
-  let seed = resolveSeed(email, name);
-  if (!seed) {
-    if (!fallbackRef.current) {
-      fallbackRef.current = nanoid();
-    }
-    seed = fallbackRef.current;
-  }
+  // Nothing to seed from; fall back to a per-instance id so the avatar still
+  // varies between anonymous entries and stays stable across renders.
+  const fallbackSeed = useId();
+  const seed = resolveSeed(email, name) ?? fallbackSeed;
 
   return (
     <div

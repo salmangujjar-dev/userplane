@@ -20,7 +20,7 @@ import {
 } from '@userplane/ui/components/select';
 import { cn } from '@userplane/ui/lib/utils';
 import { addDays, differenceInDays, format, formatDistanceToNow } from 'date-fns';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { useSubscriptionStatus } from '@/features/billing';
 import { useFeatureUpsell } from '@/hooks/use-feature-upsell';
@@ -71,12 +71,14 @@ export function EditRecordingModal({
   const { triggerUpsell } = useFeatureUpsell();
 
   // Pre-select the closest matching value when modal opens
-  const prevOpenRef = useRef(open);
-  if (open && !prevOpenRef.current) {
-    setSelectedValue(getInitialValue(currentExpiresAt));
-    setHasChanged(false);
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) {
+      setSelectedValue(getInitialValue(currentExpiresAt));
+      setHasChanged(false);
+    }
   }
-  prevOpenRef.current = open;
 
   const handleValueChange = (value: string) => {
     setSelectedValue(value);

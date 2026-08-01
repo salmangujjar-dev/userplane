@@ -152,7 +152,12 @@ export function useVerificationFlow(
     }
     verificationAttemptedRef.current = true;
 
-    verify();
+    void (async () => {
+      // Yield first so verify()'s state updates land in an async continuation
+      // instead of synchronously during the effect.
+      await Promise.resolve();
+      await verify();
+    })();
   }, [verify, bridge]);
 
   return {

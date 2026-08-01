@@ -31,8 +31,8 @@ import {
   TooltipTrigger,
 } from '@userplane/ui/components/tooltip';
 import { ArrowLeft, ChevronDown, ChevronRight, ChevronUp, HelpCircle } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { LinkReferenceInput } from '@/components/link-reference-input';
@@ -87,7 +87,6 @@ export function EditLinkModal({
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors, isValid, isDirty },
   } = useForm({
     resolver: zodResolver(editLinkFormSchema),
@@ -102,26 +101,30 @@ export function EditLinkModal({
     },
   });
 
-  const selectedProvider = watch('linkProvider');
-  const metaCount = (watch('meta') ?? []).filter(
+  // useWatch rather than watch(): watch() returns a fresh function each render,
+  // which the React Compiler cannot memoize.
+  const selectedProvider = useWatch({ control, name: 'linkProvider' });
+  const metaCount = (useWatch({ control, name: 'meta' }) ?? []).filter(
     (e: { key: string; value: string }) => e.key.trim() !== ''
   ).length;
 
   // Reset form when the modal opens
-  const prevOpenRef = useRef(open);
-  if (open && !prevOpenRef.current) {
-    reset({
-      title: title,
-      reference: reference,
-      linkProvider: linkProvider,
-      providerId: linkProviderId || '',
-      isReusable: isReusable,
-      meta: recordToMetaEntries(linkMeta),
-    });
-    setShowAdvanced(false);
-    setView('form');
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) {
+      reset({
+        title: title,
+        reference: reference,
+        linkProvider: linkProvider,
+        providerId: linkProviderId || '',
+        isReusable: isReusable,
+        meta: recordToMetaEntries(linkMeta),
+      });
+      setShowAdvanced(false);
+      setView('form');
+    }
   }
-  prevOpenRef.current = open;
 
   const onSubmit = (data: z.infer<typeof editLinkFormSchema>) => {
     onSave(

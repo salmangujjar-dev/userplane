@@ -78,10 +78,12 @@ export function RecordingPreview({
     }
   };
 
+  // Date.now() is impure during render, so sample it once per mount. A
+  // seven-day window does not need to tick while the card is on screen.
+  const [now] = useState(() => Date.now());
+
   const isExpiringSoon =
-    expiresAt &&
-    expiresAt.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 &&
-    expiresAt.getTime() > Date.now();
+    expiresAt && expiresAt.getTime() - now < 7 * 24 * 60 * 60 * 1000 && expiresAt.getTime() > now;
 
   const showFallback = !thumbnailUrl || imageError;
 

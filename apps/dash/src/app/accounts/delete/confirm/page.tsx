@@ -13,7 +13,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import posthog from 'posthog-js';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { authClient } from '@/client';
 import { AuthIcons } from '@/components/auth/auth-icons';
@@ -75,11 +75,11 @@ function DeleteAccountContent() {
 
   const account = accountResult?.success ? accountResult.data : null;
 
-  useEffect(() => {
-    if (!token) {
-      setError('Invalid or missing deletion token. Please check your email and try again.');
-    }
-  }, [token]);
+  // A missing token is derivable from the URL, so it doesn't need to be mirrored
+  // into state from an effect.
+  const displayError = token
+    ? error
+    : 'Invalid or missing deletion token. Please check your email and try again.';
 
   const handleDelete = async () => {
     if (!token) {
@@ -136,11 +136,11 @@ function DeleteAccountContent() {
     return <DeleteAccountSuccess />;
   }
 
-  if (error && !token) {
+  if (displayError && !token) {
     return (
       <DinoError
         title="Invalid Deletion Link"
-        description={error}
+        description={displayError}
         onGoBack={handleGoBack}
         showRetry={false}
       />
@@ -148,7 +148,7 @@ function DeleteAccountContent() {
   }
 
   // Check if error is related to workspace membership
-  const isWorkspaceError = error && error.includes('workspace');
+  const isWorkspaceError = displayError && displayError.includes('workspace');
 
   if (isWorkspaceError) {
     return (
@@ -183,7 +183,7 @@ function DeleteAccountContent() {
               className="opacity-80"
             />
             <div className="flex flex-col items-center gap-2">
-              <p className="text-xs text-muted-foreground text-center max-w-sm">{error}</p>
+              <p className="text-xs text-muted-foreground text-center max-w-sm">{displayError}</p>
             </div>
           </div>
 
@@ -214,11 +214,11 @@ function DeleteAccountContent() {
         <DeleteAccountHeader />
 
         <div className="space-y-6">
-          {error && (
+          {displayError && (
             <div className="rounded-lg border bg-muted/50 p-4">
               <div className="flex flex-col gap-1">
                 <p className="text-sm font-medium">Deletion failed</p>
-                <p className="text-xs text-muted-foreground">{error}</p>
+                <p className="text-xs text-muted-foreground">{displayError}</p>
               </div>
             </div>
           )}

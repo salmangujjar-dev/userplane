@@ -346,7 +346,7 @@ function ProviderSelectFlow() {
           return;
         }
 
-        window.location.href = result.data.authorizationUrl;
+        window.location.assign(result.data.authorizationUrl);
       } else {
         const [error, response] = await apiClient.provisioner.intercom.authorize({
           query: { source: 'inapp' },
@@ -358,7 +358,7 @@ function ProviderSelectFlow() {
           return;
         }
 
-        window.location.href = result.data.authorizationUrl;
+        window.location.assign(result.data.authorizationUrl);
       }
     } catch (error) {
       showConnectionFailedToast(
@@ -465,7 +465,7 @@ function IntercomMarketplaceFlow() {
           return;
         }
 
-        window.location.href = result.data.authorizationUrl;
+        window.location.assign(result.data.authorizationUrl);
       } catch (err) {
         setError({
           defined: true,
@@ -524,7 +524,7 @@ function SlackDirectFlow() {
           return;
         }
 
-        window.location.href = result.data.authorizationUrl;
+        window.location.assign(result.data.authorizationUrl);
       } catch (err) {
         setError({
           defined: true,
@@ -658,7 +658,7 @@ function ZendeskAuthFlowContent() {
       }
 
       const { data: respData } = await response.json();
-      window.location.href = respData.zendeskAuthUrl;
+      window.location.assign(respData.zendeskAuthUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setIsSubmitting(false);
@@ -796,12 +796,6 @@ function DirectCreateFlow() {
   const account = accountResult?.success ? accountResult.data : null;
 
   // Auto-trigger workspace creation if invite token is present
-  useEffect(() => {
-    if (inviteToken && !tokenCreationFailed && !createdWorkspace && !isPending) {
-      handleCreateWithToken(inviteToken);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inviteToken]);
 
   const handleCreateWithToken = (token: string) => {
     createWorkspace(
@@ -838,6 +832,13 @@ function DirectCreateFlow() {
       }
     );
   };
+
+  useEffect(() => {
+    if (inviteToken && !tokenCreationFailed && !createdWorkspace && !isPending) {
+      handleCreateWithToken(inviteToken);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inviteToken]);
 
   const handleUrlSubmit = (data: { workspace: string }) => {
     // Create workspace directly - all workspaces start on free plan

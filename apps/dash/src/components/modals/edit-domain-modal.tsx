@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
 } from '@userplane/ui/components/tooltip';
 import { HelpCircle } from 'lucide-react';
-import { useRef } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -59,11 +59,13 @@ export function EditDomainModal({
   });
 
   // Reset form when the modal opens
-  const prevOpenRef = useRef(open);
-  if (open && !prevOpenRef.current) {
-    reset({ domainUrl });
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) {
+      reset({ domainUrl });
+    }
   }
-  prevOpenRef.current = open;
 
   const onSubmit = (data: { domainUrl: string }) => {
     onSave(data.domainUrl);

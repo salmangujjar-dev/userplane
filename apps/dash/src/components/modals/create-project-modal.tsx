@@ -33,7 +33,7 @@ import {
 } from '@userplane/ui/components/tooltip';
 import { cn } from '@userplane/ui/lib/utils';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -86,12 +86,15 @@ export function CreateProjectModal({
     },
   });
 
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       reset();
       setShowAdvanced(false);
     }
-  }, [open, reset]);
+  }
 
   const onSubmit = (data: {
     title: string;

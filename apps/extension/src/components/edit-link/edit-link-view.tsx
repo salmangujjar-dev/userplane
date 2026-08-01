@@ -14,7 +14,7 @@ import { Switch } from '@userplane/ui/components/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@userplane/ui/components/tooltip';
 import { ArrowLeft, ChevronDown, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { DinoError } from '@/components/shared/dino-error';
@@ -59,7 +59,6 @@ export function EditLinkView({
     control,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors, isValid, isDirty },
   } = useForm<EditLinkFormValues>({
     resolver: zodResolver(editLinkFormSchema),
@@ -73,7 +72,9 @@ export function EditLinkView({
     },
   });
 
-  const selectedProvider = watch('linkProvider');
+  // useWatch rather than watch(): watch() returns a fresh function each render,
+  // which the React Compiler cannot memoize.
+  const selectedProvider = useWatch({ control, name: 'linkProvider' });
 
   const onSubmit = (data: EditLinkFormValues) => {
     setError(null);

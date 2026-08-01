@@ -41,7 +41,7 @@ function OAuthZendeskAuthorizeContent() {
   const installationIdParam = searchParams.get('installationId') ?? '';
 
   // Form state
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
+  const [chosenWorkspaceId, setSelectedWorkspaceId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,20 +50,16 @@ function OAuthZendeskAuthorizeContent() {
     return data?.workspaces ?? [];
   }, [workspacesResult]);
 
+  // Default to the first workspace until the user picks one — derived rather than
+  // synced into state from an effect.
+  const selectedWorkspaceId = chosenWorkspaceId || workspaces[0]?.workspaceId || '';
+
   const selectedRole = useMemo(() => {
     const ws = workspaces.find((w) => w.workspaceId === selectedWorkspaceId);
     return ws?.workspaceMembership?.workspaceRole ?? null;
   }, [workspaces, selectedWorkspaceId]);
 
   const canConnect = selectedRole === 'owner' || selectedRole === 'admin';
-
-  // Auto-select first workspace
-  useEffect(() => {
-    if (selectedWorkspaceId) return;
-    if (workspaces.length > 0) {
-      setSelectedWorkspaceId(workspaces[0]!.workspaceId);
-    }
-  }, [workspaces, selectedWorkspaceId]);
 
   // Redirect to login if not authenticated
   useEffect(() => {

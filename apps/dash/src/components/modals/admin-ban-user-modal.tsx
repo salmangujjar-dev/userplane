@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@userplane/ui/components/select';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import type { WorkspaceRole } from '@/types';
 
@@ -67,11 +67,13 @@ export function AdminBanUserModal({
   const [form, setForm] = useState(initialFormState);
 
   // Reset form when modal closes (adjust state during render)
-  const prevOpenRef = useRef(open);
-  if (!open && prevOpenRef.current) {
-    setForm(initialFormState);
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (!open) {
+      setForm(initialFormState);
+    }
   }
-  prevOpenRef.current = open;
 
   const handleRoleToggle = (role: WorkspaceRole) => {
     setForm((prev) => ({

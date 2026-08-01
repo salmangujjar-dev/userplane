@@ -8,7 +8,6 @@
 
 import { useEffect, useState } from 'react';
 
-import { URL_PARAMS } from '@/constants';
 import {
   AppModeProvider,
   useAppMode,
@@ -46,30 +45,16 @@ function VerificationAppContent() {
   const crossTabLock = useCrossTabLock();
 
   // Initialize state from URL immediately
-  const [token, setToken] = useState<string>(() => getUrlParams().token);
-  const [workspaceIds, setWorkspaceIds] = useState<string[]>(() =>
-    parseWorkspaceIds(getUrlParams().workspace)
-  );
+  const [token] = useState<string>(() => getUrlParams().token);
+  const [workspaceIds] = useState<string[]>(() => parseWorkspaceIds(getUrlParams().workspace));
 
   // Initialize verification flow with verification bridge for parent communication
   // The bridge is used to request verification from parent so the origin is correct
   const { state, actions } = useVerificationFlow(token, workspaceIds, verificationBridge);
 
-  // Effect to extract URL params
   useEffect(() => {
     logger.debug({ mode, isEmbedded }, 'app initialized');
     logger.debug({ lockStatus: crossTabLock.status }, 'cross-tab lock status');
-
-    const params = new URLSearchParams(window.location.search);
-    const urlToken = params.get(URL_PARAMS.TOKEN);
-    const urlWorkspace = params.get(URL_PARAMS.WORKSPACE);
-
-    if (urlToken) {
-      setToken(urlToken);
-    }
-    if (urlWorkspace) {
-      setWorkspaceIds(parseWorkspaceIds(urlWorkspace));
-    }
   }, [mode, isEmbedded, crossTabLock.status]);
 
   // Report verification completion to parent via bridge (embedded mode only)

@@ -226,7 +226,7 @@ function AccessRequestedState({ workspaceId, workspaceName }: AccessRequestedSta
 
 function WorkspaceSuggestPageContent() {
   const router = useRouter();
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
+  const [chosenWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [requestedWorkspace, setRequestedWorkspace] = useState<{
@@ -239,6 +239,12 @@ function WorkspaceSuggestPageContent() {
     isLoading,
     error,
   } = useWorkspaceSuggestions({ page: currentPage, perPage: ITEMS_PER_PAGE });
+
+  // Default to the first suggestion until the user picks one — derived rather
+  // than synced into state from an effect.
+  const selectedWorkspaceId =
+    chosenWorkspaceId ??
+    (suggestionsData?.success ? (suggestionsData.data.workspaces[0]?.workspaceId ?? null) : null);
 
   const joinMutation = useJoinWorkspace({
     onSuccess: (status) => {
@@ -269,17 +275,6 @@ function WorkspaceSuggestPageContent() {
   }, [isLoading, suggestionsData, router]);
 
   // Auto-select first workspace when data loads
-  useEffect(() => {
-    if (
-      !isLoading &&
-      suggestionsData?.success &&
-      suggestionsData.data.workspaces.length > 0 &&
-      !selectedWorkspaceId
-    ) {
-      setSelectedWorkspaceId(suggestionsData.data.workspaces[0]?.workspaceId ?? null);
-    }
-  }, [isLoading, suggestionsData, selectedWorkspaceId, setSelectedWorkspaceId]);
-
   const handleJoinWorkspace = () => {
     if (!selectedWorkspaceId) return;
     setIsJoining(true);

@@ -36,7 +36,7 @@ import {
 import { format } from 'date-fns';
 import { Cable, Globe, MoreVertical, Trash2 } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { SectionError } from '@/components/shared/section-error';
 import { WORKSPACE_AVATAR_SIZES, WorkspaceAvatar } from '@/components/shared/workspace-avatar';
@@ -401,11 +401,14 @@ function RevokeMcpConnectionModal({
   const revokeMutation = useRevokeMcpConnection();
   const displayName = clientName || 'App';
 
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setConfirmText('');
     }
-  }, [open]);
+  }
 
   const handleRevoke = () => {
     if (!clientId) return;

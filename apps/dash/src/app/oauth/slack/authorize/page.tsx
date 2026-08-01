@@ -36,7 +36,7 @@ function OAuthSlackAuthorizeContent() {
   const { data: workspacesResult, isLoading: workspacesLoading } = useWorkspaces();
 
   // Form state
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
+  const [chosenWorkspaceId, setSelectedWorkspaceId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,12 +46,9 @@ function OAuthSlackAuthorizeContent() {
   }, [workspacesResult]);
 
   // Auto-select first workspace
-  useEffect(() => {
-    if (selectedWorkspaceId) return;
-    if (workspaces.length > 0) {
-      setSelectedWorkspaceId(workspaces[0]!.workspaceId);
-    }
-  }, [workspaces, selectedWorkspaceId]);
+  // Default to the first workspace until the user picks one — derived rather than
+  // synced into state from an effect.
+  const selectedWorkspaceId = chosenWorkspaceId || workspaces[0]?.workspaceId || '';
 
   // Redirect to login if not authenticated
   useEffect(() => {

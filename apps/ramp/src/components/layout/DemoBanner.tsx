@@ -16,11 +16,16 @@ function hasDismissedBanner() {
 }
 
 export function DemoBanner() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [dismissed, setDismissed] = useState<boolean | null>(null);
 
+  // localStorage isn't readable during SSR, so the first client render resolves
+  // it in a microtask rather than synchronously inside an effect.
   useEffect(() => {
-    setIsVisible(!hasDismissedBanner());
+    queueMicrotask(() => setDismissed(hasDismissedBanner()));
   }, []);
+
+  const isVisible = dismissed === false;
+  const setIsVisible = (visible: boolean) => setDismissed(!visible);
 
   const dismissBanner = () => {
     try {

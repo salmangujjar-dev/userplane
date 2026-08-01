@@ -3,7 +3,7 @@
  * Shows in the ticket sidebar — mirrors Intercom's opener → link creator → success flow
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { useAgentContext } from '@/hooks/zendesk/use-agent-context';
 import { useZendeskClient } from '@/hooks/zendesk/use-client';
@@ -68,19 +68,26 @@ export function TicketSidebar({
 
   const workspace = useWorkspaceData({ workspaceId, enabled: view === 'creator' });
 
-  useEffect(() => {
+  // Re-seed the editable message when the agent changes (adjust state during render)
+  const [prevAgentName, setPrevAgentName] = useState(agentName);
+  if (prevAgentName !== agentName) {
+    setPrevAgentName(agentName);
     setCustomMessage(generateDefaultMessage(agentName));
-  }, [agentName]);
+  }
 
-  useEffect(() => {
+  const [prevAgentError, setPrevAgentError] = useState(agentError);
+  if (prevAgentError !== agentError) {
+    setPrevAgentError(agentError);
     if (agentError) {
       setError(agentError);
       setView('error');
     }
-  }, [agentError]);
+  }
 
   // Route workspace data errors to dedicated screens
-  useEffect(() => {
+  const [prevWorkspaceRawError, setPrevWorkspaceRawError] = useState(workspace.rawError);
+  if (prevWorkspaceRawError !== workspace.rawError) {
+    setPrevWorkspaceRawError(workspace.rawError);
     if (workspace.rawError) {
       const errorView = getErrorView(workspace.rawError);
       if (errorView) {
@@ -90,7 +97,7 @@ export function TicketSidebar({
         setView('error');
       }
     }
-  }, [workspace.rawError, workspace.error]);
+  }
 
   const handleCreateLink = useCallback(async () => {
     if (!workspace.selectedProject) {

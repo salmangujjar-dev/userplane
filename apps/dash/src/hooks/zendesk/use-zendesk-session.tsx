@@ -66,12 +66,14 @@ export function useZendeskSession(
   }, [zafClient, apiUrl, workspaceId, subdomain]);
 
   useEffect(() => {
-    if (!workspaceId || !subdomain) {
-      setIsLoading(false);
-      return;
-    }
+    if (!workspaceId || !subdomain) return;
 
-    fetchSession();
+    void (async () => {
+      // Yield first so fetchSession's state updates land in an async
+      // continuation instead of synchronously during the effect.
+      await Promise.resolve();
+      await fetchSession();
+    })();
 
     refreshTimerRef.current = setInterval(fetchSession, REFRESH_INTERVAL_MS);
 
@@ -82,5 +84,8 @@ export function useZendeskSession(
     };
   }, [fetchSession, workspaceId, subdomain]);
 
-  return { sessionToken, isLoading, error };
+  // Nothing to load until Zendesk has told us which workspace/subdomain we're in.
+  const isConfigured = Boolean(workspaceId && subdomain);
+
+  return { sessionToken, isLoading: isConfigured && isLoading, error };
 }

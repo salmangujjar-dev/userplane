@@ -3,7 +3,7 @@
  * Manages the state machine for the entire recording flow
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { AggregatedLogs } from '@/bridge/types';
 import { AUTO_STOP_BUFFER_MS, RECORDING_LIMITS } from '@/constants';
@@ -121,112 +121,26 @@ export function useRecordingFlow(
     setFlowState(newState);
   }, []);
 
-  useEffect(() => {
+  // Link validation depends only on the hook's inputs, so derive it during
+  // render rather than mirroring it into state from an effect.
+  const validationError = useMemo<RecordingError | null>(() => {
     if (!linkToken || linkToken.trim() === '') {
-      logger.debug('no link token provided');
-      setError(createClientError('CLIENT_LINK_TOKEN_MISSING'));
-      setFlowState('error');
-      return;
+      return createClientError('CLIENT_LINK_TOKEN_MISSING');
     }
-
     if (!action || action.trim() === '') {
-      logger.debug('no action provided');
-      setError(createClientError('CLIENT_LINK_ACTION_MISSING'));
-      setFlowState('error');
-      return;
+      return createClientError('CLIENT_LINK_ACTION_MISSING');
     }
-
     if (action !== 'recording') {
-      logger.debug({ action }, 'invalid action');
-      setError(createClientError('CLIENT_LINK_ACTION_INVALID'));
-      setFlowState('error');
-      return;
+      return createClientError('CLIENT_LINK_ACTION_INVALID');
     }
-
     if (!workspaceIds || workspaceIds.length === 0) {
-      logger.debug('no workspace IDs provided');
-      setError(createClientError('CLIENT_LINK_WORKSPACE_MISSING'));
-      setFlowState('error');
-      return;
+      return createClientError('CLIENT_LINK_WORKSPACE_MISSING');
     }
-
     if (!isScreenRecordingSupported()) {
-      logger.debug('screen recording not supported');
-      setError(createClientError('CLIENT_BROWSER_UNSUPPORTED'));
-      setFlowState('error');
-      return;
+      return createClientError('CLIENT_BROWSER_UNSUPPORTED');
     }
-
-    initializeSession(linkToken, workspaceIds);
-
-    return () => {
-      // Cleanup on unmount
-      if (sessionRef.current) {
-        sessionRef.current.destroy();
-      }
-      if (mediaCaptureRef.current) {
-        // Async destroy, but we can't await in cleanup
-        // Trigger it and let it complete asynchronously
-        mediaCaptureRef.current.destroy().catch(() => {});
-      }
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-        countdownIntervalRef.current = null;
-      }
-      if (autoStopTimerRef.current) {
-        clearTimeout(autoStopTimerRef.current);
-        autoStopTimerRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return null;
   }, [linkToken, action, workspaceIds]);
-
-  useEffect(() => {
-    const criticalStates: FlowState[] = ['countdown', 'recording', 'review', 'uploading'];
-
-    if (criticalStates.includes(flowState)) {
-      const handler = (e: BeforeUnloadEvent) => {
-        e.preventDefault();
-      };
-
-      beforeUnloadHandlerRef.current = handler;
-      window.addEventListener('beforeunload', handler);
-
-      return () => {
-        if (beforeUnloadHandlerRef.current) {
-          window.removeEventListener('beforeunload', beforeUnloadHandlerRef.current);
-          beforeUnloadHandlerRef.current = null;
-        }
-      };
-    }
-  }, [flowState]);
-
-  useEffect(() => {
-    if (flowState !== 'recording' || !mediaCaptureRef.current) {
-      return;
-    }
-
-    // Clear any existing timer
-    if (autoStopTimerRef.current) {
-      clearTimeout(autoStopTimerRef.current);
-    }
-
-    autoStopTimerRef.current = setTimeout(
-      () => {
-        if (stopRecordingRef.current) {
-          stopRecordingRef.current();
-        }
-      },
-      Math.max(0, maxRecordingDurationMs - AUTO_STOP_BUFFER_MS)
-    );
-
-    return () => {
-      if (autoStopTimerRef.current) {
-        clearTimeout(autoStopTimerRef.current);
-        autoStopTimerRef.current = null;
-      }
-    };
-  }, [flowState, maxRecordingDurationMs]);
 
   async function initializeSession(linkToken: string, expectedWorkspaceIds: string[]) {
     setFlowState('loading');
@@ -278,6 +192,85 @@ export function useRecordingFlow(
 
     transitionToState('setup');
   }
+
+  useEffect(() => {
+    if (validationError) return;
+
+    void (async () => {
+      // Yield first so the 'loading' reset inside initializeSession lands in an
+      // async continuation instead of synchronously during the effect.
+      await Promise.resolve();
+      await initializeSession(linkToken, workspaceIds);
+    })();
+
+    return () => {
+      // Cleanup on unmount
+      if (sessionRef.current) {
+        sessionRef.current.destroy();
+      }
+      if (mediaCaptureRef.current) {
+        // Async destroy, but we can't await in cleanup
+        // Trigger it and let it complete asynchronously
+        mediaCaptureRef.current.destroy().catch(() => {});
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      if (autoStopTimerRef.current) {
+        clearTimeout(autoStopTimerRef.current);
+        autoStopTimerRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkToken, action, workspaceIds, validationError]);
+
+  useEffect(() => {
+    const criticalStates: FlowState[] = ['countdown', 'recording', 'review', 'uploading'];
+
+    if (criticalStates.includes(flowState)) {
+      const handler = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+      };
+
+      beforeUnloadHandlerRef.current = handler;
+      window.addEventListener('beforeunload', handler);
+
+      return () => {
+        if (beforeUnloadHandlerRef.current) {
+          window.removeEventListener('beforeunload', beforeUnloadHandlerRef.current);
+          beforeUnloadHandlerRef.current = null;
+        }
+      };
+    }
+  }, [flowState]);
+
+  useEffect(() => {
+    if (flowState !== 'recording' || !mediaCaptureRef.current) {
+      return;
+    }
+
+    // Clear any existing timer
+    if (autoStopTimerRef.current) {
+      clearTimeout(autoStopTimerRef.current);
+    }
+
+    autoStopTimerRef.current = setTimeout(
+      () => {
+        if (stopRecordingRef.current) {
+          stopRecordingRef.current();
+        }
+      },
+      Math.max(0, maxRecordingDurationMs - AUTO_STOP_BUFFER_MS)
+    );
+
+    return () => {
+      if (autoStopTimerRef.current) {
+        clearTimeout(autoStopTimerRef.current);
+        autoStopTimerRef.current = null;
+      }
+    };
+  }, [flowState, maxRecordingDurationMs]);
 
   async function startRecording(mode: RecordingMode) {
     try {
@@ -627,8 +620,8 @@ export function useRecordingFlow(
 
   return {
     state: {
-      state: flowState,
-      error,
+      state: validationError ? 'error' : flowState,
+      error: validationError ?? error,
       recordingMode,
       recordingBlob,
       videoUrl,

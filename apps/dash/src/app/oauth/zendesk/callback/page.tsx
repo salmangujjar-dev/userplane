@@ -46,19 +46,6 @@ function OAuthZendeskCallbackContent() {
   const code = searchParams.get('code');
   const state = searchParams.get('state');
 
-  useEffect(() => {
-    if (completedRef.current) return;
-    if (sessionLoading) return;
-    if (!session) return;
-    if (!code || !state) {
-      setError('Missing OAuth parameters from Zendesk.');
-      return;
-    }
-
-    completedRef.current = true;
-    completeOAuth(code, state);
-  }, [code, state, session, sessionLoading]);
-
   async function completeOAuth(zendeskCode: string, zendeskState: string) {
     try {
       const response = await fetch(`${env.api.url}/api/v1/zendesk/connect/complete`, {
@@ -85,17 +72,35 @@ function OAuthZendeskCallbackContent() {
     }
   }
 
+  // Missing params are derivable from the URL, so they don't need to be mirrored
+  // into state from an effect.
+  const missingParams = !code || !state;
+
+  useEffect(() => {
+    if (completedRef.current) return;
+    if (sessionLoading) return;
+    if (!session) return;
+    if (!code || !state) return;
+
+    completedRef.current = true;
+    void (async () => {
+      await completeOAuth(code, state);
+    })();
+  }, [code, state, session, sessionLoading]);
+
   // Show invite teammates after connection
   if (completedWorkspaceId) {
     return <PostConnectionInviteView workspaceId={completedWorkspaceId} />;
   }
 
-  if (error) {
+  const displayError = missingParams ? 'Missing OAuth parameters from Zendesk.' : error;
+
+  if (displayError) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background">
         <DinoError
           title="Authorization Failed"
-          description={error}
+          description={displayError}
           onRetry={() => window.location.reload()}
           onGoBack={() => window.close()}
         />

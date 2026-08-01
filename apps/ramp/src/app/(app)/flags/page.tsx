@@ -90,7 +90,11 @@ export default function FlagsPage() {
   }, [syncFromResponse]);
 
   useEffect(() => {
-    fetchFlags();
+    // Awaited inside so the state updates land in an async continuation rather
+    // than synchronously during the effect.
+    void (async () => {
+      await fetchFlags();
+    })();
   }, [fetchFlags]);
 
   const { isDirty, pendingChangeCount } = useMemo(() => {

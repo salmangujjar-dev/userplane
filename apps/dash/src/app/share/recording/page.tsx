@@ -134,10 +134,7 @@ export default function SharedRecordingPage() {
   const [showAiPromptModal, setShowAiPromptModal] = useState(false);
 
   useEffect(() => {
-    if (!token) {
-      setState({ status: 'error', message: 'No share token provided' });
-      return;
-    }
+    if (!token) return;
 
     let cancelled = false;
 
@@ -165,6 +162,11 @@ export default function SharedRecordingPage() {
       cancelled = true;
     };
   }, [token]);
+
+  // A missing token is derivable from the URL rather than seeded from an effect.
+  if (!token) {
+    return <ErrorView title="Something went wrong" description="No share token provided" />;
+  }
 
   if (state.status === 'loading') {
     return (

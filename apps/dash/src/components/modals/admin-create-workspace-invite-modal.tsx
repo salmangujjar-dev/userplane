@@ -21,7 +21,7 @@ import {
 } from '@userplane/ui/components/select';
 import { Check, ChevronDown, ChevronUp, Copy, LinkIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { URLInput } from '@/components/url-input';
@@ -82,7 +82,6 @@ export function AdminCreateWorkspaceInviteModal({
     control,
     handleSubmit,
     reset,
-    watch,
     setValue,
     formState: { errors, isValid },
   } = useForm<CreateWorkspaceInviteFormData>({
@@ -96,15 +95,20 @@ export function AdminCreateWorkspaceInviteModal({
   });
 
   // Watch notify field to conditionally show email field
-  const notifyValue = watch('notify');
+  // useWatch rather than watch(): watch() returns a fresh function each render,
+  // which the React Compiler cannot memoize.
+  const notifyValue = useWatch({ control, name: 'notify' });
 
   // Reset form when modal closes
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       reset();
       setShowAdvanced(false);
     }
-  }, [open, reset]);
+  }
 
   // Clear email field when notify is set to 'never'
   useEffect(() => {
@@ -302,11 +306,14 @@ export function AdminCreateWorkspaceInviteSuccessModal({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Reset advanced view when modal closes
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setShowAdvanced(false);
     }
-  }, [open]);
+  }
 
   const handleCopy = async () => {
     if (!result?.inviteUrl) return;

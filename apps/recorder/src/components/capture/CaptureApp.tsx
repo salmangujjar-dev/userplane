@@ -43,10 +43,12 @@ type CaptureState = {
   isCrossTabConnected: boolean;
   error: string | null;
   recorderState: CaptureRecorderState;
+  /** Parent tab ref, captured once the bridge connects. */
+  tabRef: string | null;
 };
 
 type CaptureAction =
-  | { type: 'bridge_connected' }
+  | { type: 'bridge_connected'; tabRef: string | null }
   | { type: 'cross_tab_connected' }
   | { type: 'error'; message: string }
   | { type: 'recorder_state'; state: CaptureRecorderState };
@@ -54,7 +56,7 @@ type CaptureAction =
 function captureReducer(state: CaptureState, action: CaptureAction): CaptureState {
   switch (action.type) {
     case 'bridge_connected':
-      return { ...state, isConnected: true };
+      return { ...state, isConnected: true, tabRef: action.tabRef };
     case 'cross_tab_connected':
       return { ...state, isCrossTabConnected: true };
     case 'error':
@@ -68,6 +70,7 @@ const initialCaptureState: CaptureState = {
   isConnected: false,
   isCrossTabConnected: false,
   error: null,
+  tabRef: null,
   recorderState: {
     recorderTabId: null,
     recorderState: 'inactive',
@@ -78,7 +81,7 @@ const initialCaptureState: CaptureState = {
 export default function CaptureApp() {
   const bridgeRef = useRef<CaptureBridgeConnection | null>(null);
   const crossTabRef = useRef<CrossTabCoordinator | null>(null);
-  const [{ isConnected, isCrossTabConnected, error, recorderState }, dispatch] = useReducer(
+  const [{ isConnected, isCrossTabConnected, error, recorderState, tabRef }, dispatch] = useReducer(
     captureReducer,
     initialCaptureState
   );
@@ -143,7 +146,7 @@ export default function CaptureApp() {
         if (!mounted) return;
 
         logger.debug('parent bridge connected');
-        dispatch({ type: 'bridge_connected' });
+        dispatch({ type: 'bridge_connected', tabRef: bridge.getTabRef() });
 
         // Initialize recorder state from bridge
         dispatch({ type: 'recorder_state', state: bridge.getCurrentRecorderState() });
@@ -308,12 +311,9 @@ export default function CaptureApp() {
   // Log state changes for debugging
   useEffect(() => {
     if (isConnected && isCrossTabConnected) {
-      logger.debug(
-        { tabRef: bridgeRef.current?.getTabRef(), recorderState: recorderState.recorderState },
-        'fully connected'
-      );
+      logger.debug({ tabRef, recorderState: recorderState.recorderState }, 'fully connected');
     }
-  }, [isConnected, isCrossTabConnected, recorderState]);
+  }, [isConnected, isCrossTabConnected, recorderState, tabRef]);
 
   // This component renders nothing - it's invisible
   // In development, we can add a debug indicator if needed
@@ -353,7 +353,7 @@ export default function CaptureApp() {
         pointerEvents: 'none',
       }}
       data-userplane-capture={isConnected && isCrossTabConnected ? 'connected' : 'connecting'}
-      data-tab-ref={bridgeRef.current?.getTabRef() ?? undefined}
+      data-tab-ref={tabRef ?? undefined}
       data-recorder-state={recorderState.recorderState}
       data-recorder-tab-id={recorderState.recorderTabId ?? undefined}
       data-cross-tab={isCrossTabConnected ? 'connected' : 'disconnected'}

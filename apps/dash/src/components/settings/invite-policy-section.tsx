@@ -17,7 +17,7 @@ import {
 } from '@userplane/ui/components/select';
 import { Skeleton } from '@userplane/ui/components/skeleton';
 import { Globe, Lock, Plus, RefreshCw, Shield, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { AddEmailDomainModal } from '@/components/modals/add-email-domain-modal';
 import { ResetInviteTokenModal } from '@/components/modals/reset-invite-token-modal';
@@ -79,7 +79,10 @@ export function InvitePolicySection() {
   };
 
   // Sync state with fetched data
-  useEffect(() => {
+  // Seed the form from the fetched policy (adjust state during render)
+  const [prevPolicyResult, setPrevPolicyResult] = useState(policyResult);
+  if (prevPolicyResult !== policyResult) {
+    setPrevPolicyResult(policyResult);
     if (policyResult?.success) {
       setFormState({
         policy: policyResult.data.workspaceInvitePolicy,
@@ -87,7 +90,7 @@ export function InvitePolicySection() {
         hasChanges: false,
       });
     }
-  }, [policyResult]);
+  }
 
   const handlePolicyChange = (newPolicy: WorkspaceInvitePolicy) => {
     setFormState((prev) => ({ ...prev, policy: newPolicy, hasChanges: true }));
