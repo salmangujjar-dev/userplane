@@ -699,12 +699,14 @@ export function AdminProvisionWorkspaceModal({
   });
 
   // Reset form when modal closes (adjust state during render)
-  const prevOpenRef = useRef(open);
-  if (!open && prevOpenRef.current) {
-    reset();
-    dispatch({ type: 'RESET' });
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (!open) {
+      reset();
+      dispatch({ type: 'RESET' });
+    }
   }
-  prevOpenRef.current = open;
 
   useEffect(() => {
     if (!open) return;
@@ -948,11 +950,13 @@ export function AdminProvisionWorkspaceSuccessModal({
   }>({ copiedField: null, showAdvanced: false });
 
   // Reset state when modal closes (adjust state during render)
-  const prevSuccessOpenRef = useRef(open);
-  if (!open && prevSuccessOpenRef.current) {
-    setSuccessState({ copiedField: null, showAdvanced: false });
+  const [prevSuccessOpen, setPrevSuccessOpen] = useState(open);
+  if (prevSuccessOpen !== open) {
+    setPrevSuccessOpen(open);
+    if (!open) {
+      setSuccessState({ copiedField: null, showAdvanced: false });
+    }
   }
-  prevSuccessOpenRef.current = open;
 
   const { copiedField, showAdvanced } = successState;
 

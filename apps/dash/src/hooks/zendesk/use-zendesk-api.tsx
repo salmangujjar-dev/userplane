@@ -7,7 +7,7 @@
 
 import type { SafeClient, UserplaneClient } from '@userplane/client';
 import { createClient, createSafeClient } from '@userplane/client';
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef } from 'react';
+import { createContext, type ReactNode, useContext, useMemo } from 'react';
 
 type ZendeskApiClient = SafeClient<UserplaneClient>;
 
@@ -20,26 +20,19 @@ interface ZendeskApiProviderProps {
 }
 
 export function ZendeskApiProvider({ sessionToken, apiUrl, children }: ZendeskApiProviderProps) {
-  // Use a ref to always provide the latest token without recreating the client
-  const tokenRef = useRef(sessionToken);
-
-  useEffect(() => {
-    tokenRef.current = sessionToken;
-  }, [sessionToken]);
-
+  // Rebuilt when the session token is refreshed rather than reading a ref during
+  // render. createClient only assembles a config object, so this is cheap and the
+  // token refreshes rarely.
   const client = useMemo(
     () =>
       createSafeClient(
         createClient({
           url: `${apiUrl}/api/v1`,
           credentials: 'omit',
-          headers: () => ({ Authorization: `Bearer ${tokenRef.current}` }),
+          headers: () => ({ Authorization: `Bearer ${sessionToken}` }),
         })
       ),
-    // Only recreate client when apiUrl changes, not on every token refresh
-    // Token updates are handled via the ref
-
-    [apiUrl]
+    [apiUrl, sessionToken]
   );
 
   return <ZendeskApiContext.Provider value={client}>{children}</ZendeskApiContext.Provider>;

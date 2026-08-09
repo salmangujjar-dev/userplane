@@ -292,30 +292,39 @@ export function ConsolePanel({
   // When a request targets a console entry: enable its level filter if needed,
   // clear search only if it would still hide the entry, then mark it focused.
   // Keyed on focusToken so repeat clicks on the same marker re-fire.
+  const [prevFocusToken, setPrevFocusToken] = useState(focusToken);
+  if (prevFocusToken !== focusToken) {
+    setPrevFocusToken(focusToken);
+    const target =
+      focusRequest && focusRequest.kind === 'console'
+        ? logs.find((l) => l.timestamp === focusRequest.entryTimestamp)
+        : undefined;
+
+    if (target) {
+      setActiveFilters((prev) => {
+        const level = target.type as LogLevel;
+        if (prev.has(level)) return prev;
+        const next = new Set(prev);
+        next.add(level);
+        return next;
+      });
+
+      const logText = target.args
+        .map((arg) => formatSerializedValue(arg))
+        .join(' ')
+        .toLowerCase();
+      setSearchQuery((prev) => (prev && !logText.includes(prev.toLowerCase()) ? '' : prev));
+
+      setFocusedEntryTs(target.timestamp);
+    }
+  }
+
+  // Clear the highlight a moment after it lands.
   useEffect(() => {
-    if (!focusRequest || focusRequest.kind !== 'console') return;
-    const target = logs.find((l) => l.timestamp === focusRequest.entryTimestamp);
-    if (!target) return;
-
-    setActiveFilters((prev) => {
-      const level = target.type as LogLevel;
-      if (prev.has(level)) return prev;
-      const next = new Set(prev);
-      next.add(level);
-      return next;
-    });
-
-    const logText = target.args
-      .map((arg) => formatSerializedValue(arg))
-      .join(' ')
-      .toLowerCase();
-    setSearchQuery((prev) => (prev && !logText.includes(prev.toLowerCase()) ? '' : prev));
-
-    setFocusedEntryTs(focusRequest.entryTimestamp);
+    if (focusedEntryTs === null) return;
     const t = setTimeout(() => setFocusedEntryTs(null), 1800);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusToken]);
+  }, [focusedEntryTs]);
 
   const filteredLogs = logs.filter((log) => {
     const level = log.type as LogLevel;

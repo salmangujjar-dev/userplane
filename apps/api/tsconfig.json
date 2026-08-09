@@ -2,14 +2,12 @@
   "extends": "@userplane/typescript-config/node.json",
   "compilerOptions": {
     "moduleDetection": "force",
-    "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": false,
     "declarationMap": false,
-    "baseUrl": "./src",
     "paths": {
-      "@/api/*": ["./*"]
+      "@/api/*": ["./src/*"]
     },
     "jsx": "react-jsx",
     "jsxImportSource": "react"

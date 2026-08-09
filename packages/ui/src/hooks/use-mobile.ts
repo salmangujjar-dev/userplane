@@ -4,19 +4,21 @@ const MOBILE_BREAKPOINT = 768;
 const TABLET_BREAKPOINT = 1024;
 
 function useMediaBreakpoint(breakpoint: number) {
-  const [isBelow, setIsBelow] = React.useState<boolean | undefined>(undefined);
+  const subscribe = React.useCallback(
+    (onStoreChange: () => void) => {
+      const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+      mql.addEventListener('change', onStoreChange);
+      return () => mql.removeEventListener('change', onStoreChange);
+    },
+    [breakpoint]
+  );
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
-    const onChange = () => {
-      setIsBelow(window.innerWidth < breakpoint);
-    };
-    mql.addEventListener('change', onChange);
-    setIsBelow(window.innerWidth < breakpoint);
-    return () => mql.removeEventListener('change', onChange);
-  }, [breakpoint]);
-
-  return !!isBelow;
+  return React.useSyncExternalStore(
+    subscribe,
+    () => window.innerWidth < breakpoint,
+    // No viewport on the server; match the previous first-render value.
+    () => false
+  );
 }
 
 // Below md breakpoint (768px) -- phones

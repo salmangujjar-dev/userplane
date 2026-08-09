@@ -8,7 +8,7 @@ import Logo from '@userplane/ui/components/logo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@userplane/ui/components/tabs';
 import { cn } from '@userplane/ui/lib/utils';
 import { Loader2, Plus } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -262,23 +262,20 @@ export function InviteTeammatesView({
   const updateDomainMutation = useUpdateDomain(workspaceId);
 
   // Sync state with initial values during render
-  const prevInitialPolicyRef = useRef(initialPolicy);
-  const prevInitialDomainsRef = useRef(initialDomains);
-  const prevInitialDomainUrlRef = useRef(initialDomainUrl);
-  if (
-    prevInitialPolicyRef.current !== initialPolicy ||
-    prevInitialDomainsRef.current !== initialDomains
-  ) {
-    prevInitialPolicyRef.current = initialPolicy;
-    prevInitialDomainsRef.current = initialDomains;
+  const [prevInitialPolicy, setPrevInitialPolicy] = useState(initialPolicy);
+  const [prevInitialDomains, setPrevInitialDomains] = useState(initialDomains);
+  const [prevInitialDomainUrl, setPrevInitialDomainUrl] = useState(initialDomainUrl);
+  if (prevInitialPolicy !== initialPolicy || prevInitialDomains !== initialDomains) {
+    setPrevInitialPolicy(initialPolicy);
+    setPrevInitialDomains(initialDomains);
     setConfigState((prev) => ({
       ...prev,
       policy: initialPolicy,
       emailDomains: initialDomains || [],
     }));
   }
-  if (prevInitialDomainUrlRef.current !== initialDomainUrl) {
-    prevInitialDomainUrlRef.current = initialDomainUrl;
+  if (prevInitialDomainUrl !== initialDomainUrl) {
+    setPrevInitialDomainUrl(initialDomainUrl);
     setConfigState((prev) => ({ ...prev, domainUrl: initialDomainUrl }));
   }
 

@@ -5,15 +5,7 @@
  * Coordinates recorder lock across tabs using SharedWorker
  */
 
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-} from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useMemo, useReducer } from 'react';
 
 import {
   type AcquireLockResult,
@@ -110,10 +102,6 @@ function lockReducer(_state: LockState, action: LockAction): LockState {
 }
 
 export function AppModeProvider({ children, actionType, crossTabWorkerURL }: AppModeProviderProps) {
-  const bridgeRef = useRef<RecorderBridgeConnection | null>(null);
-  const verificationBridgeRef = useRef<VerificationBridgeConnection | null>(null);
-  const crossTabRef = useRef<CrossTabCoordinator | null>(null);
-
   // Track cross-tab lock status
   const [lockState, dispatchLock] = useReducer(lockReducer, {
     status: 'pending',
@@ -127,68 +115,80 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
   const isRecording = actionType === 'recording';
   const isVerification = actionType === 'verification';
 
-  // Create instances only in embedded mode, based on action type
-  useMemo(() => {
-    // Recording mode: create recorder bridge and cross-tab coordinator
-    if (isEmbedded && isRecording && !bridgeRef.current) {
-      bridgeRef.current = getRecorderBridge();
-    }
-    // Cross-tab coordinator for lock management and scatter-gather (single userplane channel)
-    if (isEmbedded && isRecording && !crossTabRef.current) {
-      crossTabRef.current = getCrossTabCoordinator({
-        workerURL: crossTabWorkerURL,
-        callbacks: {
-          onRecorderAcquiredByOtherTab: (tabId) => {
-            logger.debug({ tabId }, 'another tab acquired recorder');
-          },
-          onRecorderReleasedByOtherTab: (previousTabId) => {
-            logger.debug({ previousTabId }, 'another tab released recorder');
-          },
-          onRecorderStateChanged: (tabId, state) => {
-            logger.debug({ tabId, state }, 'recorder state changed');
-          },
-          onMetadataResponse: (response) => {
-            logger.debug({ responderTabId: response.responderTabId }, 'metadata response received');
-          },
-        },
-      });
-    }
-    // Verification mode: create only verification bridge
-    if (isEmbedded && isVerification && !verificationBridgeRef.current) {
-      verificationBridgeRef.current = getVerificationBridge();
-    }
-  }, [isEmbedded, isRecording, isVerification, crossTabWorkerURL]);
+  // Create instances only in embedded mode, based on action type.
+  // Each getter returns a module-level singleton, so they are idempotent and
+  // don't need a ref to guard against being called more than once.
+
+  // Recording mode: create recorder bridge and cross-tab coordinator
+  const bridge = useMemo(
+    () => (isEmbedded && isRecording ? getRecorderBridge() : null),
+    [isEmbedded, isRecording]
+  );
+
+  // Cross-tab coordinator for lock management and scatter-gather (single userplane channel)
+  const crossTab = useMemo(
+    () =>
+      isEmbedded && isRecording
+        ? getCrossTabCoordinator({
+            workerURL: crossTabWorkerURL,
+            callbacks: {
+              onRecorderAcquiredByOtherTab: (tabId) => {
+                logger.debug({ tabId }, 'another tab acquired recorder');
+              },
+              onRecorderReleasedByOtherTab: (previousTabId) => {
+                logger.debug({ previousTabId }, 'another tab released recorder');
+              },
+              onRecorderStateChanged: (tabId, state) => {
+                logger.debug({ tabId, state }, 'recorder state changed');
+              },
+              onMetadataResponse: (response) => {
+                logger.debug(
+                  { responderTabId: response.responderTabId },
+                  'metadata response received'
+                );
+              },
+            },
+          })
+        : null,
+    [isEmbedded, isRecording, crossTabWorkerURL]
+  );
+
+  // Verification mode: create only verification bridge
+  const verificationBridge = useMemo(
+    () => (isEmbedded && isVerification ? getVerificationBridge() : null),
+    [isEmbedded, isVerification]
+  );
 
   const value = useMemo<AppModeContextValue>(
     () => ({
       mode,
       isEmbedded,
       isStandalone: mode === 'standalone',
-      bridge: isEmbedded ? bridgeRef.current : null,
-      verificationBridge: isEmbedded ? verificationBridgeRef.current : null,
-      crossTab: isEmbedded ? crossTabRef.current : null,
+      bridge,
+      verificationBridge,
+      crossTab,
       crossTabLockStatus: lockState.status,
       crossTabError: lockState.error,
       blockingTabId: lockState.blockingTabId,
     }),
-    [mode, isEmbedded, lockState]
+    [mode, isEmbedded, bridge, verificationBridge, crossTab, lockState]
   );
 
   // Connect verification bridge (simple connection, no cross-tab coordination needed)
   // Only runs in verification mode
   useEffect(() => {
-    if (!isEmbedded || !isVerification || !verificationBridgeRef.current) {
+    if (!isEmbedded || !isVerification || !verificationBridge) {
       return;
     }
 
-    const verificationBridge = verificationBridgeRef.current;
+    const connection = verificationBridge;
     let mounted = true;
 
     async function connectVerificationBridge() {
       try {
         logger.debug('connecting verification bridge');
         await Promise.race([
-          verificationBridge.connect(),
+          connection.connect(),
           new Promise<never>((_, reject) =>
             setTimeout(
               () => reject(new Error('Bridge connection timed out — parent SDK did not respond')),
@@ -212,19 +212,19 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
 
     return () => {
       mounted = false;
-      verificationBridge.disconnect();
+      connection.disconnect();
     };
-  }, [isEmbedded, isVerification]);
+  }, [isEmbedded, isVerification, verificationBridge]);
 
   // Connect recorder bridge (with cross-tab coordination)
   // Only runs in recording mode
   useEffect(() => {
-    if (!isEmbedded || !isRecording || !bridgeRef.current || !crossTabRef.current) {
+    if (!isEmbedded || !isRecording || !bridge || !crossTab) {
       return;
     }
 
-    const bridge = bridgeRef.current;
-    const crossTab = crossTabRef.current;
+    const connection = bridge;
+    const coordinator = crossTab;
     let mounted = true;
 
     async function connectAll() {
@@ -235,7 +235,7 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
         // Timeout prevents infinite hang if parent SDK never responds to handshake
         logger.debug('connecting bridge');
         await Promise.race([
-          bridge.connect(),
+          connection.connect(),
           new Promise<never>((_, reject) =>
             setTimeout(
               () => reject(new Error('Bridge connection timed out — parent SDK did not respond')),
@@ -245,20 +245,20 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
         ]);
         if (!mounted) return;
 
-        const tabRef = bridge.getTabRef();
+        const tabRef = connection.getTabRef();
         logger.debug({ tabRef }, 'got tab ref');
 
         // Step 2: Connect cross-tab coordinator using parent's tabRef
         // Use rec_ prefix to identify as recorder on the userplane channel
         const recorderTabId = tabRef ? `rec_${tabRef}` : undefined;
         logger.debug({ recorderTabId }, 'connecting cross-tab coordinator');
-        await crossTab.connect(recorderTabId);
+        await coordinator.connect(recorderTabId);
         if (!mounted) return;
 
         // Step 3: Check if another recorder is already mounted AND alive
-        const isMounted = await crossTab.isRecorderMounted();
+        const isMounted = await coordinator.isRecorderMounted();
         if (isMounted) {
-          const holderTabId = crossTab.getRecorderTabId();
+          const holderTabId = coordinator.getRecorderTabId();
           logger.warn({ holderTabId }, 'blocked by another recorder');
           dispatchLock({
             type: 'blocked',
@@ -270,13 +270,13 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
 
         // Step 4: Attempt to acquire the lock using CAS
         logger.debug('acquiring recorder lock');
-        const result: AcquireLockResult = await crossTab.acquireLock();
+        const result: AcquireLockResult = await coordinator.acquireLock();
         if (!mounted) return;
 
         if (result.success) {
           logger.debug('recorder lock acquired');
           // Wire up cross-tab coordinator to bridge for state sync
-          bridge.setCrossTabCoordinator(crossTab);
+          connection.setCrossTabCoordinator(coordinator);
           dispatchLock({ type: 'acquired' });
         } else {
           logger.warn({ error: result.error }, 'failed to acquire lock');
@@ -300,13 +300,13 @@ export function AppModeProvider({ children, actionType, crossTabWorkerURL }: App
     return () => {
       mounted = false;
       logger.debug('disconnecting');
-      bridge.setCrossTabCoordinator(null);
-      bridge.disconnect();
-      crossTab.disconnect().catch((err) => {
+      connection.setCrossTabCoordinator(null);
+      connection.disconnect();
+      coordinator.disconnect().catch((err) => {
         logger.warn({ err }, 'error disconnecting cross-tab');
       });
     };
-  }, [isEmbedded, isRecording]);
+  }, [isEmbedded, isRecording, bridge, crossTab]);
 
   return <AppModeContext.Provider value={value}>{children}</AppModeContext.Provider>;
 }

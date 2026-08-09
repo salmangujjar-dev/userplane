@@ -382,7 +382,7 @@ export function RecordingsTab({ workspaceId }: RecordingsTabProps) {
       recordingCount: stat.recordingCount,
       durationMinutes: Number((stat.totalDuration / (1000 * 60)).toFixed(2)),
     }));
-  }, [stats?.weeklyStats]);
+  }, [stats]);
 
   const total = useMemo(() => {
     if (!chartData.length) return { recordingCount: 0, durationMinutes: 0 };
@@ -400,7 +400,7 @@ export function RecordingsTab({ workspaceId }: RecordingsTabProps) {
       durationMinutes: Number((member.totalDuration / (1000 * 60)).toFixed(2)),
       fill: PIE_COLORS[memberStats.memberStats.indexOf(member) % PIE_COLORS.length],
     }));
-  }, [memberStats?.memberStats]);
+  }, [memberStats]);
 
   const pieTotal = useMemo(() => {
     if (!pieChartData.length) return { recordingCount: 0, durationMinutes: 0 };

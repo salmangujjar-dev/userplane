@@ -11,7 +11,7 @@ import {
 import { Input } from '@userplane/ui/components/input';
 import { Label } from '@userplane/ui/components/label';
 import Logo from '@userplane/ui/components/logo';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface DeleteAccountModalProps {
   open: boolean;
@@ -31,11 +31,14 @@ export function DeleteAccountModal({
   const [confirmEmail, setConfirmEmail] = useState('');
 
   // Reset input when the modal closes
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setConfirmEmail('');
     }
-  }, [open]);
+  }
 
   const isConfirmDisabled = confirmEmail !== email || isLoading;
 

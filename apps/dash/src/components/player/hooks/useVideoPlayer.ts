@@ -102,13 +102,16 @@ export function useVideoPlayer(
       }
     };
 
-    // Set initial values
-    setDuration(player.duration() || 0);
-    setCurrentTime(player.currentTime() || 0);
-    setIsPlaying(!player.paused());
-    setVolume(player.volume() || 1);
-    setIsMuted(player.muted() || false);
-    setPlaybackSpeed(player.playbackRate() || 1);
+    // Seed from the player's current values. Deferred to a microtask so this
+    // external-system sync doesn't run synchronously inside the effect.
+    queueMicrotask(() => {
+      setDuration(player.duration() || 0);
+      setCurrentTime(player.currentTime() || 0);
+      setIsPlaying(!player.paused());
+      setVolume(player.volume() || 1);
+      setIsMuted(player.muted() || false);
+      setPlaybackSpeed(player.playbackRate() || 1);
+    });
 
     // Subscribe to events
     player.on('timeupdate', updateTime);

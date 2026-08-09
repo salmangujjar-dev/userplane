@@ -43,7 +43,7 @@ import {
 } from '@userplane/ui/components/tooltip';
 import { format } from 'date-fns';
 import { Code, Copy, HelpCircle, Key, MoreVertical, Plus, RotateCw, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { SectionError } from '@/components/shared/section-error';
 import { SUPPORT_LINKS } from '@/constants';
@@ -407,13 +407,16 @@ function CreateApiKeyModal({
   } | null>(null);
   const createMutation = useCreateApiKey();
 
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setName('');
       setExpiresIn('0');
       setCreatedResult(null);
     }
-  }, [open]);
+  }
 
   const handleCreate = () => {
     const expiresInValue = parseInt(expiresIn, 10);
@@ -568,11 +571,14 @@ function RevokeApiKeyModal({
   const [confirmText, setConfirmText] = useState('');
   const revokeMutation = useRevokeApiKey();
 
-  useEffect(() => {
+  // Reset when the modal closes (adjust state during render)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (!open) {
       setConfirmText('');
     }
-  }, [open]);
+  }
 
   const handleRevoke = () => {
     if (!keyId) return;
@@ -663,7 +669,11 @@ function RotateApiKeyModal({
   } | null>(null);
   const rotateMutation = useRotateApiKey();
 
-  useEffect(() => {
+  // Seed on open, clear on close (adjust state during render)
+  const [prevOpenKey, setPrevOpenKey] = useState(`${open}:${currentKeyName ?? ''}`);
+  const openKey = `${open}:${currentKeyName ?? ''}`;
+  if (prevOpenKey !== openKey) {
+    setPrevOpenKey(openKey);
     if (open) {
       setName(currentKeyName || '');
     } else {
@@ -671,7 +681,7 @@ function RotateApiKeyModal({
       setExpiresIn('0');
       setRotatedResult(null);
     }
-  }, [open, currentKeyName]);
+  }
 
   const handleRotate = () => {
     if (!keyId) return;

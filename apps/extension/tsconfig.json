@@ -1,7 +1,7 @@
 {
   "extends": "@userplane/typescript-config/react-library.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "types": ["chrome"],
     "paths": {
       "@/*": ["./src/*"],
       "@userplane/ui/*": ["../../packages/ui/src/*"]

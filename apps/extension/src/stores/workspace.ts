@@ -11,7 +11,7 @@ interface WorkspaceState {
 const chromeStorage = createJSONStorage(() => ({
   getItem: async (name: string) => {
     const result = await chrome.storage.local.get(name);
-    return result[name] ?? null;
+    return (result[name] as string | undefined) ?? null;
   },
   setItem: async (name: string, value: string) => {
     await chrome.storage.local.set({ [name]: value });

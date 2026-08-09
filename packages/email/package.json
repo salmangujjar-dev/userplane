@@ -25,8 +25,8 @@
     "@userplane/contract": "*",
     "@userplane/shared": "*",
     "@userplane/storage": "*",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "resend": "^6.17.2"
   },
   "devDependencies": {
@@ -36,7 +36,7 @@
     "@types/react-dom": "^19.2.3",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^10.7.0",
+    "eslint": "^10.8.0",
     "react-email": "^6.6.6",
     "typescript": "^6.0.3"
   }

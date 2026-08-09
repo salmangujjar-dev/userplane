@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@userplane/eslint-config": "*",
-    "eslint": "^10.7.0",
+    "eslint": "^10.8.0",
     "mint": "^4.2.557"
   }
 }

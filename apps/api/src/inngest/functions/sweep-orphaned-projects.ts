@@ -1,7 +1,9 @@
+import { cron } from 'inngest';
+
 import { db } from '@/api/clients/db';
 import { env } from '@/api/env';
-import { inngest } from '@/api/inngest/client';
-import { BATCH_LIMITS, EVENT_NAMES } from '@/api/inngest/constants';
+import { EVENTS, inngest } from '@/api/inngest/client';
+import { BATCH_LIMITS } from '@/api/inngest/constants';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildProjectDeletionKey, buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { chunkArray } from '@/api/lib/batch';
@@ -21,8 +23,8 @@ export const cleanupOrphanedProject = inngest.createFunction(
   {
     id: 'cleanup-orphaned-project',
     retries: 3,
+    triggers: [EVENTS.cleanupOrphanedProject],
   },
-  { event: EVENT_NAMES.CLEANUP_ORPHANED_PROJECT },
   async ({ event, step }) => {
     const { projectId } = event.data;
 
@@ -72,12 +74,15 @@ export const cleanupOrphanedProject = inngest.createFunction(
       for (const [index, chunk] of recordingChunks.entries()) {
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
-            chunk.map((recording) => ({
-              name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
-              data: { recordingId: recording.recordingId },
-              id: buildRecordingDeletionKey(recording.recordingId),
-              ...(getPurgeDelayTimestamp() ? { ts: getPurgeDelayTimestamp() } : {}),
-            }))
+            chunk.map((recording) =>
+              EVENTS.deleteRecordingResources.create(
+                { recordingId: recording.recordingId },
+                {
+                  id: buildRecordingDeletionKey(recording.recordingId),
+                  ...(getPurgeDelayTimestamp() ? { ts: getPurgeDelayTimestamp() } : {}),
+                }
+              )
+            )
           );
         });
 
@@ -111,8 +116,8 @@ export const sweepOrphanedProjects = inngest.createFunction(
   {
     id: 'sweep-orphaned-projects',
     retries: 3,
+    triggers: [cron(env.inngest.projectSweepCronSchedule)],
   },
-  { cron: env.inngest.projectSweepCronSchedule },
   async ({ step }) => {
     // Environment guard: only run in production
     if (env.server.appEnv !== 'production') {
@@ -159,11 +164,12 @@ export const sweepOrphanedProjects = inngest.createFunction(
       for (const [index, chunk] of projectChunks.entries()) {
         await step.run(`send-batch-${index}`, async () => {
           await inngest.send(
-            chunk.map((project) => ({
-              name: EVENT_NAMES.CLEANUP_ORPHANED_PROJECT,
-              data: { projectId: project.projectId },
-              id: buildProjectDeletionKey(project.projectId),
-            }))
+            chunk.map((project) =>
+              EVENTS.cleanupOrphanedProject.create(
+                { projectId: project.projectId },
+                { id: buildProjectDeletionKey(project.projectId) }
+              )
+            )
           );
         });
 

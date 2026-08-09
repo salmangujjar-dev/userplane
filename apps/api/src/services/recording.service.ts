@@ -12,8 +12,7 @@ import type {
   VideoStorageClient,
 } from '@userplane/storage';
 
-import { inngest } from '@/api/inngest/client';
-import { EVENT_NAMES } from '@/api/inngest/constants';
+import { EVENTS, inngest } from '@/api/inngest/client';
 import { getPurgeDelayTimestamp } from '@/api/inngest/delay-calculator';
 import { buildRecordingDeletionKey } from '@/api/inngest/idempotency';
 import { createLogger } from '@/api/lib/logger';
@@ -176,12 +175,12 @@ export class RecordingService {
     // Note: Inngest failures are non-blocking - recording soft delete has already succeeded
     try {
       const ts = getPurgeDelayTimestamp(existingRecording.uploadStatus);
-      await inngest.send({
-        name: EVENT_NAMES.DELETE_RECORDING_RESOURCES,
-        data: { recordingId },
-        id: buildRecordingDeletionKey(recordingId),
-        ...(ts ? { ts } : {}),
-      });
+      await inngest.send(
+        EVENTS.deleteRecordingResources.create(
+          { recordingId },
+          { id: buildRecordingDeletionKey(recordingId), ...(ts ? { ts } : {}) }
+        )
+      );
     } catch (error) {
       // Log but don't fail the request - cleanup is a background task
       // The recording has been soft deleted and cleanup can be retried later

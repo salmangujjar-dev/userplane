@@ -1273,10 +1273,10 @@ export function PlanChangePreviewModal({ onComplete }: PlanChangePreviewModalPro
   };
 
   // Reset state when modal opens with a new plan (adjust state during render)
-  const prevPlanKeyRef = useRef<string | null>(null);
+  const [prevPlanKey, setPrevPlanKey] = useState<string | null>(null);
   const planKey = open && newPlanId && workspaceId ? `${newPlanId}-${workspaceId}` : null;
-  if (planKey !== prevPlanKeyRef.current) {
-    prevPlanKeyRef.current = planKey;
+  if (planKey !== prevPlanKey) {
+    setPrevPlanKey(planKey);
     if (planKey) {
       setModalState('loading');
       setPreviewData(null);
@@ -1285,8 +1285,12 @@ export function PlanChangePreviewModal({ onComplete }: PlanChangePreviewModalPro
   }
 
   // Trigger preview/initiate flow when modal opens with a new plan
+  // Kept in a ref so the effect below doesn't re-run whenever the mutation
+  // object changes identity. Assigned in an effect, not during render.
   const managePlanRef = useRef(managePlan);
-  managePlanRef.current = managePlan;
+  useEffect(() => {
+    managePlanRef.current = managePlan;
+  });
   useEffect(() => {
     if (open && newPlanId && workspaceId) {
       // Call without action - server will route appropriately

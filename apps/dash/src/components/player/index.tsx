@@ -36,6 +36,9 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
 }) => {
   const videoRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<Player | null>(null);
+  // Mirrored into state so the controls re-render once the player is ready;
+  // reading playerRef.current during render would not schedule one.
+  const [player, setPlayer] = useState<Player | null>(null);
   const [playerState, setPlayerState] = useState({
     duration: durationMs ? durationMs / 1000 : 0,
     hasStarted: false,
@@ -94,6 +97,7 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
       };
 
       const player = (playerRef.current = videojs(videoElement, playerOptions, () => {
+        setPlayer(player);
         // Notify parent component that player is ready
         if (onPlayerReady) {
           onPlayerReady(player);
@@ -215,7 +219,7 @@ const StreamPlayer: React.FC<StreamPlayerProps> = ({
 
       {/* Custom controls */}
       <StreamControls
-        player={playerRef.current}
+        player={player}
         markers={markers}
         onMarkerClick={onMarkerClick}
         onFullscreen={onFullscreen}

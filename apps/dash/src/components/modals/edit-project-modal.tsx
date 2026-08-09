@@ -28,7 +28,7 @@ import {
 } from '@userplane/ui/components/tooltip';
 import { cn } from '@userplane/ui/lib/utils';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { SUPPORT_LINKS } from '@/constants';
 import { useSubscriptionStatus } from '@/features/billing';
@@ -68,7 +68,11 @@ export function EditProjectModal({
   const featureGates = subscriptionData?.featureGates;
   const { triggerUpsell } = useFeatureUpsell();
 
-  useEffect(() => {
+  // Seed the form when the modal opens or the project changes
+  // (adjust state during render)
+  const [prevSeed, setPrevSeed] = useState<[boolean, typeof project]>([open, project]);
+  if (prevSeed[0] !== open || prevSeed[1] !== project) {
+    setPrevSeed([open, project]);
     if (open && project) {
       setEditedProject({
         title: project.title,
@@ -77,7 +81,7 @@ export function EditProjectModal({
       });
       setShowAdvanced(false);
     }
-  }, [open, project]);
+  }
 
   const handleSave = () => {
     const isValid = editedProject.title.trim();
