@@ -30,7 +30,7 @@
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "@vitejs/plugin-react": "^6.0.2",
-    "eslint": "^9.39.4",
+    "eslint": "^10.8.0",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
     "vite": "^8.2.0",

@@ -33,7 +33,7 @@
     "@userplane/contract": "*"
   },
   "devDependencies": {
-    "eslint": "^9.39.4",
+    "eslint": "^10.8.0",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
     "hono": "^4.12.18",

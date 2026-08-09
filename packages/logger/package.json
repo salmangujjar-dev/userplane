@@ -37,7 +37,7 @@
     "@storybook/html-vite": "^10.3.6",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^9.39.4",
+    "eslint": "^10.8.0",
     "eslint-plugin-storybook": "^10.3.6",
     "happy-dom": "^20.8.8",
     "remark-gfm": "^4.0.1",

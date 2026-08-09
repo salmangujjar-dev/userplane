@@ -41,7 +41,7 @@
     "@types/uuid": "^11.0.0",
     "@userplane/eslint-config": "*",
     "@userplane/typescript-config": "*",
-    "eslint": "^9.39.4"
+    "eslint": "^10.8.0"
   },
   "exports": {
     "./routes": "./src/routes/index.ts",
