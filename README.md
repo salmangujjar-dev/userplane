@@ -1,8 +1,9 @@
 <div align="center">
-  <h1>Userplane</h1>
+<h1>Userplane</h1>
   <p><strong>The open-source Loom alternative built for customer support.</strong></p>
+  
+<img width="1672" height="941" alt="preview" src="https://github.com/user-attachments/assets/e99a508f-1ab3-4737-828c-ab7138fb655f" />
 
-https://github.com/user-attachments/assets/5e6c71b0-d139-4365-abc3-202d32a7f52f
 
   <p>
     Send customers one recording link. Get back the session replay, console logs,
@@ -26,6 +27,7 @@ https://github.com/user-attachments/assets/5e6c71b0-d139-4365-abc3-202d32a7f52f
 </div>
 
 ## Table of contents
+https://github.com/user-attachments/assets/5e6c71b0-d139-4365-abc3-202d32a7f52f
 
 **Product**
 
