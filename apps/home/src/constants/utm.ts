@@ -35,12 +35,15 @@ export interface UTMParams {
 /**
  * Append UTM query parameters to a URL.
  * Only tags absolute URLs (skips internal paths like `/demo`).
+ * GitHub drops query params, so repo links are left clean.
  * Handles URLs that already have query strings.
  */
 export function withUTM(url: string, params: UTMParams): string {
   if (!url.startsWith('http')) return url;
 
   const parsed = new URL(url);
+  if (parsed.hostname === 'github.com') return url;
+
   for (const [key, value] of Object.entries(params)) {
     if (!parsed.searchParams.has(key)) {
       parsed.searchParams.set(key, value);
